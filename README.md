@@ -21,22 +21,29 @@ minimalistic project effort estimation and progress tracking and release date in
 3. UI layer
 
 ## Project
+
 1. name
 2. project_id
 3. list\<sprint\>
 4. list <AccessGroup>
+5. created
+6. updated
 
 ## Sprint
 1. list\<story\>
 1. start
 2. end
 3. status
+4. created
+5. updated
 
 ## Story
 1. list\<task\>
 2. start
 3. end
 4. status
+5. created
+6. updated
 
 ## Task
 1. task-id
