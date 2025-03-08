@@ -48,3 +48,7 @@ minimalistic prject effort estimation and progress tracking and release date int
 5. status
 6. created
 7. updated
+
+# Design Philosophy
+1. backup the devellopment with unit tests.
+2. create data generators that can be used in unit tests.
