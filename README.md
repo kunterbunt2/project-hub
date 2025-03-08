@@ -23,17 +23,17 @@ minimalistic project effort estimation and progress tracking and release date in
 ## Project
 1. name
 2. project_id
-3. list<sprint>
-4. list<AccessGroup>
+3. list\<sprint\>
+4. list <AccessGroup>
 
 ## Sprint
-1. list<story>
+1. list\<story\>
 1. start
 2. end
 3. status
 
 ## Story
-1. list<task>
+1. list\<task\>
 2. start
 3. end
 4. status
