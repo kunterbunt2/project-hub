@@ -1,14 +1,14 @@
 # Target
-minimalistic prject effort estimation and progress tracking and release date interpolation.
+minimalistic project effort estimation and progress tracking and release date interpolation.
 
 # Requirements
-1. minimalistic project status stracking within one single server.
+1. minimalistic project status tracking within one single server.
 2. written in Java + spring boot.
 3. project list.
 4. every project has list of sprints.
 5. every sprint contains stories and tasks.
 6. every task has start, end, effort estimation, effort worked, dependency to other tasks or stories.
-7. gantt chart genration with resource conflict visualization.
+7. gantt chart generation with resource conflict visualization.
 8. burn down chart for every sprint.
 9. keep number of clicks to minimum for daily work of developer.
 10. access control using user groups and oidc authentication on project level.
@@ -50,5 +50,5 @@ minimalistic prject effort estimation and progress tracking and release date int
 7. updated
 
 # Design Philosophy
-1. backup the devellopment with unit tests.
+1. backup the development with unit tests.
 2. create data generators that can be used in unit tests.
