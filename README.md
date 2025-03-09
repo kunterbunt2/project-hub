@@ -22,12 +22,13 @@ minimalistic project effort estimation and progress tracking and release date in
 
 ## Project
 
-1. name
-2. project_id
-3. list\<version\>
-4. list <AccessGroup>
-5. created
-6. updated
+1. project_id
+2. name
+3. requester
+4. list\<version\>
+5. list <AccessGroup>
+6. created
+7. updated
 
 ## Version
 1. version_id
@@ -35,23 +36,25 @@ minimalistic project effort estimation and progress tracking and release date in
 3. list\<sprint\>
 
 ## Sprint
-1. list\<story\>
-1. start
-2. end
-3. status
-4. created
-5. updated
+1. sprint_id
+2. list\<story\>
+3. start
+4. end
+5. status
+6. created
+7. updated
 
 ## Story
-1. list\<task\>
-2. start
-3. end
-4. status
-5. created
-6. updated
+1. story_id
+2. list\<task\>
+3. start
+4. end
+5. status
+6. created
+7. updated
 
 ## Task
-1. task-id
+1. task_id
 2. summary
 3. effort estimated
 4. effort worked
