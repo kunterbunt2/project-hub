@@ -24,10 +24,15 @@ minimalistic project effort estimation and progress tracking and release date in
 
 1. name
 2. project_id
-3. list\<sprint\>
+3. list\<version\>
 4. list <AccessGroup>
 5. created
 6. updated
+
+## Version
+1. version_id
+2. version
+3. list\<sprint\>
 
 ## Sprint
 1. list\<story\>
