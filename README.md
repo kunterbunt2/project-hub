@@ -11,12 +11,15 @@ minimalistic project effort estimation and progress tracking and release date in
 5. every sprint contains stories and tasks.
 6. every task has start, end, effort estimation, effort worked, dependency to other tasks or stories.
 7. gantt chart generation with resource conflict visualization.
-8. burn down chart for every sprint.
-9. keep number of clicks to minimum for daily work of developer.
-10. Close project Release Date.
-11. National Holidays
-12. data scenario simulation generator
-13.  Simulator Write the use case as a Story in the project or product
+8. 1. Gantt task only on working days.
+   2. User name before gantt task with rounded corners.
+   3. X-axis calendar make none working day gray.
+9. burn down chart for every sprint.
+10. keep number of clicks to minimum for daily work of developer.
+11. Close project Release Date.
+12. National Holidays
+13. data scenario simulation generator
+14. 1. Simulator Write the use case as a Story in the project or product
 
 ## Phase 2
 1. Authentication via oidc
@@ -34,6 +37,11 @@ minimalistic project effort estimation and progress tracking and release date in
 1. Performance
 2. Live updates to your inputs
 3.  Live response to your Input.
+
+
+
+
+
 
 # Design Philosophy
 1. As simple as possible, as complex as nessesary .
