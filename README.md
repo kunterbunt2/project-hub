@@ -37,7 +37,7 @@ minimalistic project effort estimation and progress tracking and release date in
 1. Performance
 2. Live updates to your inputs
 3. Live response to your Input.
-4. 4product page.
+4. product page.
 
 
 # Design Philosophy
