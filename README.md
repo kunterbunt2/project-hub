@@ -36,11 +36,8 @@ minimalistic project effort estimation and progress tracking and release date in
 ## Phase 4
 1. Performance
 2. Live updates to your inputs
-3.  Live response to your Input.
-
-
-
-
+3. Live response to your Input.
+4. 4product page.
 
 
 # Design Philosophy
