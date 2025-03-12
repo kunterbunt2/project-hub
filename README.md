@@ -54,13 +54,17 @@ minimalistic project effort estimation and progress tracking and release date in
 2. logical layer and rest interface
 3. UI layer
 
-## Project
-
-1. project_id
+## Product
+1. key
 2. name
+3. list\<version\>
+4. created
+5. updated
+
+## Project
+1. key
+
 3. requester
-4. list\<version\>
-5. list <AccessGroup>
 6. created
 7. updated
 
