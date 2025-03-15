@@ -2,6 +2,7 @@ package de.bushnaq.abdalla.projecthub.client;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
@@ -14,7 +15,9 @@ public class ProjectHubClient {
 
     public ProjectHubClient(RestTemplate restTemplate, String baseUrl) {
         this.restTemplate = restTemplate;
-        this.baseUrl      = baseUrl;
+        this.restTemplate.setErrorHandler(new DefaultResponseErrorHandler());
+
+        this.baseUrl = baseUrl;
     }
 
     public ProjectHubClient() {
@@ -22,6 +25,18 @@ public class ProjectHubClient {
 
     public ProjectHubClient(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
+    }
+
+    public void delete(User user, Location location) throws org.springframework.web.client.RestClientException {
+        try {
+            restTemplate.delete(
+                    baseUrl + "/location/{userId}/{id}",
+                    user.getId(),
+                    location.getId()
+            );
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Failed to delete location: " + e.getMessage(), e);
+        }
     }
 
     public List<Project> getAllProjects() {

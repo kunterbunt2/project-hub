@@ -19,20 +19,15 @@ public class ProjectController {
     @Autowired
     private VersionRepository versionRepository;
 
-    @PostMapping(consumes = "application/json", produces = "application/json")
-    public ProjectEntity create(@RequestBody ProjectEntity project) {
-//        for (VersionEntity ve : project.getVersions()) {
-//            versionRepository.save(ve);
-//        }
-
-        ProjectEntity createdEntity = projectRepository.save(project);
-        return createdEntity;
-
-    }
-
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         projectRepository.deleteById(id);
+    }
+
+    @GetMapping("/{id}")
+    public Optional<ProjectEntity> get(@PathVariable Long id) {
+        ProjectEntity projectEntity = projectRepository.findById(id).orElseThrow();
+        return Optional.of(projectEntity);
     }
 
     @GetMapping
@@ -40,10 +35,9 @@ public class ProjectController {
         return projectRepository.findAll();
     }
 
-    @GetMapping("/{id}")
-    public Optional<ProjectEntity> getById(@PathVariable Long id) {
-        ProjectEntity projectEntity = projectRepository.findById(id).orElseThrow();
-        return Optional.of(projectEntity);
+    @PostMapping(consumes = "application/json", produces = "application/json")
+    public ProjectEntity save(@RequestBody ProjectEntity project) {
+        return projectRepository.save(project);
     }
 
     @PutMapping("/{id}")

@@ -9,6 +9,7 @@ import org.springframework.core.MethodParameter;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
@@ -24,8 +25,28 @@ public class JsonResponseLogger implements ResponseBodyAdvice<Object> {
     public Object beforeBodyWrite(Object body, MethodParameter returnType, org.springframework.http.MediaType selectedContentType,
                                   Class<? extends HttpMessageConverter<?>> selectedConverterType, ServerHttpRequest request, ServerHttpResponse response) {
         try {
-            String jsonString = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(body);
-            System.out.format("Response JSON: %s\n", jsonString);
+//            int        rawStatus = ((org.springframework.http.server.ServerHttpResponse) response).getRawStatusCode();
+//            HttpStatus status    = HttpStatus.valueOf(rawStatus);
+
+//            HttpStatus status     = HttpStatus.valueOf(response.getStatusCode().value());
+
+            int status = ((ServletServerHttpResponse) response).getServletResponse().getStatus();
+
+
+//            if (body instanceof ErrorResponse errorResponse)
+            if (status != 200) {
+                System.out.format("Error Response: %d", status);
+            } else {
+                String jsonString = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(body);
+                System.out.format("Response JSON: %s\n", jsonString);
+            }
+
+//            if (status.is2xxSuccessful()) {
+//                logger.info("Response: {} - {}", status, jsonString);
+//            } else {
+//                logger.error("Error Response: {} - {}", status, jsonString);
+//            }
+
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

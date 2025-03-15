@@ -1,10 +1,13 @@
 package de.bushnaq.abdalla.projecthub.rest.controller;
 
 import de.bushnaq.abdalla.projecthub.db.LocationEntity;
+import de.bushnaq.abdalla.projecthub.db.UserEntity;
 import de.bushnaq.abdalla.projecthub.db.repository.LocationRepository;
+import de.bushnaq.abdalla.projecthub.db.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @RestController
@@ -14,6 +17,20 @@ public class LocationController {
     @Autowired
     private LocationRepository locationRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @DeleteMapping("/{userId}/{id}")
+    public void delete(@PathVariable Long userId, @PathVariable Long id) {
+        UserEntity     user     = userRepository.getById(userId);
+        LocationEntity location = locationRepository.findById(id).orElseThrow();
+        if (Objects.equals(user.getLocations().getFirst().getId(), id))
+            throw new IllegalArgumentException("Cannot delete the last location");
+        user.getLocations().remove(location);
+        userRepository.save(user);
+        locationRepository.deleteById(id);
+//        locationRepository.deleteById(id);
+    }
 
     @GetMapping("/{id}")
     public Optional<LocationEntity> getById(@PathVariable Long id) {

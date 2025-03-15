@@ -1,7 +1,6 @@
 package de.bushnaq.abdalla.projecthub.rest.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.db.UserEntity;
 import de.bushnaq.abdalla.projecthub.db.repository.LocationRepository;
 import de.bushnaq.abdalla.projecthub.db.repository.UserRepository;
@@ -18,30 +17,29 @@ import java.util.Optional;
 public class UserController {
 
     @Autowired
-    DebugUtil     debugUtil;
+    DebugUtil debugUtil;
+
     @Autowired
     EntityManager entityManager;
+
     @Autowired
     private LocationRepository locationRepository;
-    @Autowired
-    ObjectMapper objectMapper;
+
+//    @Autowired
+//    ObjectMapper objectMapper;
+
     @Autowired
     private UserRepository userRepository;
-
-    @PostMapping(consumes = "application/json", produces = "application/json")
-    public UserEntity create(@RequestBody UserEntity user) {
-//        for (LocationEntity wl : user.getLocations()) {
-//            locationRepository.save(wl);
-//        }
-//        debugUtil.logJson(user);
-        UserEntity createdEntity = userRepository.save(user);
-//        debugUtil.logJson(createdEntity);
-        return createdEntity;
-    }
 
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         userRepository.deleteById(id);
+    }
+
+    @GetMapping("/{id}")
+    public Optional<UserEntity> get(@PathVariable Long id) throws JsonProcessingException {
+        UserEntity byId = userRepository.getById(id);
+        return Optional.of(byId);
     }
 
     @GetMapping
@@ -49,10 +47,9 @@ public class UserController {
         return userRepository.findAll();
     }
 
-    @GetMapping("/{id}")
-    public Optional<UserEntity> getById(@PathVariable Long id) throws JsonProcessingException {
-        UserEntity byId = userRepository.getById(id);
-        return Optional.of(byId);
+    @PostMapping(consumes = "application/json", produces = "application/json")
+    public UserEntity save(@RequestBody UserEntity user) {
+        return userRepository.save(user);
     }
 
     @PutMapping()
