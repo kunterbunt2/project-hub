@@ -1,7 +1,8 @@
-package de.bushnaq.abdalla.projecthub;
+package de.bushnaq.abdalla.projecthub.util;
 
 import de.bushnaq.abdalla.projecthub.client.Project;
 import de.bushnaq.abdalla.projecthub.client.ProjectHubClient;
+import de.bushnaq.abdalla.projecthub.client.User;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +36,13 @@ public class AbstractTestUtil extends AbstractEntityGenerator {
     }
 
 
+    protected static void asserEqual(User user1, User user2) {
+        assertEquals(user1, user2);
+        for (int i = 0; i < user1.getLocations().size(); i++) {
+            assertEquals(user1.getLocations().get(i), user2.getLocations().get(i));
+        }
+    }
+
     @BeforeEach
     protected void clearDatabase() {
         List<String> tableNames = getAllTableNames();
@@ -67,6 +75,7 @@ public class AbstractTestUtil extends AbstractEntityGenerator {
     }
 
     protected void printTables() {
+        System.out.println("\n\n\n");
         try {
             String        separator = "+";
             StringBuilder output    = new StringBuilder("\n=== Database Content ===\n");

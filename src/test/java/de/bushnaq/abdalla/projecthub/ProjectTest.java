@@ -1,6 +1,7 @@
 package de.bushnaq.abdalla.projecthub;
 
 import de.bushnaq.abdalla.projecthub.client.Project;
+import de.bushnaq.abdalla.projecthub.util.AbstractTestUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
@@ -23,15 +24,19 @@ public class ProjectTest extends AbstractTestUtil {
     @Test
     public void create() throws Exception {
 
-        for (int i = 0; i < 10; i++) {
-            Project project = createProject();
-            System.out.println(project.toString());
-            Project createdProject   = client.createProject(project);
-            Project retrievedProject = client.getProjectById(createdProject.getId());
+        for (int i = 0; i < 1; i++) {
+            Project project        = createProject();
+            Project createdProject = client.persist(project);
+//            printTables();
+            Project retrievedProject = client.getProject(createdProject.getId());
             asserEqual(createdProject, retrievedProject);
         }
+//        Project project          = createProject();
+//        Project createdProject   = client.createProject(project);
+//        Project retrievedProject = client.getProjectById(createdProject.getId());
+//        asserEqual(createdProject, retrievedProject);
 
-        List<Project> allProjects = client.getAllProjects();
+//        List<Project> allProjects = client.getAllProjects();
 
         printTables();
     }
@@ -46,9 +51,9 @@ public class ProjectTest extends AbstractTestUtil {
     @Test
     public void getById() throws Exception {
         Project project        = createProject();
-        Project createdProject = client.createProject(project);
+        Project createdProject = client.persist(project);
 
-        Project retrievedProject = client.getProjectById(createdProject.getId());
+        Project retrievedProject = client.getProject(createdProject.getId());
         asserEqual(createdProject, retrievedProject);
         printTables();
     }

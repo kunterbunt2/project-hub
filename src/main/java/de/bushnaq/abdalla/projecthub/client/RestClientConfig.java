@@ -1,4 +1,4 @@
-package de.bushnaq.abdalla.projecthub;
+package de.bushnaq.abdalla.projecthub.client;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

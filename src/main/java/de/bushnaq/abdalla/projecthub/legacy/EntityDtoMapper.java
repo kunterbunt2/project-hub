@@ -1,4 +1,4 @@
-package de.bushnaq.abdalla.projecthub.mapper;
+package de.bushnaq.abdalla.projecthub.legacy;
 
 import de.bushnaq.abdalla.projecthub.client.Project;
 import de.bushnaq.abdalla.projecthub.client.Sprint;

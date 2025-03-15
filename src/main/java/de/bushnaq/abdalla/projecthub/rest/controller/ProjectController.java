@@ -1,8 +1,8 @@
-package de.bushnaq.abdalla.projecthub.controller;
+package de.bushnaq.abdalla.projecthub.rest.controller;
 
 import de.bushnaq.abdalla.projecthub.db.ProjectEntity;
 import de.bushnaq.abdalla.projecthub.db.repository.ProjectRepository;
-import de.bushnaq.abdalla.projecthub.service.ProjectService;
+import de.bushnaq.abdalla.projecthub.db.repository.VersionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,11 +17,17 @@ public class ProjectController {
     private ProjectRepository projectRepository;
 
     @Autowired
-    private ProjectService projectService;
+    private VersionRepository versionRepository;
 
     @PostMapping(consumes = "application/json", produces = "application/json")
     public ProjectEntity create(@RequestBody ProjectEntity project) {
-        return projectService.createProject(project);
+//        for (VersionEntity ve : project.getVersions()) {
+//            versionRepository.save(ve);
+//        }
+
+        ProjectEntity createdEntity = projectRepository.save(project);
+        return createdEntity;
+
     }
 
     @DeleteMapping("/{id}")
@@ -31,12 +37,13 @@ public class ProjectController {
 
     @GetMapping
     public List<ProjectEntity> getAll() {
-        return projectService.getAllProjects();
+        return projectRepository.findAll();
     }
 
     @GetMapping("/{id}")
     public Optional<ProjectEntity> getById(@PathVariable Long id) {
-        return projectService.getProjectById(id);
+        ProjectEntity projectEntity = projectRepository.findById(id).orElseThrow();
+        return Optional.of(projectEntity);
     }
 
     @PutMapping("/{id}")

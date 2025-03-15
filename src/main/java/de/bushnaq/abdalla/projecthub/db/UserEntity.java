@@ -2,8 +2,9 @@ package de.bushnaq.abdalla.projecthub.db;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Proxy;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,27 +15,31 @@ import java.util.List;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
+@Proxy(lazy = false)
 public class UserEntity extends AbstractTimeAwareEntity {
 
-    @OneToMany
-    private List<AvailabilityEntity>    availability     = new ArrayList<>();
-    private String                      email;
-    private OffsetDateTime              firstWorkingDay;//first working day
+    //    @OneToMany
+//    private List<AvailabilityEntity> availability = new ArrayList<>();
+    private String    email;
+    private LocalDate firstWorkingDay;//first working day
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Long                        id;
-    private OffsetDateTime              lastWorkingDay;//last working day
-    private String                      name;
-    @OneToMany
-    private List<NonworkingEntity>      nonworking       = new ArrayList<>();
-    @OneToMany
-    private List<WorkingLocationEntity> workingLocations = new ArrayList<>();
+    private Long      id;
+    private LocalDate lastWorkingDay;//last working day
+
+    //    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, fetch = FetchType.EAGER, mappedBy = "user")
+    @OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    private List<LocationEntity> locations = new ArrayList<>();
+    private String               name;
+//    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+//    private List<NonworkingEntity>   nonworking   = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {
         super.onCreate();
-        firstWorkingDay = OffsetDateTime.now();
+        firstWorkingDay = LocalDate.now();
     }
 
 }

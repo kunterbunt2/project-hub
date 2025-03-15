@@ -3,6 +3,7 @@ package de.bushnaq.abdalla.projecthub;
 import de.bushnaq.abdalla.projecthub.client.Project;
 import de.bushnaq.abdalla.projecthub.client.Sprint;
 import de.bushnaq.abdalla.projecthub.client.Status;
+import de.bushnaq.abdalla.projecthub.util.AbstractTestUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -36,9 +37,9 @@ public class SprintTest extends AbstractTestUtil {
         }
 
 
-        Project createdProject = client.createProject(project);
+        Project createdProject = client.persist(project);
 
-        Project retrievedProject = client.getProjectById(createdProject.getId());
+        Project retrievedProject = client.getProject(createdProject.getId());
 
         asserEqual(createdProject, retrievedProject);
         List<Sprint> sprints = retrievedProject.getVersions().get(0).getSprints();

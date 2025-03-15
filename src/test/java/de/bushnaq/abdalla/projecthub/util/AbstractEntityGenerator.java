@@ -1,20 +1,14 @@
-package de.bushnaq.abdalla.projecthub;
+package de.bushnaq.abdalla.projecthub.util;
 
 import de.bushnaq.abdalla.projecthub.client.Project;
 import de.bushnaq.abdalla.projecthub.client.User;
 import de.bushnaq.abdalla.projecthub.client.Version;
-import de.focus_shift.jollyday.core.Holiday;
-import de.focus_shift.jollyday.core.HolidayCalendar;
-import de.focus_shift.jollyday.core.HolidayManager;
-import de.focus_shift.jollyday.core.ManagerParameters;
 import org.ajbrown.namemachine.Name;
 import org.ajbrown.namemachine.NameGenerator;
 import org.junit.jupiter.api.BeforeEach;
 
-import java.time.OffsetDateTime;
-import java.time.Year;
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Set;
 
 public class AbstractEntityGenerator {
     List<Name> names;
@@ -22,7 +16,7 @@ public class AbstractEntityGenerator {
     private static int userIndex    = 0;
     private static int versionIndex = 0;
 
-    Project createProject() {
+    protected Project createProject() {
         Project project = new Project();
         project.setName(String.format("Project-%d", projectIndex));
         project.setRequester(String.format("Requester-%d", projectIndex));
@@ -35,17 +29,18 @@ public class AbstractEntityGenerator {
         return project;
     }
 
-    User createUser() {
+    protected User createUser() {
+        return createUser(LocalDate.now());
+    }
+
+    protected User createUser(LocalDate start) {
         User user = new User();
         user.setName(names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName());
         user.setEmail(user.getName() + "@project-hub.org");
-        user.addWorkingLocation("de", "nw", OffsetDateTime.now(), null);
-//        user.addWorkingLocation("de", "nw", OffsetDateTime.now(), null);
-//        user.setCountry(Locale.GERMAN.getCountry());
-//        user.setState("nw");
+        user.addWorkingLocation("de", "nw", start, null);
 
-        final HolidayManager holidayManager = HolidayManager.getInstance(ManagerParameters.create(HolidayCalendar.GERMANY));
-        final Set<Holiday>   holidays       = holidayManager.getHolidays(Year.of(2022), "nw");
+//        final HolidayManager holidayManager = HolidayManager.getInstance(ManagerParameters.create(HolidayCalendar.GERMANY));
+//        final Set<Holiday>   holidays       = holidayManager.getHolidays(Year.of(2022), "nw");
 
         userIndex++;
         return user;

@@ -1,0 +1,32 @@
+package de.bushnaq.abdalla.projecthub.client;
+
+import lombok.*;
+
+import java.time.LocalDate;
+
+/**
+ * {@code LegalLocation} class
+ * This class stores the work contract working location that will be used to determine the official public holidays.
+ * A user might be working in Melbourne Australia and wil get paid non-working days as everybody else in Melbourne,
+ * next year the same user might be working in Germany and will receive paid non-working days like everybody else in Germany.
+ */
+@Getter
+@Setter
+@NoArgsConstructor
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
+public class Location extends TimeAware {
+    private String    country;
+    private LocalDate finish;
+    private Long      id;
+    private LocalDate start;
+    private String    state;
+
+    public Location(String country, String state, LocalDate start, LocalDate finish) {
+        this.country = country;
+        this.state   = state;
+        this.start   = start;
+        this.finish  = finish;
+    }
+
+}

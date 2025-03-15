@@ -24,33 +24,6 @@ public class ProjectHubClient {
         this.restTemplate = restTemplate;
     }
 
-    public Project createProject(Project project) {
-        return restTemplate.postForObject(
-                baseUrl + "/project",
-                project,
-                Project.class
-        );
-    }
-
-    // Example usage with Sprint
-    public Sprint createSprint(Sprint sprint, Long projectId, String version) {
-        return restTemplate.postForObject(
-                baseUrl + "/project/{id}/versions/{version}/sprints",
-                sprint,
-                Sprint.class,
-                projectId,
-                version
-        );
-    }
-
-    public User createUser(User user) {
-        return restTemplate.postForObject(
-                baseUrl + "/user",
-                user,
-                User.class
-        );
-    }
-
     public List<Project> getAllProjects() {
         ResponseEntity<Project[]> response = restTemplate.getForEntity(
                 baseUrl + "/project",
@@ -59,11 +32,76 @@ public class ProjectHubClient {
         return Arrays.asList(response.getBody());
     }
 
-    public Project getProjectById(Long id) {
+    public List<User> getAllUsers() {
+        ResponseEntity<User[]> response = restTemplate.getForEntity(
+                baseUrl + "/user",
+                User[].class
+        );
+        return Arrays.asList(response.getBody());
+    }
+
+    public Location getLocation(Long id) {
+        return restTemplate.getForObject(
+                baseUrl + "/location/{id}",
+                Location.class,
+                id
+        );
+    }
+
+    public Project getProject(Long id) {
         return restTemplate.getForObject(
                 baseUrl + "/project/{id}",
                 Project.class,
                 id
+        );
+    }
+
+    public User getUser(Long id) {
+        return restTemplate.getForObject(
+                baseUrl + "/user/{id}",
+                User.class,
+                id
+        );
+    }
+
+    public Project persist(Project project) {
+        return restTemplate.postForObject(
+                baseUrl + "/project",
+                project,
+                Project.class
+        );
+    }
+
+    // Example usage with Sprint
+//    public Sprint persist(Sprint sprint, Long projectId, String version) {
+//        return restTemplate.postForObject(
+//                baseUrl + "/project/{id}/versions/{version}/sprints",
+//                sprint,
+//                Sprint.class,
+//                projectId,
+//                version
+//        );
+//    }
+
+    public User persist(User user) {
+        return restTemplate.postForObject(
+                baseUrl + "/user",
+                user,
+                User.class
+        );
+    }
+
+    public void update(Location location) {
+        restTemplate.put(
+                baseUrl + "/location",
+                location
+        );
+    }
+
+    public void update(User user) {
+        restTemplate.put(
+                baseUrl + "/user",
+                user
         );
     }
 }
