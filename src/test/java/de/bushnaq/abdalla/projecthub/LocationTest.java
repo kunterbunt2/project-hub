@@ -11,6 +11,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ServerErrorException;
 
 import java.time.LocalDate;
 import java.util.Locale;
@@ -113,7 +114,7 @@ public class LocationTest extends AbstractTestUtil {
             try {
                 client.delete(user, user.getLocations().getFirst());
                 fail("should not be able to delete the first location");
-            } catch (IllegalArgumentException e) {
+            } catch (ServerErrorException e) {
                 //expected
                 logger.error(e.getMessage(), e);
             }

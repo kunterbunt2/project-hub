@@ -1,7 +1,8 @@
 package de.bushnaq.abdalla.projecthub.util;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import de.bushnaq.abdalla.projecthub.client.Client;
 import de.bushnaq.abdalla.projecthub.client.Project;
-import de.bushnaq.abdalla.projecthub.client.ProjectHubClient;
 import de.bushnaq.abdalla.projecthub.client.User;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
@@ -16,12 +17,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AbstractTestUtil extends AbstractEntityGenerator {
     @Autowired
-    protected ProjectHubClient client;
+    protected Client        client;
     @Autowired
-    protected EntityManager    entityManager;
+    protected EntityManager entityManager;
+    @Autowired
+    ObjectMapper objectMapper;
     @LocalServerPort
-    private   int              port;
-
+    private   int           port;
     @Autowired
     private TestRestTemplate testRestTemplate; // Use TestRestTemplate instead of RestTemplate
 
@@ -71,7 +73,7 @@ public class AbstractTestUtil extends AbstractEntityGenerator {
     @PostConstruct
     protected void init() {
         // Set the correct port after injection
-        client = new ProjectHubClient(testRestTemplate.getRestTemplate(), "http://localhost:" + port);
+        client = new Client(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
     }
 
     protected void printTables() {

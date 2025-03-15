@@ -25,7 +25,7 @@ public class LocationController {
         UserEntity     user     = userRepository.getById(userId);
         LocationEntity location = locationRepository.findById(id).orElseThrow();
         if (Objects.equals(user.getLocations().getFirst().getId(), id))
-            throw new IllegalArgumentException("Cannot delete the last location");
+            throw new IllegalArgumentException("Cannot delete the first location");
         user.getLocations().remove(location);
         userRepository.save(user);
         locationRepository.deleteById(id);
