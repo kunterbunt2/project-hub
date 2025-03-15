@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "resource")
+@Table(name = "users")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,19 +20,26 @@ public class UserEntity extends AbstractTimeAwareEntity {
 
     //    @OneToMany
 //    private List<AvailabilityEntity> availability = new ArrayList<>();
-    private String    email;
+    @Column(nullable = false)
+    private String email;
+
+    @Column(nullable = false)
     private LocalDate firstWorkingDay;//first working day
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Long      id;
+    private Long id;
+
+    @Column(nullable = true)
     private LocalDate lastWorkingDay;//last working day
 
-    //    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, fetch = FetchType.EAGER, mappedBy = "user")
     @OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private List<LocationEntity> locations = new ArrayList<>();
-    private String               name;
+
+    @Column(nullable = false)
+    private String name;
 //    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 //    private List<NonworkingEntity>   nonworking   = new ArrayList<>();
 

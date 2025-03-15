@@ -1,5 +1,6 @@
 package de.bushnaq.abdalla.projecthub.db;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -14,7 +15,10 @@ import java.time.OffsetDateTime;
 @Setter
 @ToString
 public abstract class AbstractTimeAwareEntity {
+    @Column(nullable = false)
     private OffsetDateTime created;
+
+    @Column(nullable = false)
     private OffsetDateTime updated;
 
     @PrePersist

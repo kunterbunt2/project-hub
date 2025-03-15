@@ -7,7 +7,7 @@ import org.hibernate.annotations.Proxy;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "location")
+@Table(name = "locations")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -15,13 +15,20 @@ import java.time.LocalDate;
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
 public class LocationEntity extends AbstractTimeAwareEntity {
-    private String    country;
+    @Column(nullable = false)
+    private String country;
+
+    @Column(nullable = true)
     private LocalDate finish;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Long      id;
-    //    @Column(name = "start", nullable = false)
+    private Long id;
+
+    @Column(nullable = false)
     private LocalDate start;
-    private String    state;
+
+    @Column(nullable = false)
+    private String state;
 }

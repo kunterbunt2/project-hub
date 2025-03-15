@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "version")
+@Table(name = "versions")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,8 +20,11 @@ public class VersionEntity extends AbstractTimeAwareEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Long               id;
-    private String             name;
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "version_id", referencedColumnName = "id")
     private List<SprintEntity> sprints = new ArrayList<>();
