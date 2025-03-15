@@ -2,6 +2,11 @@
 
 minimalistic project effort estimation and progress tracking and release date interpolation open source server.
 
+[Requirements](https://github.com/kunterbunt2/project-hub/wiki/Requirements)
+
+[Design](https://github.com/kunterbunt2/project-hub/wiki/Design)
+
+
 # Status
 
 ## Locations
