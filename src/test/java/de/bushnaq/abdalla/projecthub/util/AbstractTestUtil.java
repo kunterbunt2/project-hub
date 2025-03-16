@@ -3,8 +3,9 @@ package de.bushnaq.abdalla.projecthub.util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.api.ProjectApi;
 import de.bushnaq.abdalla.projecthub.api.UserApi;
-import de.bushnaq.abdalla.projecthub.model.Project;
-import de.bushnaq.abdalla.projecthub.model.User;
+import de.bushnaq.abdalla.projecthub.dto.OffDay;
+import de.bushnaq.abdalla.projecthub.dto.Project;
+import de.bushnaq.abdalla.projecthub.dto.User;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,6 +23,7 @@ public class AbstractTestUtil extends AbstractEntityGenerator {
     protected EntityManager entityManager;
     @Autowired
     ObjectMapper objectMapper;
+    protected List<OffDay> offDays = new ArrayList<>();
     @LocalServerPort
     private   int              port;
     @Autowired

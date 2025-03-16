@@ -1,7 +1,7 @@
 package de.bushnaq.abdalla.projecthub;
 
-import de.bushnaq.abdalla.projecthub.model.Location;
-import de.bushnaq.abdalla.projecthub.model.User;
+import de.bushnaq.abdalla.projecthub.dto.Location;
+import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.util.AbstractTestUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,7 +18,6 @@ import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 
 @ExtendWith(SpringExtension.class)
@@ -27,7 +26,9 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 @Transactional
 public class LocationTest extends AbstractTestUtil {
     public static final String FIRST_START_DATE  = "2024-03-14";
+    public static final String SECOND_COUNTRY    = "us";
     public static final String SECOND_START_DATE = "2025-07-01";
+    public static final String SECOND_STATE      = "fl";
     Logger logger = LoggerFactory.getLogger(LocationTest.class);
 
     @Test
@@ -46,22 +47,22 @@ public class LocationTest extends AbstractTestUtil {
         //test if new location was persisted correctly
         {
             User user = userApi.getUser(id);
-            assertEquals(LocalDate.parse(FIRST_START_DATE), user.getLocations().getFirst().getFirstDay());
+            assertEquals(LocalDate.parse(FIRST_START_DATE), user.getLocations().getFirst().getStart());
         }
 
         //add a working location in Germany
         {
             User user = userApi.getUser(id);
             //moving to Germany
-            user.addLocation("de", "nw", LocalDate.parse(SECOND_START_DATE), null);
+            user.addLocation("de", "nw", LocalDate.parse(SECOND_START_DATE));
             userApi.persist(user);//persist the new location
         }
 
         //test the new location
         {
             User user = userApi.getUser(id);
-            assertEquals(LocalDate.parse(SECOND_START_DATE), user.getLocations().get(1).getFirstDay());
-            assertEquals(LocalDate.parse(SECOND_START_DATE).minusDays(1), user.getLocations().get(0).getLastDay());
+            assertEquals(LocalDate.parse(SECOND_START_DATE), user.getLocations().get(1).getStart());
+//            assertEquals(LocalDate.parse(SECOND_START_DATE).minusDays(1), user.getLocations().get(0).getLastDay());
         }
 
         printTables();
@@ -83,7 +84,7 @@ public class LocationTest extends AbstractTestUtil {
         //test if the location was persisted correctly
         {
             User user = userApi.getUser(id);
-            assertEquals(LocalDate.parse(FIRST_START_DATE), user.getLocations().getFirst().getFirstDay());
+            assertEquals(LocalDate.parse(FIRST_START_DATE), user.getLocations().getFirst().getStart());
         }
 
         printTables();
@@ -105,7 +106,7 @@ public class LocationTest extends AbstractTestUtil {
         //test if new location was persisted correctly
         {
             User user = userApi.getUser(id);
-            assertEquals(LocalDate.parse(FIRST_START_DATE), user.getLocations().getFirst().getFirstDay());
+            assertEquals(LocalDate.parse(FIRST_START_DATE), user.getLocations().getFirst().getStart());
         }
 
         //try to delete the first location
@@ -124,15 +125,15 @@ public class LocationTest extends AbstractTestUtil {
         {
             User user = userApi.getUser(id);
             //moving to Germany
-            user.addLocation("de", "nw", LocalDate.parse(SECOND_START_DATE), null);
+            user.addLocation("de", "nw", LocalDate.parse(SECOND_START_DATE));
             userApi.persist(user);//persist the new location
         }
 
         //test the new location
         {
             User user = userApi.getUser(id);
-            assertEquals(LocalDate.parse(SECOND_START_DATE), user.getLocations().get(1).getFirstDay());
-            assertEquals(LocalDate.parse(SECOND_START_DATE).minusDays(1), user.getLocations().get(0).getLastDay());
+            assertEquals(LocalDate.parse(SECOND_START_DATE), user.getLocations().get(1).getStart());
+//            assertEquals(LocalDate.parse(SECOND_START_DATE).minusDays(1), user.getLocations().get(0).getLastDay());
         }
 
         //try to delete the second location
@@ -163,25 +164,27 @@ public class LocationTest extends AbstractTestUtil {
         //test if the location was persisted correctly
         {
             User user = userApi.getUser(id);
-            assertEquals(LocalDate.parse(FIRST_START_DATE), user.getLocations().getFirst().getFirstDay());
+            assertEquals(LocalDate.parse(FIRST_START_DATE), user.getLocations().getFirst().getStart());
         }
 
         Thread.sleep(1000);//ensure that update time is different
 
-        //user leaves the company
+        //fix location mistake
         {
-            User     user     = userApi.getUser(id);
-            Location location = user.getLocations().getFirst();
-            user.setLastWorkingDay(LocalDate.parse(SECOND_START_DATE));
+            Location location = userApi.getLocation(locationId);
+            location.setCountry(SECOND_COUNTRY);
+            location.setState(SECOND_STATE);
+            location.setStart(LocalDate.parse(SECOND_START_DATE));
             userApi.update(location);
-            userApi.update(user);
+            User user = userApi.getUser(id);
         }
 
         //test if the location was updated correctly
         {
-            Location location = userApi.getLocation(locationId);
-            assertEquals(LocalDate.parse(SECOND_START_DATE), location.getLastDay());
-            assertNotEquals(location.getFirstDay(), location.getLastDay());
+            User user = userApi.getUser(id);
+            assertEquals(SECOND_COUNTRY, user.getLocations().getFirst().getCountry());
+            assertEquals(SECOND_STATE, user.getLocations().getFirst().getState());
+            assertEquals(LocalDate.parse(SECOND_START_DATE), user.getLocations().getFirst().getStart());
         }
 
         printTables();

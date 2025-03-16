@@ -1,4 +1,4 @@
-package de.bushnaq.abdalla.projecthub.db;
+package de.bushnaq.abdalla.projecthub.dao;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;

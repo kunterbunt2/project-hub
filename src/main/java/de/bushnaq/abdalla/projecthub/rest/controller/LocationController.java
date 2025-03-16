@@ -1,9 +1,9 @@
 package de.bushnaq.abdalla.projecthub.rest.controller;
 
-import de.bushnaq.abdalla.projecthub.db.LocationEntity;
-import de.bushnaq.abdalla.projecthub.db.UserEntity;
-import de.bushnaq.abdalla.projecthub.db.repository.LocationRepository;
-import de.bushnaq.abdalla.projecthub.db.repository.UserRepository;
+import de.bushnaq.abdalla.projecthub.dao.LocationEntity;
+import de.bushnaq.abdalla.projecthub.dao.UserEntity;
+import de.bushnaq.abdalla.projecthub.repository.LocationRepository;
+import de.bushnaq.abdalla.projecthub.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,8 +43,7 @@ public class LocationController {
         LocationEntity e = locationRepository.findById(locationDetails.getId()).orElseThrow();
         e.setCountry(locationDetails.getCountry());
         e.setState(locationDetails.getState());
-        e.setFirstDay(locationDetails.getFirstDay());
-        e.setLastDay(locationDetails.getLastDay());
+        e.setStart(locationDetails.getStart());
         locationRepository.save(e);
     }
 }

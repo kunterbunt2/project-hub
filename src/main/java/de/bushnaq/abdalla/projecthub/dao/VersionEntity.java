@@ -1,4 +1,4 @@
-package de.bushnaq.abdalla.projecthub.db;
+package de.bushnaq.abdalla.projecthub.dao;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,14 +8,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "projects")
+@Table(name = "versions")
 @Getter
 @Setter
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
-public class ProjectEntity extends AbstractTimeAwareEntity {
+public class VersionEntity extends AbstractTimeAwareEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,11 +25,8 @@ public class ProjectEntity extends AbstractTimeAwareEntity {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
-    private String requester;
-
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinColumn(name = "project_id", referencedColumnName = "id")
-    private List<VersionEntity> versions = new ArrayList<>();
+    @JoinColumn(name = "version_id", referencedColumnName = "id")
+    private List<SprintEntity> sprints = new ArrayList<>();
 
 }

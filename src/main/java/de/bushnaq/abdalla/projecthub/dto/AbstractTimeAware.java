@@ -1,4 +1,4 @@
-package de.bushnaq.abdalla.projecthub.model;
+package de.bushnaq.abdalla.projecthub.dto;
 
 import lombok.Getter;
 import lombok.Setter;

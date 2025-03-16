@@ -1,8 +1,8 @@
 package de.bushnaq.abdalla.projecthub.legacy;
 
-import de.bushnaq.abdalla.projecthub.db.ProjectEntity;
-import de.bushnaq.abdalla.projecthub.db.repository.ProjectRepository;
-import de.bushnaq.abdalla.projecthub.db.repository.VersionRepository;
+import de.bushnaq.abdalla.projecthub.dao.ProjectEntity;
+import de.bushnaq.abdalla.projecthub.repository.ProjectRepository;
+import de.bushnaq.abdalla.projecthub.repository.VersionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;

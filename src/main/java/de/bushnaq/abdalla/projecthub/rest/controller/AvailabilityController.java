@@ -1,9 +1,9 @@
 package de.bushnaq.abdalla.projecthub.rest.controller;
 
-import de.bushnaq.abdalla.projecthub.db.AvailabilityEntity;
-import de.bushnaq.abdalla.projecthub.db.UserEntity;
-import de.bushnaq.abdalla.projecthub.db.repository.AvailabilityRepository;
-import de.bushnaq.abdalla.projecthub.db.repository.UserRepository;
+import de.bushnaq.abdalla.projecthub.dao.AvailabilityEntity;
+import de.bushnaq.abdalla.projecthub.dao.UserEntity;
+import de.bushnaq.abdalla.projecthub.repository.AvailabilityRepository;
+import de.bushnaq.abdalla.projecthub.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,8 +41,7 @@ public class AvailabilityController {
     public void update(@RequestBody AvailabilityEntity availabilityDetails) {
         AvailabilityEntity e = availabilityRepository.findById(availabilityDetails.getId()).orElseThrow();
         e.setAvailability(availabilityDetails.getAvailability());
-        e.setFirstDay(availabilityDetails.getFirstDay());
-        e.setLastDay(availabilityDetails.getLastDay());
+        e.setStart(availabilityDetails.getStart());
         availabilityRepository.save(e);
     }
 }

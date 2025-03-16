@@ -1,6 +1,6 @@
-package de.bushnaq.abdalla.projecthub.db.repository;
+package de.bushnaq.abdalla.projecthub.repository;
 
-import de.bushnaq.abdalla.projecthub.db.AvailabilityEntity;
+import de.bushnaq.abdalla.projecthub.dao.AvailabilityEntity;
 import org.springframework.data.repository.ListCrudRepository;
 
 public interface AvailabilityRepository extends ListCrudRepository<AvailabilityEntity, Long> {

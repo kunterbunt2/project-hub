@@ -1,11 +1,11 @@
 package de.bushnaq.abdalla.projecthub.legacy;
 
-import de.bushnaq.abdalla.projecthub.db.ProjectEntity;
-import de.bushnaq.abdalla.projecthub.db.SprintEntity;
-import de.bushnaq.abdalla.projecthub.db.VersionEntity;
-import de.bushnaq.abdalla.projecthub.model.Project;
-import de.bushnaq.abdalla.projecthub.model.Sprint;
-import de.bushnaq.abdalla.projecthub.model.Version;
+import de.bushnaq.abdalla.projecthub.dao.ProjectEntity;
+import de.bushnaq.abdalla.projecthub.dao.SprintEntity;
+import de.bushnaq.abdalla.projecthub.dao.VersionEntity;
+import de.bushnaq.abdalla.projecthub.dto.Project;
+import de.bushnaq.abdalla.projecthub.dto.Sprint;
+import de.bushnaq.abdalla.projecthub.dto.Version;
 import org.springframework.stereotype.Component;
 
 @Component

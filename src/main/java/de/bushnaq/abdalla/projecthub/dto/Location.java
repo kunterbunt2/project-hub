@@ -1,4 +1,4 @@
-package de.bushnaq.abdalla.projecthub.model;
+package de.bushnaq.abdalla.projecthub.dto;
 
 import lombok.*;
 
@@ -15,18 +15,17 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = false)
-public class Location extends AbstractDateRange {
-    private String country;
-    //    private LocalDate finish;
-    private Long   id;
-    //    private LocalDate start;
-    private String state;
+public class Location extends AbstractTimeAware {
 
-    public Location(String country, String state, LocalDate start, LocalDate finish) {
+    private String    country;
+    private Long      id;
+    private LocalDate start;
+    private String    state;
+
+    public Location(String country, String state, LocalDate start) {
         this.country = country;
         this.state   = state;
-        this.setFirstDay(start);
-        this.setLastDay(finish);
+        this.setStart(start);
     }
 
 }

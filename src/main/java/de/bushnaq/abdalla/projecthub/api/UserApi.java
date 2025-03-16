@@ -2,9 +2,10 @@ package de.bushnaq.abdalla.projecthub.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.bushnaq.abdalla.projecthub.model.Availability;
-import de.bushnaq.abdalla.projecthub.model.Location;
-import de.bushnaq.abdalla.projecthub.model.User;
+import de.bushnaq.abdalla.projecthub.dto.Availability;
+import de.bushnaq.abdalla.projecthub.dto.Location;
+import de.bushnaq.abdalla.projecthub.dto.OffDay;
+import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.rest.util.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -46,6 +47,14 @@ public class UserApi {
                 baseUrl + "/location/{userId}/{id}",
                 user.getId(),
                 location.getId()
+        ));
+    }
+
+    public void delete(User user, OffDay offDay) throws org.springframework.web.client.RestClientException {
+        executeWithErrorHandling(() -> restTemplate.delete(
+                baseUrl + "/offday/{userId}/{id}",
+                user.getId(),
+                offDay.getId()
         ));
     }
 
@@ -110,6 +119,15 @@ public class UserApi {
                 ));
     }
 
+    public OffDay getOffDay(Long id) {
+        return executeWithErrorHandling(() ->
+                restTemplate.getForObject(
+                        baseUrl + "/offday/{id}",
+                        OffDay.class,
+                        id
+                ));
+    }
+
     public User getUser(Long id) {
         return executeWithErrorHandling(() ->
                 restTemplate.getForObject(
@@ -132,6 +150,13 @@ public class UserApi {
         executeWithErrorHandling(() -> restTemplate.put(
                 baseUrl + "/location",
                 location
+        ));
+    }
+
+    public void update(OffDay offDay) {
+        executeWithErrorHandling(() -> restTemplate.put(
+                baseUrl + "/offday",
+                offDay
         ));
     }
 

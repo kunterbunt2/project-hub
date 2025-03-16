@@ -1,6 +1,6 @@
-package de.bushnaq.abdalla.projecthub.db.repository;
+package de.bushnaq.abdalla.projecthub.repository;
 
-import de.bushnaq.abdalla.projecthub.db.VersionEntity;
+import de.bushnaq.abdalla.projecthub.dao.VersionEntity;
 import org.springframework.data.repository.ListCrudRepository;
 
 //public interface ProjectRepository extends JpaRepository<ProjectEntity, Long>

@@ -1,4 +1,4 @@
-package de.bushnaq.abdalla.projecthub.db;
+package de.bushnaq.abdalla.projecthub.dao;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -42,8 +42,10 @@ public class UserEntity extends AbstractTimeAwareEntity {
 
     @Column(nullable = false)
     private String name;
-//    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-//    private List<NonworkingEntity>   nonworking   = new ArrayList<>();
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    private List<OffDayEntity> offDays = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

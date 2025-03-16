@@ -1,4 +1,4 @@
-package de.bushnaq.abdalla.projecthub.model;
+package de.bushnaq.abdalla.projecthub.dto;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

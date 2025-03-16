@@ -2,7 +2,7 @@ package de.bushnaq.abdalla.projecthub.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.bushnaq.abdalla.projecthub.model.Project;
+import de.bushnaq.abdalla.projecthub.dto.Project;
 import de.bushnaq.abdalla.projecthub.rest.util.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;

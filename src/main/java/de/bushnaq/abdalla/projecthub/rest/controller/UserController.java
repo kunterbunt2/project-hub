@@ -1,9 +1,9 @@
 package de.bushnaq.abdalla.projecthub.rest.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import de.bushnaq.abdalla.projecthub.db.UserEntity;
-import de.bushnaq.abdalla.projecthub.db.repository.LocationRepository;
-import de.bushnaq.abdalla.projecthub.db.repository.UserRepository;
+import de.bushnaq.abdalla.projecthub.dao.UserEntity;
+import de.bushnaq.abdalla.projecthub.repository.LocationRepository;
+import de.bushnaq.abdalla.projecthub.repository.UserRepository;
 import de.bushnaq.abdalla.projecthub.rest.debug.DebugUtil;
 import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,9 +52,11 @@ public class UserController {
     @PutMapping()
     public void update(@RequestBody UserEntity user) {
         UserEntity e = userRepository.findById(user.getId()).orElseThrow();
-        //TODO update user
-//        user.setName(userDetails.getName());
-//        user.setRequester(projectDetails.getRequester());
+        e.setLastWorkingDay(user.getLastWorkingDay());
+        e.setFirstWorkingDay(user.getFirstWorkingDay());
+        e.setEmail(user.getEmail());
+        e.setLastWorkingDay(user.getLastWorkingDay());
+        e.setName(user.getName());
         userRepository.save(e);
     }
 }

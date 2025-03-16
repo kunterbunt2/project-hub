@@ -1,8 +1,8 @@
 package de.bushnaq.abdalla.projecthub.util;
 
-import de.bushnaq.abdalla.projecthub.model.Project;
-import de.bushnaq.abdalla.projecthub.model.User;
-import de.bushnaq.abdalla.projecthub.model.Version;
+import de.bushnaq.abdalla.projecthub.dto.Project;
+import de.bushnaq.abdalla.projecthub.dto.User;
+import de.bushnaq.abdalla.projecthub.dto.Version;
 import org.ajbrown.namemachine.Name;
 import org.ajbrown.namemachine.NameGenerator;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,7 +37,7 @@ public class AbstractEntityGenerator {
         User user = new User();
         user.setName(names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName());
         user.setEmail(user.getName() + "@project-hub.org");
-        user.addLocation("de", "nw", start, null);
+        user.addLocation("de", "nw", start);
         user.addAvailability(0.7f, start);
 
 //        final HolidayManager holidayManager = HolidayManager.getInstance(ManagerParameters.create(HolidayCalendar.GERMANY));

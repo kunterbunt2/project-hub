@@ -1,6 +1,6 @@
-package de.bushnaq.abdalla.projecthub.db.repository;
+package de.bushnaq.abdalla.projecthub.repository;
 
-import de.bushnaq.abdalla.projecthub.db.UserEntity;
+import de.bushnaq.abdalla.projecthub.dao.UserEntity;
 import org.springframework.data.repository.ListCrudRepository;
 
 public interface UserRepository extends ListCrudRepository<UserEntity, Long> {

@@ -1,8 +1,10 @@
-package de.bushnaq.abdalla.projecthub.db;
+package de.bushnaq.abdalla.projecthub.dao;
 
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Proxy;
+
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "locations")
@@ -12,7 +14,7 @@ import org.hibernate.annotations.Proxy;
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
-public class LocationEntity extends AbstractDateRangeEntity {
+public class LocationEntity extends AbstractTimeAwareEntity {
     @Column(nullable = false)
     private String country;
 
@@ -24,8 +26,8 @@ public class LocationEntity extends AbstractDateRangeEntity {
     @Column(name = "id")
     private Long id;
 
-//    @Column(nullable = false)
-//    private LocalDate start;
+    @Column(nullable = false)
+    private LocalDate start;
 
     @Column(nullable = false)
     private String state;
