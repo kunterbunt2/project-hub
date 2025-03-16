@@ -15,6 +15,7 @@ import java.time.OffsetDateTime;
 @Setter
 @ToString
 public abstract class AbstractTimeAwareEntity {
+
     @Column(nullable = false)
     private OffsetDateTime created;
 

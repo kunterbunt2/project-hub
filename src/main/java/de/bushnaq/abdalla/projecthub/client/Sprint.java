@@ -10,7 +10,7 @@ import java.time.OffsetDateTime;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
-public class Sprint extends TimeAware {
+public class Sprint extends AbstractTimeAware {
     private OffsetDateTime end;
     private Long           id;
     private String         name;

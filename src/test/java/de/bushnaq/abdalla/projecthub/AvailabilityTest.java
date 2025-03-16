@@ -1,6 +1,6 @@
 package de.bushnaq.abdalla.projecthub;
 
-import de.bushnaq.abdalla.projecthub.client.Location;
+import de.bushnaq.abdalla.projecthub.client.Availability;
 import de.bushnaq.abdalla.projecthub.client.User;
 import de.bushnaq.abdalla.projecthub.util.AbstractTestUtil;
 import org.junit.jupiter.api.Test;
@@ -18,17 +18,18 @@ import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Transactional
-public class LocationTest extends AbstractTestUtil {
-    public static final String FIRST_START_DATE  = "2024-03-14";
-    public static final String SECOND_START_DATE = "2025-07-01";
-    Logger logger = LoggerFactory.getLogger(LocationTest.class);
+public class AvailabilityTest extends AbstractTestUtil {
+    public static final float  FIRST_AVAILABILITY  = 0.7f;
+    public static final String FIRST_START_DATE    = "2024-03-14";
+    public static final float  SECOND_AVAILABILITY = 0.6f;
+    public static final String SECOND_START_DATE   = "2025-07-01";
+    Logger logger = LoggerFactory.getLogger(AvailabilityTest.class);
 
     @Test
     public void add() throws Exception {
@@ -36,32 +37,34 @@ public class LocationTest extends AbstractTestUtil {
 
         //create a user with australian locale
         {
-            Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
             User user  = createUser(LocalDate.parse(FIRST_START_DATE));
             User pUser = client.persist(user);
-            Locale.setDefault(Locale.getDefault());
             id = pUser.getId();
         }
 
         //test if new location was persisted correctly
         {
             User user = client.getUser(id);
-            assertEquals(LocalDate.parse(FIRST_START_DATE), user.getLocations().getFirst().getFirstDay());
+            assertEquals(LocalDate.parse(FIRST_START_DATE), user.getAvailabilities().getFirst().getFirstDay());
+            assertEquals(FIRST_AVAILABILITY, user.getAvailabilities().getFirst().getAvailability());
         }
 
-        //add a working location in Germany
+        //add an availability
         {
             User user = client.getUser(id);
             //moving to Germany
-            user.addLocation("de", "nw", LocalDate.parse(SECOND_START_DATE), null);
+            user.addAvailability(SECOND_AVAILABILITY, LocalDate.parse(SECOND_START_DATE));
             client.persist(user);//persist the new location
         }
 
         //test the new location
         {
             User user = client.getUser(id);
-            assertEquals(LocalDate.parse(SECOND_START_DATE), user.getLocations().get(1).getFirstDay());
-            assertEquals(LocalDate.parse(SECOND_START_DATE).minusDays(1), user.getLocations().get(0).getLastDay());
+            assertEquals(LocalDate.parse(FIRST_START_DATE), user.getAvailabilities().getFirst().getFirstDay());
+            assertEquals(FIRST_AVAILABILITY, user.getAvailabilities().getFirst().getAvailability());
+            assertEquals(LocalDate.parse(SECOND_START_DATE), user.getAvailabilities().get(1).getFirstDay());
+            assertEquals(SECOND_AVAILABILITY, user.getAvailabilities().get(1).getAvailability());
+
         }
 
         printTables();
@@ -83,7 +86,8 @@ public class LocationTest extends AbstractTestUtil {
         //test if the location was persisted correctly
         {
             User user = client.getUser(id);
-            assertEquals(LocalDate.parse(FIRST_START_DATE), user.getLocations().getFirst().getFirstDay());
+            assertEquals(LocalDate.parse(FIRST_START_DATE), user.getAvailabilities().getFirst().getFirstDay());
+            assertEquals(FIRST_AVAILABILITY, user.getAvailabilities().getFirst().getAvailability());
         }
 
         printTables();
@@ -95,52 +99,54 @@ public class LocationTest extends AbstractTestUtil {
 
         //create a user with australian locale
         {
-            Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
             User user  = createUser(LocalDate.parse(FIRST_START_DATE));
             User pUser = client.persist(user);
-            Locale.setDefault(Locale.getDefault());
             id = pUser.getId();
         }
 
         //test if new location was persisted correctly
         {
             User user = client.getUser(id);
-            assertEquals(LocalDate.parse(FIRST_START_DATE), user.getLocations().getFirst().getFirstDay());
+            assertEquals(LocalDate.parse(FIRST_START_DATE), user.getAvailabilities().getFirst().getFirstDay());
+            assertEquals(FIRST_AVAILABILITY, user.getAvailabilities().getFirst().getAvailability());
         }
 
         //try to delete the first location
         {
             User user = client.getUser(id);
             try {
-                client.delete(user, user.getLocations().getFirst());
-                fail("should not be able to delete the first location");
+                client.delete(user, user.getAvailabilities().getFirst());
+                fail("should not be able to delete the first availability");
             } catch (ServerErrorException e) {
                 //expected
                 logger.error(e.getMessage(), e);
             }
         }
 
-        //add a working location in Germany
+        //add an availability
         {
             User user = client.getUser(id);
             //moving to Germany
-            user.addLocation("de", "nw", LocalDate.parse(SECOND_START_DATE), null);
+            user.addAvailability(SECOND_AVAILABILITY, LocalDate.parse(SECOND_START_DATE));
             client.persist(user);//persist the new location
         }
 
         //test the new location
         {
             User user = client.getUser(id);
-            assertEquals(LocalDate.parse(SECOND_START_DATE), user.getLocations().get(1).getFirstDay());
-            assertEquals(LocalDate.parse(SECOND_START_DATE).minusDays(1), user.getLocations().get(0).getLastDay());
+            assertEquals(LocalDate.parse(SECOND_START_DATE), user.getAvailabilities().get(1).getFirstDay());
+            assertEquals(SECOND_AVAILABILITY, user.getAvailabilities().get(1).getAvailability());
+
+            assertEquals(LocalDate.parse(SECOND_START_DATE), user.getAvailabilities().get(1).getFirstDay());
+            assertEquals(LocalDate.parse(SECOND_START_DATE).minusDays(1), user.getAvailabilities().get(0).getLastDay());
         }
 
-        //try to delete the second location
+        //try to delete the second availability
         {
             User user = client.getUser(id);
-            client.delete(user, user.getLocations().get(1));
+            client.delete(user, user.getAvailabilities().get(1));
             user = client.getUser(id);
-            assertEquals(1, user.getLocations().size());
+            assertEquals(1, user.getAvailabilities().size());
         }
         printTables();
     }
@@ -148,40 +154,38 @@ public class LocationTest extends AbstractTestUtil {
     @Test
     public void update() throws Exception {
         Long id;
-        Long locationId;
+        Long availabilityId;
 
         //create the user with australian locale
         {
-            Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
             User user  = createUser(LocalDate.parse(FIRST_START_DATE));
             User pUser = client.persist(user);
-            Locale.setDefault(Locale.getDefault());
-            id         = pUser.getId();
-            locationId = pUser.getLocations().getFirst().getId();
+            id             = pUser.getId();
+            availabilityId = pUser.getAvailabilities().getFirst().getId();
         }
 
         //test if the location was persisted correctly
         {
             User user = client.getUser(id);
             assertEquals(LocalDate.parse(FIRST_START_DATE), user.getLocations().getFirst().getFirstDay());
+            assertEquals(FIRST_AVAILABILITY, user.getAvailabilities().getFirst().getAvailability());
         }
 
         Thread.sleep(1000);//ensure that update time is different
 
-        //user leaves the company
+        //user availability is fixed
         {
-            User     user     = client.getUser(id);
-            Location location = user.getLocations().getFirst();
-            user.setLastWorkingDay(LocalDate.parse(SECOND_START_DATE));
+            User         user     = client.getUser(id);
+            Availability location = user.getAvailabilities().getFirst();
+            location.setAvailability(SECOND_AVAILABILITY);
             client.update(location);
             client.update(user);
         }
 
         //test if the location was updated correctly
         {
-            Location location = client.getLocation(locationId);
-            assertEquals(LocalDate.parse(SECOND_START_DATE), location.getLastDay());
-            assertNotEquals(location.getFirstDay(), location.getLastDay());
+            Availability location = client.getAvailability(availabilityId);
+            assertEquals(SECOND_AVAILABILITY, location.getAvailability());
         }
 
         printTables();

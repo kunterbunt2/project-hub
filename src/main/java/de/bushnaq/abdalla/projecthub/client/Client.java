@@ -46,6 +46,14 @@ public class Client {
         ));
     }
 
+    public void delete(User user, Availability availability) throws org.springframework.web.client.RestClientException {
+        executeWithErrorHandling(() -> restTemplate.delete(
+                baseUrl + "/availability/{userId}/{id}",
+                user.getId(),
+                availability.getId()
+        ));
+    }
+
     private void executeWithErrorHandling(RestOperation operation) {
         try {
             operation.execute();
@@ -88,6 +96,15 @@ public class Client {
                 User[].class
         ));
         return Arrays.asList(response.getBody());
+    }
+
+    public Availability getAvailability(Long id) {
+        return executeWithErrorHandling(() ->
+                restTemplate.getForObject(
+                        baseUrl + "/availability/{id}",
+                        Availability.class,
+                        id
+                ));
     }
 
     public Location getLocation(Long id) {
@@ -149,6 +166,13 @@ public class Client {
         executeWithErrorHandling(() -> restTemplate.put(
                 baseUrl + "/location",
                 location
+        ));
+    }
+
+    public void update(Availability availability) {
+        executeWithErrorHandling(() -> restTemplate.put(
+                baseUrl + "/availability",
+                availability
         ));
     }
 

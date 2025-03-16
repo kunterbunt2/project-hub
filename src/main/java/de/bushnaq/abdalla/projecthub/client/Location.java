@@ -15,18 +15,18 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = false)
-public class Location extends TimeAware {
-    private String    country;
-    private LocalDate finish;
-    private Long      id;
-    private LocalDate start;
-    private String    state;
+public class Location extends AbstractDateRange {
+    private String country;
+    //    private LocalDate finish;
+    private Long   id;
+    //    private LocalDate start;
+    private String state;
 
     public Location(String country, String state, LocalDate start, LocalDate finish) {
         this.country = country;
         this.state   = state;
-        this.start   = start;
-        this.finish  = finish;
+        this.setFirstDay(start);
+        this.setLastDay(finish);
     }
 
 }

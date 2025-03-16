@@ -9,7 +9,7 @@ import java.util.List;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
-public class Project extends TimeAware {
+public class Project extends AbstractTimeAware {
     private Long          id;
     private String        name;
     private String        requester;

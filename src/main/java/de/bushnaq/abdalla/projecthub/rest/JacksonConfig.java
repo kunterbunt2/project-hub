@@ -25,10 +25,10 @@ public class JacksonConfig {
                 new Hibernate6Module().configure(
                         Hibernate6Module.Feature.FORCE_LAZY_LOADING, false)
         );
-        objectMapper.registerModule(
-                new Hibernate6Module().configure(
-                        Hibernate6Module.Feature.SERIALIZE_IDENTIFIER_FOR_LAZY_NOT_LOADED_OBJECTS, true)
-        );
+//        objectMapper.registerModule(
+//                new Hibernate6Module().configure(
+//                        Hibernate6Module.Feature.SERIALIZE_IDENTIFIER_FOR_LAZY_NOT_LOADED_OBJECTS, true)
+//        );
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.registerModule(new Jdk8Module());
         return objectMapper;

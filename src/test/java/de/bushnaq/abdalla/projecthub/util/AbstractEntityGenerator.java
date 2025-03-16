@@ -37,7 +37,8 @@ public class AbstractEntityGenerator {
         User user = new User();
         user.setName(names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName());
         user.setEmail(user.getName() + "@project-hub.org");
-        user.addWorkingLocation("de", "nw", start, null);
+        user.addLocation("de", "nw", start, null);
+        user.addAvailability(0.7f, start);
 
 //        final HolidayManager holidayManager = HolidayManager.getInstance(ManagerParameters.create(HolidayCalendar.GERMANY));
 //        final Set<Holiday>   holidays       = holidayManager.getHolidays(Year.of(2022), "nw");

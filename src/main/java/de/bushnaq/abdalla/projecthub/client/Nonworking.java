@@ -10,7 +10,7 @@ import java.time.OffsetDateTime;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
-public class Nonworking extends TimeAware {
+public class Nonworking extends AbstractTimeAware {
     private OffsetDateTime finish;
     private Long           id;
     private OffsetDateTime start;

@@ -11,7 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
-public class Version extends TimeAware {
+public class Version extends AbstractTimeAware {
 
     private Long         id;
     private String       name;

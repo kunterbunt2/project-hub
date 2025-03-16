@@ -43,8 +43,8 @@ public class LocationController {
         LocationEntity e = locationRepository.findById(locationDetails.getId()).orElseThrow();
         e.setCountry(locationDetails.getCountry());
         e.setState(locationDetails.getState());
-        e.setStart(locationDetails.getStart());
-        e.setFinish(locationDetails.getFinish());
+        e.setFirstDay(locationDetails.getFirstDay());
+        e.setLastDay(locationDetails.getLastDay());
         locationRepository.save(e);
     }
 }

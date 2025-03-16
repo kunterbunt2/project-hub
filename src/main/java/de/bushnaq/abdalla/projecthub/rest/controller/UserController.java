@@ -25,9 +25,6 @@ public class UserController {
     @Autowired
     private LocationRepository locationRepository;
 
-//    @Autowired
-//    ObjectMapper objectMapper;
-
     @Autowired
     private UserRepository userRepository;
 

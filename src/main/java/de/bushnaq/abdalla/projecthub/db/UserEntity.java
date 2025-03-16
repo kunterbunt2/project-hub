@@ -18,8 +18,10 @@ import java.util.List;
 @Proxy(lazy = false)
 public class UserEntity extends AbstractTimeAwareEntity {
 
-    //    @OneToMany
-//    private List<AvailabilityEntity> availability = new ArrayList<>();
+    @OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    private List<AvailabilityEntity> availabilities = new ArrayList<>();
+
     @Column(nullable = false)
     private String email;
 

@@ -9,7 +9,10 @@ import java.time.OffsetDateTime;
 @Getter
 @Setter
 @ToString
-public abstract class TimeAware {
+public abstract class AbstractTimeAware {
+
     private OffsetDateTime created;
+
     private OffsetDateTime updated;
+
 }
