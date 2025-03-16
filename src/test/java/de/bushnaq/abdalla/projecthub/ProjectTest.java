@@ -1,6 +1,6 @@
 package de.bushnaq.abdalla.projecthub;
 
-import de.bushnaq.abdalla.projecthub.client.Project;
+import de.bushnaq.abdalla.projecthub.model.Project;
 import de.bushnaq.abdalla.projecthub.util.AbstractTestUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,9 +26,9 @@ public class ProjectTest extends AbstractTestUtil {
 
         for (int i = 0; i < 1; i++) {
             Project project        = createProject();
-            Project createdProject = client.persist(project);
+            Project createdProject = projectApi.persist(project);
 //            printTables();
-            Project retrievedProject = client.getProject(createdProject.getId());
+            Project retrievedProject = projectApi.getProject(createdProject.getId());
             asserEqual(createdProject, retrievedProject);
         }
 //        Project project          = createProject();
@@ -44,16 +44,16 @@ public class ProjectTest extends AbstractTestUtil {
 
     @Test
     public void getAll() throws Exception {
-        List<Project> allProjects = client.getAllProjects();
+        List<Project> allProjects = projectApi.getAllProjects();
         printTables();
     }
 
     @Test
     public void getById() throws Exception {
         Project project        = createProject();
-        Project createdProject = client.persist(project);
+        Project createdProject = projectApi.persist(project);
 
-        Project retrievedProject = client.getProject(createdProject.getId());
+        Project retrievedProject = projectApi.getProject(createdProject.getId());
         asserEqual(createdProject, retrievedProject);
         printTables();
     }

@@ -1,8 +1,8 @@
 package de.bushnaq.abdalla.projecthub;
 
-import de.bushnaq.abdalla.projecthub.client.Project;
-import de.bushnaq.abdalla.projecthub.client.Sprint;
-import de.bushnaq.abdalla.projecthub.client.Status;
+import de.bushnaq.abdalla.projecthub.model.Project;
+import de.bushnaq.abdalla.projecthub.model.Sprint;
+import de.bushnaq.abdalla.projecthub.model.Status;
 import de.bushnaq.abdalla.projecthub.util.AbstractTestUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,9 +37,9 @@ public class SprintTest extends AbstractTestUtil {
         }
 
 
-        Project createdProject = client.persist(project);
+        Project createdProject = projectApi.persist(project);
 
-        Project retrievedProject = client.getProject(createdProject.getId());
+        Project retrievedProject = projectApi.getProject(createdProject.getId());
 
         asserEqual(createdProject, retrievedProject);
         List<Sprint> sprints = retrievedProject.getVersions().get(0).getSprints();

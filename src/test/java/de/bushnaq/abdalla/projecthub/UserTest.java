@@ -1,6 +1,6 @@
 package de.bushnaq.abdalla.projecthub;
 
-import de.bushnaq.abdalla.projecthub.client.User;
+import de.bushnaq.abdalla.projecthub.model.User;
 import de.bushnaq.abdalla.projecthub.util.AbstractTestUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,14 +28,14 @@ public class UserTest extends AbstractTestUtil {
         //create the users
         for (int i = 0; i < 1; i++) {
             User user  = createUser();
-            User pUser = client.persist(user);
+            User pUser = userApi.persist(user);
             users.add(pUser);
         }
         printTables();
 
         //test if the users were persisted correctly
         {
-            List<User> allUsers = client.getAllUsers();
+            List<User> allUsers = userApi.getAllUsers();
             assertEquals(users.size(), allUsers.size());
             for (int i = 0; i < users.size(); i++) {
                 asserEqual(users.get(i), allUsers.get(i));

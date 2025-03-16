@@ -1,8 +1,8 @@
 package de.bushnaq.abdalla.projecthub.util;
 
-import de.bushnaq.abdalla.projecthub.client.Project;
-import de.bushnaq.abdalla.projecthub.client.User;
-import de.bushnaq.abdalla.projecthub.client.Version;
+import de.bushnaq.abdalla.projecthub.model.Project;
+import de.bushnaq.abdalla.projecthub.model.User;
+import de.bushnaq.abdalla.projecthub.model.Version;
 import org.ajbrown.namemachine.Name;
 import org.ajbrown.namemachine.NameGenerator;
 import org.junit.jupiter.api.BeforeEach;

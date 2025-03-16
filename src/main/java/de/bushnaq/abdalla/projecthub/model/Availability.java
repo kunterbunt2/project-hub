@@ -1,4 +1,4 @@
-package de.bushnaq.abdalla.projecthub.client;
+package de.bushnaq.abdalla.projecthub.model;
 
 import lombok.*;
 

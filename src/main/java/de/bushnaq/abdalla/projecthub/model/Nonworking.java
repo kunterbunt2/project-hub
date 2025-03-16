@@ -1,6 +1,6 @@
-package de.bushnaq.abdalla.projecthub.client;
+package de.bushnaq.abdalla.projecthub.model;
 
-
+import de.bushnaq.abdalla.projecthub.db.NonworkingType;
 import lombok.*;
 
 import java.time.OffsetDateTime;
@@ -10,10 +10,9 @@ import java.time.OffsetDateTime;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
-public class Sprint extends AbstractTimeAware {
-    private OffsetDateTime end;
+public class Nonworking extends AbstractTimeAware {
+    private OffsetDateTime finish;
     private Long           id;
-    private String         name;
     private OffsetDateTime start;
-    private Status         status;
+    private NonworkingType type;
 }

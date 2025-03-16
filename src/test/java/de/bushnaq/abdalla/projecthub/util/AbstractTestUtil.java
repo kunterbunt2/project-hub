@@ -1,9 +1,10 @@
 package de.bushnaq.abdalla.projecthub.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.bushnaq.abdalla.projecthub.client.Client;
-import de.bushnaq.abdalla.projecthub.client.Project;
-import de.bushnaq.abdalla.projecthub.client.User;
+import de.bushnaq.abdalla.projecthub.api.ProjectApi;
+import de.bushnaq.abdalla.projecthub.api.UserApi;
+import de.bushnaq.abdalla.projecthub.model.Project;
+import de.bushnaq.abdalla.projecthub.model.User;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,15 +18,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AbstractTestUtil extends AbstractEntityGenerator {
     @Autowired
-    protected Client        client;
-    @Autowired
     protected EntityManager entityManager;
     @Autowired
     ObjectMapper objectMapper;
     @LocalServerPort
-    private   int           port;
+    private   int              port;
     @Autowired
-    private TestRestTemplate testRestTemplate; // Use TestRestTemplate instead of RestTemplate
+    protected ProjectApi       projectApi;
+    @Autowired
+    private   TestRestTemplate testRestTemplate; // Use TestRestTemplate instead of RestTemplate
+    @Autowired
+    protected UserApi          userApi;
 
     protected static void asserEqual(Project createdProject, Project retrievedProject) {
         assertEquals(createdProject, retrievedProject);
@@ -73,7 +76,8 @@ public class AbstractTestUtil extends AbstractEntityGenerator {
     @PostConstruct
     protected void init() {
         // Set the correct port after injection
-        client = new Client(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        projectApi = new ProjectApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        userApi    = new UserApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
     }
 
     protected void printTables() {

@@ -1,6 +1,6 @@
 package de.bushnaq.abdalla.projecthub.db;
 
-import de.bushnaq.abdalla.projecthub.client.Status;
+import de.bushnaq.abdalla.projecthub.model.Status;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Proxy;

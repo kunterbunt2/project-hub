@@ -1,7 +1,7 @@
 package de.bushnaq.abdalla.projecthub;
 
-import de.bushnaq.abdalla.projecthub.client.Availability;
-import de.bushnaq.abdalla.projecthub.client.User;
+import de.bushnaq.abdalla.projecthub.model.Availability;
+import de.bushnaq.abdalla.projecthub.model.User;
 import de.bushnaq.abdalla.projecthub.util.AbstractTestUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,28 +38,28 @@ public class AvailabilityTest extends AbstractTestUtil {
         //create a user with australian locale
         {
             User user  = createUser(LocalDate.parse(FIRST_START_DATE));
-            User pUser = client.persist(user);
+            User pUser = userApi.persist(user);
             id = pUser.getId();
         }
 
         //test if new location was persisted correctly
         {
-            User user = client.getUser(id);
+            User user = userApi.getUser(id);
             assertEquals(LocalDate.parse(FIRST_START_DATE), user.getAvailabilities().getFirst().getFirstDay());
             assertEquals(FIRST_AVAILABILITY, user.getAvailabilities().getFirst().getAvailability());
         }
 
         //add an availability
         {
-            User user = client.getUser(id);
+            User user = userApi.getUser(id);
             //moving to Germany
             user.addAvailability(SECOND_AVAILABILITY, LocalDate.parse(SECOND_START_DATE));
-            client.persist(user);//persist the new location
+            userApi.persist(user);//persist the new location
         }
 
         //test the new location
         {
-            User user = client.getUser(id);
+            User user = userApi.getUser(id);
             assertEquals(LocalDate.parse(FIRST_START_DATE), user.getAvailabilities().getFirst().getFirstDay());
             assertEquals(FIRST_AVAILABILITY, user.getAvailabilities().getFirst().getAvailability());
             assertEquals(LocalDate.parse(SECOND_START_DATE), user.getAvailabilities().get(1).getFirstDay());
@@ -78,14 +78,14 @@ public class AvailabilityTest extends AbstractTestUtil {
         {
             Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
             User user  = createUser(LocalDate.parse(FIRST_START_DATE));
-            User pUser = client.persist(user);
+            User pUser = userApi.persist(user);
             Locale.setDefault(Locale.getDefault());
             id = pUser.getId();
         }
 
         //test if the location was persisted correctly
         {
-            User user = client.getUser(id);
+            User user = userApi.getUser(id);
             assertEquals(LocalDate.parse(FIRST_START_DATE), user.getAvailabilities().getFirst().getFirstDay());
             assertEquals(FIRST_AVAILABILITY, user.getAvailabilities().getFirst().getAvailability());
         }
@@ -100,22 +100,22 @@ public class AvailabilityTest extends AbstractTestUtil {
         //create a user with australian locale
         {
             User user  = createUser(LocalDate.parse(FIRST_START_DATE));
-            User pUser = client.persist(user);
+            User pUser = userApi.persist(user);
             id = pUser.getId();
         }
 
         //test if new location was persisted correctly
         {
-            User user = client.getUser(id);
+            User user = userApi.getUser(id);
             assertEquals(LocalDate.parse(FIRST_START_DATE), user.getAvailabilities().getFirst().getFirstDay());
             assertEquals(FIRST_AVAILABILITY, user.getAvailabilities().getFirst().getAvailability());
         }
 
         //try to delete the first location
         {
-            User user = client.getUser(id);
+            User user = userApi.getUser(id);
             try {
-                client.delete(user, user.getAvailabilities().getFirst());
+                userApi.delete(user, user.getAvailabilities().getFirst());
                 fail("should not be able to delete the first availability");
             } catch (ServerErrorException e) {
                 //expected
@@ -125,15 +125,15 @@ public class AvailabilityTest extends AbstractTestUtil {
 
         //add an availability
         {
-            User user = client.getUser(id);
+            User user = userApi.getUser(id);
             //moving to Germany
             user.addAvailability(SECOND_AVAILABILITY, LocalDate.parse(SECOND_START_DATE));
-            client.persist(user);//persist the new location
+            userApi.persist(user);//persist the new location
         }
 
         //test the new location
         {
-            User user = client.getUser(id);
+            User user = userApi.getUser(id);
             assertEquals(LocalDate.parse(SECOND_START_DATE), user.getAvailabilities().get(1).getFirstDay());
             assertEquals(SECOND_AVAILABILITY, user.getAvailabilities().get(1).getAvailability());
 
@@ -143,9 +143,9 @@ public class AvailabilityTest extends AbstractTestUtil {
 
         //try to delete the second availability
         {
-            User user = client.getUser(id);
-            client.delete(user, user.getAvailabilities().get(1));
-            user = client.getUser(id);
+            User user = userApi.getUser(id);
+            userApi.delete(user, user.getAvailabilities().get(1));
+            user = userApi.getUser(id);
             assertEquals(1, user.getAvailabilities().size());
         }
         printTables();
@@ -159,14 +159,14 @@ public class AvailabilityTest extends AbstractTestUtil {
         //create the user with australian locale
         {
             User user  = createUser(LocalDate.parse(FIRST_START_DATE));
-            User pUser = client.persist(user);
+            User pUser = userApi.persist(user);
             id             = pUser.getId();
             availabilityId = pUser.getAvailabilities().getFirst().getId();
         }
 
         //test if the location was persisted correctly
         {
-            User user = client.getUser(id);
+            User user = userApi.getUser(id);
             assertEquals(LocalDate.parse(FIRST_START_DATE), user.getLocations().getFirst().getFirstDay());
             assertEquals(FIRST_AVAILABILITY, user.getAvailabilities().getFirst().getAvailability());
         }
@@ -175,16 +175,16 @@ public class AvailabilityTest extends AbstractTestUtil {
 
         //user availability is fixed
         {
-            User         user     = client.getUser(id);
+            User         user     = userApi.getUser(id);
             Availability location = user.getAvailabilities().getFirst();
             location.setAvailability(SECOND_AVAILABILITY);
-            client.update(location);
-            client.update(user);
+            userApi.update(location);
+            userApi.update(user);
         }
 
         //test if the location was updated correctly
         {
-            Availability location = client.getAvailability(availabilityId);
+            Availability location = userApi.getAvailability(availabilityId);
             assertEquals(SECOND_AVAILABILITY, location.getAvailability());
         }
 

@@ -1,39 +1,43 @@
 +----------------------------+------------------------------+----------+----------+----------+----------+----------+----------+
 | Package Name               | File Name                    | Type     | Blank    | JavaDoc  | Comment  | Code     | Total    |
 +----------------------------+------------------------------+----------+----------+----------+----------+----------+----------+
-| projecthub.client          | Availability.java            | src      |        3 |        0 |        0 |       14 |       17 |
-| projecthub.client          | Client.java                  | src      |       24 |        0 |       11 |      136 |      171 |
-| projecthub.client          | Location.java                | src      |        5 |        6 |        0 |       21 |       32 |
+| projecthub.client          | AbstractDateRange.java       | src      |        6 |        0 |        0 |       15 |       21 |
+| projecthub.client          | AbstractTimeAware.java       | src      |        6 |        0 |        0 |       12 |       18 |
+| projecthub.client          | Availability.java            | src      |        4 |        0 |        2 |       17 |       23 |
+| projecthub.client          | Client.java                  | src      |       27 |        0 |       11 |      157 |      195 |
+| projecthub.client          | Location.java                | src      |        5 |        6 |        2 |       19 |       32 |
 | projecthub.client          | Nonworking.java              | src      |        3 |        0 |        0 |       15 |       18 |
 | projecthub.client          | Project.java                 | src      |        3 |        0 |        0 |       14 |       17 |
 | projecthub.client          | RestClientConfig.java        | src      |        3 |        0 |        2 |       22 |       27 |
 | projecthub.client          | Sprint.java                  | src      |        4 |        0 |        0 |       15 |       19 |
 | projecthub.client          | Status.java                  | src      |        1 |        0 |        0 |        6 |        7 |
-| projecthub.client          | TimeAware.java               | src      |        3 |        0 |        0 |       12 |       15 |
-| projecthub.client          | User.java                    | src      |        6 |        0 |        4 |       41 |       51 |
+| projecthub.client          | User.java                    | src      |        9 |        0 |        6 |       52 |       67 |
 | projecthub.client          | Version.java                 | src      |        6 |        0 |        0 |       14 |       20 |
 +----------------------------+------------------------------+----------+----------+----------+----------+----------+----------+
+| projecthub.db.repository   | AvailabilityRepository.java  | src      |        3 |        0 |        2 |        6 |       11 |
 | projecthub.db.repository   | LocationRepository.java      | src      |        3 |        0 |        2 |        6 |       11 |
 | projecthub.db.repository   | ProjectRepository.java       | src      |        3 |        0 |        1 |        7 |       11 |
 | projecthub.db.repository   | UserRepository.java          | src      |        3 |        0 |        0 |        7 |       10 |
 | projecthub.db.repository   | VersionRepository.java       | src      |        2 |        0 |        1 |        6 |        9 |
 +----------------------------+------------------------------+----------+----------+----------+----------+----------+----------+
-| projecthub.db              | AbstractTimeAwareEntity.java | src      |        7 |        0 |        0 |       28 |       35 |
-| projecthub.db              | AvailabilityEntity.java      | src      |        3 |        0 |        0 |       20 |       23 |
-| projecthub.db              | LocationEntity.java          | src      |        7 |        0 |        0 |       27 |       34 |
+| projecthub.db              | AbstractDateRangeEntity.java | src      |        6 |        0 |        0 |       17 |       23 |
+| projecthub.db              | AbstractTimeAwareEntity.java | src      |        8 |        0 |        0 |       28 |       36 |
+| projecthub.db              | AvailabilityEntity.java      | src      |        5 |        3 |        0 |       20 |       28 |
+| projecthub.db              | LocationEntity.java          | src      |        6 |        0 |        4 |       22 |       32 |
 | projecthub.db              | NonworkingEntity.java        | src      |        3 |        0 |        0 |       20 |       23 |
 | projecthub.db              | NonworkingType.java          | src      |        1 |        0 |        0 |        6 |        7 |
 | projecthub.db              | ProjectEntity.java           | src      |        8 |        0 |        0 |       27 |       35 |
 | projecthub.db              | SprintEntity.java            | src      |        7 |        0 |        0 |       28 |       35 |
-| projecthub.db              | UserEntity.java              | src      |       11 |        0 |        4 |       37 |       52 |
+| projecthub.db              | UserEntity.java              | src      |       12 |        0 |        2 |       40 |       54 |
 | projecthub.db              | VersionEntity.java           | src      |        7 |        0 |        0 |       25 |       32 |
 +----------------------------+------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.legacy          | EntityDtoMapper.java         | src      |        9 |        0 |        0 |       71 |       80 |
 | projecthub.legacy          | ProjectService.java          | src      |        7 |        0 |       20 |       17 |       44 |
 +----------------------------+------------------------------+----------+----------+----------+----------+----------+----------+
+| projecthub.rest.controller | AvailabilityController.java  | src      |        8 |        0 |        0 |       40 |       48 |
 | projecthub.rest.controller | LocationController.java      | src      |        8 |        0 |        1 |       41 |       50 |
 | projecthub.rest.controller | ProjectController.java       | src      |       10 |        0 |        0 |       40 |       50 |
-| projecthub.rest.controller | UserController.java          | src      |       13 |        0 |        5 |       45 |       63 |
+| projecthub.rest.controller | UserController.java          | src      |       12 |        0 |        3 |       45 |       60 |
 +----------------------------+------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.rest.debug      | DebugUtil.java               | src      |        3 |        0 |        0 |       17 |       20 |
 | projecthub.rest.debug      | JsonResponseLogger.java      | src      |        7 |        0 |        0 |       44 |       51 |
@@ -42,16 +46,17 @@
 | projecthub.rest.util       | ErrorResponse.java           | src      |        5 |        0 |        0 |       17 |       22 |
 | projecthub.rest.util       | GlobalExceptionHandler.java  | src      |        3 |        0 |        0 |       22 |       25 |
 +----------------------------+------------------------------+----------+----------+----------+----------+----------+----------+
-| projecthub.rest            | JacksonConfig.java           | src      |        3 |        0 |        0 |       33 |       36 |
+| projecthub.rest            | JacksonConfig.java           | src      |        3 |        0 |        4 |       29 |       36 |
 +----------------------------+------------------------------+----------+----------+----------+----------+----------+----------+
-| projecthub.util            | AbstractEntityGenerator.java | src      |       11 |        0 |        2 |       42 |       55 |
+| projecthub.util            | AbstractEntityGenerator.java | src      |       11 |        0 |        2 |       43 |       56 |
 | projecthub.util            | AbstractTestUtil.java        | src      |       23 |        0 |       12 |      126 |      161 |
 +----------------------------+------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub                 | Application.java             | src      |        3 |        0 |       13 |       11 |       27 |
+| projecthub                 | AvailabilityTest.java        | src      |       31 |        0 |       19 |      143 |      193 |
 | projecthub                 | LocationTest.java            | src      |       29 |        0 |       19 |      141 |      189 |
 | projecthub                 | ProjectTest.java             | src      |       13 |        0 |        6 |       42 |       61 |
 | projecthub                 | SprintTest.java              | src      |       12 |        0 |        1 |       43 |       56 |
 | projecthub                 | UserTest.java                | src      |       11 |        0 |       19 |       36 |       66 |
 +----------------------------+------------------------------+----------+----------+----------+----------+----------+----------+
-| 10 package(s)              | 42 file(s)                   | java     |      314 |        6 |      126 |     1415 |     1861 |
+| 10 package(s)              | 47 file(s)                   | java     |      380 |        9 |      157 |     1664 |     2210 |
 +----------------------------+------------------------------+----------+----------+----------+----------+----------+----------+
