@@ -2,6 +2,7 @@
 | Package Name               | File Name                    | Type     | Blank    | JavaDoc  | Comment  | Code     | Total    |
 +----------------------------+------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.api             | ProjectApi.java              | src      |       16 |        0 |       11 |       87 |      114 |
+| projecthub.api             | TaskApi.java                 | src      |       15 |        0 |        1 |       87 |      103 |
 | projecthub.api             | UserApi.java                 | src      |       25 |        0 |        1 |      160 |      186 |
 +----------------------------+------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.dao             | AbstractDateRangeEntity.java | src      |        6 |        0 |        0 |       17 |       23 |
@@ -10,7 +11,9 @@
 | projecthub.dao             | LocationEntity.java          | src      |        7 |        0 |        2 |       25 |       34 |
 | projecthub.dao             | OffDayEntity.java            | src      |        5 |        0 |        0 |       21 |       26 |
 | projecthub.dao             | ProjectEntity.java           | src      |        8 |        0 |        0 |       27 |       35 |
+| projecthub.dao             | Relation.java                | src      |        2 |        0 |        0 |        5 |        7 |
 | projecthub.dao             | SprintEntity.java            | src      |        7 |        0 |        0 |       28 |       35 |
+| projecthub.dao             | TaskDAO.java                 | src      |       15 |        3 |        3 |       44 |       65 |
 | projecthub.dao             | UserEntity.java              | src      |       13 |        0 |        0 |       43 |       56 |
 | projecthub.dao             | VersionEntity.java           | src      |        7 |        0 |        0 |       25 |       32 |
 +----------------------------+------------------------------+----------+----------+----------+----------+----------+----------+
@@ -24,7 +27,8 @@
 | projecthub.dto             | RestClientConfig.java        | src      |        3 |        0 |        2 |       22 |       27 |
 | projecthub.dto             | Sprint.java                  | src      |        4 |        0 |        0 |       15 |       19 |
 | projecthub.dto             | Status.java                  | src      |        1 |        0 |        0 |        6 |        7 |
-| projecthub.dto             | User.java                    | src      |        9 |        0 |       11 |       41 |       61 |
+| projecthub.dto             | Task.java                    | src      |        8 |        3 |        7 |       39 |       57 |
+| projecthub.dto             | User.java                    | src      |        9 |        0 |        0 |       41 |       50 |
 | projecthub.dto             | Version.java                 | src      |        6 |        0 |        0 |       14 |       20 |
 +----------------------------+------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.legacy          | EntityDtoMapper.java         | src      |        9 |        0 |        0 |       71 |       80 |
@@ -34,6 +38,7 @@
 | projecthub.repository      | LocationRepository.java      | src      |        3 |        0 |        2 |        6 |       11 |
 | projecthub.repository      | OffDayRepository.java        | src      |        3 |        0 |        0 |        6 |        9 |
 | projecthub.repository      | ProjectRepository.java       | src      |        3 |        0 |        1 |        7 |       11 |
+| projecthub.repository      | TaskRepository.java          | src      |        3 |        0 |        0 |        6 |        9 |
 | projecthub.repository      | UserRepository.java          | src      |        3 |        0 |        0 |        7 |       10 |
 | projecthub.repository      | VersionRepository.java       | src      |        2 |        0 |        1 |        6 |        9 |
 +----------------------------+------------------------------+----------+----------+----------+----------+----------+----------+
@@ -41,6 +46,7 @@
 | projecthub.rest.controller | LocationController.java      | src      |        8 |        0 |        1 |       40 |       49 |
 | projecthub.rest.controller | OffDayController.java        | src      |        8 |        0 |        0 |       37 |       45 |
 | projecthub.rest.controller | ProjectController.java       | src      |       10 |        0 |        0 |       40 |       50 |
+| projecthub.rest.controller | TaskController.java          | src      |       10 |        0 |       12 |       31 |       53 |
 | projecthub.rest.controller | UserController.java          | src      |       12 |        0 |        0 |       50 |       62 |
 +----------------------------+------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.rest.debug      | DebugUtil.java               | src      |        3 |        0 |        0 |       17 |       20 |
@@ -53,7 +59,7 @@
 | projecthub.rest            | JacksonConfig.java           | src      |        3 |        0 |        4 |       29 |       36 |
 +----------------------------+------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.util            | AbstractEntityGenerator.java | src      |       11 |        0 |        2 |       43 |       56 |
-| projecthub.util            | AbstractTestUtil.java        | src      |       23 |        0 |       12 |      133 |      168 |
+| projecthub.util            | AbstractTestUtil.java        | src      |       23 |        0 |       12 |      137 |      172 |
 +----------------------------+------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub                 | Application.java             | src      |        3 |        0 |       13 |       11 |       27 |
 | projecthub                 | AvailabilityTest.java        | src      |       31 |        0 |       20 |      142 |      193 |
@@ -61,7 +67,8 @@
 | projecthub                 | OffDayTest.java              | src      |       23 |        0 |       15 |      102 |      140 |
 | projecthub                 | ProjectTest.java             | src      |       13 |        0 |        6 |       42 |       61 |
 | projecthub                 | SprintTest.java              | src      |       12 |        0 |        1 |       43 |       56 |
+| projecthub                 | TaskTest.java                | src      |       17 |        0 |        9 |       77 |      103 |
 | projecthub                 | UserTest.java                | src      |       18 |        0 |       23 |       63 |      104 |
 +----------------------------+------------------------------+----------+----------+----------+----------+----------+----------+
-| 11 package(s)              | 51 file(s)                   | java     |      443 |        9 |      175 |     1941 |     2568 |
+| 11 package(s)              | 58 file(s)                   | java     |      513 |       15 |      196 |     2234 |     2958 |
 +----------------------------+------------------------------+----------+----------+----------+----------+----------+----------+

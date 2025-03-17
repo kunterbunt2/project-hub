@@ -2,6 +2,7 @@ package de.bushnaq.abdalla.projecthub.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.api.ProjectApi;
+import de.bushnaq.abdalla.projecthub.api.TaskApi;
 import de.bushnaq.abdalla.projecthub.api.UserApi;
 import de.bushnaq.abdalla.projecthub.dto.OffDay;
 import de.bushnaq.abdalla.projecthub.dto.Project;
@@ -20,14 +21,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AbstractTestUtil extends AbstractEntityGenerator {
     @Autowired
-    protected EntityManager entityManager;
+    protected EntityManager    entityManager;
     @Autowired
-    ObjectMapper objectMapper;
-    protected List<OffDay> offDays = new ArrayList<>();
+    protected ObjectMapper     objectMapper;
+    protected List<OffDay>     offDays = new ArrayList<>();
     @LocalServerPort
     private   int              port;
     @Autowired
     protected ProjectApi       projectApi;
+    @Autowired
+    protected TaskApi          taskApi;
     @Autowired
     private   TestRestTemplate testRestTemplate; // Use TestRestTemplate instead of RestTemplate
     @Autowired
@@ -81,6 +84,7 @@ public class AbstractTestUtil extends AbstractEntityGenerator {
         // Set the correct port after injection
         projectApi = new ProjectApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
         userApi    = new UserApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        taskApi    = new TaskApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
     }
 
     protected void printTables() {
