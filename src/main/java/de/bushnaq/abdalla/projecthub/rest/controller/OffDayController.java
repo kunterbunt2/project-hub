@@ -35,11 +35,11 @@ public class OffDayController {
     }
 
     @PutMapping()
-    public void update(@RequestBody OffDayEntity offDayDetails) {
-        OffDayEntity e = offDayRepository.findById(offDayDetails.getId()).orElseThrow();
-        e.setType(offDayDetails.getType());
-        e.setFirstDay(offDayDetails.getFirstDay());
-        e.setLastDay(offDayDetails.getLastDay());
-        offDayRepository.save(e);
+    public void update(@RequestBody OffDayEntity offDay) {
+//        OffDayEntity e = offDayRepository.findById(offDayDetails.getId()).orElseThrow();
+//        e.setType(offDayDetails.getType());
+//        e.setFirstDay(offDayDetails.getFirstDay());
+//        e.setLastDay(offDayDetails.getLastDay());
+        offDayRepository.save(offDay);
     }
 }

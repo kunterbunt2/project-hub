@@ -28,13 +28,7 @@ public class AbstractTestUtil extends AbstractEntityGenerator {
     @LocalServerPort
     private   int              port;
     @Autowired
-    protected ProjectApi       projectApi;
-    @Autowired
-    protected TaskApi          taskApi;
-    @Autowired
     private   TestRestTemplate testRestTemplate; // Use TestRestTemplate instead of RestTemplate
-    @Autowired
-    protected UserApi          userApi;
 
     protected static void asserEqual(Project createdProject, Project retrievedProject) {
         assertEquals(createdProject, retrievedProject);

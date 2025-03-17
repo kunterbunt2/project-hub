@@ -38,10 +38,10 @@ public class AvailabilityController {
     }
 
     @PutMapping()
-    public void update(@RequestBody AvailabilityEntity availabilityDetails) {
-        AvailabilityEntity e = availabilityRepository.findById(availabilityDetails.getId()).orElseThrow();
-        e.setAvailability(availabilityDetails.getAvailability());
-        e.setStart(availabilityDetails.getStart());
-        availabilityRepository.save(e);
+    public void update(@RequestBody AvailabilityEntity availability) {
+//        AvailabilityEntity e = availabilityRepository.findById(availabilityDetails.getId()).orElseThrow();
+//        e.setAvailability(availabilityDetails.getAvailability());
+//        e.setStart(availabilityDetails.getStart());
+        availabilityRepository.save(availability);
     }
 }

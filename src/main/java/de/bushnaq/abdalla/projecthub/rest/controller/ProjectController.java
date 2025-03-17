@@ -41,10 +41,10 @@ public class ProjectController {
     }
 
     @PutMapping("/{id}")
-    public ProjectEntity update(@PathVariable Long id, @RequestBody ProjectEntity projectDetails) {
-        ProjectEntity project = projectRepository.findById(id).orElseThrow();
-        project.setName(projectDetails.getName());
-        project.setRequester(projectDetails.getRequester());
+    public ProjectEntity update(@PathVariable Long id, @RequestBody ProjectEntity project) {
+//        ProjectEntity project = projectRepository.findById(id).orElseThrow();
+//        project.setName(projectDetails.getName());
+//        project.setRequester(projectDetails.getRequester());
         return projectRepository.save(project);
     }
 }

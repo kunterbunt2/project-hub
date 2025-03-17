@@ -39,11 +39,11 @@ public class LocationController {
     }
 
     @PutMapping()
-    public void update(@RequestBody LocationEntity locationDetails) {
-        LocationEntity e = locationRepository.findById(locationDetails.getId()).orElseThrow();
-        e.setCountry(locationDetails.getCountry());
-        e.setState(locationDetails.getState());
-        e.setStart(locationDetails.getStart());
-        locationRepository.save(e);
+    public void update(@RequestBody LocationEntity location) {
+//        LocationEntity e = locationRepository.findById(locationDetails.getId()).orElseThrow();
+//        e.setCountry(locationDetails.getCountry());
+//        e.setState(locationDetails.getState());
+//        e.setStart(locationDetails.getStart());
+        locationRepository.save(location);
     }
 }

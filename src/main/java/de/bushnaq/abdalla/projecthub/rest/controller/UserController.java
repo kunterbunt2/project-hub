@@ -51,12 +51,13 @@ public class UserController {
 
     @PutMapping()
     public void update(@RequestBody UserEntity user) {
-        UserEntity e = userRepository.findById(user.getId()).orElseThrow();
-        e.setLastWorkingDay(user.getLastWorkingDay());
-        e.setFirstWorkingDay(user.getFirstWorkingDay());
-        e.setEmail(user.getEmail());
-        e.setLastWorkingDay(user.getLastWorkingDay());
-        e.setName(user.getName());
-        userRepository.save(e);
+//            UserEntity e = userRepository.findById(user.getId()).orElseThrow();
+//            e.setLastWorkingDay(user.getLastWorkingDay());
+//            e.setFirstWorkingDay(user.getFirstWorkingDay());
+//            e.setEmail(user.getEmail());
+//            e.setLastWorkingDay(user.getLastWorkingDay());
+//            e.setName(user.getName());
+//            userRepository.save(e);
+        userRepository.save(user);
     }
 }

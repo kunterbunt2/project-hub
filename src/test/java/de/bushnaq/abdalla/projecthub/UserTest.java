@@ -10,7 +10,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,13 +25,10 @@ public class UserTest extends AbstractTestUtil {
 
     @Test
     public void create() throws Exception {
-        List<User> users = new ArrayList<>();
 
         //create the users
         for (int i = 0; i < 1; i++) {
-            User user  = createUser();
-            User pUser = userApi.persist(user);
-            users.add(pUser);
+            User user = createUser();
         }
         printTables();
 
@@ -54,9 +50,8 @@ public class UserTest extends AbstractTestUtil {
 
         //create the user with australian locale
         {
-            User user  = createUser(LocalDate.parse(FIRST_START_DATE));
-            User pUser = userApi.persist(user);
-            id = pUser.getId();
+            User user = createUser(LocalDate.parse(FIRST_START_DATE));
+            id = user.getId();
         }
 
         //test if the location was persisted correctly

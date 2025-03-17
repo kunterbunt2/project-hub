@@ -1,20 +1,32 @@
 package de.bushnaq.abdalla.projecthub.util;
 
+import de.bushnaq.abdalla.projecthub.api.ProjectApi;
+import de.bushnaq.abdalla.projecthub.api.TaskApi;
+import de.bushnaq.abdalla.projecthub.api.UserApi;
 import de.bushnaq.abdalla.projecthub.dto.Project;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.dto.Version;
 import org.ajbrown.namemachine.Name;
 import org.ajbrown.namemachine.NameGenerator;
 import org.junit.jupiter.api.BeforeEach;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 public class AbstractEntityGenerator {
     List<Name> names;
-    private static int projectIndex = 0;
-    private static int userIndex    = 0;
-    private static int versionIndex = 0;
+    @Autowired
+    protected      ProjectApi projectApi;
+    private static int        projectIndex = 0;
+    @Autowired
+    protected      TaskApi    taskApi;
+    @Autowired
+    protected      UserApi    userApi;
+    private static int        userIndex    = 0;
+    protected      List<User> users        = new ArrayList<>();
+    private static int        versionIndex = 0;
 
     protected Project createProject() {
         Project project = new Project();
@@ -44,7 +56,10 @@ public class AbstractEntityGenerator {
 //        final Set<Holiday>   holidays       = holidayManager.getHolidays(Year.of(2022), "nw");
 
         userIndex++;
-        return user;
+        User saved = userApi.persist(user);
+        users.add(saved);
+        return saved;
+
     }
 
     @BeforeEach
