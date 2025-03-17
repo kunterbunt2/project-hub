@@ -41,16 +41,24 @@ public class AbstractEntityGenerator {
         return project;
     }
 
-    protected User createUser() {
-        return createUser(LocalDate.now());
+    protected User createUser(LocalDate start) {
+        String name  = names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
+        String email = name + "@project-hub.org";
+        return createUser(name, email, "de", "nw", start, 0.7f);
     }
 
-    protected User createUser(LocalDate start) {
+    protected User createUser() {
+        String name  = names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
+        String email = name + "@project-hub.org";
+        return createUser(name, email, "de", "nw", LocalDate.now(), 0.7f);
+    }
+
+    protected User createUser(String name, String email, String country, String state, LocalDate start, float availability) {
         User user = new User();
-        user.setName(names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName());
-        user.setEmail(user.getName() + "@project-hub.org");
-        user.addLocation("de", "nw", start);
-        user.addAvailability(0.7f, start);
+        user.setName(name);
+        user.setEmail(email);
+        user.addLocation(country, state, start);
+        user.addAvailability(availability, start);
 
 //        final HolidayManager holidayManager = HolidayManager.getInstance(ManagerParameters.create(HolidayCalendar.GERMANY));
 //        final Set<Holiday>   holidays       = holidayManager.getHolidays(Year.of(2022), "nw");

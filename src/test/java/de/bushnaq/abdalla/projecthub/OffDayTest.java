@@ -32,9 +32,9 @@ public class OffDayTest extends AbstractTestUtil {
 
         //create a user
         {
-            User user  = createUser(LocalDate.parse(FIRST_DATE_0));
-            User pUser = userApi.persist(user);
-            id = pUser.getId();
+            User user = createUser(LocalDate.parse(FIRST_DATE_0));
+//            User pUser = userApi.persist(user);
+            id = user.getId();
         }
 
         //add a vacation
@@ -60,9 +60,9 @@ public class OffDayTest extends AbstractTestUtil {
 
         //create a user
         {
-            User user  = createUser(LocalDate.parse(FIRST_DATE_0));
-            User pUser = userApi.persist(user);
-            id = pUser.getId();
+            User user = createUser(LocalDate.parse(FIRST_DATE_0));
+//            User pUser = userApi.persist(user);
+            id = user.getId();
         }
 
         //add a vacation
@@ -96,9 +96,9 @@ public class OffDayTest extends AbstractTestUtil {
 
         //create a user
         {
-            User user  = createUser(LocalDate.parse(FIRST_DATE_0));
-            User pUser = userApi.persist(user);
-            id = pUser.getId();
+            User user = createUser(LocalDate.parse(FIRST_DATE_0));
+//            User pUser = userApi.persist(user);
+            id = user.getId();
         }
 
         //add a vacation

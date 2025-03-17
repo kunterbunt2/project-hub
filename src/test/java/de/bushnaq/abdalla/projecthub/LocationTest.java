@@ -38,10 +38,9 @@ public class LocationTest extends AbstractTestUtil {
         //create a user with australian locale
         {
             Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
-            User user  = createUser(LocalDate.parse(FIRST_START_DATE));
-            User pUser = userApi.persist(user);
+            User user = createUser(LocalDate.parse(FIRST_START_DATE));
             Locale.setDefault(Locale.getDefault());
-            id = pUser.getId();
+            id = user.getId();
         }
 
         //test if new location was persisted correctly
@@ -62,7 +61,6 @@ public class LocationTest extends AbstractTestUtil {
         {
             User user = userApi.getUser(id);
             assertEquals(LocalDate.parse(SECOND_START_DATE), user.getLocations().get(1).getStart());
-//            assertEquals(LocalDate.parse(SECOND_START_DATE).minusDays(1), user.getLocations().get(0).getLastDay());
         }
 
         printTables();
@@ -75,10 +73,9 @@ public class LocationTest extends AbstractTestUtil {
         //create the user with australian locale
         {
             Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
-            User user  = createUser(LocalDate.parse(FIRST_START_DATE));
-            User pUser = userApi.persist(user);
+            User user = createUser(LocalDate.parse(FIRST_START_DATE));
             Locale.setDefault(Locale.getDefault());
-            id = pUser.getId();
+            id = user.getId();
         }
 
         //test if the location was persisted correctly
@@ -97,10 +94,9 @@ public class LocationTest extends AbstractTestUtil {
         //create a user with australian locale
         {
             Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
-            User user  = createUser(LocalDate.parse(FIRST_START_DATE));
-            User pUser = userApi.persist(user);
+            User user = createUser(LocalDate.parse(FIRST_START_DATE));
             Locale.setDefault(Locale.getDefault());
-            id = pUser.getId();
+            id = user.getId();
         }
 
         //test if new location was persisted correctly
@@ -133,7 +129,6 @@ public class LocationTest extends AbstractTestUtil {
         {
             User user = userApi.getUser(id);
             assertEquals(LocalDate.parse(SECOND_START_DATE), user.getLocations().get(1).getStart());
-//            assertEquals(LocalDate.parse(SECOND_START_DATE).minusDays(1), user.getLocations().get(0).getLastDay());
         }
 
         //try to delete the second location
@@ -153,12 +148,11 @@ public class LocationTest extends AbstractTestUtil {
 
         //create the user with australian locale
         {
-            Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
-            User user  = createUser(LocalDate.parse(FIRST_START_DATE));
-            User pUser = userApi.persist(user);
-            Locale.setDefault(Locale.getDefault());
-            id         = pUser.getId();
-            locationId = pUser.getLocations().getFirst().getId();
+//            Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
+            User user = createUser(LocalDate.parse(FIRST_START_DATE));
+//            Locale.setDefault(Locale.getDefault());
+            id         = user.getId();
+            locationId = user.getLocations().getFirst().getId();
         }
 
         //test if the location was persisted correctly
