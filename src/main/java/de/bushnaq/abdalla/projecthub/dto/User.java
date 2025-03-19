@@ -47,4 +47,8 @@ public class User extends AbstractTimeAware {
         offDays.add(a);
         return a;
     }
+
+    String getKey() {
+        return "U-" + id;
+    }
 }

@@ -21,4 +21,8 @@ public class OffDay extends AbstractDateRange {
         this.type = offDayType;
     }
 
+    String getKey() {
+        return "D-" + id;
+    }
+
 }

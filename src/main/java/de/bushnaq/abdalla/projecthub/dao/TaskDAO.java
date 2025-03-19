@@ -51,12 +51,17 @@ public class TaskDAO {
     @JsonBackReference
     private TaskDAO parent;
 
-//    List<Relation> predecessors = new ArrayList<>();
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    List<RelationDAO> predecessors = new ArrayList<>();
+
+    @Column(nullable = true)
+    Long resourceId;
+
+    //    List<Relation> successors = new ArrayList<>();
 
     @Column(nullable = false)
     LocalDateTime start;
-
-//    List<Relation> successors = new ArrayList<>();
 
     boolean isMilestone() {
         return false;

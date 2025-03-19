@@ -16,4 +16,9 @@ public class Sprint extends AbstractTimeAware {
     private String         name;
     private OffsetDateTime start;
     private Status         status;
+
+    String getKey() {
+        return "S-" + id;
+    }
+
 }

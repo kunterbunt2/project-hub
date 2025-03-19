@@ -31,8 +31,11 @@ public class Task {
     //    List<Relation> successors   = new ArrayList<>();
     @JsonBackReference
     private Task parent;
-    //    List<Relation> predecessors = new ArrayList<>();
-    LocalDateTime start;
+
+    //    @JsonManagedReference
+    List<Relation> predecessors = new ArrayList<>();
+    Long           resourceId;
+    LocalDateTime  start;
 
     public void addChildTask(Task childTask) {
         if (childTask.getParent() != null) {
@@ -42,6 +45,18 @@ public class Task {
         childTasks.add(childTask);
     }
 
+    public void addDependency(Task dependency) {
+        predecessors.add(new Relation(dependency));
+    }
+
+    //    public void setDuration(Duration duration) {
+//        this.duration = duration;
+//        setFinish(getStart().plus(duration));
+//    }
+    String getKey() {
+        return "T-" + id;
+    }
+
     boolean isMilestone() {
         return false;
     }
@@ -49,9 +64,4 @@ public class Task {
     public void removeChildTask(Task childTask2) {
         childTasks.remove(childTask2);
     }
-
-//    public void setDuration(Duration duration) {
-//        this.duration = duration;
-//        setFinish(getStart().plus(duration));
-//    }
 }

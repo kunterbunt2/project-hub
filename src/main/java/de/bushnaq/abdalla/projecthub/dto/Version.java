@@ -17,4 +17,8 @@ public class Version extends AbstractTimeAware {
     private String       name;
     private List<Sprint> sprints = new ArrayList<>();
 
+    String getKey() {
+        return "V-" + id;
+    }
+
 }

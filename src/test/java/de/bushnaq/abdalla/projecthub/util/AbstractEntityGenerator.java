@@ -4,6 +4,7 @@ import de.bushnaq.abdalla.projecthub.api.ProjectApi;
 import de.bushnaq.abdalla.projecthub.api.TaskApi;
 import de.bushnaq.abdalla.projecthub.api.UserApi;
 import de.bushnaq.abdalla.projecthub.dto.Project;
+import de.bushnaq.abdalla.projecthub.dto.Task;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.dto.Version;
 import org.ajbrown.namemachine.Name;
@@ -11,7 +12,9 @@ import org.ajbrown.namemachine.NameGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,6 +43,36 @@ public class AbstractEntityGenerator {
         versionIndex++;
         return project;
     }
+
+    protected Task createTask(Task parent, String name, LocalDateTime start, Duration duration, User user, Task dependency) {
+        Task task = new Task();
+        task.setName(name);
+        task.setStart(start);
+        if (duration != null) {
+            task.setDuration(duration);
+            task.setFinish(start.plus(duration));
+        }
+        if (user != null) {
+            task.setResourceId(user.getId());
+        }
+        if (dependency != null) {
+            task.addDependency(dependency);
+        }
+        if (parent != null) {
+            // Add the parent to the task
+            task.setParent(parent);
+        }
+        // Save the task
+        Task saved = taskApi.persist(task);
+        if (parent != null) {
+            // Add the task to the parent
+            parent.addChildTask(saved);
+            // Save the parent
+            taskApi.persist(parent);
+        }
+        return saved;
+    }
+
 
     protected User createUser(LocalDate start) {
         String name  = names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
@@ -74,6 +107,21 @@ public class AbstractEntityGenerator {
     public void createUserNames() {
         NameGenerator generator = new NameGenerator();
         names = generator.generateNames(1000);
+    }
+
+    /**
+     * Move task from its parent to newParent
+     *
+     * @param task      the task to move
+     * @param newParent the new parent
+     */
+    protected void move(Task task, Task newParent) {
+        Task oldParent = task.getParent();
+        newParent.addChildTask(task);
+
+        taskApi.persist(newParent);
+        taskApi.persist(task);
+        taskApi.persist(oldParent);
     }
 
 }

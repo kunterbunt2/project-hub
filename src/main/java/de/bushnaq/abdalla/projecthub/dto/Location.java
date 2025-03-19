@@ -28,4 +28,9 @@ public class Location extends AbstractTimeAware {
         this.setStart(start);
     }
 
+    String getKey() {
+        return "L-" + id;
+    }
+
+
 }

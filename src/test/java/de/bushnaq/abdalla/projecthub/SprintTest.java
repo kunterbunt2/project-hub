@@ -1,8 +1,6 @@
 package de.bushnaq.abdalla.projecthub;
 
-import de.bushnaq.abdalla.projecthub.dto.Project;
-import de.bushnaq.abdalla.projecthub.dto.Sprint;
-import de.bushnaq.abdalla.projecthub.dto.Status;
+import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.util.AbstractTestUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,6 +9,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -23,7 +23,17 @@ import static org.junit.jupiter.api.Assertions.*;
 public class SprintTest extends AbstractTestUtil {
 
     @Test
-    public void shouldCreateSprintWithinVersion() throws Exception {
+    public void case01() throws Exception {
+        User          user1 = createUser();
+        User          user2 = createUser();
+        LocalDateTime start = LocalDateTime.now();
+        Task          task1 = createTask(null, "[1] Parent Task", start, Duration.ofDays(0), null, null);
+        Task          task2 = createTask(task1, "[2] Child Task", start, Duration.ofDays(1), user1, null);
+        Task          task3 = createTask(task1, "[3] Child Task", start, Duration.ofDays(1), user2, task2);
+    }
+
+    @Test
+    public void create() throws Exception {
         Project project = createProject();
 
         // Create sprint
@@ -52,5 +62,6 @@ public class SprintTest extends AbstractTestUtil {
 
         printTables();
     }
+
 
 }

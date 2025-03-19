@@ -20,4 +20,9 @@ public class Availability extends AbstractTimeAware {
         this.availability = availability;
         setStart(firstDate);
     }
+
+    String getKey() {
+        return "A-" + id;
+    }
+
 }

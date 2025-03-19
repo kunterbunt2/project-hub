@@ -1,6 +1,7 @@
 package de.bushnaq.abdalla.projecthub;
 
 import de.bushnaq.abdalla.projecthub.dto.Task;
+import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.util.AbstractTestUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,10 +24,11 @@ public class TaskTest extends AbstractTestUtil {
 
     @Test
     public void create() throws Exception {
+        User user1 = createUser();
 
-        Task task1 = createTask(null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10));
-        Task task2 = createTask(task1, "Design", LocalDateTime.now(), Duration.ofDays(4));
-        Task task3 = createTask(task1, "Implementation", LocalDateTime.now().plusDays(4), Duration.ofDays(6));
+        Task task1 = createTask(null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
+        Task task2 = createTask(task1, "Design", LocalDateTime.now(), Duration.ofDays(4), user1, null);
+        Task task3 = createTask(task1, "Implementation", LocalDateTime.now().plusDays(4), Duration.ofDays(6), user1, task1);
 
         // Verify the structure
         {
@@ -38,33 +40,13 @@ public class TaskTest extends AbstractTestUtil {
         printTables();
     }
 
-    private Task createTask(Task parent, String name, LocalDateTime start, Duration duration) {
-        Task task = new Task();
-        task.setName(name);
-        task.setStart(start);
-        task.setDuration(duration);
-        task.setFinish(start.plus(duration));
-        if (parent != null) {
-            // Add the parent to the task
-            task.setParent(parent);
-        }
-        // Save the task
-        Task saved = taskApi.persist(task);
-        if (parent != null) {
-            // Add the task to the parent
-            parent.addChildTask(saved);
-            // Save the parent
-            taskApi.persist(parent);
-        }
-        return saved;
-    }
-
     @Test
     public void update() throws Exception {
+        User user1 = createUser();
 
-        Task task1 = createTask(null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10));
-        Task task2 = createTask(task1, "Design", LocalDateTime.now(), Duration.ofDays(4));
-        Task task3 = createTask(task1, "Implementation", LocalDateTime.now().plusDays(4), Duration.ofDays(6));
+        Task task1 = createTask(null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
+        Task task2 = createTask(task1, "Design", LocalDateTime.now(), Duration.ofDays(4), user1, null);
+        Task task3 = createTask(task1, "Implementation", LocalDateTime.now().plusDays(4), Duration.ofDays(6), user1, task1);
 
         // Verify the structure
         {
@@ -76,14 +58,9 @@ public class TaskTest extends AbstractTestUtil {
 
         //update
         {
-            task2 = task1.getChildTasks().getFirst();
-            task3 = task1.getChildTasks().get(1);
-            Task oldParent = task3.getParent();
-            task2.addChildTask(task3);
-
-            taskApi.persist(task2);
-            taskApi.persist(task3);
-            taskApi.persist(oldParent);
+//            task2 = task1.getChildTasks().getFirst();
+//            task3 = task1.getChildTasks().get(1);
+            move(task3, task2);
         }
 
         // Verify the structure
@@ -100,4 +77,5 @@ public class TaskTest extends AbstractTestUtil {
         printTables();
 
     }
+
 }
