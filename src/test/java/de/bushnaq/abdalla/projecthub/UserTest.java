@@ -28,7 +28,7 @@ public class UserTest extends AbstractTestUtil {
 
         //create the users
         for (int i = 0; i < 1; i++) {
-            User user = createUser();
+            User user = addUser();
         }
         printTables();
 
@@ -37,7 +37,7 @@ public class UserTest extends AbstractTestUtil {
             List<User> allUsers = userApi.getAllUsers();
             assertEquals(users.size(), allUsers.size());
             for (int i = 0; i < users.size(); i++) {
-                asserEqual(users.get(i), allUsers.get(i));
+                assertUserEquals(users.get(i), allUsers.get(i));
             }
         }
 
@@ -50,7 +50,7 @@ public class UserTest extends AbstractTestUtil {
 
         //create the user with australian locale
         {
-            User user = createUser(LocalDate.parse(FIRST_START_DATE));
+            User user = addUser(LocalDate.parse(FIRST_START_DATE));
             id = user.getId();
         }
 

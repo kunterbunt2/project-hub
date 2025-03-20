@@ -13,9 +13,14 @@ import java.util.List;
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 public class Version extends AbstractTimeAware {
 
-    private Long         id;
-    private String       name;
-    private List<Sprint> sprints = new ArrayList<>();
+    private Long          id;
+    private String        name;
+    private List<Project> projects = new ArrayList<>();
+
+    public Project addProject(Project project) {
+        projects.add(project);
+        return project;
+    }
 
     String getKey() {
         return "V-" + id;

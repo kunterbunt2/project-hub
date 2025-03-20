@@ -37,7 +37,7 @@ public class AvailabilityTest extends AbstractTestUtil {
 
         //create a user with australian locale
         {
-            User user  = createUser(LocalDate.parse(FIRST_START_DATE));
+            User user  = addUser(LocalDate.parse(FIRST_START_DATE));
             User pUser = userApi.persist(user);
             id = pUser.getId();
         }
@@ -77,7 +77,7 @@ public class AvailabilityTest extends AbstractTestUtil {
         //create the user with australian locale
         {
             Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
-            User user  = createUser(LocalDate.parse(FIRST_START_DATE));
+            User user  = addUser(LocalDate.parse(FIRST_START_DATE));
             User pUser = userApi.persist(user);
             Locale.setDefault(Locale.getDefault());
             id = pUser.getId();
@@ -99,7 +99,7 @@ public class AvailabilityTest extends AbstractTestUtil {
 
         //create a user with australian locale
         {
-            User user  = createUser(LocalDate.parse(FIRST_START_DATE));
+            User user  = addUser(LocalDate.parse(FIRST_START_DATE));
             User pUser = userApi.persist(user);
             id = pUser.getId();
         }
@@ -158,7 +158,7 @@ public class AvailabilityTest extends AbstractTestUtil {
 
         //create the user with australian locale
         {
-            User user  = createUser(LocalDate.parse(FIRST_START_DATE));
+            User user  = addUser(LocalDate.parse(FIRST_START_DATE));
             User pUser = userApi.persist(user);
             id             = pUser.getId();
             availabilityId = pUser.getAvailabilities().getFirst().getId();

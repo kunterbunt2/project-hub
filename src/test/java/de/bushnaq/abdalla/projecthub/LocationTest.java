@@ -38,7 +38,7 @@ public class LocationTest extends AbstractTestUtil {
         //create a user with australian locale
         {
             Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
-            User user = createUser(LocalDate.parse(FIRST_START_DATE));
+            User user = addUser(LocalDate.parse(FIRST_START_DATE));
             Locale.setDefault(Locale.getDefault());
             id = user.getId();
         }
@@ -73,7 +73,7 @@ public class LocationTest extends AbstractTestUtil {
         //create the user with australian locale
         {
             Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
-            User user = createUser(LocalDate.parse(FIRST_START_DATE));
+            User user = addUser(LocalDate.parse(FIRST_START_DATE));
             Locale.setDefault(Locale.getDefault());
             id = user.getId();
         }
@@ -94,7 +94,7 @@ public class LocationTest extends AbstractTestUtil {
         //create a user with australian locale
         {
             Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
-            User user = createUser(LocalDate.parse(FIRST_START_DATE));
+            User user = addUser(LocalDate.parse(FIRST_START_DATE));
             Locale.setDefault(Locale.getDefault());
             id = user.getId();
         }
@@ -149,7 +149,7 @@ public class LocationTest extends AbstractTestUtil {
         //create the user with australian locale
         {
 //            Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
-            User user = createUser(LocalDate.parse(FIRST_START_DATE));
+            User user = addUser(LocalDate.parse(FIRST_START_DATE));
 //            Locale.setDefault(Locale.getDefault());
             id         = user.getId();
             locationId = user.getLocations().getFirst().getId();

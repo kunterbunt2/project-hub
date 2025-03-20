@@ -30,6 +30,6 @@ public class ProjectEntity extends AbstractTimeAwareEntity {
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "project_id", referencedColumnName = "id")
-    private List<VersionEntity> versions = new ArrayList<>();
+    private List<SprintEntity> sprints = new ArrayList<>();
 
 }

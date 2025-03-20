@@ -6,6 +6,8 @@ import lombok.*;
 import org.hibernate.annotations.Proxy;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "sprints")
@@ -32,4 +34,8 @@ public class SprintEntity extends AbstractTimeAwareEntity {
 
     @Column(nullable = false)
     private Status status;
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "sprint_id", referencedColumnName = "id")
+    private List<TaskDAO> tasks = new ArrayList<>();
 }

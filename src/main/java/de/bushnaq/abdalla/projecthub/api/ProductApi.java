@@ -2,8 +2,8 @@ package de.bushnaq.abdalla.projecthub.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.bushnaq.abdalla.projecthub.dto.Project;
-import de.bushnaq.abdalla.projecthub.dto.Sprint;
+import de.bushnaq.abdalla.projecthub.dto.Product;
+import de.bushnaq.abdalla.projecthub.dto.Version;
 import de.bushnaq.abdalla.projecthub.rest.util.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -17,12 +17,12 @@ import java.util.Arrays;
 import java.util.List;
 
 @Service
-public class ProjectApi {
+public class ProductApi {
     private String       baseUrl = "http://localhost:8080"; // Configure as needed
     private ObjectMapper objectMapper;
     private RestTemplate restTemplate;
 
-    public ProjectApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
+    public ProductApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
         this.restTemplate.setErrorHandler(new DefaultResponseErrorHandler());
@@ -33,24 +33,18 @@ public class ProjectApi {
         restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
     }
 
-    public ProjectApi() {
+    public ProductApi() {
     }
 
-    public ProjectApi(RestTemplate restTemplate) {
+    public ProductApi(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
-    private void executeWithErrorHandling(RestOperation operation) {
-        try {
-            operation.execute();
-        } catch (HttpClientErrorException e) {
-            try {
-                ErrorResponse error = objectMapper.readValue(e.getResponseBodyAsString(), ErrorResponse.class);
-                throw new ServerErrorException(error.getMessage(), error.getException());
-            } catch (JsonProcessingException ex) {
-                throw new IllegalArgumentException(String.format("Error processing server response '%s'.", e.getResponseBodyAsString()));
-            }
-        }
+    public void deleteById(Long id) {
+        executeWithErrorHandling(() -> restTemplate.delete(
+                baseUrl + "/product/{id}",
+                id
+        ));
     }
 
     private <T> T executeWithErrorHandling(RestOperationWithResult<T> operation) {
@@ -66,38 +60,60 @@ public class ProjectApi {
         }
     }
 
-    public List<Project> getAllProjects() {
+    private void executeWithErrorHandling(RestOperation operation) {
+        try {
+            operation.execute();
+        } catch (HttpClientErrorException e) {
+            try {
+                ErrorResponse error = objectMapper.readValue(e.getResponseBodyAsString(), ErrorResponse.class);
+                throw new ServerErrorException(error.getMessage(), error.getException());
+            } catch (JsonProcessingException ex) {
+                throw new IllegalArgumentException(String.format("Error processing server response '%s'.", e.getResponseBodyAsString()));
+            }
+        }
+    }
 
-        ResponseEntity<Project[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(
+    public List<Product> getAllProducts() {
+
+        ResponseEntity<Product[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(
                 baseUrl + "/project",
-                Project[].class
+                Product[].class
         ));
         return Arrays.asList(response.getBody());
     }
 
-    public Project getProduct(Long id) {
+    public Product getProduct(Long id) {
         return executeWithErrorHandling(() -> restTemplate.getForObject(
-                baseUrl + "/project/{id}",
-                Project.class,
+                baseUrl + "/product/{id}",
+                Product.class,
                 id
         ));
     }
 
-    public Project persist(Project project) {
+    public Product persist(Product product) {
         return executeWithErrorHandling(() ->
                 restTemplate.postForObject(
-                        baseUrl + "/project",
-                        project,
-                        Project.class
+                        baseUrl + "/product",
+                        product,
+                        Product.class
                 ));
     }
 
-    public Sprint persist(Sprint sprint) {
+//    public Project persist(Project project) {
+//        return executeWithErrorHandling(() ->
+//                restTemplate.postForObject(
+//                        baseUrl + "/project",
+//                        project,
+//                        Project.class
+//                ));
+//    }
+
+    public Version persist(Version version) {
         return executeWithErrorHandling(() ->
                 restTemplate.postForObject(
-                        baseUrl + "/sprint",
-                        sprint,
-                        Sprint.class
+                        baseUrl + "/version",
+                        version,
+                        Version.class
                 ));
     }
 

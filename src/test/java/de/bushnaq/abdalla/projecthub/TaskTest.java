@@ -24,11 +24,11 @@ public class TaskTest extends AbstractTestUtil {
 
     @Test
     public void create() throws Exception {
-        User user1 = createUser();
+        User user1 = addUser();
 
-        Task task1 = createTask(null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
-        Task task2 = createTask(task1, "Design", LocalDateTime.now(), Duration.ofDays(4), user1, null);
-        Task task3 = createTask(task1, "Implementation", LocalDateTime.now().plusDays(4), Duration.ofDays(6), user1, task1);
+        Task task1 = addTask(null, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
+        Task task2 = addTask(null, task1, "Design", LocalDateTime.now(), Duration.ofDays(4), user1, null);
+        Task task3 = addTask(null, task1, "Implementation", LocalDateTime.now().plusDays(4), Duration.ofDays(6), user1, task1);
 
         // Verify the structure
         {
@@ -42,11 +42,11 @@ public class TaskTest extends AbstractTestUtil {
 
     @Test
     public void update() throws Exception {
-        User user1 = createUser();
+        User user1 = addUser();
 
-        Task task1 = createTask(null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
-        Task task2 = createTask(task1, "Design", LocalDateTime.now(), Duration.ofDays(4), user1, null);
-        Task task3 = createTask(task1, "Implementation", LocalDateTime.now().plusDays(4), Duration.ofDays(6), user1, task1);
+        Task task1 = addTask(null, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
+        Task task2 = addTask(null, task1, "Design", LocalDateTime.now(), Duration.ofDays(4), user1, null);
+        Task task3 = addTask(null, task1, "Implementation", LocalDateTime.now().plusDays(4), Duration.ofDays(6), user1, task1);
 
         // Verify the structure
         {
