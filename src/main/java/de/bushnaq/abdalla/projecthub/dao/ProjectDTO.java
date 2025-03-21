@@ -15,7 +15,7 @@ import java.util.List;
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
-public class ProjectEntity extends AbstractTimeAwareEntity {
+public class ProjectDTO extends AbstractTimeAwareDTO {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,6 +30,6 @@ public class ProjectEntity extends AbstractTimeAwareEntity {
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "project_id", referencedColumnName = "id")
-    private List<SprintEntity> sprints = new ArrayList<>();
+    private List<SprintDTO> sprints = new ArrayList<>();
 
 }

@@ -1,6 +1,6 @@
 package de.bushnaq.abdalla.projecthub.rest.controller;
 
-import de.bushnaq.abdalla.projecthub.dao.VersionEntity;
+import de.bushnaq.abdalla.projecthub.dao.VersionDTO;
 import de.bushnaq.abdalla.projecthub.repository.VersionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -21,23 +21,23 @@ public class VersionController {
     }
 
     @GetMapping("/{id}")
-    public Optional<VersionEntity> get(@PathVariable Long id) {
-        VersionEntity projectEntity = versionRepository.findById(id).orElseThrow();
+    public Optional<VersionDTO> get(@PathVariable Long id) {
+        VersionDTO projectEntity = versionRepository.findById(id).orElseThrow();
         return Optional.of(projectEntity);
     }
 
     @GetMapping
-    public List<VersionEntity> getAll() {
+    public List<VersionDTO> getAll() {
         return versionRepository.findAll();
     }
 
     @PostMapping(consumes = "application/json", produces = "application/json")
-    public VersionEntity save(@RequestBody VersionEntity version) {
+    public VersionDTO save(@RequestBody VersionDTO version) {
         return versionRepository.save(version);
     }
 
     @PutMapping("/{id}")
-    public VersionEntity update(@PathVariable Long id, @RequestBody VersionEntity version) {
+    public VersionDTO update(@PathVariable Long id, @RequestBody VersionDTO version) {
         return versionRepository.save(version);
     }
 }

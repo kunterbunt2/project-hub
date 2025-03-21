@@ -16,11 +16,11 @@ import java.util.List;
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
-public class UserEntity extends AbstractTimeAwareEntity {
+public class UserDTO extends AbstractTimeAwareDTO {
 
     @OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private List<AvailabilityEntity> availabilities = new ArrayList<>();
+    private List<AvailabilityDTO> availabilities = new ArrayList<>();
 
     @Column(nullable = false)
     private String email;
@@ -38,14 +38,14 @@ public class UserEntity extends AbstractTimeAwareEntity {
 
     @OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private List<LocationEntity> locations = new ArrayList<>();
+    private List<LocationDTO> locations = new ArrayList<>();
 
     @Column(nullable = false)
     private String name;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private List<OffDayEntity> offDays = new ArrayList<>();
+    private List<OffDayDTO> offDays = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

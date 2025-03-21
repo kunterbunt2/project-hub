@@ -1,19 +1,21 @@
 package de.bushnaq.abdalla.projecthub.dao;
 
-import de.bushnaq.abdalla.projecthub.dto.OffDayType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Proxy;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
-@Table(name = "off_days")
+@Table(name = "versions")
 @Getter
 @Setter
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
-public class OffDayEntity extends AbstractDateRangeEntity {
+public class VersionDTO extends AbstractTimeAwareDTO {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,6 +23,10 @@ public class OffDayEntity extends AbstractDateRangeEntity {
     private Long id;
 
     @Column(nullable = false)
-    private OffDayType type;
+    private String name;
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "version_id", referencedColumnName = "id")
+    private List<ProjectDTO> projects = new ArrayList<>();
 
 }

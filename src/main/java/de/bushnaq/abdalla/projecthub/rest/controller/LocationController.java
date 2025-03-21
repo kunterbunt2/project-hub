@@ -1,7 +1,7 @@
 package de.bushnaq.abdalla.projecthub.rest.controller;
 
-import de.bushnaq.abdalla.projecthub.dao.LocationEntity;
-import de.bushnaq.abdalla.projecthub.dao.UserEntity;
+import de.bushnaq.abdalla.projecthub.dao.LocationDTO;
+import de.bushnaq.abdalla.projecthub.dao.UserDTO;
 import de.bushnaq.abdalla.projecthub.repository.LocationRepository;
 import de.bushnaq.abdalla.projecthub.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +22,8 @@ public class LocationController {
 
     @DeleteMapping("/{userId}/{id}")
     public void delete(@PathVariable Long userId, @PathVariable Long id) {
-        UserEntity     user     = userRepository.getById(userId);
-        LocationEntity location = locationRepository.findById(id).orElseThrow();
+        UserDTO     user     = userRepository.getById(userId);
+        LocationDTO location = locationRepository.findById(id).orElseThrow();
         if (Objects.equals(user.getLocations().getFirst().getId(), id))
             throw new IllegalArgumentException("Cannot delete the first location");
         user.getLocations().remove(location);
@@ -33,13 +33,13 @@ public class LocationController {
     }
 
     @GetMapping("/{id}")
-    public Optional<LocationEntity> getById(@PathVariable Long id) {
-        LocationEntity e = locationRepository.findById(id).orElseThrow();
+    public Optional<LocationDTO> getById(@PathVariable Long id) {
+        LocationDTO e = locationRepository.findById(id).orElseThrow();
         return Optional.of(e);
     }
 
     @PutMapping()
-    public void update(@RequestBody LocationEntity location) {
+    public void update(@RequestBody LocationDTO location) {
 //        LocationEntity e = locationRepository.findById(locationDetails.getId()).orElseThrow();
 //        e.setCountry(locationDetails.getCountry());
 //        e.setState(locationDetails.getState());

@@ -1,7 +1,7 @@
 package de.bushnaq.abdalla.projecthub.rest.controller;
 
-import de.bushnaq.abdalla.projecthub.dao.OffDayEntity;
-import de.bushnaq.abdalla.projecthub.dao.UserEntity;
+import de.bushnaq.abdalla.projecthub.dao.OffDayDTO;
+import de.bushnaq.abdalla.projecthub.dao.UserDTO;
 import de.bushnaq.abdalla.projecthub.repository.OffDayRepository;
 import de.bushnaq.abdalla.projecthub.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,21 +21,21 @@ public class OffDayController {
 
     @DeleteMapping("/{userId}/{id}")
     public void delete(@PathVariable Long userId, @PathVariable Long id) {
-        UserEntity   user   = userRepository.getById(userId);
-        OffDayEntity offDay = offDayRepository.findById(id).orElseThrow();
+        UserDTO   user   = userRepository.getById(userId);
+        OffDayDTO offDay = offDayRepository.findById(id).orElseThrow();
         user.getOffDays().remove(offDay);
         userRepository.save(user);
         offDayRepository.deleteById(id);
     }
 
     @GetMapping("/{id}")
-    public Optional<OffDayEntity> getById(@PathVariable Long id) {
-        OffDayEntity e = offDayRepository.findById(id).orElseThrow();
+    public Optional<OffDayDTO> getById(@PathVariable Long id) {
+        OffDayDTO e = offDayRepository.findById(id).orElseThrow();
         return Optional.of(e);
     }
 
     @PutMapping()
-    public void update(@RequestBody OffDayEntity offDay) {
+    public void update(@RequestBody OffDayDTO offDay) {
 //        OffDayEntity e = offDayRepository.findById(offDayDetails.getId()).orElseThrow();
 //        e.setType(offDayDetails.getType());
 //        e.setFirstDay(offDayDetails.getFirstDay());

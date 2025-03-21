@@ -14,7 +14,7 @@ import java.time.LocalDate;
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
-public class LocationEntity extends AbstractTimeAwareEntity {
+public class LocationDTO extends AbstractTimeAwareDTO {
     @Column(nullable = false)
     private String country;
 

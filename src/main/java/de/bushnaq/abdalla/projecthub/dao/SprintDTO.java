@@ -17,7 +17,7 @@ import java.util.List;
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
-public class SprintEntity extends AbstractTimeAwareEntity {
+public class SprintDTO extends AbstractTimeAwareDTO {
     @Column(name = "end_date", nullable = true)  // renamed from 'end' as it is reserved in H2 databases
     private OffsetDateTime end;
 

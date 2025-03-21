@@ -15,7 +15,7 @@ import java.util.List;
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
-public class ProductDAO extends AbstractTimeAwareEntity {
+public class ProductDAO extends AbstractTimeAwareDTO {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,6 +27,6 @@ public class ProductDAO extends AbstractTimeAwareEntity {
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "product_id", referencedColumnName = "id")
-    private List<VersionEntity> versions = new ArrayList<>();
+    private List<VersionDTO> versions = new ArrayList<>();
 
 }

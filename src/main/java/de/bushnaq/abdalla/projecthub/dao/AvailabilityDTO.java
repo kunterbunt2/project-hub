@@ -17,14 +17,14 @@ import java.time.LocalDate;
 /**
  * Represents the availability of a user at a certain time.
  */
-public class AvailabilityEntity extends AbstractTimeAwareEntity {
+public class AvailabilityDTO extends AbstractTimeAwareDTO {
 
     @Column(nullable = false)
-    private float availability;
+    private float     availability;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Long id;
+    private Long      id;
     @Column(nullable = false)
     private LocalDate start;
 

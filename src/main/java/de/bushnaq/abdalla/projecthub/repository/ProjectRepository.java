@@ -1,11 +1,11 @@
 package de.bushnaq.abdalla.projecthub.repository;
 
-import de.bushnaq.abdalla.projecthub.dao.ProjectEntity;
+import de.bushnaq.abdalla.projecthub.dao.ProjectDTO;
 import org.springframework.data.repository.ListCrudRepository;
 
 //public interface ProjectRepository extends JpaRepository<ProjectEntity, Long>
-public interface ProjectRepository extends ListCrudRepository<ProjectEntity, Long> {
-    ProjectEntity getById(Long id);
+public interface ProjectRepository extends ListCrudRepository<ProjectDTO, Long> {
+    ProjectDTO getById(Long id);
 
-    ProjectEntity getByName(String name);
+    ProjectDTO getByName(String name);
 }

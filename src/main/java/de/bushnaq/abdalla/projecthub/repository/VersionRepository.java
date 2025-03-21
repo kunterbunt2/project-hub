@@ -1,9 +1,9 @@
 package de.bushnaq.abdalla.projecthub.repository;
 
-import de.bushnaq.abdalla.projecthub.dao.VersionEntity;
+import de.bushnaq.abdalla.projecthub.dao.VersionDTO;
 import org.springframework.data.repository.ListCrudRepository;
 
 //public interface ProjectRepository extends JpaRepository<ProjectEntity, Long>
-public interface VersionRepository extends ListCrudRepository<VersionEntity, Long> {
-    VersionEntity getByName(String name);
+public interface VersionRepository extends ListCrudRepository<VersionDTO, Long> {
+    VersionDTO getByName(String name);
 }
