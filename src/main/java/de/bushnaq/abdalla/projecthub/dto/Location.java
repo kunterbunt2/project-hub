@@ -1,5 +1,7 @@
 package de.bushnaq.abdalla.projecthub.dto;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -15,12 +17,21 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = false)
+@JsonIdentityInfo(
+        scope = Location.class,
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id")
 public class Location extends AbstractTimeAware {
 
     private String    country;
     private Long      id;
     private LocalDate start;
     private String    state;
+
+    @ToString.Exclude//help intellij debugger not to go into a loop
+    private User user;
+
+    private Long userId;
 
     public Location(String country, String state, LocalDate start) {
         this.country = country;

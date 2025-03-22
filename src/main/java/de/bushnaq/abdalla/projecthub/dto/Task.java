@@ -2,10 +2,7 @@ package de.bushnaq.abdalla.projecthub.dto;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -29,7 +26,9 @@ public class Task {
     Long          id;
     String        name;
     //    List<Relation> successors   = new ArrayList<>();
+
     @JsonBackReference
+    @ToString.Exclude//help intellij debugger not to go into a loop
     private Task parent;
 
     //    @JsonManagedReference

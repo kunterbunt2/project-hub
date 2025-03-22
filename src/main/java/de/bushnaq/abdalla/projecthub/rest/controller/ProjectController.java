@@ -1,6 +1,6 @@
 package de.bushnaq.abdalla.projecthub.rest.controller;
 
-import de.bushnaq.abdalla.projecthub.dao.ProjectDTO;
+import de.bushnaq.abdalla.projecthub.dao.ProjectDAO;
 import de.bushnaq.abdalla.projecthub.repository.ProjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -21,23 +21,23 @@ public class ProjectController {
     }
 
     @GetMapping("/{id}")
-    public Optional<ProjectDTO> get(@PathVariable Long id) {
-        ProjectDTO projectEntity = projectRepository.findById(id).orElseThrow();
+    public Optional<ProjectDAO> get(@PathVariable Long id) {
+        ProjectDAO projectEntity = projectRepository.findById(id).orElseThrow();
         return Optional.of(projectEntity);
     }
 
     @GetMapping
-    public List<ProjectDTO> getAll() {
+    public List<ProjectDAO> getAll() {
         return projectRepository.findAll();
     }
 
     @PostMapping(consumes = "application/json", produces = "application/json")
-    public ProjectDTO save(@RequestBody ProjectDTO project) {
+    public ProjectDAO save(@RequestBody ProjectDAO project) {
         return projectRepository.save(project);
     }
 
     @PutMapping("/{id}")
-    public ProjectDTO update(@PathVariable Long id, @RequestBody ProjectDTO project) {
+    public ProjectDAO update(@PathVariable Long id, @RequestBody ProjectDAO project) {
 //        ProjectEntity project = projectRepository.findById(id).orElseThrow();
 //        project.setName(projectDetails.getName());
 //        project.setRequester(projectDetails.getRequester());

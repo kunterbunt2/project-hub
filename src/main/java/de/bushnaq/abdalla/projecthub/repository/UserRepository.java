@@ -1,10 +1,10 @@
 package de.bushnaq.abdalla.projecthub.repository;
 
-import de.bushnaq.abdalla.projecthub.dao.UserDTO;
+import de.bushnaq.abdalla.projecthub.dao.UserDAO;
 import org.springframework.data.repository.ListCrudRepository;
 
-public interface UserRepository extends ListCrudRepository<UserDTO, Long> {
-    UserDTO getById(Long id);
+public interface UserRepository extends ListCrudRepository<UserDAO, Long> {
+    UserDAO getById(Long id);
 
-    UserDTO getByName(String name);
+    UserDAO getByName(String name);
 }

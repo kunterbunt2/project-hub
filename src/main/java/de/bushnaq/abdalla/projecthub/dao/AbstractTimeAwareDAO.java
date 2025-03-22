@@ -14,7 +14,7 @@ import java.time.OffsetDateTime;
 @Getter
 @Setter
 @ToString
-public abstract class AbstractTimeAwareDTO {
+public abstract class AbstractTimeAwareDAO {
 
     @Column(nullable = false)
     private OffsetDateTime created;

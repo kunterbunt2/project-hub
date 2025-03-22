@@ -1,8 +1,8 @@
 package de.bushnaq.abdalla.projecthub.repository;
 
-import de.bushnaq.abdalla.projecthub.dao.SprintDTO;
+import de.bushnaq.abdalla.projecthub.dao.SprintDAO;
 import org.springframework.data.repository.ListCrudRepository;
 
-public interface SprintRepository extends ListCrudRepository<SprintDTO, Long> {
+public interface SprintRepository extends ListCrudRepository<SprintDAO, Long> {
 //    SprintEntity getByName(String name);
 }

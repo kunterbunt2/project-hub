@@ -2,7 +2,7 @@ package de.bushnaq.abdalla.projecthub;
 
 import de.bushnaq.abdalla.projecthub.dto.Task;
 import de.bushnaq.abdalla.projecthub.dto.User;
-import de.bushnaq.abdalla.projecthub.util.AbstractTestUtil;
+import de.bushnaq.abdalla.projecthub.util.AbstractEntityGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -20,11 +20,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Transactional
-public class TaskTest extends AbstractTestUtil {
+public class TaskTest extends AbstractEntityGenerator {
 
     @Test
     public void create() throws Exception {
-        User user1 = addUser();
+        User user1 = addRandomUser();
 
         Task task1 = addTask(null, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
         Task task2 = addTask(null, task1, "Design", LocalDateTime.now(), Duration.ofDays(4), user1, null);
@@ -42,7 +42,7 @@ public class TaskTest extends AbstractTestUtil {
 
     @Test
     public void update() throws Exception {
-        User user1 = addUser();
+        User user1 = addRandomUser();
 
         Task task1 = addTask(null, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
         Task task2 = addTask(null, task1, "Design", LocalDateTime.now(), Duration.ofDays(4), user1, null);

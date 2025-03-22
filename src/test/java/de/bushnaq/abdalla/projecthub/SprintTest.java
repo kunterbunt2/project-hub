@@ -2,7 +2,7 @@ package de.bushnaq.abdalla.projecthub;
 
 import de.bushnaq.abdalla.projecthub.dto.Task;
 import de.bushnaq.abdalla.projecthub.dto.User;
-import de.bushnaq.abdalla.projecthub.util.AbstractTestUtil;
+import de.bushnaq.abdalla.projecthub.util.AbstractEntityGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -17,12 +17,12 @@ import java.time.LocalDateTime;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Transactional
-public class SprintTest extends AbstractTestUtil {
+public class SprintTest extends AbstractEntityGenerator {
 
     @Test
     public void case01() throws Exception {
-        User          user1 = addUser();
-        User          user2 = addUser();
+        User          user1 = addRandomUser();
+        User          user2 = addRandomUser();
         LocalDateTime start = LocalDateTime.now();
         Task          task1 = addTask(null, null, "[1] Parent Task", start, Duration.ofDays(0), null, null);
         Task          task2 = addTask(null, task1, "[2] Child Task", start, Duration.ofDays(1), user1, null);

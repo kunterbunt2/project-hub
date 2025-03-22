@@ -2,7 +2,7 @@ package de.bushnaq.abdalla.projecthub;
 
 import de.bushnaq.abdalla.projecthub.dto.Availability;
 import de.bushnaq.abdalla.projecthub.dto.User;
-import de.bushnaq.abdalla.projecthub.util.AbstractTestUtil;
+import de.bushnaq.abdalla.projecthub.util.AbstractEntityGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Transactional
-public class AvailabilityTest extends AbstractTestUtil {
+public class AvailabilityTest extends AbstractEntityGenerator {
     public static final float  FIRST_AVAILABILITY  = 0.7f;
     public static final String FIRST_START_DATE    = "2024-03-14";
     public static final float  SECOND_AVAILABILITY = 0.6f;
@@ -37,7 +37,7 @@ public class AvailabilityTest extends AbstractTestUtil {
 
         //create a user with australian locale
         {
-            User user  = addUser(LocalDate.parse(FIRST_START_DATE));
+            User user  = addRandomUser(LocalDate.parse(FIRST_START_DATE));
             User pUser = userApi.persist(user);
             id = pUser.getId();
         }
@@ -53,7 +53,8 @@ public class AvailabilityTest extends AbstractTestUtil {
         {
             User user = userApi.getUser(id);
             //moving to Germany
-            user.addAvailability(SECOND_AVAILABILITY, LocalDate.parse(SECOND_START_DATE));
+            addAvailability(user, SECOND_AVAILABILITY, LocalDate.parse(SECOND_START_DATE));
+//            user.addAvailability(SECOND_AVAILABILITY, LocalDate.parse(SECOND_START_DATE));
             userApi.persist(user);//persist the new location
         }
 
@@ -77,7 +78,7 @@ public class AvailabilityTest extends AbstractTestUtil {
         //create the user with australian locale
         {
             Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
-            User user  = addUser(LocalDate.parse(FIRST_START_DATE));
+            User user  = addRandomUser(LocalDate.parse(FIRST_START_DATE));
             User pUser = userApi.persist(user);
             Locale.setDefault(Locale.getDefault());
             id = pUser.getId();
@@ -99,7 +100,7 @@ public class AvailabilityTest extends AbstractTestUtil {
 
         //create a user with australian locale
         {
-            User user  = addUser(LocalDate.parse(FIRST_START_DATE));
+            User user  = addRandomUser(LocalDate.parse(FIRST_START_DATE));
             User pUser = userApi.persist(user);
             id = pUser.getId();
         }
@@ -127,7 +128,8 @@ public class AvailabilityTest extends AbstractTestUtil {
         {
             User user = userApi.getUser(id);
             //moving to Germany
-            user.addAvailability(SECOND_AVAILABILITY, LocalDate.parse(SECOND_START_DATE));
+            addAvailability(user, SECOND_AVAILABILITY, LocalDate.parse(SECOND_START_DATE));
+//            user.addAvailability(SECOND_AVAILABILITY, LocalDate.parse(SECOND_START_DATE));
             userApi.persist(user);//persist the new location
         }
 
@@ -158,7 +160,7 @@ public class AvailabilityTest extends AbstractTestUtil {
 
         //create the user with australian locale
         {
-            User user  = addUser(LocalDate.parse(FIRST_START_DATE));
+            User user  = addRandomUser(LocalDate.parse(FIRST_START_DATE));
             User pUser = userApi.persist(user);
             id             = pUser.getId();
             availabilityId = pUser.getAvailabilities().getFirst().getId();

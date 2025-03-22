@@ -2,7 +2,7 @@ package de.bushnaq.abdalla.projecthub;
 
 import de.bushnaq.abdalla.projecthub.dto.Location;
 import de.bushnaq.abdalla.projecthub.dto.User;
-import de.bushnaq.abdalla.projecthub.util.AbstractTestUtil;
+import de.bushnaq.abdalla.projecthub.util.AbstractEntityGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Transactional
-public class LocationTest extends AbstractTestUtil {
+public class LocationTest extends AbstractEntityGenerator {
     public static final String FIRST_START_DATE  = "2024-03-14";
     public static final String SECOND_COUNTRY    = "us";
     public static final String SECOND_START_DATE = "2025-07-01";
@@ -38,7 +38,7 @@ public class LocationTest extends AbstractTestUtil {
         //create a user with australian locale
         {
             Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
-            User user = addUser(LocalDate.parse(FIRST_START_DATE));
+            User user = addRandomUser(LocalDate.parse(FIRST_START_DATE));
             Locale.setDefault(Locale.getDefault());
             id = user.getId();
         }
@@ -53,7 +53,8 @@ public class LocationTest extends AbstractTestUtil {
         {
             User user = userApi.getUser(id);
             //moving to Germany
-            user.addLocation("de", "nw", LocalDate.parse(SECOND_START_DATE));
+            addLocation(user, "de", "nw", LocalDate.parse(SECOND_START_DATE));
+//            user.addLocation("de", "nw", LocalDate.parse(SECOND_START_DATE));
             userApi.persist(user);//persist the new location
         }
 
@@ -73,7 +74,7 @@ public class LocationTest extends AbstractTestUtil {
         //create the user with australian locale
         {
             Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
-            User user = addUser(LocalDate.parse(FIRST_START_DATE));
+            User user = addRandomUser(LocalDate.parse(FIRST_START_DATE));
             Locale.setDefault(Locale.getDefault());
             id = user.getId();
         }
@@ -94,7 +95,7 @@ public class LocationTest extends AbstractTestUtil {
         //create a user with australian locale
         {
             Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
-            User user = addUser(LocalDate.parse(FIRST_START_DATE));
+            User user = addRandomUser(LocalDate.parse(FIRST_START_DATE));
             Locale.setDefault(Locale.getDefault());
             id = user.getId();
         }
@@ -121,7 +122,8 @@ public class LocationTest extends AbstractTestUtil {
         {
             User user = userApi.getUser(id);
             //moving to Germany
-            user.addLocation("de", "nw", LocalDate.parse(SECOND_START_DATE));
+            addLocation(user, "de", "nw", LocalDate.parse(SECOND_START_DATE));
+//            user.addLocation("de", "nw", LocalDate.parse(SECOND_START_DATE));
             userApi.persist(user);//persist the new location
         }
 
@@ -149,7 +151,7 @@ public class LocationTest extends AbstractTestUtil {
         //create the user with australian locale
         {
 //            Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
-            User user = addUser(LocalDate.parse(FIRST_START_DATE));
+            User user = addRandomUser(LocalDate.parse(FIRST_START_DATE));
 //            Locale.setDefault(Locale.getDefault());
             id         = user.getId();
             locationId = user.getLocations().getFirst().getId();
@@ -173,6 +175,7 @@ public class LocationTest extends AbstractTestUtil {
             User user = userApi.getUser(id);
         }
 
+        printTables();
         //test if the location was updated correctly
         {
             User user = userApi.getUser(id);
@@ -181,6 +184,5 @@ public class LocationTest extends AbstractTestUtil {
             assertEquals(LocalDate.parse(SECOND_START_DATE), user.getLocations().getFirst().getStart());
         }
 
-        printTables();
     }
 }

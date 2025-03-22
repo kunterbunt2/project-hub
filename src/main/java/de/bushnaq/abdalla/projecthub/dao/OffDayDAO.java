@@ -1,5 +1,7 @@
 package de.bushnaq.abdalla.projecthub.dao;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import de.bushnaq.abdalla.projecthub.dto.OffDayType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,7 +15,11 @@ import org.hibernate.annotations.Proxy;
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
-public class OffDayDTO extends AbstractDateRangeDTO {
+@JsonIdentityInfo(
+        scope = OffDayDAO.class,
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id")
+public class OffDayDAO extends AbstractDateRangeDAO {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,4 +29,7 @@ public class OffDayDTO extends AbstractDateRangeDTO {
     @Column(nullable = false)
     private OffDayType type;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @ToString.Exclude//help intellij debugger not to go into a loop
+    private UserDAO user;
 }

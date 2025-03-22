@@ -61,6 +61,13 @@ public class UserApi extends AbstractApi {
         ));
     }
 
+    public void deleteById(Long id) {
+        executeWithErrorHandling(() -> restTemplate.delete(
+                baseUrl + "/user/{id}",
+                id
+        ));
+    }
+
 //    private void executeWithErrorHandling(RestOperation operation) {
 //        try {
 //            operation.execute();
@@ -138,6 +145,24 @@ public class UserApi extends AbstractApi {
                         baseUrl + "/user",
                         user,
                         User.class
+                ));
+    }
+
+    public Location persist(Location location) {
+        return executeWithErrorHandling(() ->
+                restTemplate.postForObject(
+                        baseUrl + "/location",
+                        location,
+                        Location.class
+                ));
+    }
+
+    public Availability persist(Availability availability) {
+        return executeWithErrorHandling(() ->
+                restTemplate.postForObject(
+                        baseUrl + "/availability",
+                        availability,
+                        Availability.class
                 ));
     }
 

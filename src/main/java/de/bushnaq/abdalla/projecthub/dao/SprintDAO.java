@@ -1,5 +1,7 @@
 package de.bushnaq.abdalla.projecthub.dao;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import de.bushnaq.abdalla.projecthub.dto.Status;
 import jakarta.persistence.*;
 import lombok.*;
@@ -17,7 +19,11 @@ import java.util.List;
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
-public class SprintDTO extends AbstractTimeAwareDTO {
+@JsonIdentityInfo(
+        scope = SprintDAO.class,
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id")
+public class SprintDAO extends AbstractTimeAwareDAO {
     @Column(name = "end_date", nullable = true)  // renamed from 'end' as it is reserved in H2 databases
     private OffsetDateTime end;
 
@@ -28,6 +34,10 @@ public class SprintDTO extends AbstractTimeAwareDTO {
 
     @Column(nullable = false)
     private String name;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @ToString.Exclude//help intellij debugger not to go into a loop
+    private ProjectDAO project;
 
     @Column(name = "start_date", nullable = true)  // renamed from 'start'
     private OffsetDateTime start;

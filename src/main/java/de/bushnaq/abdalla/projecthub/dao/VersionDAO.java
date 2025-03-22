@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "products")
+@Table(name = "versions")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -18,10 +18,10 @@ import java.util.List;
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
 @JsonIdentityInfo(
-        scope = ProductDAO.class,
+        scope = VersionDAO.class,
         generator = ObjectIdGenerators.PropertyGenerator.class,
         property = "id")
-public class ProductDAO extends AbstractTimeAwareDAO {
+public class VersionDAO extends AbstractTimeAwareDAO {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,13 +31,13 @@ public class ProductDAO extends AbstractTimeAwareDAO {
     @Column(nullable = false)
     private String name;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-//    @JoinColumn(name = "product_id", referencedColumnName = "id")
-//    @JsonBackReference
-    private List<VersionDAO> versions = new ArrayList<>();
+    @ManyToOne(fetch = FetchType.LAZY)
+    @ToString.Exclude//help intellij debugger not to go into a loop
+    private ProductDAO product;
 
-    public void addVersion(VersionDAO comment) {
-        versions.add(comment);
-        comment.setProduct(this);
-    }
+    @OneToMany(mappedBy = "version", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+//    @JoinColumn(name = "version_id", referencedColumnName = "id", nullable = false, updatable = false)
+//    @JsonManagedReference
+    private List<ProjectDAO> projects = new ArrayList<>();
+
 }

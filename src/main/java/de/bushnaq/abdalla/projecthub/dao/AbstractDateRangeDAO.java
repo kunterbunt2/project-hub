@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @ToString
-public abstract class AbstractDateRangeDTO extends AbstractTimeAwareDTO {
+public abstract class AbstractDateRangeDAO extends AbstractTimeAwareDAO {
 
     @Column(nullable = false)
     private LocalDate firstDay;

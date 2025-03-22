@@ -1,7 +1,7 @@
 package de.bushnaq.abdalla.projecthub.rest.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import de.bushnaq.abdalla.projecthub.dao.UserDTO;
+import de.bushnaq.abdalla.projecthub.dao.UserDAO;
 import de.bushnaq.abdalla.projecthub.repository.LocationRepository;
 import de.bushnaq.abdalla.projecthub.repository.UserRepository;
 import de.bushnaq.abdalla.projecthub.rest.debug.DebugUtil;
@@ -34,23 +34,23 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public Optional<UserDTO> get(@PathVariable Long id) throws JsonProcessingException {
-        UserDTO byId = userRepository.getById(id);
+    public Optional<UserDAO> get(@PathVariable Long id) throws JsonProcessingException {
+        UserDAO byId = userRepository.getById(id);
         return Optional.of(byId);
     }
 
     @GetMapping
-    public List<UserDTO> getAll() {
+    public List<UserDAO> getAll() {
         return userRepository.findAll();
     }
 
     @PostMapping(consumes = "application/json", produces = "application/json")
-    public UserDTO save(@RequestBody UserDTO user) {
+    public UserDAO save(@RequestBody UserDAO user) {
         return userRepository.save(user);
     }
 
     @PutMapping()
-    public void update(@RequestBody UserDTO user) {
+    public void update(@RequestBody UserDAO user) {
 //            UserEntity e = userRepository.findById(user.getId()).orElseThrow();
 //            e.setLastWorkingDay(user.getLastWorkingDay());
 //            e.setFirstWorkingDay(user.getFirstWorkingDay());

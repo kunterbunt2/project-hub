@@ -71,7 +71,7 @@ public class ProductApi extends AbstractApi {
     public List<Product> getAllProducts() {
 
         ResponseEntity<Product[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(
-                baseUrl + "/project",
+                baseUrl + "/product",
                 Product[].class
         ));
         return Arrays.asList(response.getBody());

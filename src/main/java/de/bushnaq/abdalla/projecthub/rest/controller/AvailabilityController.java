@@ -1,7 +1,7 @@
 package de.bushnaq.abdalla.projecthub.rest.controller;
 
-import de.bushnaq.abdalla.projecthub.dao.AvailabilityDTO;
-import de.bushnaq.abdalla.projecthub.dao.UserDTO;
+import de.bushnaq.abdalla.projecthub.dao.AvailabilityDAO;
+import de.bushnaq.abdalla.projecthub.dao.UserDAO;
 import de.bushnaq.abdalla.projecthub.repository.AvailabilityRepository;
 import de.bushnaq.abdalla.projecthub.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +22,8 @@ public class AvailabilityController {
 
     @DeleteMapping("/{userId}/{id}")
     public void delete(@PathVariable Long userId, @PathVariable Long id) {
-        UserDTO         user         = userRepository.getById(userId);
-        AvailabilityDTO availability = availabilityRepository.findById(id).orElseThrow();
+        UserDAO         user         = userRepository.getById(userId);
+        AvailabilityDAO availability = availabilityRepository.findById(id).orElseThrow();
         if (Objects.equals(user.getAvailabilities().getFirst().getId(), id))
             throw new IllegalArgumentException("Cannot delete the first availability");
         user.getAvailabilities().remove(availability);
@@ -32,13 +32,18 @@ public class AvailabilityController {
     }
 
     @GetMapping("/{id}")
-    public Optional<AvailabilityDTO> getById(@PathVariable Long id) {
-        AvailabilityDTO e = availabilityRepository.findById(id).orElseThrow();
+    public Optional<AvailabilityDAO> getById(@PathVariable Long id) {
+        AvailabilityDAO e = availabilityRepository.findById(id).orElseThrow();
         return Optional.of(e);
     }
 
+    @PostMapping(consumes = "application/json", produces = "application/json")
+    public AvailabilityDAO save(@RequestBody AvailabilityDAO availability) {
+        return availabilityRepository.save(availability);
+    }
+
     @PutMapping()
-    public void update(@RequestBody AvailabilityDTO availability) {
+    public void update(@RequestBody AvailabilityDAO availability) {
 //        AvailabilityEntity e = availabilityRepository.findById(availabilityDetails.getId()).orElseThrow();
 //        e.setAvailability(availabilityDetails.getAvailability());
 //        e.setStart(availabilityDetails.getStart());

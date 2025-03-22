@@ -3,7 +3,7 @@ package de.bushnaq.abdalla.projecthub;
 import de.bushnaq.abdalla.projecthub.dto.OffDay;
 import de.bushnaq.abdalla.projecthub.dto.OffDayType;
 import de.bushnaq.abdalla.projecthub.dto.User;
-import de.bushnaq.abdalla.projecthub.util.AbstractTestUtil;
+import de.bushnaq.abdalla.projecthub.util.AbstractEntityGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Transactional
-public class OffDayTest extends AbstractTestUtil {
+public class OffDayTest extends AbstractEntityGenerator {
     public static final String FIRST_DATE_0 = "2024-03-14";
     public static final String FIRST_DATE_1 = "2025-07-01";
     public static final String LAST_DATE_0  = "2024-03-14";
@@ -32,7 +32,7 @@ public class OffDayTest extends AbstractTestUtil {
 
         //create a user
         {
-            User user = addUser(LocalDate.parse(FIRST_DATE_0));
+            User user = addRandomUser(LocalDate.parse(FIRST_DATE_0));
 //            User pUser = userApi.persist(user);
             id = user.getId();
         }
@@ -41,14 +41,14 @@ public class OffDayTest extends AbstractTestUtil {
         {
             User user = userApi.getUser(id);
             //vacation
-            offDays.add(user.addOffday(LocalDate.parse(FIRST_DATE_0), LocalDate.parse(LAST_DATE_0), OffDayType.VACATION));
+            expectedDffDays.add(user.addOffday(LocalDate.parse(FIRST_DATE_0), LocalDate.parse(LAST_DATE_0), OffDayType.VACATION));
             userApi.persist(user);//persist the new offDay
         }
 
         //test the new offDay
         {
             User user = userApi.getUser(id);
-            assertEquals(offDays, user.getOffDays());
+            assertEquals(expectedDffDays, user.getOffDays());
         }
 
         printTables();
@@ -60,7 +60,7 @@ public class OffDayTest extends AbstractTestUtil {
 
         //create a user
         {
-            User user = addUser(LocalDate.parse(FIRST_DATE_0));
+            User user = addRandomUser(LocalDate.parse(FIRST_DATE_0));
 //            User pUser = userApi.persist(user);
             id = user.getId();
         }
@@ -69,23 +69,23 @@ public class OffDayTest extends AbstractTestUtil {
         {
             User user = userApi.getUser(id);
             //vacation
-            offDays.add(user.addOffday(LocalDate.parse(FIRST_DATE_0), LocalDate.parse(LAST_DATE_0), OffDayType.VACATION));
+            expectedDffDays.add(user.addOffday(LocalDate.parse(FIRST_DATE_0), LocalDate.parse(LAST_DATE_0), OffDayType.VACATION));
             userApi.persist(user);//persist the new offDay
         }
 
         //test the new offDay
         {
             User user = userApi.getUser(id);
-            assertEquals(offDays, user.getOffDays());
+            assertEquals(expectedDffDays, user.getOffDays());
         }
 
         //try to delete the vacation
         {
             User user = userApi.getUser(id);
             userApi.delete(user, user.getOffDays().get(0));
-            offDays.removeFirst();
+            expectedDffDays.removeFirst();
             user = userApi.getUser(id);
-            assertEquals(offDays, user.getOffDays());
+            assertEquals(expectedDffDays, user.getOffDays());
         }
         printTables();
     }
@@ -96,7 +96,7 @@ public class OffDayTest extends AbstractTestUtil {
 
         //create a user
         {
-            User user = addUser(LocalDate.parse(FIRST_DATE_0));
+            User user = addRandomUser(LocalDate.parse(FIRST_DATE_0));
 //            User pUser = userApi.persist(user);
             id = user.getId();
         }
@@ -105,14 +105,14 @@ public class OffDayTest extends AbstractTestUtil {
         {
             User user = userApi.getUser(id);
             //vacation
-            offDays.add(user.addOffday(LocalDate.parse(FIRST_DATE_0), LocalDate.parse(LAST_DATE_0), OffDayType.VACATION));
+            expectedDffDays.add(user.addOffday(LocalDate.parse(FIRST_DATE_0), LocalDate.parse(LAST_DATE_0), OffDayType.VACATION));
             userApi.persist(user);//persist the new offDay
         }
 
         //test the new offDay
         {
             User user = userApi.getUser(id);
-            assertEquals(offDays, user.getOffDays());
+            assertEquals(expectedDffDays, user.getOffDays());
         }
 
         Thread.sleep(1000);//ensure that update time is different
@@ -125,14 +125,14 @@ public class OffDayTest extends AbstractTestUtil {
             offDay.setFirstDay(LocalDate.parse(FIRST_DATE_1));
             offDay.setLastDay(LocalDate.parse(LAST_DATE_1));
             userApi.update(offDay);
-            offDays.clear();
-            offDays.add(offDay);
+            expectedDffDays.clear();
+            expectedDffDays.add(offDay);
         }
 
         //test if the location was updated correctly
         {
             User user = userApi.getUser(id);
-            assertEquals(offDays, user.getOffDays());
+            assertEquals(expectedDffDays, user.getOffDays());
         }
 
         printTables();

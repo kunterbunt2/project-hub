@@ -6,11 +6,10 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Proxy;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDate;
 
 @Entity
-@Table(name = "products")
+@Table(name = "locations")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -18,26 +17,23 @@ import java.util.List;
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
 @JsonIdentityInfo(
-        scope = ProductDAO.class,
+        scope = LocationDAO.class,
         generator = ObjectIdGenerators.PropertyGenerator.class,
         property = "id")
-public class ProductDAO extends AbstractTimeAwareDAO {
-
+public class LocationDAO extends AbstractTimeAwareDAO {
+    @Column(nullable = false)
+    private String    country;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Long id;
-
+    private Long      id;
     @Column(nullable = false)
-    private String name;
-
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-//    @JoinColumn(name = "product_id", referencedColumnName = "id")
-//    @JsonBackReference
-    private List<VersionDAO> versions = new ArrayList<>();
-
-    public void addVersion(VersionDAO comment) {
-        versions.add(comment);
-        comment.setProduct(this);
-    }
+    private LocalDate start;
+    @Column(nullable = false)
+    private String    state;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @ToString.Exclude//help intellij debugger not to go into a loop
+    private UserDAO   user;
+    @Column(name = "USER_ID", insertable = false, updatable = false)
+    private Long      userId;
 }
