@@ -113,8 +113,8 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
             Project project = addProject(version);
             Sprint  sprint  = addSprint(project);
             Task    task1   = addTask(sprint, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
-            Task    task2   = addTask(null, task1, "Design", LocalDateTime.now(), Duration.ofDays(4), user1, null);
-            Task    task3   = addTask(null, task2, "Implementation", LocalDateTime.now().plusDays(4), Duration.ofDays(6), user1, task1);
+            Task    task2   = addTask(sprint, task1, "Design", LocalDateTime.now(), Duration.ofDays(4), user1, null);
+            Task    task3   = addTask(sprint, task2, "Implementation", LocalDateTime.now().plusDays(4), Duration.ofDays(6), user1, task1);
         }
         testProducts();
     }
