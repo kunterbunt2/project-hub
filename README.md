@@ -42,3 +42,6 @@ minimalistic project effort estimation and progress tracking and release date in
 - project priority can be changed by moving them within the list
 - sprint priority can be changed by moving them within the list
 
+# Issues
+1. task update will not always persist the sprint_id.
+1. rest client still sends null and empty fields as json.

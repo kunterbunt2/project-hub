@@ -35,7 +35,7 @@ public class ProductController {
         return productRepository.findAll();
     }
 
-    @PostMapping(consumes = "application/json", produces = "application/json")
+    @PostMapping(consumes = "application/json;charset=UTF-8", produces = "application/json;charset=UTF-8")
     public ProductDAO save(@RequestBody ProductDAO product) {
         return productRepository.save(product);
     }

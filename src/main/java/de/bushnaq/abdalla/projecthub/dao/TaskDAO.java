@@ -3,10 +3,7 @@ package de.bushnaq.abdalla.projecthub.dao;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.Proxy;
 
 import java.time.Duration;
@@ -22,14 +19,14 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-//@ToString(callSuper = true)
+@ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
 public class TaskDAO {
 
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    @JsonManagedReference
+    @JsonManagedReference(value = "task-task")
     List<TaskDAO> childTasks = new ArrayList<>();
 
     @Column(nullable = false)
@@ -48,7 +45,8 @@ public class TaskDAO {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "parent_id")
-    @JsonBackReference
+    @JsonBackReference(value = "task-task")
+    @ToString.Exclude//help intellij debugger not to go into a loop
     private TaskDAO parent;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
@@ -59,6 +57,11 @@ public class TaskDAO {
     Long resourceId;
 
     //    List<Relation> successors = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonBackReference(value = "sprint-task")
+    @ToString.Exclude//help intellij debugger not to go into a loop
+    SprintDAO sprint;
 
     @Column(nullable = false)
     LocalDateTime start;

@@ -61,6 +61,13 @@ public class UserApi extends AbstractApi {
         ));
     }
 
+    public void deleteById(Long id) {
+        executeWithErrorHandling(() -> restTemplate.delete(
+                baseUrl + "/user/{id}",
+                id
+        ));
+    }
+
 //    private void executeWithErrorHandling(RestOperation operation) {
 //        try {
 //            operation.execute();
@@ -141,24 +148,57 @@ public class UserApi extends AbstractApi {
                 ));
     }
 
-    public void update(Location location) {
+    public Location persist(Location location, Long userId) {
+        return executeWithErrorHandling(() ->
+                restTemplate.postForObject(
+                        baseUrl + "/location/{userId}",
+                        location,
+                        Location.class,
+                        userId
+                ));
+    }
+
+    public Availability persist(Availability availability, Long userId) {
+        return executeWithErrorHandling(() ->
+                restTemplate.postForObject(
+                        baseUrl + "/availability/{userId}",
+                        availability,
+                        Availability.class,
+                        userId
+                ));
+    }
+
+    public OffDay persist(OffDay offDay, Long userId) {
+        return executeWithErrorHandling(() ->
+                restTemplate.postForObject(
+                        baseUrl + "/offday/{userId}",
+                        offDay,
+                        OffDay.class,
+                        userId
+                ));
+    }
+
+    public void update(Location location, Long userId) {
         executeWithErrorHandling(() -> restTemplate.put(
-                baseUrl + "/location",
-                location
+                baseUrl + "/location/{userId}",
+                location,
+                userId
         ));
     }
 
-    public void update(OffDay offDay) {
+    public void update(OffDay offDay, Long userId) {
         executeWithErrorHandling(() -> restTemplate.put(
-                baseUrl + "/offday",
-                offDay
+                baseUrl + "/offday/{userId}",
+                offDay,
+                userId
         ));
     }
 
-    public void update(Availability availability) {
+    public void update(Availability availability, Long userId) {
         executeWithErrorHandling(() -> restTemplate.put(
-                baseUrl + "/availability",
-                availability
+                baseUrl + "/availability/{userId}",
+                availability,
+                userId
         ));
     }
 

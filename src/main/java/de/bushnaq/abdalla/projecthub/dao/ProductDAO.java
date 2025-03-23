@@ -1,5 +1,6 @@
 package de.bushnaq.abdalla.projecthub.dao;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Proxy;
@@ -15,7 +16,11 @@ import java.util.List;
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
-public class ProductDAO extends AbstractTimeAwareDTO {
+//@JsonIdentityInfo(
+//        scope = ProductDAO.class,
+//        generator = ObjectIdGenerators.PropertyGenerator.class,
+//        property = "id")
+public class ProductDAO extends AbstractTimeAwareDAO {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,8 +30,13 @@ public class ProductDAO extends AbstractTimeAwareDTO {
     @Column(nullable = false)
     private String name;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinColumn(name = "product_id", referencedColumnName = "id")
-    private List<VersionDTO> versions = new ArrayList<>();
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+//    @JoinColumn(name = "product_id", referencedColumnName = "id")
+    @JsonManagedReference(value = "product-version")
+    private List<VersionDAO> versions = new ArrayList<>();
 
+    public void addVersion(VersionDAO comment) {
+        versions.add(comment);
+        comment.setProduct(this);
+    }
 }

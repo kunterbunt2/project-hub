@@ -1,7 +1,7 @@
 package de.bushnaq.abdalla.projecthub;
 
 import de.bushnaq.abdalla.projecthub.dto.User;
-import de.bushnaq.abdalla.projecthub.util.AbstractTestUtil;
+import de.bushnaq.abdalla.projecthub.util.AbstractEntityGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -10,7 +10,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -19,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Transactional
-public class UserTest extends AbstractTestUtil {
+public class UserTest extends AbstractEntityGenerator {
     public static final String FIRST_START_DATE  = "2024-03-14";
     public static final String SECOND_START_DATE = "2025-07-01";
 
@@ -27,19 +26,18 @@ public class UserTest extends AbstractTestUtil {
     public void create() throws Exception {
 
         //create the users
-        for (int i = 0; i < 1; i++) {
-            User user = addUser();
-        }
+        addRandomUsers(1);
         printTables();
 
-        //test if the users were persisted correctly
-        {
-            List<User> allUsers = userApi.getAllUsers();
-            assertEquals(users.size(), allUsers.size());
-            for (int i = 0; i < users.size(); i++) {
-                assertUserEquals(users.get(i), allUsers.get(i));
-            }
-        }
+    }
+
+    @Test
+    public void delete() throws Exception {
+
+        //create the users
+        addRandomUsers(2);
+        removeUser(expectedUsers.getFirst().getId());
+        testUsers();
 
         printTables();
     }
@@ -50,7 +48,7 @@ public class UserTest extends AbstractTestUtil {
 
         //create the user with australian locale
         {
-            User user = addUser(LocalDate.parse(FIRST_START_DATE));
+            User user = addRandomUser(LocalDate.parse(FIRST_START_DATE));
             id = user.getId();
         }
 
@@ -66,17 +64,19 @@ public class UserTest extends AbstractTestUtil {
         {
             User user = userApi.getUser(id);
             user.setLastWorkingDay(LocalDate.parse(SECOND_START_DATE));
-            userApi.update(user);
+            updateUser(user);
         }
 
         //test if user was updated correctly
-        {
-            User user = userApi.getUser(id);
-            assertEquals(LocalDate.parse(SECOND_START_DATE), user.getLastWorkingDay());
-        }
+//        {
+//            User user = userApi.getUser(id);
+//            assertEquals(LocalDate.parse(SECOND_START_DATE), user.getLastWorkingDay());
+//        }
 
+        testUsers();
         printTables();
     }
+
 
 //
 //

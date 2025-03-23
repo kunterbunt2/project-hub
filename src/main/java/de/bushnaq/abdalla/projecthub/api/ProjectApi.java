@@ -12,20 +12,9 @@ import java.util.List;
 
 @Service
 public class ProjectApi extends AbstractApi {
-//    private String       baseUrl = "http://localhost:8080"; // Configure as needed
-//    private ObjectMapper objectMapper;
-//    private RestTemplate restTemplate;
 
     public ProjectApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
         super(restTemplate, objectMapper, baseUrl);
-//        this.restTemplate = restTemplate;
-//        this.objectMapper = objectMapper;
-//        this.restTemplate.setErrorHandler(new DefaultResponseErrorHandler());
-//
-//        this.baseUrl = baseUrl;
-//        // Configure message converters for JSON
-//        restTemplate.getMessageConverters().clear();
-//        restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
     }
 
     public ProjectApi() {
@@ -34,32 +23,6 @@ public class ProjectApi extends AbstractApi {
     public ProjectApi(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
-
-//    private void executeWithErrorHandling(RestOperation operation) {
-//        try {
-//            operation.execute();
-//        } catch (HttpClientErrorException e) {
-//            try {
-//                ErrorResponse error = objectMapper.readValue(e.getResponseBodyAsString(), ErrorResponse.class);
-//                throw new ServerErrorException(error.getMessage(), error.getException());
-//            } catch (JsonProcessingException ex) {
-//                throw new IllegalArgumentException(String.format("Error processing server response '%s'.", e.getResponseBodyAsString()));
-//            }
-//        }
-//    }
-//
-//    private <T> T executeWithErrorHandling(RestOperationWithResult<T> operation) {
-//        try {
-//            return operation.execute();
-//        } catch (HttpClientErrorException e) {
-//            try {
-//                ErrorResponse error = objectMapper.readValue(e.getResponseBodyAsString(), ErrorResponse.class);
-//                throw new ServerErrorException(error.getMessage(), error.getException());
-//            } catch (JsonProcessingException ex) {
-//                throw new IllegalArgumentException(String.format("Error processing server response '%s'.", e.getResponseBodyAsString()));
-//            }
-//        }
-//    }
 
     public List<Project> getAllProjects() {
 
@@ -78,21 +41,23 @@ public class ProjectApi extends AbstractApi {
         ));
     }
 
-    public Project persist(Project project) {
+    public Project persist(Project project, Long versionId) {
         return executeWithErrorHandling(() ->
                 restTemplate.postForObject(
-                        baseUrl + "/project",
+                        baseUrl + "/project/{versionId}",
                         project,
-                        Project.class
+                        Project.class,
+                        versionId
                 ));
     }
 
-    public Sprint persist(Sprint sprint) {
+    public Sprint persist(Sprint sprint, Long projectId) {
         return executeWithErrorHandling(() ->
                 restTemplate.postForObject(
-                        baseUrl + "/sprint",
+                        baseUrl + "/sprint/{projectId}",
                         sprint,
-                        Sprint.class
+                        Sprint.class,
+                        projectId
                 ));
     }
 
@@ -105,15 +70,5 @@ public class ProjectApi extends AbstractApi {
 //                projectId,
 //                version
 //        );
-//    }
-
-//    @FunctionalInterface
-//    private interface RestOperation {
-//        void execute() throws HttpClientErrorException;
-//    }
-//
-//    @FunctionalInterface
-//    private interface RestOperationWithResult<T> {
-//        T execute() throws HttpClientErrorException;
 //    }
 }

@@ -1,5 +1,6 @@
 package de.bushnaq.abdalla.projecthub.dao;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Proxy;
@@ -14,12 +15,13 @@ import java.time.LocalDate;
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
-public class LocationDTO extends AbstractTimeAwareDTO {
+//@JsonIdentityInfo(
+//        scope = LocationDAO.class,
+//        generator = ObjectIdGenerators.PropertyGenerator.class,
+//        property = "id")
+public class LocationDAO extends AbstractTimeAwareDAO {
     @Column(nullable = false)
     private String country;
-
-//    @Column(nullable = true)
-//    private LocalDate finish;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,4 +33,11 @@ public class LocationDTO extends AbstractTimeAwareDTO {
 
     @Column(nullable = false)
     private String state;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @ToString.Exclude//help intellij debugger not to go into a loop
+    @JsonBackReference
+    private UserDAO user;
+//    @Column(name = "USER_ID", insertable = false, updatable = false)
+//    private Long      userId;
 }

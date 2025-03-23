@@ -1,11 +1,15 @@
 package de.bushnaq.abdalla.projecthub.dao;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Proxy;
 
 import java.time.LocalDate;
 
+/**
+ * Represents the availability of a user at a certain time.
+ */
 @Entity
 @Table(name = "availabilities")
 @Getter
@@ -14,10 +18,11 @@ import java.time.LocalDate;
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
-/**
- * Represents the availability of a user at a certain time.
- */
-public class AvailabilityDTO extends AbstractTimeAwareDTO {
+//@JsonIdentityInfo(
+//        scope = AvailabilityDAO.class,
+//        generator = ObjectIdGenerators.PropertyGenerator.class,
+//        property = "id")
+public class AvailabilityDAO extends AbstractTimeAwareDAO {
 
     @Column(nullable = false)
     private float     availability;
@@ -27,5 +32,10 @@ public class AvailabilityDTO extends AbstractTimeAwareDTO {
     private Long      id;
     @Column(nullable = false)
     private LocalDate start;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @ToString.Exclude//help intellij debugger not to go into a loop
+    @JsonBackReference
+    private UserDAO user;
 
 }

@@ -2,10 +2,7 @@ package de.bushnaq.abdalla.projecthub.dto;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -22,20 +19,27 @@ import java.util.List;
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 public class Task {
 
-    @JsonManagedReference
+    @JsonManagedReference(value = "task-task")
     List<Task> childTasks = new ArrayList<>();
     Duration      duration;
     LocalDateTime finish;
     Long          id;
     String        name;
     //    List<Relation> successors   = new ArrayList<>();
-    @JsonBackReference
+
+    @JsonBackReference(value = "task-task")
+    @ToString.Exclude//help intellij debugger not to go into a loop
     private Task parent;
 
     //    @JsonManagedReference
     List<Relation> predecessors = new ArrayList<>();
     Long           resourceId;
-    LocalDateTime  start;
+
+    @JsonBackReference(value = "sprint-task")
+    @ToString.Exclude//help intellij debugger not to go into a loop
+    Sprint sprint;
+
+    LocalDateTime start;
 
     public void addChildTask(Task childTask) {
         if (childTask.getParent() != null) {
@@ -64,4 +68,5 @@ public class Task {
     public void removeChildTask(Task childTask2) {
         childTasks.remove(childTask2);
     }
+
 }

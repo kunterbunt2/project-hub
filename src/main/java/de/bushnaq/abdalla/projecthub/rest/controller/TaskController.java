@@ -1,7 +1,9 @@
 package de.bushnaq.abdalla.projecthub.rest.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import de.bushnaq.abdalla.projecthub.dao.SprintDAO;
 import de.bushnaq.abdalla.projecthub.dao.TaskDAO;
+import de.bushnaq.abdalla.projecthub.repository.SprintRepository;
 import de.bushnaq.abdalla.projecthub.repository.TaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +19,9 @@ public class TaskController {
 //    DebugUtil debugUtil;
 
     @Autowired
-    private TaskRepository taskRepository;
+    private SprintRepository sprintRepository;
+    @Autowired
+    private TaskRepository   taskRepository;
 
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
@@ -35,9 +39,21 @@ public class TaskController {
         return taskRepository.findAll();
     }
 
-    @PostMapping(consumes = "application/json", produces = "application/json")
-    public TaskDAO save(@RequestBody TaskDAO user) {
-        return taskRepository.save(user);
+    @PostMapping("/{sprintId}")
+    public TaskDAO save(@RequestBody TaskDAO task, @PathVariable Long sprintId) {
+        SprintDAO sprint = sprintRepository.getById(sprintId);
+        task.setSprint(sprint);
+        return taskRepository.save(task);
+    }
+
+    @PostMapping("/{sprintId}/{parentId}")
+    public TaskDAO save(@RequestBody TaskDAO task, @PathVariable Long sprintId, @PathVariable Long parentId) {
+        SprintDAO sprint = sprintRepository.getById(sprintId);
+        TaskDAO   parent = taskRepository.getById(parentId);
+        task.setParent(parent);
+        task.setSprint(sprint);
+        TaskDAO save = taskRepository.save(task);
+        return save;
     }
 
 //    @PutMapping()

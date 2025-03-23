@@ -6,4 +6,6 @@ import org.springframework.data.repository.ListCrudRepository;
 public interface TaskRepository extends ListCrudRepository<TaskDAO, Long> {
 
     void deleteById(Long id);
+
+    TaskDAO getById(Long id);
 }

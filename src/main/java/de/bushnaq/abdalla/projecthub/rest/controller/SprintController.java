@@ -1,19 +1,22 @@
 package de.bushnaq.abdalla.projecthub.rest.controller;
 
-import de.bushnaq.abdalla.projecthub.dao.SprintDTO;
+import de.bushnaq.abdalla.projecthub.dao.ProjectDAO;
+import de.bushnaq.abdalla.projecthub.dao.SprintDAO;
+import de.bushnaq.abdalla.projecthub.repository.ProjectRepository;
 import de.bushnaq.abdalla.projecthub.repository.SprintRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/sprint")
 public class SprintController {
 
     @Autowired
-    private SprintRepository sprintRepository;
+    private ProjectRepository projectRepository;
+    @Autowired
+    private SprintRepository  sprintRepository;
 
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
@@ -21,23 +24,31 @@ public class SprintController {
     }
 
     @GetMapping("/{id}")
-    public Optional<SprintDTO> get(@PathVariable Long id) {
-        SprintDTO sprintEntity = sprintRepository.findById(id).orElseThrow();
-        return Optional.of(sprintEntity);
+    public SprintDAO get(@PathVariable Long id) {
+        SprintDAO sprintEntity = sprintRepository.findById(id).orElseThrow();
+        return sprintEntity;
     }
 
     @GetMapping
-    public List<SprintDTO> getAll() {
+    public List<SprintDAO> getAll() {
         return sprintRepository.findAll();
     }
 
-    @PostMapping(consumes = "application/json", produces = "application/json")
-    public SprintDTO save(@RequestBody SprintDTO sprintEntity) {
-        return sprintRepository.save(sprintEntity);
+//    @PostMapping(consumes = "application/json", produces = "application/json")
+//    public SprintDAO save(@RequestBody SprintDAO sprintEntity) {
+//        return sprintRepository.save(sprintEntity);
+//    }
+
+    @PostMapping("/{projectId}")
+    public SprintDAO save(@RequestBody SprintDAO sprintDAO, @PathVariable Long projectId) {
+        ProjectDAO project = projectRepository.getById(projectId);
+        sprintDAO.setProject(project);
+        SprintDAO save = sprintRepository.save(sprintDAO);
+        return save;
     }
 
     @PutMapping("/{id}")
-    public SprintDTO update(@PathVariable Long id, @RequestBody SprintDTO sprintEntity) {
+    public SprintDAO update(@PathVariable Long id, @RequestBody SprintDAO sprintEntity) {
 //        ProjectEntity project = projectRepository.findById(id).orElseThrow();
 //        project.setName(projectDetails.getName());
 //        project.setRequester(projectDetails.getRequester());

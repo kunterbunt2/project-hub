@@ -1,5 +1,6 @@
 package de.bushnaq.abdalla.projecthub.dto;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -15,17 +16,30 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = false)
-public class Location extends AbstractTimeAware {
+//@JsonIdentityInfo(
+//        scope = Location.class,
+//        generator = ObjectIdGenerators.PropertyGenerator.class,
+//        property = "id")
+public class Location extends AbstractTimeAware implements Comparable<Location> {
 
     private String    country;
     private Long      id;
     private LocalDate start;
     private String    state;
 
+    @ToString.Exclude//help intellij debugger not to go into a loop
+    @JsonBackReference
+    private User user;
+
     public Location(String country, String state, LocalDate start) {
         this.country = country;
         this.state   = state;
         this.setStart(start);
+    }
+
+    @Override
+    public int compareTo(Location other) {
+        return this.id.compareTo(other.id);
     }
 
     String getKey() {

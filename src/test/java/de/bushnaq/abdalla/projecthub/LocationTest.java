@@ -2,7 +2,7 @@ package de.bushnaq.abdalla.projecthub;
 
 import de.bushnaq.abdalla.projecthub.dto.Location;
 import de.bushnaq.abdalla.projecthub.dto.User;
-import de.bushnaq.abdalla.projecthub.util.AbstractTestUtil;
+import de.bushnaq.abdalla.projecthub.util.AbstractEntityGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Transactional
-public class LocationTest extends AbstractTestUtil {
+public class LocationTest extends AbstractEntityGenerator {
     public static final String FIRST_START_DATE  = "2024-03-14";
     public static final String SECOND_COUNTRY    = "us";
     public static final String SECOND_START_DATE = "2025-07-01";
@@ -38,7 +38,7 @@ public class LocationTest extends AbstractTestUtil {
         //create a user with australian locale
         {
             Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
-            User user = addUser(LocalDate.parse(FIRST_START_DATE));
+            User user = addRandomUser(LocalDate.parse(FIRST_START_DATE));
             Locale.setDefault(Locale.getDefault());
             id = user.getId();
         }
@@ -53,7 +53,8 @@ public class LocationTest extends AbstractTestUtil {
         {
             User user = userApi.getUser(id);
             //moving to Germany
-            user.addLocation("de", "nw", LocalDate.parse(SECOND_START_DATE));
+            addLocation(user, "de", "nw", LocalDate.parse(SECOND_START_DATE));
+//            user.addLocation("de", "nw", LocalDate.parse(SECOND_START_DATE));
             userApi.persist(user);//persist the new location
         }
 
@@ -73,7 +74,7 @@ public class LocationTest extends AbstractTestUtil {
         //create the user with australian locale
         {
             Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
-            User user = addUser(LocalDate.parse(FIRST_START_DATE));
+            User user = addRandomUser(LocalDate.parse(FIRST_START_DATE));
             Locale.setDefault(Locale.getDefault());
             id = user.getId();
         }
@@ -94,20 +95,20 @@ public class LocationTest extends AbstractTestUtil {
         //create a user with australian locale
         {
             Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
-            User user = addUser(LocalDate.parse(FIRST_START_DATE));
+            User user = addRandomUser(LocalDate.parse(FIRST_START_DATE));
             Locale.setDefault(Locale.getDefault());
             id = user.getId();
         }
 
         //test if new location was persisted correctly
-        {
-            User user = userApi.getUser(id);
-            assertEquals(LocalDate.parse(FIRST_START_DATE), user.getLocations().getFirst().getStart());
-        }
+//        {
+//            User user = userApi.getUser(id);
+//            assertEquals(LocalDate.parse(FIRST_START_DATE), user.getLocations().getFirst().getStart());
+//        }
 
         //try to delete the first location
         {
-            User user = userApi.getUser(id);
+            User user = expectedUsers.getFirst();
             try {
                 userApi.delete(user, user.getLocations().getFirst());
                 fail("should not be able to delete the first location");
@@ -119,27 +120,31 @@ public class LocationTest extends AbstractTestUtil {
 
         //add a working location in Germany
         {
-            User user = userApi.getUser(id);
+            User user = expectedUsers.getFirst();
             //moving to Germany
-            user.addLocation("de", "nw", LocalDate.parse(SECOND_START_DATE));
+            addLocation(user, "de", "nw", LocalDate.parse(SECOND_START_DATE));
+//            user.addLocation("de", "nw", LocalDate.parse(SECOND_START_DATE));
             userApi.persist(user);//persist the new location
         }
-
+        testUsers();
         //test the new location
-        {
-            User user = userApi.getUser(id);
-            assertEquals(LocalDate.parse(SECOND_START_DATE), user.getLocations().get(1).getStart());
-        }
+//        {
+//            User user = userApi.getUser(id);
+//            assertEquals(LocalDate.parse(SECOND_START_DATE), user.getLocations().get(1).getStart());
+//        }
 
         //try to delete the second location
         {
-            User user = userApi.getUser(id);
-            userApi.delete(user, user.getLocations().get(1));
-            user = userApi.getUser(id);
-            assertEquals(1, user.getLocations().size());
+            User     user     = expectedUsers.getFirst();
+            Location location = user.getLocations().get(1);
+            removeLocation(location, user);
+//            user = userApi.getUser(id);
+//            assertEquals(1, user.getLocations().size());
+            testUsers();
         }
         printTables();
     }
+
 
     @Test
     public void update() throws Exception {
@@ -149,7 +154,7 @@ public class LocationTest extends AbstractTestUtil {
         //create the user with australian locale
         {
 //            Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
-            User user = addUser(LocalDate.parse(FIRST_START_DATE));
+            User user = addRandomUser(LocalDate.parse(FIRST_START_DATE));
 //            Locale.setDefault(Locale.getDefault());
             id         = user.getId();
             locationId = user.getLocations().getFirst().getId();
@@ -165,22 +170,24 @@ public class LocationTest extends AbstractTestUtil {
 
         //fix location mistake
         {
-            Location location = userApi.getLocation(locationId);
+            User     user     = expectedUsers.getFirst();
+            Location location = user.getLocations().getFirst();
             location.setCountry(SECOND_COUNTRY);
             location.setState(SECOND_STATE);
             location.setStart(LocalDate.parse(SECOND_START_DATE));
-            userApi.update(location);
-            User user = userApi.getUser(id);
-        }
-
-        //test if the location was updated correctly
-        {
-            User user = userApi.getUser(id);
-            assertEquals(SECOND_COUNTRY, user.getLocations().getFirst().getCountry());
-            assertEquals(SECOND_STATE, user.getLocations().getFirst().getState());
-            assertEquals(LocalDate.parse(SECOND_START_DATE), user.getLocations().getFirst().getStart());
+            updateLocation(location, user);
         }
 
         printTables();
+        //test if the location was updated correctly
+        testUsers();
+//        {
+//            User user = userApi.getUser(id);
+//            assertEquals(SECOND_COUNTRY, user.getLocations().getFirst().getCountry());
+//            assertEquals(SECOND_STATE, user.getLocations().getFirst().getState());
+//            assertEquals(LocalDate.parse(SECOND_START_DATE), user.getLocations().getFirst().getStart());
+//        }
+
     }
+
 }
