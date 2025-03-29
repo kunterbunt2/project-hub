@@ -40,4 +40,7 @@ public class Version extends AbstractTimeAware {
         return "V-" + id;
     }
 
+    public void initialize(List<User> allUsers) {
+        projects.forEach(project -> project.initialize(allUsers));
+    }
 }

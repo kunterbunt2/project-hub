@@ -2,6 +2,7 @@ package de.bushnaq.abdalla.projecthub.dao;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import de.bushnaq.abdalla.projecthub.dto.TaskMode;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Proxy;
@@ -25,48 +26,57 @@ import java.util.List;
 public class TaskDAO {
 
 
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "parentTask", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JsonManagedReference(value = "task-task")
-    List<TaskDAO> childTasks = new ArrayList<>();
+    private List<TaskDAO> childTasks = new ArrayList<>();
 
     @Column(nullable = false)
-    Duration duration;
+    private boolean critical;
 
     @Column(nullable = false)
-    LocalDateTime finish;
+    private Duration duration;
+
+    @Column(nullable = true)
+    private LocalDateTime finish;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    Long id;
+    private Long id;
 
     @Column(nullable = false)
-    String name;
+    private String name;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "parent_id")
     @JsonBackReference(value = "task-task")
     @ToString.Exclude//help intellij debugger not to go into a loop
-    private TaskDAO parent;
+    private TaskDAO parentTask;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
-    List<RelationDAO> predecessors = new ArrayList<>();
+    private List<RelationDAO> predecessors = new ArrayList<>();
+
+    @Column(nullable = false)
+    private Number progress;
 
     @Column(nullable = true)
-    Long resourceId;
-
-    //    List<Relation> successors = new ArrayList<>();
-
+    private Long      resourceId;
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonBackReference(value = "sprint-task")
     @ToString.Exclude//help intellij debugger not to go into a loop
-    SprintDAO sprint;
+    private SprintDAO sprint;
+
+    //    List<Relation> successors = new ArrayList<>();
+    @Column(nullable = true)
+    private LocalDateTime start;
 
     @Column(nullable = false)
-    LocalDateTime start;
+    private TaskMode taskMode;
 
-    boolean isMilestone() {
+    private Duration work;
+
+    public boolean isMilestone() {
         return false;
     }
 

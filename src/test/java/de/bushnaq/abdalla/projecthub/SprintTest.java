@@ -26,8 +26,8 @@ public class SprintTest extends AbstractEntityGenerator {
         for (int i = 0; i < 1; i++) {
             Product product = addProduct("Product " + i);
             Version version = addVersion(product, String.format("1.%d.0", i));
-            Project project = addProject(version);
-            Sprint  sprint  = addSprint(project);
+            Project project = addRandomProject(version);
+            Sprint  sprint  = addRandomSprint(project);
 
             LocalDateTime start = LocalDateTime.now();
             Task          task1 = addTask(sprint, null, "[1] Parent Task", start, Duration.ofDays(0), null, null);

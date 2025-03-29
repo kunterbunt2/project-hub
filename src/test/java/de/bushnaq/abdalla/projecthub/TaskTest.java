@@ -26,8 +26,8 @@ public class TaskTest extends AbstractEntityGenerator {
         for (int i = 0; i < 1; i++) {
             Product product = addProduct("Product " + i);
             Version version = addVersion(product, String.format("1.%d.0", i));
-            Project project = addProject(version);
-            Sprint  sprint  = addSprint(project);
+            Project project = addRandomProject(version);
+            Sprint  sprint  = addRandomSprint(project);
 
             Task task1 = addTask(sprint, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
             Task task2 = addTask(sprint, task1, "Design", LocalDateTime.now(), Duration.ofDays(4), user1, null);
@@ -53,8 +53,8 @@ public class TaskTest extends AbstractEntityGenerator {
         for (int i = 0; i < 1; i++) {
             Product product = addProduct("Product " + i);
             Version version = addVersion(product, String.format("1.%d.0", i));
-            Project project = addProject(version);
-            Sprint  sprint  = addSprint(project);
+            Project project = addRandomProject(version);
+            Sprint  sprint  = addRandomSprint(project);
             Task    task1   = addTask(sprint, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
             Task    task2   = addTask(sprint, task1, "Design", LocalDateTime.now(), Duration.ofDays(4), user1, null);
             Task    task3   = addTask(sprint, task1, "Implementation", LocalDateTime.now().plusDays(4), Duration.ofDays(6), user1, task1);

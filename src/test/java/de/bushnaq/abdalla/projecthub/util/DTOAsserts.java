@@ -88,7 +88,7 @@ public class DTOAsserts {
         assertLocalDateTimeEquals(expected.getFinish(), actual.getFinish());
         assertEquals(expected.getId(), actual.getId(), "Task IDs do not match");
         assertEquals(expected.getName(), actual.getName(), "Task names do not match");
-        assertEquals(expected.getParent(), actual.getParent(), "Task parents do not match");
+        assertEquals(expected.getParentTask(), actual.getParentTask(), "Task parents do not match");
 
         assertEquals(expected.getPredecessors().size(), actual.getPredecessors().size(), "Number of task predecessors do not match");
         for (int i = 0; i < expected.getPredecessors().size(); i++) {

@@ -1,6 +1,7 @@
 .settings
 .classpath
 .project
+.idea
 target
 node_modules
 *log.*.gz
@@ -20,3 +21,4 @@ webpack.generated.js
 /.idea
 /public/testCache
 /docs
+*.db

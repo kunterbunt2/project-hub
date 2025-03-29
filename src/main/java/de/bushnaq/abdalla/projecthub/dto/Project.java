@@ -31,4 +31,8 @@ public class Project extends AbstractTimeAware {
     public void addSprint(Sprint sprint) {
         sprints.add(sprint);
     }
+
+    public void initialize(List<User> allUsers) {
+        sprints.forEach(sprint -> sprint.initialize(allUsers));
+    }
 }

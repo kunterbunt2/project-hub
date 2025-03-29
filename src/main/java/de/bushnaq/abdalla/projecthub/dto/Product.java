@@ -31,4 +31,7 @@ public class Product extends AbstractTimeAware {
         version.setProduct(this);
     }
 
+    public void initialize(List<User> allUsers) {
+        versions.forEach(version -> version.initialize(allUsers));
+    }
 }

@@ -1,0 +1,119 @@
+package de.bushnaq.abdalla.projecthub.report.html.dao;
+
+enum EStatus {
+    CRITICAL,
+    IDLE,
+    WARNING
+}
+
+public class ReportCell implements Comparable<ReportCell> {
+
+    public static final String  CRITICAL   = "Critical";
+    public static final String  GOOD       = "Good";
+    public static final String  IDLE       = "Idle";
+    public static final String  IGNORE     = "Ignore";
+    public static final String  INFO       = "Info";
+    public static final String  WARNING    = "Warning";
+    public              int     colspan    = 0;
+    public              String  columnName = null;
+    public              String  cssClass   = IDLE;
+    public              boolean hidden     = false;
+    public              String  icon       = null;
+    public              int     rowspan    = 0;
+    public              String  text       = null;
+
+    public ReportCell(String column, String text) {
+        this.columnName = column;
+        this.text       = text;
+    }
+
+    public ReportCell(String column, String text, boolean hidden) {
+        this(column, text);
+        this.hidden = hidden;
+    }
+
+    public ReportCell(String column, String text, String icon) {
+        this(column, text);
+        this.icon = icon;
+    }
+
+    public ReportCell(String column, String text, String icon, boolean hidden) {
+        this(column, text);
+        this.icon   = icon;
+        this.hidden = hidden;
+    }
+
+    public ReportCell(Throwable e) {
+        this("Exception", e.getMessage());
+        if (text == null) {
+            text = e.getClass().getName();
+        }
+    }
+
+    @Override
+    public int compareTo(ReportCell other) {
+        if (other == null) {
+            return 1;
+        }
+        if (other.text == null && text == null) {
+            return 0;
+        }
+        if (other.text == null) {
+            return 1;
+        }
+        if (text == null) {
+            return -1;
+        }
+        return text.compareTo(other.text);
+    }
+
+    public ReportCell setColspan(int colspan) {
+        this.colspan = colspan;
+        return this;
+    }
+
+    public ReportCell setColumnName(String columnName) {
+        this.columnName = columnName;
+        return this;
+    }
+
+    public ReportCell setCritical() {
+        this.cssClass = CRITICAL;
+        return this;
+    }
+
+    public ReportCell setCssClass(String cssClass) {
+        this.cssClass = cssClass;
+        return this;
+    }
+
+    public ReportCell setGood() {
+        this.cssClass = GOOD;
+        return this;
+    }
+
+    public ReportCell setHidden(boolean hidden) {
+        this.hidden = hidden;
+        return this;
+    }
+
+    public ReportCell setIdle() {
+        this.cssClass = IDLE;
+        return this;
+    }
+
+    public ReportCell setRowspan(int rowspan) {
+        this.rowspan = rowspan;
+        return this;
+    }
+
+    public ReportCell setText(String text) {
+        this.text = text;
+        return this;
+    }
+
+    public ReportCell setWarning() {
+        this.cssClass = WARNING;
+        return this;
+    }
+}
