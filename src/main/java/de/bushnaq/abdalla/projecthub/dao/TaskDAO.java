@@ -1,6 +1,11 @@
 package de.bushnaq.abdalla.projecthub.dao;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import de.bushnaq.abdalla.projecthub.dto.TaskMode;
+import de.bushnaq.abdalla.util.DurationDeserializer;
+import de.bushnaq.abdalla.util.DurationSerializer;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Proxy;
@@ -21,6 +26,7 @@ import java.util.List;
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class TaskDAO {
 
 
@@ -31,8 +37,10 @@ public class TaskDAO {
     @Column(nullable = false)
     private boolean critical;
 
-    @Column(nullable = false)
-    private Duration duration = Duration.ZERO;
+    @Column(nullable = true)
+    @JsonSerialize(using = DurationSerializer.class)
+    @JsonDeserialize(using = DurationDeserializer.class)
+    private Duration duration;
 
     @Column(nullable = true)
     private LocalDateTime finish;
@@ -77,6 +85,8 @@ public class TaskDAO {
     private TaskMode taskMode;
 
     @Column(nullable = true)
+    @JsonSerialize(using = DurationSerializer.class)
+    @JsonDeserialize(using = DurationDeserializer.class)
     private Duration work;
 
     public boolean isMilestone() {

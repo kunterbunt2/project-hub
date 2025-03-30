@@ -1,5 +1,6 @@
 package de.bushnaq.abdalla.projecthub.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.*;
 
@@ -16,6 +17,7 @@ import java.util.List;
 //        scope = User.class,
 //        generator = ObjectIdGenerators.PropertyGenerator.class,
 //        property = "id")
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class User extends AbstractTimeAware implements Comparable<User> {
 
     @JsonManagedReference

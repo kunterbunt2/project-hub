@@ -25,7 +25,7 @@ public class GanttChartTest extends AbstractGanttUtil {
         Task task1 = addParentTask("[1] Parent Task", sprint, null, null);
         Task task2 = addTask("[2] Child Task", Duration.ofDays(5), resource1, sprint, task1, null);
         Task task3 = addTask("[3] Child Task", Duration.ofDays(5), resource2, sprint, task1, task2);
-        generateGanttChart();
+        generateGanttChart(testInfo);
     }
 
     @Test
@@ -40,8 +40,26 @@ public class GanttChartTest extends AbstractGanttUtil {
         Task task5 = addTask("[5] Child Task ", Duration.ofDays(5), resource1, sprint, task4, null);
         Task task6 = addTask("[6] Child Task ", Duration.ofDays(5), resource2, sprint, task4, task5);
 
-        generateGanttChart();
+        generateGanttChart(testInfo);
     }
 
+    @Test
+    public void gantt_03(TestInfo testInfo) throws Exception {
+
+        //create tasks
+        Task task1 = addParentTask("[1] Parent Task", sprint, null, null);
+        Task task2 = addTask("[2] Child Task ", Duration.ofDays(5), resource1, sprint, task1, null);
+        Task task3 = addTask("[3] Child Task ", Duration.ofDays(5), resource2, sprint, task1, task2);
+
+        Task task4 = addParentTask("[4] Parent Task", sprint, null, task1);
+        Task task5 = addTask("[5] Child Task ", Duration.ofDays(5), resource1, sprint, task4, null);
+        Task task6 = addTask("[6] Child Task ", Duration.ofDays(5), resource2, sprint, task4, task5);
+
+        Task task7 = addParentTask("[7] Parent Task", sprint, null, task4);
+        Task task8 = addTask("[8] Child Task ", Duration.ofDays(5), resource1, sprint, task7, null);
+        Task task9 = addTask("[9] Child Task ", Duration.ofDays(5), resource2, sprint, task7, null);
+
+        generateGanttChart(testInfo);
+    }
 
 }

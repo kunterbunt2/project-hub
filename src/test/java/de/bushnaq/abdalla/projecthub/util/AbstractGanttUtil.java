@@ -17,6 +17,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,7 +58,7 @@ public class AbstractGanttUtil extends AbstractEntityGenerator {
         initialize();
     }
 
-    protected void generateGanttChart() throws Exception {
+    protected void generateGanttChart(TestInfo testInfo) throws Exception {
         initialize();
         GanttUtil         ganttUtil = new GanttUtil(context);
         GanttErrorHandler eh        = new GanttErrorHandler();
@@ -64,6 +69,8 @@ public class AbstractGanttUtil extends AbstractEntityGenerator {
             taskApi.persist(task);
         });
         initialize();
+        storeExpectedResult();
+
 
         GanttChart ganttChart = new GanttChart(context, "", "/", "Gantt Chart", sprint.getName(), exceptions,
                 ParameterOptions.now, false, sprint, 1887, 1000, "scheduleWithMargin", context.parameters.graphicsTheme);
@@ -86,15 +93,25 @@ public class AbstractGanttUtil extends AbstractEntityGenerator {
 //        resourceLeveling();
     }
 
-    private void resourceLeveling() {
-        //dummy method to avoid null start/finish
-        for (Task task : sprint.getTasks()) {
-            if (task.getStart() == null) {
-                task.setStart(ParameterOptions.now);
-                task.setFinish(task.getStart().plus(task.getDuration()));
-            }
-        }
+//    private void resourceLeveling() {
+//        //dummy method to avoid null start/finish
+//        for (Task task : sprint.getTasks()) {
+//            if (task.getStart() == null) {
+//                task.setStart(ParameterOptions.now);
+//                task.setFinish(task.getStart().plus(task.getDuration()));
+//            }
+//        }
+//
+//    }
 
+    private void storeExpectedResult() throws IOException {
+        Path         filePath = Paths.get(testResultFolder, sprint.getName() + ".json");
+        List<String> content  = new ArrayList<>();
+        content.add(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(sprint));
+        for (Task task : sprint.getTasks()) {
+            content.add(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(task));
+            Files.write(filePath, content, StandardCharsets.UTF_8);
+        }
     }
 
 }

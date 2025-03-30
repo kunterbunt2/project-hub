@@ -1,6 +1,11 @@
 package de.bushnaq.abdalla.projecthub.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import de.bushnaq.abdalla.util.DurationDeserializer;
+import de.bushnaq.abdalla.util.DurationSerializer;
 import lombok.*;
 
 import java.time.Duration;
@@ -16,12 +21,15 @@ import java.util.List;
 @NoArgsConstructor
 //@ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class Task {
 
     @JsonIgnore
     private List<Task>    childTasks = new ArrayList<>();
     private boolean       critical   = false;
-    private Duration      duration   = Duration.ZERO;
+    @JsonSerialize(using = DurationSerializer.class)
+    @JsonDeserialize(using = DurationDeserializer.class)
+    private Duration      duration;
     private LocalDateTime finish;
     private Long          id;
     //    List<Relation> successors   = new ArrayList<>();
@@ -46,6 +54,8 @@ public class Task {
     private Long           sprintId;
     private LocalDateTime  start;
     private TaskMode       taskMode     = TaskMode.AUTO_SCHEDULED;
+    @JsonSerialize(using = DurationSerializer.class)
+    @JsonDeserialize(using = DurationDeserializer.class)
     private Duration       work         = Duration.ZERO;
 
     public void addChildTask(Task childTask) {

@@ -1,5 +1,6 @@
 package de.bushnaq.abdalla.projecthub.dao;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
@@ -21,6 +22,7 @@ import java.util.List;
 //        scope = UserDAO.class,
 //        generator = ObjectIdGenerators.PropertyGenerator.class,
 //        property = "id")
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class UserDAO extends AbstractTimeAwareDAO {
 
     //    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
