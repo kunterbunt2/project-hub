@@ -2,7 +2,6 @@ package de.bushnaq.abdalla.projecthub.dto;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.*;
 
 import java.time.Duration;
@@ -20,19 +19,22 @@ import java.util.List;
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 public class Task {
 
-    @JsonManagedReference(value = "task-task")
-    private List<Task>     childTasks   = new ArrayList<>();
-    private boolean        critical     = false;
-    private Duration       duration;
-    private LocalDateTime  finish;
-    private Long           id;
-    //    List<Relation> successors   = new ArrayList<>();
-    private String         name;
     @JsonIgnore
-    private String         notes;
-    @JsonBackReference(value = "task-task")
+    private List<Task>    childTasks = new ArrayList<>();
+    private boolean       critical   = false;
+    private Duration      duration   = Duration.ZERO;
+    private LocalDateTime finish;
+    private Long          id;
+    //    List<Relation> successors   = new ArrayList<>();
+    private String        name;
+    @JsonIgnore
+    private String        notes;
+
+    @JsonIgnore
     @ToString.Exclude//help intellij debugger not to go into a loop
-    private Task           parentTask;
+    private Task parentTask;
+
+    private Long           parentTaskId;
     //    @JsonManagedReference
     private List<Relation> predecessors = new ArrayList<>();
     private Number         progress     = 0;
@@ -49,6 +51,7 @@ public class Task {
             childTask.getParentTask().removeChildTask(childTask);
         }
         childTask.setParentTask(this);
+        childTask.setParentTaskId(this.getId());
         childTasks.add(childTask);
     }
 
@@ -71,16 +74,16 @@ public class Task {
     }
 
     public void initialize() {
-
     }
 
     @JsonIgnore
     public boolean isMilestone() {
-        return duration == null || duration.isZero();
+        return work == null || work.isZero();
     }
 
-    public void removeChildTask(Task childTask2) {
-        childTasks.remove(childTask2);
+    public void removeChildTask(Task childTask) {
+        childTasks.remove(childTask);
+        childTask.setParentTask(null);
+        childTask.setParentTaskId(null);
     }
-
 }

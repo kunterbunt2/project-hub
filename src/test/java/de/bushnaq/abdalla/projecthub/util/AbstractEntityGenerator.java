@@ -172,20 +172,20 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         return saved;
     }
 
-    protected Task addTask(String name, Duration duration, User user, Sprint sprint, Task parent, Task dependency) {
-        return addTask(sprint, parent, name, null, duration, user, dependency);
+    protected Task addTask(String name, Duration work, User user, Sprint sprint, Task parent, Task dependency) {
+        return addTask(sprint, parent, name, null, work, user, dependency);
     }
 
-    protected Task addTask(Sprint sprint, Task parent, String name, LocalDateTime start, Duration duration, User user, Task dependency) {
+    protected Task addTask(Sprint sprint, Task parent, String name, LocalDateTime start, Duration work, User user, Task dependency) {
         Task task = new Task();
         task.setName(name);
         task.setStart(start);
 //        task.setProgress(0);
 //        task.setTaskMode(TaskMode.AUTO_SCHEDULED);
-        if (duration != null) {
-            task.setDuration(duration);
-            if (start != null)
-                task.setFinish(start.plus(duration));
+        if (work != null) {
+            task.setWork(work);
+//            if (start != null)
+//                task.setFinish(start.plus(duration));
         }
         if (user != null) {
             task.setResourceId(user.getId());
@@ -198,6 +198,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         }
         if (parent != null) {
             task.setParentTask(parent);
+            task.setParentTaskId(parent.getId());
         }
         // Save the task
         Task saved = taskApi.persist(task, parent == null ? null : parent.getId(), sprint == null ? null : sprint.getId());

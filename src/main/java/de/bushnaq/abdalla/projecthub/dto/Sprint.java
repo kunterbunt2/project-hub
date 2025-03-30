@@ -85,12 +85,21 @@ public class Sprint extends AbstractTimeAware {
     }
 
     public void initialize(List<User> allUsers) {
+        //map users to their ids
         allUsers.forEach(user -> userMap.put(user.getId(), user));
+        //map tasks to their ids
         tasks.forEach(task -> taskMap.put(task.getId(), task));
         tasks.forEach(task -> {
-            task.setParentTask(taskMap.get(task.getResourceId()));
+            //set the parent task
+            if (task.getParentTaskId() != null) {
+                task.setParentTask(taskMap.get(task.getParentTaskId()));
+                //add the task to the parent task
+                task.getParentTask().addChildTask(task);
+            }
+//            task.getChildTasks().forEach(childTask -> task.addChildTask(taskMap.get(id)));
 //            task.setSprint(this);
             task.initialize();
         });
+        int a = 0;
     }
 }

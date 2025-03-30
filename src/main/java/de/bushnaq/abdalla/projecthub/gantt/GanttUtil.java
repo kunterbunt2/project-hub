@@ -3,10 +3,7 @@ package de.bushnaq.abdalla.projecthub.gantt;
 import de.bushnaq.abdalla.profiler.Profiler;
 import de.bushnaq.abdalla.profiler.SampleType;
 import de.bushnaq.abdalla.projecthub.dao.Context;
-import de.bushnaq.abdalla.projecthub.dto.Relation;
-import de.bushnaq.abdalla.projecthub.dto.Sprint;
-import de.bushnaq.abdalla.projecthub.dto.Task;
-import de.bushnaq.abdalla.projecthub.dto.TaskMode;
+import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.util.GanttErrorHandler;
 import de.bushnaq.abdalla.util.date.DateUtil;
 import org.slf4j.Logger;
@@ -17,6 +14,8 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+
+import static java.time.temporal.ChronoUnit.SECONDS;
 
 public class GanttUtil {
     private static final String DELIVERY_BUFFER          = "Delivery buffer (from critical path tasks)";
@@ -39,250 +38,218 @@ public class GanttUtil {
         this.context = context;
     }
 
-//    private void calculateCriticalPath(/*GanttErrorHandler eh,*/ Sprint sprint, String projectRequestKey, LocalDateTime currentStartTime/*, String xlsxFile*/)
-//            throws Exception {
-//
-//        long checks     = 0;
-//        int  iterations = 0;
-//        logger.trace(String.format("Calculating critical path for %d tasks.", sprint.getTasks().size()));
-//        int     maxLoop         = Math.max(sprint.getTasks().size() * sprint.getTasks().size(), sprint.getTasks().size() * 5);
-//        boolean anythingChanged = false;
-//        printCase("#", "ID", "Task Name", "Method", "Start", "Finish", "Duration");
-//        //        logger.trace(String.format("[#] [ID][Task Name           ][ Method__ start_______________ finish_______________"));
-//        do {
-//            anythingChanged = false;
-//            do {
-//                logger.trace(String.format("Iteration %d/%d.", iterations, maxLoop));
-//                anythingChanged = false;
-//                //[M] manual
-//                //+manual
-//                //-milestone
-//                //-duration
-//                //-children, this means +work
-//                for (Task task : sprint.getTasks()) {
-//                    checks++;
-//                    if (isManual(task) && !task.isMilestone() && (task.getDuration() == null || task.getDuration().isZero())
-//                            && !hasChildTasks(task)) {
-//                        Duration duration = getDurationFromWork(/*eh,*/ task);
-//                        task.setDuration(duration);
-//                        if (task.getStart() != null && duration != null) {
+    public void calculateCriticalPath(GanttErrorHandler eh, Sprint sprint, String projectRequestKey, LocalDateTime currentStartTime/*, String xlsxFile*/)
+            throws Exception {
+
+        long checks     = 0;
+        int  iterations = 0;
+        logger.trace(String.format("Calculating critical path for %d tasks.", sprint.getTasks().size()));
+        int     maxLoop         = Math.max(sprint.getTasks().size() * sprint.getTasks().size(), sprint.getTasks().size() * 5);
+        boolean anythingChanged = false;
+        printCase("#", "ID", "Task Name", "Method", "Start", "Finish", "Duration");
+        //        logger.trace(String.format("[#] [ID][Task Name           ][ Method__ start_______________ finish_______________"));
+        do {
+            anythingChanged = false;
+            do {
+                logger.trace(String.format("Iteration %d/%d.", iterations, maxLoop));
+                anythingChanged = false;
+                //[M] manual
+                //+manual
+                //-milestone
+                //-duration
+                //-children, this means +work
+                for (Task task : sprint.getTasks()) {
+                    checks++;
+                    if (isManual(task) && !task.isMilestone() && (task.getDuration() == null || task.getDuration().isZero())
+                            && !hasChildTasks(task)) {
+                        Duration duration = getDurationFromWork(eh, task);
+                        task.setDuration(duration);
+                        if (task.getStart() != null && duration != null) {
+                            //TODO reintroduce calendar
 //                            ProjectCalendar calendar = getCalendar(task);
 //                            LocalDateTime   finish   = calendar.getDate(task.getStart(), duration);
-//                            task.setFinish(finish);
-//                        }
-//                        anythingChanged = true;
-//                        printCase("M", "setFinish", task);
-//                        //                        logger.trace(String.format("[M] [%2d][%-20s][setFinish][%s][%s][%s]", task.getID(), task.getName(),
-//                        //                                LocalDateTimeUtil.createDateString(task.getStart(), localDateTimeUtil.dtfymdhms),
-//                        //                                LocalDateTimeUtil.createDateString(task.getFinish(), localDateTimeUtil.dtfymdhms),
-//                        //                                LocalDateTimeUtil.createDurationString(MpxjUtil.toJavaDuration(task.getDuration()), false, true, true)));
-//                    }
-//                }
-//
-//                //[2]
-//                for (Task task : sprint.getTasks()) {
-//                    checks++;
-//                    //-manual
-//                    //-children
-//                    //-dependencies
-//                    //-parent with start
-//                    ProjectCalendar calendar = getCalendar(task);
-//                    if (!isManual(task) && !hasChildTasks(task) && !hasHierarchicalDependencies(task) && !hasStart(task.getParentTask())
-//                            && !equals(calendar, currentStartTime, task.getStart())) {
-//                        setStart(eh, task, currentStartTime);
-//                        anythingChanged = true;
-//                        printCase("2", "setStart", task);
-//                        //                        logger.trace(String.format("[2] [%2d][%-20s][setStart][%s][%s][%s]", task.getID(), task.getName(),
-//                        //                                LocalDateTimeUtil.createDateString(task.getStart(), localDateTimeUtil.dtfymdhms),
-//                        //                                LocalDateTimeUtil.createDateString(task.getFinish(), localDateTimeUtil.dtfymdhms),
-//                        //                                LocalDateTimeUtil.createDurationString(MpxjUtil.toJavaDuration(task.getDuration()), false, true, true)));
-//                    }
-//                }
-//
-//                //[3]
-//                {
-//                    for (Task task : sprint.getTasks()) {
-//                        checks++;
-//                        LocalDateTime start = getLastStartConstraint(task);
-//                        //-manual
-//                        //-children
-//                        //+dependency with finish
-//                        if (!isManual(task) && !hasChildTasks(task)) {
-//                            if (start != null) {
-//                                ProjectCalendar calendar = getCalendar(task);
-//                                //                                Duration duration = calendar.getWork(task.getStart(), finish, TimeUnit.DAYS);
-//                                //                                finish = calendar.getDate(finish, Duration.getInstance(0, TimeUnit.DAYS));//TODO not working anymore
-//                                //                                finish = calendar.getDate(finish, duration);//TODO not working anymore
-//                                start = calendar.getNextWorkStart(start);//ensure we are not starting on a none-working-day
-//                                if (!equals(getCalendar(task), start, task.getStart())) {
-//                                    setStart(/*eh,*/ task, start);
-//                                    anythingChanged = true;
-//                                    printCase("3", "setStart", task);
-//                                    //                                    logger.trace(String.format("[3] [%2d][%-20s][setStart][%s][%s][%s]", task.getID(), task.getName(),
-//                                    //                                            LocalDateTimeUtil.createDateString(task.getStart(), localDateTimeUtil.dtfymdhms),
-//                                    //                                            LocalDateTimeUtil.createDateString(task.getFinish(), localDateTimeUtil.dtfymdhms),
-//                                    //                                            LocalDateTimeUtil.createDurationString(MpxjUtil.toJavaDuration(task.getDuration()), false, true, true)));
-//                                }
-//                            }
-//                        }
-//
-//                    }
-//                }
-//
-//                //[1]
-//                {
-//                    for (Task task : sprint.getTasks()) {
-//                        checks++;
-//                        boolean depends = hasHierarchicalDependencies(task);
-//                        //-manual
-//                        //+children
-//                        //-dependency
-//                        LocalDateTime   start    = getFirstChildStart(task);
-//                        ProjectCalendar calendar = getCalendar(task);
-//                        if (!isManual(task) && hasChildTasks(task) && !depends) {
-//                            if (start != null && !equals(calendar, start, task.getStart())) {
-//                                setStart(/*eh,*/ task, start);
-//                                anythingChanged = true;
-//                                printCase("1", "setStart", task);
-//                                //                                logger.trace(String.format("[1] [%2d][%-20s][setStart][%s][%s][%s]", task.getID(), task.getName(),
-//                                //                                        LocalDateTimeUtil.createDateString(task.getStart(), localDateTimeUtil.dtfymdhms),
-//                                //                                        LocalDateTimeUtil.createDateString(task.getFinish(), localDateTimeUtil.dtfymdhms),
-//                                //                                        LocalDateTimeUtil.createDurationString(MpxjUtil.toJavaDuration(task.getDuration()), false, true, true)));
-//                            }
-//                        }
-//                        LocalDateTime finish = getLastChildFinish(task);
-//                        if (!isManual(task) && hasChildTasks(task) && !depends) {
-//                            if (finish != null && !equals(calendar, finish, task.getFinish())) {
-//                                setFinish(task, finish);
-//                                anythingChanged = true;
-//                                printCase("1", "setFinish", task);
-//                                //                                logger.trace(String.format("[1] [%2d][%-20s][setFinish][%s][%s][%s]", task.getID(), task.getName(),
-//                                //                                        LocalDateTimeUtil.createDateString(task.getStart(), localDateTimeUtil.dtfymdhms),
-//                                //                                        LocalDateTimeUtil.createDateString(task.getFinish(), localDateTimeUtil.dtfymdhms),
-//                                //                                        LocalDateTimeUtil.createDurationString(MpxjUtil.toJavaDuration(task.getDuration()), false, true, true)));
-//                            }
-//                        }
-//
-//                    }
-//                }
-//
-//                //[4]
-//                {
-//                    for (Task task : sprint.getTasks()) {
-//                        checks++;
-//                        //-manual
-//                        //+children
-//                        //+dependencies
-//                        //+dependency with finish
-//                        //TBD +children without start
-//                        //TODO should also check if children have constraints for start
-//                        if (!isManual(task) && hasChildTasks(task) && hasDirectDependencies(task)) {
-//                            LocalDateTime lastStartConstraint   = getLastStartConstraint(task);
-//                            LocalDateTime firstManualChildStart = getFirstManualChildStart(task);
-//                            LocalDateTime firstChildStart       = getFirstChildStart(task);
-//                            //we have to start at least after the constraints and before the children
-//                            LocalDateTime start;
-//                            if (firstChildStart != null && lastStartConstraint != null
-//                                    && (lastStartConstraint.isBefore(firstChildStart) || lastStartConstraint.isEqual(firstChildStart))) {
-//                                start = firstChildStart;
-//                            } else if (firstManualChildStart != null) {
-//                                start = firstManualChildStart;
-//                            } else {
-//                                start = lastStartConstraint;
-//                            }
-//                            //                                                    Date start = getLastStartConstraint(task);
-//                            //if (firstChildStart != null)
-//                            //start = firstChildStart;
-//                            LocalDateTime finish = getLastChildFinish(task);
-//                            //                            Date dependencyStart = getLastStartConstraint(task);
-//                            //                            Date childStart = getFirstChildStart(task);
-//                            //                            Date start;
-//                            //                            if (dependencyStart.before(childStart))
-//                            //                                start = dependencyStart;
-//                            //                            else
-//                            //                                start = childStart;
-//                            ProjectCalendar calendar = getCalendar(task);
-//                            if (start != null) {
-//                                //                                start = calendar.getDate(start, Duration.getInstance(0, TimeUnit.DAYS));
-//                                start = calendar.getNextWorkStart(start);
-//                                if (!equals(calendar, start, task.getStart())) {
-//
-//                                    setStart(/*eh,*/ task, start);
-//                                    anythingChanged = true;
-//                                    printCase("4", "setStart", task);
-//                                    //                                    logger.trace(String.format("[4] [%2d][%-20s][setStart][%s][%s][%s]", task.getID(), task.getName(),
-//                                    //                                            LocalDateTimeUtil.createDateString(task.getStart(), localDateTimeUtil.dtfymdhms),
-//                                    //                                            LocalDateTimeUtil.createDateString(task.getFinish(), localDateTimeUtil.dtfymdhms),
-//                                    //                                            LocalDateTimeUtil.createDurationString(MpxjUtil.toJavaDuration(task.getDuration()), false, true, true)));
-//                                }
-//                            }
-//                            if (finish != null && !equals(calendar, finish, task.getFinish())) {
-//                                setFinish(task, finish);
-//                                anythingChanged = true;
-//                                printCase("4", "setFinish", task);
-//                                //                                logger.trace(String.format("[4] [%2d][%-20s][setFinish][%s][%s][%s]", task.getID(), task.getName(),
-//                                //                                        LocalDateTimeUtil.createDateString(task.getStart(), localDateTimeUtil.dtfymdhms),
-//                                //                                        LocalDateTimeUtil.createDateString(task.getFinish(), localDateTimeUtil.dtfymdhms),
-//                                //                                        LocalDateTimeUtil.createDurationString(MpxjUtil.toJavaDuration(task.getDuration()), false, true, true)));
-//                            }
-//                        }
-//                    }
-//                }
-//                //[5]
-//                for (Task task : sprint.getTasks()) {
-//                    checks++;
-//                    //-manual
-//                    //-children
-//                    //-dependencies
-//                    //+parent with dependencies
-//                    LocalDateTime start = getStart(task.getParentTask());
-//                    if (!isManual(task) && !hasChildTasks(task) && !hasDirectDependencies(task) && hasHierarchicalDependencies(task.getParentTask())) {
-//                        if (start != null) {
-//                            ProjectCalendar calendar = getCalendar(task);
-//                            //                            start = calendar.getDate(start, Duration.getInstance(0, TimeUnit.DAYS));
-//                            start = calendar.getNextWorkStart(start);
-//                            if (!equals(calendar, start, task.getStart())) {
-//
-//                                setStart(/*eh,*/ task, start);
-//                                anythingChanged = true;
-//                                printCase("5", "setStart", task);
-//                                //                                logger.trace(String.format("[5] [%2d][%-20s][setStart][%s][%s][%s]", task.getID(), task.getName(),
-//                                //                                        LocalDateTimeUtil.createDateString(task.getStart(), localDateTimeUtil.dtfymdhms),
-//                                //                                        LocalDateTimeUtil.createDateString(task.getFinish(), localDateTimeUtil.dtfymdhms),
-//                                //                                        LocalDateTimeUtil.createDurationString(MpxjUtil.toJavaDuration(task.getDuration()), false, true, true)));
-//                            }
-//                        }
-//                    }
-//                }
-//                iterations++;
-//
-//                if (!eh.isTrue("Error #040. We have detected a dependency loop involving tasks and Categories. Please check the generated team planner chart and fix the dependency loop in your Excel sheet.",
-//                        iterations < maxLoop)) {
-//                    try {
-//                        logger.info(String.format("Could not resolve critical path after %d iterations.", iterations));
-//                        //TODO reintroduce intermediate results
-////                        String ganttFileName = FileUtil.removeExtension(xlsxFile);
-////                        ReportUtil.drawTeamPlannerChart(context, projectRequestKey, "/", ganttFileName, projectFile, ganttFileName);
-//                    } catch (Exception e) {
-//                        logger.error(String.format(e.getMessage(), e));
-//                    }
-//                    anythingChanged = false;
-//                }
-//            } while (anythingChanged);
-//            anythingChanged = createResourceDependencies(sprint, anythingChanged);
-//        } while (anythingChanged);
-//        checks = testForNull(/*eh,*/ projectFile, checks);
-//        String ganttFileName = FileUtil.removeExtension(xlsxFile);
-//        checks = testRelationsAreHonored(/*eh,*/ projectFile, checks, ganttFileName);
-//        markCriticalPath(/*eh,*/ projectFile, currentStartTime);
-//        logger.trace(String.format("executed %d checks.", checks));
-//    }
+                            LocalDateTime finish = task.getStart().plus(duration);
+                            task.setFinish(finish);
+                        }
+                        anythingChanged = true;
+                        printCase("M", "setFinish", task);
+                    }
+                }
 
-//    private Duration calculateDeliveryBuffer(Sprint projectFile) throws ProjectsDashboardException {
-//        Duration deliveryBuffer = Duration.ZERO;
-//        int      i              = 0;
-//        for (Task task : projectFile.getTasks()) {
-//            for (ResourceAssignment resourceAssignment : task.getResourceAssignments()) {
+                //[2]
+                for (Task task : sprint.getTasks()) {
+                    checks++;
+                    //-manual
+                    //-children
+                    //-dependencies
+                    //-parent with start
+                    //TODO reintroduce calendar
+//                    ProjectCalendar calendar = getCalendar(task);
+                    if (!isManual(task) && !hasChildTasks(task) && !hasHierarchicalDependencies(task) && !hasStart(task.getParentTask())
+                            && !equals(/*calendar,*/ currentStartTime, task.getStart())) {
+                        setStart(eh, task, currentStartTime);
+                        anythingChanged = true;
+                        printCase("2", "setStart", task);
+                    }
+                }
+
+                //[3]
+                {
+                    for (Task task : sprint.getTasks()) {
+                        checks++;
+                        LocalDateTime start = getLastStartConstraint(task);
+                        //-manual
+                        //-children
+                        //+dependency with finish
+                        if (!isManual(task) && !hasChildTasks(task)) {
+                            if (start != null) {
+                                //TODO reintroduce calendar
+//                                ProjectCalendar calendar = getCalendar(task);
+                                //                                Duration duration = calendar.getWork(task.getStart(), finish, TimeUnit.DAYS);
+                                //                                finish = calendar.getDate(finish, Duration.getInstance(0, TimeUnit.DAYS));//TODO not working anymore
+                                //                                finish = calendar.getDate(finish, duration);//TODO not working anymore
+//                                start = calendar.getNextWorkStart(start);//ensure we are not starting on a none-working-day
+                                if (!equals(/*getCalendar(task),*/ start, task.getStart())) {
+                                    setStart(eh, task, start);
+                                    anythingChanged = true;
+                                    printCase("3", "setStart", task);
+                                }
+                            }
+                        }
+
+                    }
+                }
+
+                //[1]
+                {
+                    for (Task task : sprint.getTasks()) {
+                        checks++;
+                        boolean depends = hasHierarchicalDependencies(task);
+                        //-manual
+                        //+children
+                        //-dependency
+                        LocalDateTime start = getFirstChildStart(task);
+                        //TODO reintroduce calendar
+//                        ProjectCalendar calendar = getCalendar(task);
+                        if (!isManual(task) && hasChildTasks(task) && !depends) {
+                            if (start != null && !equals(/*calendar,*/ start, task.getStart())) {
+                                setStart(eh, task, start);
+                                anythingChanged = true;
+                                printCase("1", "setStart", task);
+                            }
+                        }
+                        LocalDateTime finish = getLastChildFinish(task);
+                        if (!isManual(task) && hasChildTasks(task) && !depends) {
+                            if (finish != null && !equals(/*calendar,*/ finish, task.getFinish())) {
+                                setFinish(task, finish);
+                                anythingChanged = true;
+                                printCase("1", "setFinish", task);
+                            }
+                        }
+
+                    }
+                }
+
+                //[4]
+                {
+                    for (Task task : sprint.getTasks()) {
+                        checks++;
+                        //-manual
+                        //+children
+                        //+dependencies
+                        //+dependency with finish
+                        //TBD +children without start
+                        //TODO should also check if children have constraints for start
+                        if (!isManual(task) && hasChildTasks(task) && hasDirectDependencies(task)) {
+                            LocalDateTime lastStartConstraint   = getLastStartConstraint(task);
+                            LocalDateTime firstManualChildStart = getFirstManualChildStart(task);
+                            LocalDateTime firstChildStart       = getFirstChildStart(task);
+                            //we have to start at least after the constraints and before the children
+                            LocalDateTime start;
+                            if (firstChildStart != null && lastStartConstraint != null
+                                    && (lastStartConstraint.isBefore(firstChildStart) || lastStartConstraint.isEqual(firstChildStart))) {
+                                start = firstChildStart;
+                            } else if (firstManualChildStart != null) {
+                                start = firstManualChildStart;
+                            } else {
+                                start = lastStartConstraint;
+                            }
+                            //                                                    Date start = getLastStartConstraint(task);
+                            //if (firstChildStart != null)
+                            //start = firstChildStart;
+                            LocalDateTime finish = getLastChildFinish(task);
+                            //                            Date dependencyStart = getLastStartConstraint(task);
+                            //                            Date childStart = getFirstChildStart(task);
+                            //                            Date start;
+                            //                            if (dependencyStart.before(childStart))
+                            //                                start = dependencyStart;
+                            //                            else
+                            //                                start = childStart;
+                            //TODO reintroduce calendar
+//                            ProjectCalendar calendar = getCalendar(task);
+                            if (start != null) {
+                                //                                start = calendar.getDate(start, Duration.getInstance(0, TimeUnit.DAYS));
+//                                start = calendar.getNextWorkStart(start);
+                                if (!equals(/*calendar,*/ start, task.getStart())) {
+
+                                    setStart(eh, task, start);
+                                    anythingChanged = true;
+                                    printCase("4", "setStart", task);
+                                }
+                            }
+                            if (finish != null && !equals(/*calendar,*/ finish, task.getFinish())) {
+                                setFinish(task, finish);
+                                anythingChanged = true;
+                                printCase("4", "setFinish", task);
+                            }
+                        }
+                    }
+                }
+                //[5]
+                for (Task task : sprint.getTasks()) {
+                    checks++;
+                    //-manual
+                    //-children
+                    //-dependencies
+                    //+parent with dependencies
+                    LocalDateTime start = getStart(task.getParentTask());
+                    if (!isManual(task) && !hasChildTasks(task) && !hasDirectDependencies(task) && hasHierarchicalDependencies(task.getParentTask())) {
+                        if (start != null) {
+                            //TODO reintroduce calendar
+//                            ProjectCalendar calendar = getCalendar(task);
+//                            start = calendar.getNextWorkStart(start);
+                            if (!equals(/*calendar,*/ start, task.getStart())) {
+
+                                setStart(eh, task, start);
+                                anythingChanged = true;
+                                printCase("5", "setStart", task);
+                            }
+                        }
+                    }
+                }
+                iterations++;
+
+                if (!eh.isTrue("Error #040. We have detected a dependency loop involving tasks and Categories. Please check the generated team planner chart and fix the dependency loop in your Excel sheet.",
+                        iterations < maxLoop)) {
+                    try {
+                        logger.info(String.format("Could not resolve critical path after %d iterations.", iterations));
+                        //TODO reintroduce intermediate results
+//                        String ganttFileName = FileUtil.removeExtension(xlsxFile);
+//                        ReportUtil.drawTeamPlannerChart(context, projectRequestKey, "/", ganttFileName, projectFile, ganttFileName);
+                    } catch (Exception e) {
+                        logger.error(String.format(e.getMessage(), e));
+                    }
+                    anythingChanged = false;
+                }
+            } while (anythingChanged);
+            anythingChanged = createResourceDependencies(sprint, anythingChanged);
+        } while (anythingChanged);
+        checks = testForNull(/*eh,*/ sprint, checks);
+//        String ganttFileName = FileUtil.removeExtension(xlsxFile);
+        checks = testRelationsAreHonored(eh, sprint, checks, "");
+        markCriticalPath(/*eh,*/ sprint, currentStartTime);
+        logger.trace(String.format("executed %d checks.", checks));
+    }
 
     /// /                Number   units = resourceAssignment.getUnits();
 //                Duration work = task.getWork();
@@ -346,6 +313,12 @@ public class GanttUtil {
         return size;
     }
 
+//    private Duration calculateDeliveryBuffer(Sprint projectFile) throws ProjectsDashboardException {
+//        Duration deliveryBuffer = Duration.ZERO;
+//        int      i              = 0;
+//        for (Task task : projectFile.getTasks()) {
+//            for (ResourceAssignment resourceAssignment : task.getResourceAssignments()) {
+
     public void createResourceDependencies(Sprint projectFile) throws Exception {
         try (Profiler pc = new Profiler(SampleType.CPU)) {
             boolean anythingChanged = false;
@@ -385,18 +358,44 @@ public class GanttUtil {
         return anythingChanged;
     }
 
+    public static boolean equals(/*ProjectCalendar calendar,*/ LocalDateTime d1, LocalDateTime d2) {
+        if (d1 == null && d2 == null) {
+            return true;
+        }
+        if (d1 == null || d2 == null) {
+            return false;
+        }
+        return d1.equals(d2);
+        //TODO reintroduce calendar
+//        {
+//            //Date might be end of a working day, while reference is beginning of next working day?
+//            //            LocalDateTime nextDay = calendar.getDate(d1, Duration.getInstance(0, TimeUnit.DAYS));
+//            LocalDateTime nextDay = calendar.getNextWorkStart(d1);
+//
+//            if (nextDay.equals(d2)) {
+//                return true;
+//            }
+//        }
+//        {
+//            //Date might be beginning of next day working day, while reference is end of previous working day?
+//            //            LocalDateTime nextDay = calendar.getDate(d2, Duration.getInstance(0, TimeUnit.DAYS));
+//            LocalDateTime nextDay = calendar.getNextWorkStart(d2);
+//            return d1.equals(nextDay);
+//        }
+    }
+
     public static boolean equals(Duration duration, Duration duration2) {
         return DateUtil.createDurationString(duration, true, true, true).equals(DateUtil.createDurationString(duration2, true, true, true));
     }
 
-    /**
-     * equal timestamps even if there is a out of office duration in between
-     *
-     * @param calendar
-     * @param d1
-     * @param d2
-     * @return
-     */
+//    /**
+//     * equal timestamps even if there is a out of office duration in between
+//     *
+//     * @param calendar
+//     * @param d1
+//     * @param d2
+//     * @return
+//     */
 //    public static boolean equals(ProjectCalendar calendar, LocalDateTime d1, LocalDateTime d2) {
 //        if (d1 == null && d2 == null) {
 //            return true;
@@ -431,7 +430,7 @@ public class GanttUtil {
 //        return null;
 //    }
 
-//    public static ProjectCalendar getCalendar(Task task) {
+    //    public static ProjectCalendar getCalendar(Task task) {
 //        for (ResourceAssignment ra : task.getResourceAssignments()) {
 //            Resource resource = ra.getResource();
 //            if (resource != null) {
@@ -460,40 +459,34 @@ public class GanttUtil {
     //        return task.getResourceAssignments().size() != 0;
     //    }
 
-//    private Duration getDurationFromWork(/*GanttErrorHandler eh,*/ Task task) {
-//        if (task.getAssignedUser() != null) {
-//            User resourceAssignment = task.getAssignedUser();
-//            //            Resource resource = resourceAssignment.getResource();
+    private Duration getDurationFromWork(GanttErrorHandler eh, Task task) {
+        if (task.getAssignedUser() != null) {
+            User resourceAssignment = task.getAssignedUser();
+            //            Resource resource = resourceAssignment.getResource();
 
-    /// /            Number   units = resourceAssignment.getUnits();
-//            Duration work = task.getWork();
-//            if (work != null) {
-//                if (work.getUnits() == TimeUnit.HOURS) {
-//                    //            if (work != null) {
-//                    double availability = 100 / units.doubleValue();
-//                    //            double a = Math.ceil(work.getDuration() * availability * 60 * 60) / (60 * 60);
-//                    //            double d = work.getDuration();
-//                    //            double a = availability * work.getDuration();
-//                    //            double a = Math.max(availability * work.getDuration() * 60, 1) / (60.0);
-//                    double durationUnits = availability * work.getDuration();
-//                    if (durationUnits > 0.0) {
-//                        durationUnits = Math.max(durationUnits * 60, 1) / (60.0);
-//                    }
-//                    //            double seconds = (Math.round(a * 60 * 10) * 6);
-//                    durationUnits = (Math.round(durationUnits * 60 * 10) * 6) / (60 * 10 * 6.0);//calculate in 6 second accuracy, assuming that unit is hours
-//                    Duration duration = Duration.getInstance(durationUnits, work.getUnits());
-//                    //            duration = duration.convertUnits(TimeUnit.HOURS, projectProperties);
-//                    //            String ds = DateUtil.createDurationString(duration, true, true, true);
-//                    return duration;
-//                    //            }
-//                }
-//            } else {
-//                Duration duration = Duration.ZERO;
-//                return duration;
-//            }
-//        }
-//        return Duration.ZERO;
-//    }
+//            Number   units = resourceAssignment.getUnits();
+            float    availability = resourceAssignment.getAvailabilities().getLast().getAvailability();
+            Duration work         = task.getWork();
+            if (work != null) {
+//                if (work.getUnits() == TimeUnit.HOURS)
+                {
+                    double inverseAvailability = 1 / availability;
+                    double durationUnits       = inverseAvailability * work.getSeconds();
+                    if (durationUnits > 0.0) {
+                        durationUnits = Math.max(durationUnits * 60, 1) / (60.0);
+                    }
+                    durationUnits = (Math.round(durationUnits * 60 * 10) * 6) / (60 * 10 * 6.0);//calculate in 6 second accuracy, assuming that unit is hours
+                    Duration duration = Duration.of((long) durationUnits, SECONDS);
+                    return duration;
+                }
+            } else {
+                Duration duration = Duration.ZERO;
+                return duration;
+            }
+        }
+        return Duration.ZERO;
+    }
+
     public static LocalDateTime getEarliestStartDate(Sprint projectFile) {
         LocalDateTime earliestDate = null;
         for (Task task : projectFile.getTasks()) {
@@ -542,11 +535,11 @@ public class GanttUtil {
         return finish;
     }
 
-    private LocalDateTime getLastStartConstraint(Sprint sprint, Task task) {
+    private LocalDateTime getLastStartConstraint(Task task) {
         LocalDateTime finish = null;
         for (Relation relation : task.getPredecessors()) {
             Task sourceTask = task;
-            Task targetTask = sprint.getTaskById(relation.getPredecessorId());
+            Task targetTask = task.getSprint().getTaskById(relation.getPredecessorId());
             //            if (sourceTask.getUniqueID() == task.getUniqueID() && targetTask.getStart() != null && targetTask.getDuration() != null) {
             //                Date localFinish = calendar.getDate(targetTask.getStart(), targetTask.getDuration(), true);
             //                if (finish == null || calendar.getDate(targetTask.getStart(), targetTask.getDuration(), true).after(finish)) {
@@ -597,35 +590,24 @@ public class GanttUtil {
         return false;
     }
 
-//    private boolean hasDirectDependencies(Task task) {
-//        //the task has no predecessors
-//        //none of its parents has predecessor
-//        if (task == null) {
-//            return false;
-//        }
-//        for (Relation relation : task.getPredecessors()) {
-//            Task sourceTask = relation.getSourceTask();
-//            if (sourceTask.getUniqueID() == task.getUniqueID()) {
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
+    private boolean hasDirectDependencies(Task task) {
+        if (task == null) {
+            return false;
+        }
+        return !task.getPredecessors().isEmpty();
+    }
 
-    //    private boolean hasHierarchicalDependencies(Task task) {
-//        //the task has no predecessors
-//        //none of its parents has predecessor
-//        if (task == null) {
-//            return false;
-//        }
-//        for (Relation relation : task.getPredecessors()) {
-//            Task sourceTask = relation.getSourceTask();
-//            if (sourceTask.getUniqueID() == task.getUniqueID()) {
-//                return true;
-//            }
-//        }
-//        return hasHierarchicalDependencies(task.getParentTask());
-//    }
+    private boolean hasHierarchicalDependencies(Task task) {
+        //the task has no predecessors
+        //none of its parents has predecessor
+        if (task == null) {
+            return false;
+        }
+        if (!task.getPredecessors().isEmpty())
+            return true;
+        return hasHierarchicalDependencies(task.getParentTask());
+    }
+
     private boolean hasStart(Task task) {
         return task != null && task.getStart() != null;
     }
@@ -998,76 +980,80 @@ public class GanttUtil {
         return count;
     }
 
-//    private void setFinish(Task task, LocalDateTime finish) {
-//        task.setFinish(finish);
-//        if (task.getChildTasks().size() != 0) {
-//            LocalDateTime start = task.getStart();
-//            //            if (task.getStart() != null) {
-//            //                Duration duration = Duration.getInstance((finish.getTime() - start.getTime()) / (1000 * 60 * 60 * 7.5), TimeUnit.DAYS);
-//            //                task.setDuration(duration);
-//            //            }
-//            if (finish != null && start != null) {
-//                //                logger.trace("getWork start");
-//                //                long now = System.currentTimeMillis();
+    private void setFinish(Task task, LocalDateTime finish) {
+        task.setFinish(finish);
+        if (task.getChildTasks().size() != 0) {
+            LocalDateTime start = task.getStart();
+            //            if (task.getStart() != null) {
+            //                Duration duration = Duration.getInstance((finish.getTime() - start.getTime()) / (1000 * 60 * 60 * 7.5), TimeUnit.DAYS);
+            //                task.setDuration(duration);
+            //            }
+            if (finish != null && start != null) {
+                //                logger.trace("getWork start");
+                //                long now = System.currentTimeMillis();
+                //TODO reintroduce calendar
 //                ProjectCalendar calendar = getCalendar(task);
 //                Duration        duration = calendar.getWork(start, finish, TimeUnit.DAYS);
-//                //                count++;
-//                //                long delta = System.currentTimeMillis() - now;
-//                //                logger.trace("getWork end");
-//                //                if (delta > 1000) {
-//                //                    logger.trace("took too long " + count);
-//                //                }
-//
-//                //                Duration duration = getDuration(task);
-//                task.setDuration(duration);
-//
-//                //                if (duration != null && time != null) {
-//                //                    Date date = calendar.getDate(time, duration, true);
-//                //                    calendar.task.setFinish(date);
-//                //                }
-//            }
-//        }
-//    }
+                Duration duration = Duration.between(start, finish);
+                //                count++;
+                //                long delta = System.currentTimeMillis() - now;
+                //                logger.trace("getWork end");
+                //                if (delta > 1000) {
+                //                    logger.trace("took too long " + count);
+                //                }
 
-//    private void setStart(/*GanttErrorHandler eh,*/ Task task, LocalDateTime endOfLastTask) {
+                //                Duration duration = getDuration(task);
+                task.setDuration(duration);
+
+                //                if (duration != null && time != null) {
+                //                    Date date = calendar.getDate(time, duration, true);
+                //                    calendar.task.setFinish(date);
+                //                }
+            }
+        }
+    }
+
+    private void setStart(GanttErrorHandler eh, Task task, LocalDateTime endOfLastTask) {
+        //TODO reintroduce calendar
 //        ProjectCalendar calendar = getCalendar(task);
 //        LocalDateTime   start    = calendar.getNextWorkStart(endOfLastTask);
-//        task.setStart(start);
-//        if (task.isMilestone()) {
-//            task.setFinish(start);
-//            Duration duration = Duration.ZERO;
-//            task.setDuration(duration);
-//        } else if (!hasChildTasks(task)) {//task
-//            Duration duration = getDurationFromWork(/*eh,*/ task);
-//            task.setDuration(duration);
-//            //            String d = Util.createDurationString(duration, true, true, true);
-//            LocalDateTime finish = calendar.getDate(start, duration);
-//            //            finish = calendar.getNextWorkStart(finish);
-//            task.setFinish(finish);
-//        } else {//parent
-//            LocalDateTime finish = task.getFinish();
-//            if (start != null & finish != null) {
-//                Duration duration = calendar.getWork(start, finish, TimeUnit.DAYS);
-//                //                Duration duration = getDuration(task);
-//                task.setDuration(duration);
-//                //                if (duration != null && time != null) {
-//                //                    Date date = calendar.getDate(time, duration, true);
-//                //                    calendar.task.setFinish(date);
-//                //                }
-//                task.setFinish(finish);
-//            }
-//        }
-//    }
+        LocalDateTime start = endOfLastTask;
+        task.setStart(start);
+        if (task.isMilestone()) {
+            task.setFinish(start);
+            Duration duration = Duration.ZERO;
+            task.setDuration(duration);
+        } else if (!hasChildTasks(task)) {//task
+            Duration duration = getDurationFromWork(eh, task);
+            task.setDuration(duration);
+            //            String d = Util.createDurationString(duration, true, true, true);
 
-    /**
-     * Task is critical if it cannot move and all tasks that depend on it can also not move until the end date
-     *
-     * @param startDate
-     * @param finishDate
-     * @param anythingChanged
-     * @param task
-     * @return
-     */
+            //TODO reintroduce calendar
+            //LocalDateTime finish = calendar.getDate(start, duration);
+            LocalDateTime finish = start.plus(duration);
+            task.setFinish(finish);
+        } else {//parent
+            LocalDateTime finish = task.getFinish();
+            if (start != null & finish != null) {
+
+                //TODO reintroduce calendar
+//                Duration duration = calendar.getWork(start, finish, TimeUnit.DAYS);
+                Duration duration = Duration.between(start, finish);
+                task.setDuration(duration);
+                task.setFinish(finish);
+            }
+        }
+    }
+
+    //    /**
+//     * Task is critical if it cannot move and all tasks that depend on it can also not move until the end date
+//     *
+//     * @param startDate
+//     * @param finishDate
+//     * @param anythingChanged
+//     * @param task
+//     * @return
+//     */
 //    private boolean testCritical(LocalDateTime startDate, LocalDateTime finishDate, boolean anythingChanged, Task task) {
 //        if (!startSet.contains(task)) {
 //            //are we starting at the beginning of the project?

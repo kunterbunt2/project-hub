@@ -1,7 +1,6 @@
 package de.bushnaq.abdalla.projecthub.dao;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import de.bushnaq.abdalla.projecthub.dto.TaskMode;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,15 +25,15 @@ import java.util.List;
 public class TaskDAO {
 
 
-    @OneToMany(mappedBy = "parentTask", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    @JsonManagedReference(value = "task-task")
-    private List<TaskDAO> childTasks = new ArrayList<>();
+//    @OneToMany(mappedBy = "parentTask", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+//    @JsonManagedReference(value = "task-task")
+//    private List<Long> childTaskIds = new ArrayList<>();
 
     @Column(nullable = false)
     private boolean critical;
 
     @Column(nullable = false)
-    private Duration duration;
+    private Duration duration = Duration.ZERO;
 
     @Column(nullable = true)
     private LocalDateTime finish;
@@ -47,11 +46,13 @@ public class TaskDAO {
     @Column(nullable = false)
     private String name;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "parent_id")
-    @JsonBackReference(value = "task-task")
-    @ToString.Exclude//help intellij debugger not to go into a loop
-    private TaskDAO parentTask;
+    //    @ManyToOne(fetch = FetchType.EAGER)
+//    @JoinColumn(name = "parent_id")
+//    @JsonBackReference(value = "task-task")
+//    @ToString.Exclude//help intellij debugger not to go into a loop
+//    private TaskDAO parentTask;
+    @Column(nullable = true)
+    private Long parentTaskId;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
@@ -61,7 +62,8 @@ public class TaskDAO {
     private Number progress;
 
     @Column(nullable = true)
-    private Long      resourceId;
+    private Long resourceId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonBackReference(value = "sprint-task")
     @ToString.Exclude//help intellij debugger not to go into a loop
@@ -74,6 +76,7 @@ public class TaskDAO {
     @Column(nullable = false)
     private TaskMode taskMode;
 
+    @Column(nullable = true)
     private Duration work;
 
     public boolean isMilestone() {

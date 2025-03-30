@@ -3,7 +3,9 @@ package de.bushnaq.abdalla.projecthub.util;
 import de.bushnaq.abdalla.projecthub.dao.Context;
 import de.bushnaq.abdalla.projecthub.dao.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
+import de.bushnaq.abdalla.projecthub.gantt.GanttUtil;
 import de.bushnaq.abdalla.projecthub.report.GanttChart;
+import de.bushnaq.abdalla.util.GanttErrorHandler;
 import de.bushnaq.abdalla.util.Util;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
@@ -53,7 +55,9 @@ public class AbstractGanttUtil extends AbstractEntityGenerator {
 
     protected void generateGanttChart() throws Exception {
         initialize();
-
+        GanttUtil         ganttUtil = new GanttUtil(context);
+        GanttErrorHandler eh        = new GanttErrorHandler();
+        ganttUtil.calculateCriticalPath(eh, sprint, "", ParameterOptions.now);
         GanttChart ganttChart = new GanttChart(context, "", "/", "Gantt Chart", sprint.getName(), exceptions,
                 ParameterOptions.now, false, sprint, 1887, 1000, "scheduleWithMargin", context.parameters.graphicsTheme);
         ganttChart.generateImage(Util.generateCopyrightString(ParameterOptions.now), testResultFolder);
@@ -67,7 +71,7 @@ public class AbstractGanttUtil extends AbstractEntityGenerator {
         sprint    = allProducts.getFirst().getVersions().getFirst().getProjects().getFirst().getSprints().getFirst();
         resource1 = allUsers.getFirst();
         resource2 = allUsers.get(1);
-        resourceLeveling();
+//        resourceLeveling();
     }
 
     private void resourceLeveling() {

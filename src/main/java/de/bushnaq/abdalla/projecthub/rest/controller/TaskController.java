@@ -50,7 +50,7 @@ public class TaskController {
     public TaskDAO save(@RequestBody TaskDAO task, @PathVariable Long sprintId, @PathVariable Long parentId) {
         SprintDAO sprint = sprintRepository.getById(sprintId);
         TaskDAO   parent = taskRepository.getById(parentId);
-        task.setParentTask(parent);
+//        task.setParentTask(parent);
         task.setSprint(sprint);
         TaskDAO save = taskRepository.save(task);
         return save;

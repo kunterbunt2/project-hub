@@ -25,7 +25,6 @@ public class GanttChartTest extends AbstractGanttUtil {
         Task task1 = addParentTask("[1] Parent Task", sprint, null, null);
         Task task2 = addTask("[2] Child Task", Duration.ofDays(5), resource1, sprint, task1, null);
         Task task3 = addTask("[3] Child Task", Duration.ofDays(5), resource2, sprint, task1, task2);
-
         generateGanttChart();
     }
 
