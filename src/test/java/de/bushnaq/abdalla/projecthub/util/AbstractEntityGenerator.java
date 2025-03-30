@@ -37,21 +37,23 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     protected           ObjectMapper          objectMapper;
     @LocalServerPort
     private             int                   port;
-    @Autowired
+    //    @Autowired
     protected           ProductApi            productApi;
     private static      int                   productIndex              = 0;
-    @Autowired
+    //    @Autowired
     protected           ProjectApi            projectApi;
     private static      int                   projectIndex              = 0;
+    //    @Autowired
+    protected           SprintApi             sprintApi;
     private static      int                   sprintIndex               = 0;
-    @Autowired
+    //    @Autowired
     protected           TaskApi               taskApi;
     @Autowired
     private             TestRestTemplate      testRestTemplate; // Use TestRestTemplate instead of RestTemplate
-    @Autowired
+    //    @Autowired
     protected           UserApi               userApi;
     private static      int                   userIndex                 = 0;
-    @Autowired
+    //    @Autowired
     protected           VersionApi            versionApi;
     private static      int                   versionIndex              = 0;
 
@@ -98,6 +100,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         project.setRequester(requester);
 
         project.setVersion(version);
+        project.setVersionId(version.getId());
         Project saved = projectApi.persist(project, version.getId());
         expectedProjects.add(saved);
 
@@ -164,7 +167,8 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         sprint.setName(sprintName);
         sprint.setStatus(Status.OPEN);
         sprint.setProject(project);
-        Sprint saved = projectApi.persist(sprint, project.getId());
+        sprint.setProjectId(project.getId());
+        Sprint saved = sprintApi.persist(sprint, project.getId());
         expectedSprints.add(saved);
         project.addSprint(saved);
 
@@ -195,13 +199,14 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         }
         if (sprint != null) {
             task.setSprint(sprint);
+            task.setSprintId(sprint.getId());
         }
         if (parent != null) {
             task.setParentTask(parent);
             task.setParentTaskId(parent.getId());
         }
         // Save the task
-        Task saved = taskApi.persist(task, parent == null ? null : parent.getId(), sprint == null ? null : sprint.getId());
+        Task saved = taskApi.persist(task);
         expectedTasks.add(saved);
         if (parent != null) {
             parent.addChildTask(saved);
@@ -234,6 +239,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         Version version = new Version();
         version.setName(versionName);
         version.setProduct(product);
+        version.setProductId(product.getId());
         Version saved = versionApi.persist(version, product.getId());
         product.addVersion(saved);
         expectedVersions.add(saved);
@@ -255,6 +261,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         userApi    = new UserApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
         taskApi    = new TaskApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
         versionApi = new VersionApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        sprintApi  = new SprintApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
     }
 
     /**
@@ -268,9 +275,9 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         newParent.addChildTask(task);
 
 
-        taskApi.persist(newParent, newParent.getParentTask() == null ? null : newParent.getParentTask().getId(), sprint.getId());
-        taskApi.persist(task, task.getParentTask() == null ? null : task.getParentTask().getId(), sprint.getId());
-        taskApi.persist(oldParent, oldParent.getParentTask() == null ? null : oldParent.getParentTask().getId(), sprint.getId());
+        taskApi.persist(newParent);
+        taskApi.persist(task);
+        taskApi.persist(oldParent);
     }
 
     protected void removeAvailability(Availability availability, User user) {
@@ -354,9 +361,13 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
      * ensure products in db match oru expectations
      */
     protected void testProducts() {
-        List<User>    allUsers = userApi.getAllUsers();
-        List<Product> actual   = productApi.getAllProducts();
-        actual.forEach(product -> product.initialize(allUsers));
+        List<User>    allUsers    = userApi.getAllUsers();
+        List<Product> actual      = productApi.getAllProducts();
+        List<Version> allVersions = versionApi.getAllVersions();
+        List<Project> allProjects = projectApi.getAllProjects();
+        List<Sprint>  allSprints  = sprintApi.getAllSprints();
+        List<Task>    allTasks    = taskApi.getAllTasks();
+        actual.forEach(product -> product.initialize(allUsers, allVersions, allProjects, allSprints, allTasks));
 
         assertEquals(expectedProducts.size(), actual.size());
         for (int i = 0; i < expectedProducts.size(); i++) {

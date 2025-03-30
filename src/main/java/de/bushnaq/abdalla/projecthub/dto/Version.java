@@ -1,8 +1,7 @@
 package de.bushnaq.abdalla.projecthub.dto;
 
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -23,11 +22,15 @@ public class Version extends AbstractTimeAware {
 
     private String name;
 
+    @JsonIgnore
     @ToString.Exclude//help intellij debugger not to go into a loop
-    @JsonBackReference(value = "product-version")
     private Product product;
 
-    @JsonManagedReference(value = "version-project")
+    private Long productId;
+
+    //    @JsonManagedReference(value = "version-project")
+    @JsonIgnore
+    @ToString.Exclude//help intellij debugger not to go into a loop
     private List<Project> projects = new ArrayList<>();
 
     public Project addProject(Project project) {
@@ -40,7 +43,12 @@ public class Version extends AbstractTimeAware {
         return "V-" + id;
     }
 
-    public void initialize(List<User> allUsers) {
-        projects.forEach(project -> project.initialize(allUsers));
+    public void initialize(List<User> allUsers, List<Project> allProjects, List<Sprint> allSprints, List<Task> allTasks) {
+        allProjects.forEach(project -> {
+            if (project.getVersionId() == id) {
+                addProject(project);
+            }
+        });
+        projects.forEach(project -> project.initialize(allUsers, allSprints, allTasks));
     }
 }

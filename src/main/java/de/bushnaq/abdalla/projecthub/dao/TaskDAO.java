@@ -1,6 +1,5 @@
 package de.bushnaq.abdalla.projecthub.dao;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import de.bushnaq.abdalla.projecthub.dto.TaskMode;
 import jakarta.persistence.*;
 import lombok.*;
@@ -55,7 +54,7 @@ public class TaskDAO {
     private Long parentTaskId;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @JoinColumn(name = "task_id", referencedColumnName = "id")
     private List<RelationDAO> predecessors = new ArrayList<>();
 
     @Column(nullable = false)
@@ -64,10 +63,11 @@ public class TaskDAO {
     @Column(nullable = true)
     private Long resourceId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JsonBackReference(value = "sprint-task")
-    @ToString.Exclude//help intellij debugger not to go into a loop
-    private SprintDAO sprint;
+    //    @ManyToOne(fetch = FetchType.LAZY)
+//    @JsonBackReference(value = "sprint-task")
+//    @ToString.Exclude//help intellij debugger not to go into a loop
+    @Column(nullable = false)
+    private Long sprintId;
 
     //    List<Relation> successors = new ArrayList<>();
     @Column(nullable = true)

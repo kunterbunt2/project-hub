@@ -33,16 +33,17 @@ public class TaskApi extends AbstractApi {
         return executeWithErrorHandling(() -> restTemplate.getForObject(baseUrl + "/task/{id}", Task.class, id));
     }
 
-    public Task persist(Task task, Long parentId, Long sprintId) {
-        if (sprintId == null)
-            throw new IllegalArgumentException("sprintId is required");
-        if (parentId == null) {
-            //root node
-            return executeWithErrorHandling(() -> restTemplate.postForObject(baseUrl + "/task/{sprintId}", task, Task.class, sprintId));
-        } else {
-            //child node
-            return executeWithErrorHandling(() -> restTemplate.postForObject(baseUrl + "/task/{sprintId}/{taskId}", task, Task.class, sprintId, parentId));
-        }
+    public Task persist(Task task) {
+//        if (sprintId == null)
+//            throw new IllegalArgumentException("sprintId is required");
+//        if (parentId == null) {
+//            //root node
+//            return executeWithErrorHandling(() -> restTemplate.postForObject(baseUrl + "/task/{sprintId}", task, Task.class, sprintId));
+//        } else {
+//            //child node
+//            return executeWithErrorHandling(() -> restTemplate.postForObject(baseUrl + "/task/{sprintId}/{taskId}", task, Task.class, sprintId, parentId));
+//        }
+        return executeWithErrorHandling(() -> restTemplate.postForObject(baseUrl + "/task", task, Task.class));
     }
 
 }

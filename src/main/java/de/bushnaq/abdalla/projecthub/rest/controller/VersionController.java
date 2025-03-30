@@ -38,7 +38,7 @@ public class VersionController {
     @PostMapping("/{productId}")
     public VersionDAO save(@RequestBody VersionDAO version, @PathVariable Long productId) {
         ProductDAO product = productRepository.getById(productId);
-        version.setProduct(product);
+//        version.setProduct(product);
         VersionDAO save = versionRepository.save(version);
         return save;
     }

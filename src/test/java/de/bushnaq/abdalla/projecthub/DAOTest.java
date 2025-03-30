@@ -36,9 +36,9 @@ public class DAOTest extends AbstractEntityGenerator {
         {
             VersionDAO version = new VersionDAO();
             version.setName("Version 1");
-            version.setProduct(product);
+            version.setProductId(product.getId());
             entityManager.persist(version);
-            product.addVersion(version);
+//            product.addVersion(version);
         }
 
         List<ProductDAO> list1 = getAllProducts();
@@ -47,17 +47,17 @@ public class DAOTest extends AbstractEntityGenerator {
         System.out.println(jsonString1);
         ProductDAO p1 = objectMapper.readerFor(ProductDAO.class).readValue(jsonString1);
 
-        String jsonString11 = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(list1.getFirst().getVersions().getFirst());
-        System.out.println(jsonString11);
-        VersionDAO p11 = objectMapper.readerFor(VersionDAO.class).readValue(jsonString11);
+//        String jsonString11 = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(list1.getFirst());
+//        System.out.println(jsonString11);
+//        VersionDAO p11 = objectMapper.readerFor(VersionDAO.class).readValue(jsonString11);
 
 
         {
             VersionDAO version = new VersionDAO();
             version.setName("Version 2");
-            version.setProduct(product);
+            version.setProductId(product.getId());
             entityManager.persist(version);
-            product.addVersion(version);
+//            product.addVersion(version);
 
             String jsonString111 = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(version);
             System.out.println(jsonString111);

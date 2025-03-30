@@ -2,7 +2,6 @@ package de.bushnaq.abdalla.projecthub.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.dto.Project;
-import de.bushnaq.abdalla.projecthub.dto.Sprint;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -51,15 +50,15 @@ public class ProjectApi extends AbstractApi {
                 ));
     }
 
-    public Sprint persist(Sprint sprint, Long projectId) {
-        return executeWithErrorHandling(() ->
-                restTemplate.postForObject(
-                        baseUrl + "/sprint/{projectId}",
-                        sprint,
-                        Sprint.class,
-                        projectId
-                ));
-    }
+//    public Sprint persist(Sprint sprint, Long projectId) {
+//        return executeWithErrorHandling(() ->
+//                restTemplate.postForObject(
+//                        baseUrl + "/sprint/{projectId}",
+//                        sprint,
+//                        Sprint.class,
+//                        projectId
+//                ));
+//    }
 
     // Example usage with Sprint
 //    public Sprint persist(Sprint sprint, Long projectId, String version) {

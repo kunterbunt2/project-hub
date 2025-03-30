@@ -1,7 +1,7 @@
 package de.bushnaq.abdalla.projecthub.dto;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.*;
 
@@ -23,7 +23,9 @@ public class Product extends AbstractTimeAware {
 
     private String name;
 
-    @JsonManagedReference(value = "product-version")
+    //    @JsonManagedReference(value = "product-version")
+    @JsonIgnore
+    @ToString.Exclude//help intellij debugger not to go into a loop
     private List<Version> versions = new ArrayList<>();
 
     public void addVersion(Version version) {
@@ -31,7 +33,12 @@ public class Product extends AbstractTimeAware {
         version.setProduct(this);
     }
 
-    public void initialize(List<User> allUsers) {
-        versions.forEach(version -> version.initialize(allUsers));
+    public void initialize(List<User> allUsers, List<Version> allVersions, List<Project> allProjects, List<Sprint> allSprints, List<Task> allTasks) {
+        allVersions.forEach(version -> {
+            if (version.getProductId() == id) {
+                addVersion(version);
+            }
+        });
+        versions.forEach(version -> version.initialize(allUsers, allProjects, allSprints, allTasks));
     }
 }

@@ -42,7 +42,7 @@ public class SprintController {
     @PostMapping("/{projectId}")
     public SprintDAO save(@RequestBody SprintDAO sprintDAO, @PathVariable Long projectId) {
         ProjectDAO project = projectRepository.getById(projectId);
-        sprintDAO.setProject(project);
+//        sprintDAO.setProject(project);
         SprintDAO save = sprintRepository.save(sprintDAO);
         return save;
     }

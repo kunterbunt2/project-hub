@@ -38,7 +38,7 @@ public class ProjectController {
     @PostMapping("/{versionId}")
     public ProjectDAO save(@RequestBody ProjectDAO project, @PathVariable Long versionId) {
         VersionDAO version = versionRepository.getById(versionId);
-        project.setVersion(version);
+//        project.setVersion(version);
         ProjectDAO save = projectRepository.save(project);
         return save;
     }

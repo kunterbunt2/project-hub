@@ -1,7 +1,6 @@
 package de.bushnaq.abdalla.projecthub.rest.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import de.bushnaq.abdalla.projecthub.dao.SprintDAO;
 import de.bushnaq.abdalla.projecthub.dao.TaskDAO;
 import de.bushnaq.abdalla.projecthub.repository.SprintRepository;
 import de.bushnaq.abdalla.projecthub.repository.TaskRepository;
@@ -39,22 +38,20 @@ public class TaskController {
         return taskRepository.findAll();
     }
 
-    @PostMapping("/{sprintId}")
-    public TaskDAO save(@RequestBody TaskDAO task, @PathVariable Long sprintId) {
-        SprintDAO sprint = sprintRepository.getById(sprintId);
-        task.setSprint(sprint);
+    @PostMapping
+    public TaskDAO save(@RequestBody TaskDAO task) {
         return taskRepository.save(task);
     }
 
-    @PostMapping("/{sprintId}/{parentId}")
-    public TaskDAO save(@RequestBody TaskDAO task, @PathVariable Long sprintId, @PathVariable Long parentId) {
-        SprintDAO sprint = sprintRepository.getById(sprintId);
-        TaskDAO   parent = taskRepository.getById(parentId);
-//        task.setParentTask(parent);
-        task.setSprint(sprint);
-        TaskDAO save = taskRepository.save(task);
-        return save;
-    }
+//    @PostMapping("/{sprintId}/{parentId}")
+//    public TaskDAO save(@RequestBody TaskDAO task, @PathVariable Long sprintId, @PathVariable Long parentId) {
+//        SprintDAO sprint = sprintRepository.getById(sprintId);
+//        TaskDAO   parent = taskRepository.getById(parentId);
+////        task.setParentTask(parent);
+//        task.setSprint(sprint);
+//        TaskDAO save = taskRepository.save(task);
+//        return save;
+//    }
 
 //    @PutMapping()
 //    public void update(@RequestBody TaskDAO user) {

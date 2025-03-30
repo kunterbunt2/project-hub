@@ -57,16 +57,28 @@ public class AbstractGanttUtil extends AbstractEntityGenerator {
         initialize();
         GanttUtil         ganttUtil = new GanttUtil(context);
         GanttErrorHandler eh        = new GanttErrorHandler();
-        ganttUtil.calculateCriticalPath(eh, sprint, "", ParameterOptions.now);
+        ganttUtil.levelResources(eh, sprint, "", ParameterOptions.now);
+
+        //save back to the database
+        sprint.getTasks().forEach(task -> {
+            taskApi.persist(task);
+        });
+        initialize();
+
         GanttChart ganttChart = new GanttChart(context, "", "/", "Gantt Chart", sprint.getName(), exceptions,
                 ParameterOptions.now, false, sprint, 1887, 1000, "scheduleWithMargin", context.parameters.graphicsTheme);
         ganttChart.generateImage(Util.generateCopyrightString(ParameterOptions.now), testResultFolder);
+        printTables();
     }
 
     protected void initialize() {
         List<User>    allUsers    = userApi.getAllUsers();
         List<Product> allProducts = productApi.getAllProducts();
-        allProducts.forEach(product -> product.initialize(allUsers));
+        List<Version> allVersions = versionApi.getAllVersions();
+        List<Project> allProjects = projectApi.getAllProjects();
+        List<Sprint>  allSprints  = sprintApi.getAllSprints();
+        List<Task>    allTasks    = taskApi.getAllTasks();
+        allProducts.forEach(product -> product.initialize(allUsers, allVersions, allProjects, allSprints, allTasks));
 
         sprint    = allProducts.getFirst().getVersions().getFirst().getProjects().getFirst().getSprints().getFirst();
         resource1 = allUsers.getFirst();

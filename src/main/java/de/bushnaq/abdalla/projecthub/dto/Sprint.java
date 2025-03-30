@@ -1,9 +1,7 @@
 package de.bushnaq.abdalla.projecthub.dto;
 
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -26,15 +24,21 @@ public class Sprint extends AbstractTimeAware {
     private   OffsetDateTime  end;
     private   Long            id;
     private   String          name;
+    //    @ToString.Exclude//help intellij debugger not to go into a loop
+//    @JsonBackReference(value = "project-sprint")
+    @JsonIgnore
     @ToString.Exclude//help intellij debugger not to go into a loop
-    @JsonBackReference(value = "project-sprint")
     private   Project         project;
+    private   Long            projectId;
     private   OffsetDateTime  start;
     private   Status          status;
     @JsonIgnore
     transient Map<Long, Task> taskMap = new HashMap<>();
-    @JsonManagedReference(value = "sprint-task")
-    private   List<Task>      tasks   = new ArrayList<>();
+
+    @JsonIgnore
+//    @JsonManagedReference(value = "sprint-task")
+    private List<Task> tasks = new ArrayList<>();
+
     @JsonIgnore
     transient Map<Long, User> userMap = new HashMap<>();
 
@@ -84,9 +88,15 @@ public class Sprint extends AbstractTimeAware {
         return userMap.get(resourceId);
     }
 
-    public void initialize(List<User> allUsers) {
+    public void initialize(List<User> allUsers, List<Task> allTasks) {
         //map users to their ids
         allUsers.forEach(user -> userMap.put(user.getId(), user));
+        //populate tasks list
+        allTasks.forEach(task -> {
+            if (task.getSprintId().equals(id)) {
+                addTask(task);
+            }
+        });
         //map tasks to their ids
         tasks.forEach(task -> taskMap.put(task.getId(), task));
         tasks.forEach(task -> {
@@ -96,8 +106,7 @@ public class Sprint extends AbstractTimeAware {
                 //add the task to the parent task
                 task.getParentTask().addChildTask(task);
             }
-//            task.getChildTasks().forEach(childTask -> task.addChildTask(taskMap.get(id)));
-//            task.setSprint(this);
+            task.setSprint(this);
             task.initialize();
         });
         int a = 0;

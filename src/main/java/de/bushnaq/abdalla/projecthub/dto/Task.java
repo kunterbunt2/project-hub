@@ -1,6 +1,5 @@
 package de.bushnaq.abdalla.projecthub.dto;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
@@ -39,9 +38,12 @@ public class Task {
     private List<Relation> predecessors = new ArrayList<>();
     private Number         progress     = 0;
     private Long           resourceId;
-    @JsonBackReference(value = "sprint-task")
+    //    @JsonBackReference(value = "sprint-task")
+//    @ToString.Exclude//help intellij debugger not to go into a loop
+    @JsonIgnore
     @ToString.Exclude//help intellij debugger not to go into a loop
     private Sprint         sprint;
+    private Long           sprintId;
     private LocalDateTime  start;
     private TaskMode       taskMode     = TaskMode.AUTO_SCHEDULED;
     private Duration       work         = Duration.ZERO;
