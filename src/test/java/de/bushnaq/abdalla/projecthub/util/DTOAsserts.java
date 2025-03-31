@@ -1,14 +1,32 @@
+/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
 package de.bushnaq.abdalla.projecthub.util;
 
 import de.bushnaq.abdalla.projecthub.dto.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DTOAsserts {
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private static void assertAvailabilityEquals(Availability expected, Availability actual) {
         assertEquals(expected.getId(), actual.getId(), "Availability IDs do not match");
@@ -17,11 +35,12 @@ public class DTOAsserts {
 //        assertEquals(expected.getUser().getId(), actual.getUser().getId(), "Availability user IDs do not match");
     }
 
-    protected static void assertLocalDateTimeEquals(LocalDateTime expected, LocalDateTime actual) {
+    protected static void assertLocalDateTimeEquals(LocalDateTime expected, LocalDateTime actual, String name) {
         if (expected == null && actual == null) {
             return;
         }
-        assertTrue(Math.abs(ChronoUnit.MICROS.between(expected, actual)) < 1, () -> String.format("Expected %s but was %s", expected, actual));
+        assertEquals(expected, actual, String.format("%s LocalDateTime mismatch.", name));
+//        assertTrue(Math.abs(ChronoUnit.MICROS.between(expected, actual)) < 1, () -> String.format("Expected %s but was %s", expected, actual));
     }
 
     private static void assertLocationEquals(Location expected, Location actual) {
@@ -85,7 +104,7 @@ public class DTOAsserts {
         }
 
         assertEquals(expected.getDuration(), actual.getDuration(), "Task durations do not match");
-        assertLocalDateTimeEquals(expected.getFinish(), actual.getFinish());
+        assertLocalDateTimeEquals(expected.getFinish(), actual.getFinish(), "Task finish");
         assertEquals(expected.getId(), actual.getId(), "Task IDs do not match");
         assertEquals(expected.getName(), actual.getName(), "Task names do not match");
         assertEquals(expected.getParentTask(), actual.getParentTask(), "Task parents do not match");
@@ -96,7 +115,7 @@ public class DTOAsserts {
         }
 
         assertEquals(expected.getResourceId(), actual.getResourceId(), "Task resource IDs do not match");
-        assertLocalDateTimeEquals(expected.getStart(), actual.getStart());
+        assertLocalDateTimeEquals(expected.getStart(), actual.getStart(), "Task start");
     }
 
     protected static void assertUserEquals(User expected, User actual) {

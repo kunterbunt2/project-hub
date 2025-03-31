@@ -22,3 +22,4 @@ webpack.generated.js
 /public/testCache
 /docs
 *.db
+test-results

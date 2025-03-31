@@ -1,3 +1,20 @@
+/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
 package de.bushnaq.abdalla.util;
 
 import de.bushnaq.abdalla.projecthub.Application;
@@ -17,29 +34,21 @@ import java.util.*;
 import java.util.List;
 
 public class Util {
-    //    public static final String moduleVersion;
-    //    public static final String buildNumber;
     public static final  long   ONE_WORKING_DAY_MILLIS = 7500L * 60L * 60L;
     private static final String buildTime;
-    //    public static final String APPLICATION = "Projects Dashboard";
     public static final  String copyright;
     public static final  Locale locale                 = Locale.US;
     private static final Logger logger                 = LoggerFactory.getLogger(Util.class);
     public static final  String module;
     private static final String moduleName;
     private static final String moduleVersion;
-    private static final String svnRevision;
 
     static {
-        svnRevision   = MavenProperiesProvider.getProperty(Application.class, "svn.revision");
         moduleName    = MavenProperiesProvider.getProperty(Application.class, "module.name");
         moduleVersion = MavenProperiesProvider.getProperty(Application.class, "module.version");
         buildTime     = MavenProperiesProvider.getProperty(Application.class, "build.time");
-        //        moduleVersion = MavenProperiesProvider.getProperty(Util.class, "module.version");
-        //        buildNumber = MavenProperiesProvider.getProperty(Util.class, "build.number");
-        //        copyright = APPLICATION + " " + moduleVersion + "." + buildNumber + " Generated %s";
-        module    = String.format("%s %s build at %s in embedded mode", moduleName, moduleVersion, buildTime, svnRevision);
-        copyright = String.format("%s %s build at %s in embedded mode, generated %%s", moduleName, moduleVersion, buildTime, svnRevision);
+        module        = String.format("%s %s built at %s", moduleName, moduleVersion, buildTime);
+        copyright     = String.format("%s %s built at %s, generated %%s", moduleName, moduleVersion, buildTime);
 
     }
 
@@ -55,22 +64,21 @@ public class Util {
         }
     }
 
-    public static String buildBurndownChartUrl(String jiraBaseUrl, int rapidViewId, long sprintId) {
-        //http://rdn-issues.risenet.eu:8080/secure/RapidBoard.jspa?rapidView=10061&view=reporting&chart=burndownChart&sprint=6
-        return jiraBaseUrl + "/secure/RapidBoard.jspa?rapidView=" + rapidViewId + "&view=reporting&chart=burndownChart&sprint==" + sprintId;
-    }
+//    public static String buildBurndownChartUrl(String jiraBaseUrl, int rapidViewId, long sprintId) {
+//        return jiraBaseUrl + "/secure/RapidBoard.jspa?rapidView=" + rapidViewId + "&view=reporting&chart=burndownChart&sprint==" + sprintId;
+//    }
 
-    public static String buildIconUrl(String jiraBaseUrl, String key) {
-        return jiraBaseUrl + key;
-    }
+//    public static String buildIconUrl(String jiraBaseUrl, String key) {
+//        return jiraBaseUrl + key;
+//    }
 
-    public static String buildRapidViewUrl(String jiraBaseUrl, Integer rapidViewId, Long sprintId) {
-        if (sprintId != null) {
-            return jiraBaseUrl + "/secure/RapidBoard.jspa?rapidView=" + rapidViewId + "&sprint=" + sprintId;
-        } else {
-            return null;
-        }
-    }
+//    public static String buildRapidViewUrl(String jiraBaseUrl, Integer rapidViewId, Long sprintId) {
+//        if (sprintId != null) {
+//            return jiraBaseUrl + "/secure/RapidBoard.jspa?rapidView=" + rapidViewId + "&sprint=" + sprintId;
+//        } else {
+//            return null;
+//        }
+//    }
 
     public static String columnIdtoExcelColumnName(int number) {
         final StringBuilder sb = new StringBuilder();
