@@ -19,11 +19,14 @@ package de.bushnaq.abdalla.projecthub.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.api.*;
+import de.bushnaq.abdalla.projecthub.dao.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
+import de.bushnaq.abdalla.projecthub.gantt.GanttContext;
+import de.bushnaq.abdalla.util.date.DateUtil;
 import jakarta.annotation.PostConstruct;
 import org.ajbrown.namemachine.Name;
 import org.ajbrown.namemachine.NameGenerator;
-import org.junit.jupiter.api.BeforeEach;
+import org.ajbrown.namemachine.NameGeneratorOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -167,9 +170,10 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
 
     protected void addRandomUsers(int count) {
         for (int i = 0; i < count; i++) {
-            String name  = names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
-            String email = name + "@project-hub.org";
-            addUser(name, email, "de", "nw", LocalDate.now(), 0.7f, LocalDate.parse(FIRST_OFF_DAY_START_DATE), LocalDate.parse(FIRST_OFF_DAY_FINISH_DATE), OffDayType.VACATION);
+            String    name      = names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
+            String    email     = name + "@project-hub.org";
+            LocalDate firstDate = ParameterOptions.now.toLocalDate().minusYears(1);
+            addUser(name, email, "de", "nw", firstDate, 0.5f, LocalDate.parse(FIRST_OFF_DAY_START_DATE), LocalDate.parse(FIRST_OFF_DAY_FINISH_DATE), OffDayType.VACATION);
         }
         printTables();
         testUsers();
@@ -193,9 +197,10 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         return saved;
     }
 
-    protected Task addTask(String name, Duration work, User user, Sprint sprint, Task parent, Task dependency) {
-        return addTask(sprint, parent, name, null, work, user, dependency);
+    protected Task addTask(String name, String workString, User user, Sprint sprint, Task parent, Task dependency) {
+        return addTask(sprint, parent, name, null, DateUtil.parseDurationString(workString, 7.5, 37.5), user, dependency);
     }
+
 
     protected Task addTask(Sprint sprint, Task parent, String name, LocalDateTime start, Duration work, User user, Task dependency) {
         Task task = new Task();
@@ -204,6 +209,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
 //        task.setProgress(0);
 //        task.setTaskMode(TaskMode.AUTO_SCHEDULED);
         if (work != null) {
+
             task.setWork(work);
 //            if (start != null)
 //                task.setFinish(start.plus(duration));
@@ -243,8 +249,6 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         addAvailability(saved, availability, start);
         addOffDay(saved, offDayStart, offDayFinish, offDayType);
 
-//        final HolidayManager holidayManager = HolidayManager.getInstance(ManagerParameters.create(HolidayCalendar.GERMANY));
-//        final Set<Holiday>   holidays       = holidayManager.getHolidays(Year.of(2022), "nw");
 
         userIndex++;
         expectedUsers.add(saved);
@@ -264,14 +268,12 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         return saved;
     }
 
-    @BeforeEach
-    protected void createUserNames() {
-        NameGenerator generator = new NameGenerator();
-        names = generator.generateNames(1000);
-    }
-
     @PostConstruct
     private void init() {
+        NameGeneratorOptions options = new NameGeneratorOptions();
+        options.setRandomSeed(123L);//Get deterministic results by setting a random seed.
+        NameGenerator generator = new NameGenerator(options);
+        names = generator.generateNames(1000);
         // Set the correct port after injection
         productApi = new ProductApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
         projectApi = new ProjectApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
@@ -375,20 +377,21 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     }
 
     /**
-     * ensure products in db match oru expectations
+     * ensure products in db match our expectations
      */
     protected void testProducts() {
-        List<User>    allUsers    = userApi.getAllUsers();
-        List<Product> actual      = productApi.getAllProducts();
-        List<Version> allVersions = versionApi.getAllVersions();
-        List<Project> allProjects = projectApi.getAllProjects();
-        List<Sprint>  allSprints  = sprintApi.getAllSprints();
-        List<Task>    allTasks    = taskApi.getAllTasks();
-        actual.forEach(product -> product.initialize(allUsers, allVersions, allProjects, allSprints, allTasks));
+        GanttContext gc = new GanttContext();
+        gc.allUsers    = userApi.getAllUsers();
+        gc.allProducts = productApi.getAllProducts();
+        gc.allVersions = versionApi.getAllVersions();
+        gc.allProjects = projectApi.getAllProjects();
+        gc.allSprints  = sprintApi.getAllSprints();
+        gc.allTasks    = taskApi.getAllTasks();
+        gc.initialize();
 
-        assertEquals(expectedProducts.size(), actual.size());
+        assertEquals(expectedProducts.size(), gc.allProducts.size());
         for (int i = 0; i < expectedProducts.size(); i++) {
-            assertProductEquals(expectedProducts.get(i), actual.get(i));
+            assertProductEquals(expectedProducts.get(i), gc.allProducts.get(i));
         }
     }
 
@@ -401,10 +404,6 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         for (User expectedUser : expectedUsers) {
             assertUserEquals(expectedUser, actual.get(i++));
         }
-
-
-//        for (int i = 0; i < expectedUsers.size(); i++) {
-//        }
     }
 
     protected void updateAvailability(Availability availability, User user) {

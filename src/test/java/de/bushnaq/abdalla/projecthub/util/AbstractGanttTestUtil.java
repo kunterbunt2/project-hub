@@ -22,11 +22,13 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import de.bushnaq.abdalla.projecthub.dao.Context;
 import de.bushnaq.abdalla.projecthub.dao.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
+import de.bushnaq.abdalla.projecthub.gantt.GanttContext;
 import de.bushnaq.abdalla.projecthub.gantt.GanttUtil;
 import de.bushnaq.abdalla.projecthub.report.GanttChart;
 import de.bushnaq.abdalla.util.GanttErrorHandler;
 import de.bushnaq.abdalla.util.Util;
 import de.bushnaq.abdalla.util.date.DateUtil;
+import net.sf.mpxj.ProjectCalendar;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestInfo;
@@ -50,14 +52,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Transactional
 @TestMethodOrder(MethodOrderer.MethodName.class)
-public class AbstractGanttUtil extends AbstractEntityGenerator {
+public class AbstractGanttTestUtil extends AbstractEntityGenerator {
     private static final String            ANSI_BLUE                 = "\u001B[36m";
     private static final String            ANSI_GREEN                = "\u001B[32m";
     private static final String            ANSI_RED                  = "\u001B[31m";
@@ -95,22 +96,46 @@ public class AbstractGanttUtil extends AbstractEntityGenerator {
             Map<String, Object> referenceMap = objectMapper.readValue(expectedJson, typeRef);
             Map<String, Object> map          = objectMapper.readValue(actualJson, typeRef);
 
+            // Compare users
+            Map<String, User> referenceUsers = objectMapper.convertValue(referenceMap.get("users"), new TypeReference<Map<String, User>>() {
+            });
+            Map<String, User> users = objectMapper.convertValue(map.get("users"), new TypeReference<Map<String, User>>() {
+            });
+            assertEquals(referenceUsers.size(), users.size(), "Number of users differs");
+            for (String key : referenceUsers.keySet()) {
+                assertTrue(users.containsKey(key), "Missing user: " + key);
+                assertUserEquals(referenceUsers.get(key), users.get(key));
+            }
+
             // Compare sprints
             Sprint referenceSprint = objectMapper.convertValue(referenceMap.get("sprint"), Sprint.class);
             Sprint sprint          = objectMapper.convertValue(map.get("sprint"), Sprint.class);
             assertSprintEquals(referenceSprint, sprint);
 
             // Compare tasks
-            List<Task> referenceTasks = objectMapper.convertValue(referenceMap.get("tasks"),
-                    new TypeReference<List<Task>>() {
-                    });
-            List<Task> tasks = objectMapper.convertValue(map.get("tasks"),
-                    new TypeReference<List<Task>>() {
-                    });
+            List<Task> referenceTasks = objectMapper.convertValue(referenceMap.get("tasks"), new TypeReference<List<Task>>() {
+            });
+            List<Task> tasks = objectMapper.convertValue(map.get("tasks"), new TypeReference<List<Task>>() {
+            });
             for (Task task : tasks)
                 sprint.addTask(task);
             for (Task task : referenceTasks)
                 referenceSprint.addTask(task);
+            {
+                GanttContext gc = new GanttContext();
+                gc.allUsers   = new ArrayList<>(referenceUsers.values());
+                gc.allSprints = List.of(referenceSprint);
+                gc.allTasks   = referenceTasks;
+                gc.initialize();
+            }
+            {
+                GanttContext gc = new GanttContext();
+                gc.allUsers   = new ArrayList<>(users.values());
+                gc.allSprints = List.of(sprint);
+                gc.allTasks   = tasks;
+                gc.initialize();
+            }
+
             logProjectTasks(testResultFolder + "/" + this.sprint.getName() + ".json", sprint, testReferenceResultFolder + "/" + this.sprint.getName() + ".json", referenceSprint);
             compareTasks(tasks, referenceTasks);
         } catch (JsonProcessingException e) {
@@ -128,7 +153,8 @@ public class AbstractGanttUtil extends AbstractEntityGenerator {
 
     @BeforeEach
     protected void createProductAndUser(TestInfo testInfo) {
-        ParameterOptions.now = LocalDateTime.parse("1996-03-05T08:00:00");
+//        ParameterOptions.now = LocalDateTime.parse("1996-03-05T08:00:00");
+        ParameterOptions.now = LocalDateTime.parse("1996-01-01T08:00:00");
         new File(testResultFolder).mkdirs();
         new File(testReferenceResultFolder).mkdirs();
         addOneProduct(testInfo.getTestMethod().get().getName());
@@ -149,13 +175,13 @@ public class AbstractGanttUtil extends AbstractEntityGenerator {
         initialize();
         storeExpectedResult();
         storeResult();
-        compareResults();
 
 
-        GanttChart ganttChart = new GanttChart(context, "", "/", "Gantt Chart", sprint.getName(), exceptions,
-                ParameterOptions.now, false, sprint, 1887, 1000, "scheduleWithMargin", context.parameters.graphicsTheme);
-        ganttChart.generateImage(Util.generateCopyrightString(ParameterOptions.now), testResultFolder);
+        GanttChart ganttChart  = new GanttChart(context, "", "/", "Gantt Chart", sprint.getName(), exceptions, ParameterOptions.now, false, sprint, 1887, 1000, "scheduleWithMargin", context.parameters.graphicsTheme);
+        String     description = testInfo.getDisplayName();
+        ganttChart.generateImage(Util.generateCopyrightString(ParameterOptions.now), description, testResultFolder);
         printTables();
+        compareResults();
     }
 
     private int getMaxTaskNameLength(Sprint sprint) {
@@ -169,17 +195,18 @@ public class AbstractGanttUtil extends AbstractEntityGenerator {
     }
 
     protected void initialize() {
-        List<User>    allUsers    = userApi.getAllUsers();
-        List<Product> allProducts = productApi.getAllProducts();
-        List<Version> allVersions = versionApi.getAllVersions();
-        List<Project> allProjects = projectApi.getAllProjects();
-        List<Sprint>  allSprints  = sprintApi.getAllSprints();
-        List<Task>    allTasks    = taskApi.getAllTasks();
-        allProducts.forEach(product -> product.initialize(allUsers, allVersions, allProjects, allSprints, allTasks));
+        GanttContext gc = new GanttContext();
+        gc.allUsers    = userApi.getAllUsers();
+        gc.allProducts = productApi.getAllProducts();
+        gc.allVersions = versionApi.getAllVersions();
+        gc.allProjects = projectApi.getAllProjects();
+        gc.allSprints  = sprintApi.getAllSprints();
+        gc.allTasks    = taskApi.getAllTasks();
+        gc.initialize();
 
-        sprint    = allProducts.getFirst().getVersions().getFirst().getProjects().getFirst().getSprints().getFirst();
-        resource1 = allUsers.getFirst();
-        resource2 = allUsers.get(1);
+        sprint    = gc.allProducts.getFirst().getVersions().getFirst().getProjects().getFirst().getSprints().getFirst();
+        resource1 = gc.allUsers.getFirst();
+        resource2 = gc.allUsers.get(1);
     }
 
     private void logProjectTasks(String fileName, Sprint sprint, String referenceFileName, Sprint referenceSprint) {
@@ -211,11 +238,11 @@ public class AbstractGanttUtil extends AbstractEntityGenerator {
             //            double seconds = (duration.getDuration() * 7.5 * 60 * 60 - minutes * 60);
             String referenceDurationString = DateUtil.createDurationString(referenceDuration, true, true, true);
         }
-        String criticalFlag = ANSI_GREEN;
-        String startFlag    = ANSI_GREEN;
-        String finishFlag   = ANSI_GREEN;
-        String durationFlag = ANSI_GREEN;
-//        ProjectCalendar calendar     = GanttUtil.getCalendar(task);
+        String          criticalFlag = ANSI_GREEN;
+        String          startFlag    = ANSI_GREEN;
+        String          finishFlag   = ANSI_GREEN;
+        String          durationFlag = ANSI_GREEN;
+        ProjectCalendar calendar     = GanttUtil.getCalendar(task);
         if (referenceTask != null) {
             if (task.getChildTasks().isEmpty() && task.isCritical() != referenceTask.isCritical()) {
 //                criticalFlag = "█";
@@ -224,9 +251,9 @@ public class AbstractGanttUtil extends AbstractEntityGenerator {
             if (task.getStart() == null) {
 //                startFlag = "█";
                 startFlag = ANSI_RED;
-                //TODO reintroduce calendar
-//            } else if (!GanttUtil.equals(calendar, task.getStart(), referenceTask.getStart())) {
-            } else if (!task.getStart().isEqual(referenceTask.getStart())) {
+                //TODO reintroduce calendar fixed
+            } else if (!GanttUtil.equals(calendar, task.getStart(), referenceTask.getStart())) {
+//            } else if (!task.getStart().isEqual(referenceTask.getStart())) {
 //                startFlag = "█";
                 startFlag = ANSI_RED;
             } else if (!task.getStart().equals(referenceTask.getStart())) {
@@ -236,9 +263,9 @@ public class AbstractGanttUtil extends AbstractEntityGenerator {
             if (task.getFinish() == null) {
                 finishFlag = "█";
                 finishFlag = ANSI_RED;
-                //TODO reintroduce calendar
-//            } else if (!GanttUtil.equals(calendar, task.getFinish(), referenceTask.getFinish())) {
-            } else if (!task.getFinish().isEqual(referenceTask.getFinish())) {
+                //TODO reintroduce calendar fixed
+            } else if (!GanttUtil.equals(calendar, task.getFinish(), referenceTask.getFinish())) {
+//            } else if (!task.getFinish().isEqual(referenceTask.getFinish())) {
                 finishFlag = "█";
                 finishFlag = ANSI_RED;
 
@@ -264,8 +291,7 @@ public class AbstractGanttUtil extends AbstractEntityGenerator {
         String f = String.format("%19s", durationString);
 
 
-        buffer += String.format("[%2d] N='%-" + maxNameLength + "s' C=%s%s%s S='%s%20s%s' D='%s%-19s%s' F='%s%20s%s'",
-                task.getId(),//
+        buffer += String.format("[%2d] N='%-" + maxNameLength + "s' C=%s%s%s S='%s%20s%s' D='%s%-19s%s' F='%s%20s%s'", task.getId(),//
                 task.getName(),//
                 criticalFlag, criticalString, ANSI_RESET,//
                 startFlag, startString, ANSI_RESET,//
@@ -305,11 +331,11 @@ public class AbstractGanttUtil extends AbstractEntityGenerator {
         Path filePath = Paths.get(directory, sprint.getName() + ".json");
         if (overwrite || !Files.exists(filePath)) {
             Map<String, Object> container = new LinkedHashMap<>();
+            container.put("users", sprint.getUserMap());
             container.put("sprint", sprint);
             container.put("tasks", sprint.getTasks());
 
-            String json = objectMapper.writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(container);
+            String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(container);
             Files.writeString(filePath, json, StandardCharsets.UTF_8);
         }
     }
@@ -322,10 +348,4 @@ public class AbstractGanttUtil extends AbstractEntityGenerator {
         store(testReferenceResultFolder, false);
     }
 
-//    private String wrap(String flag, String text) {
-//        if (flag.isEmpty())
-//            return text;
-//        else
-//            return flag + text + ANSI_RESET;
-//    }
 }

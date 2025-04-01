@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import de.bushnaq.abdalla.util.DurationDeserializer;
 import de.bushnaq.abdalla.util.DurationSerializer;
 import lombok.*;
+import net.sf.mpxj.ProjectCalendar;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -91,6 +92,11 @@ public class Task {
     @JsonIgnore
     public User getAssignedUser() {
         return sprint.getuser(resourceId);
+    }
+
+    @JsonIgnore
+    public ProjectCalendar getEffectiveCalendar() {
+        return getSprint().getDefaultCalendar();
     }
 
     //    public void setDuration(Duration duration) {

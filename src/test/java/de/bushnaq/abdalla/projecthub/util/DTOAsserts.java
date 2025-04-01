@@ -91,10 +91,10 @@ public class DTOAsserts {
         assertEquals(expected.getStatus(), actual.getStatus(), "Sprint status values do not match");
 
         //TODO reintroduce tests
-//        assertEquals(expected.getTasks().size(), actual.getTasks().size(), "Number of tasks in sprint do not match");
-//        for (int i = 0; i < expected.getTasks().size(); i++) {
-//            assertTaskEquals(expected.getTasks().get(i), actual.getTasks().get(i));
-//        }
+        assertEquals(expected.getTasks().size(), actual.getTasks().size(), "Number of tasks in sprint do not match");
+        for (int i = 0; i < expected.getTasks().size(); i++) {
+            assertTaskEquals(expected.getTasks().get(i), actual.getTasks().get(i));
+        }
     }
 
     protected static void assertTaskEquals(Task expected, Task actual) {

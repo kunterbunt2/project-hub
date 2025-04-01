@@ -19,7 +19,9 @@ package de.bushnaq.abdalla.projecthub.dto;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import de.bushnaq.abdalla.projecthub.gantt.GanttContext;
 import lombok.*;
+import net.sf.mpxj.ProjectCalendar;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -38,24 +40,27 @@ import java.util.Map;
 //        generator = ObjectIdGenerators.PropertyGenerator.class,
 //        property = "id")
 public class Sprint extends AbstractTimeAware {
-    private   OffsetDateTime  end;
-    private   Long            id;
-    private   String          name;
+
+    @JsonIgnore
+    private ProjectCalendar defaultCalendar;
+
+    private OffsetDateTime end;
+    private Long           id;
+    private String         name;
     //    @ToString.Exclude//help intellij debugger not to go into a loop
 //    @JsonBackReference(value = "project-sprint")
     @JsonIgnore
     @ToString.Exclude//help intellij debugger not to go into a loop
-    private   Project         project;
+    private Project        project;
+
     private   Long            projectId;
     private   OffsetDateTime  start;
     private   Status          status;
     @JsonIgnore
     transient Map<Long, Task> taskMap = new HashMap<>();
-
     @JsonIgnore
 //    @JsonManagedReference(value = "sprint-task")
-    private List<Task> tasks = new ArrayList<>();
-
+    private   List<Task>      tasks   = new ArrayList<>();
     @JsonIgnore
     transient Map<Long, User> userMap = new HashMap<>();
 
@@ -105,11 +110,11 @@ public class Sprint extends AbstractTimeAware {
         return userMap.get(resourceId);
     }
 
-    public void initialize(List<User> allUsers, List<Task> allTasks) {
+    public void initialize(GanttContext gc) {
         //map users to their ids
-        allUsers.forEach(user -> userMap.put(user.getId(), user));
+        gc.allUsers.forEach(user -> userMap.put(user.getId(), user));
         //populate tasks list
-        allTasks.forEach(task -> {
+        gc.allTasks.forEach(task -> {
             if (task.getSprintId().equals(id)) {
                 addTask(task);
             }
@@ -126,6 +131,7 @@ public class Sprint extends AbstractTimeAware {
             task.setSprint(this);
             task.initialize();
         });
-        int a = 0;
+        defaultCalendar = gc.getProjectFile().getDefaultCalendar();
+
     }
 }

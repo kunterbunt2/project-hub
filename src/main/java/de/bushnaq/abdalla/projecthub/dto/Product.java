@@ -20,6 +20,7 @@ package de.bushnaq.abdalla.projecthub.dto;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import de.bushnaq.abdalla.projecthub.gantt.GanttContext;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -50,12 +51,12 @@ public class Product extends AbstractTimeAware {
         version.setProduct(this);
     }
 
-    public void initialize(List<User> allUsers, List<Version> allVersions, List<Project> allProjects, List<Sprint> allSprints, List<Task> allTasks) {
-        allVersions.forEach(version -> {
+    public void initialize(GanttContext gc) {
+        gc.allVersions.forEach(version -> {
             if (version.getProductId() == id) {
                 addVersion(version);
             }
         });
-        versions.forEach(version -> version.initialize(allUsers, allProjects, allSprints, allTasks));
+        versions.forEach(version -> version.initialize(gc));
     }
 }

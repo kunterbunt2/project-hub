@@ -27,7 +27,7 @@ import java.util.HashMap;
 public class TaskUtil {
 
     public static HashMap<Task, MetaData> createMetaData(Sprint projectFile) {
-        //TODO fix this
+        //TODO fix creating metadata
 //        ProjectProperties properties = projectFile.getProjectProperties();
 //        if (properties.getCustomProperties() == null || properties.getCustomProperties().get(MetaData.METADATA) == null) {
 //            Map<String, Object>     customProperties = new HashMap<>();

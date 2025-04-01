@@ -17,13 +17,21 @@
 
 package de.bushnaq.abdalla.projecthub.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import de.bushnaq.abdalla.projecthub.gantt.GanttContext;
+import de.focus_shift.jollyday.core.Holiday;
+import de.focus_shift.jollyday.core.HolidayManager;
+import de.focus_shift.jollyday.core.ManagerParameters;
 import lombok.*;
+import net.sf.mpxj.ProjectCalendar;
+import net.sf.mpxj.ProjectCalendarException;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -37,17 +45,21 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class User extends AbstractTimeAware implements Comparable<User> {
 
+    private static final long               MAX_PROJECT_LENGTH = 1;
     @JsonManagedReference
-    private List<Availability> availabilities = new ArrayList<>();
-    private String             email;
-    private LocalDate          firstWorkingDay;
-    private Long               id;
-    private LocalDate          lastWorkingDay;
+    private              List<Availability> availabilities     = new ArrayList<>();
+
+    @JsonIgnore
+    private ProjectCalendar calendar;
+    private String          email;
+    private LocalDate       firstWorkingDay;
+    private Long            id;
+    private LocalDate       lastWorkingDay;
     @JsonManagedReference
-    private List<Location>     locations      = new ArrayList<>();
-    private String             name;
+    private List<Location>  locations = new ArrayList<>();
+    private String          name;
     @JsonManagedReference
-    private List<OffDay>       offDays        = new ArrayList<>();
+    private List<OffDay>    offDays   = new ArrayList<>();
 
     public void addAvailability(Availability availability) {
         availabilities.add(availability);
@@ -75,6 +87,40 @@ public class User extends AbstractTimeAware implements Comparable<User> {
 
     String getKey() {
         return "U-" + id;
+    }
+
+    public void initialize(GanttContext gc) {
+        ProjectCalendar resourceCalendar = getCalendar();
+        if (resourceCalendar == null) {
+            resourceCalendar = gc.getProjectFile().addDefaultDerivedCalendar();
+            resourceCalendar.setParent(gc.getCalendar());
+            resourceCalendar.setName(getName());
+            setCalendar(resourceCalendar);
+        }
+
+
+        //TODO rethink employee leaving company and coming back
+        ProjectCalendar pc = getCalendar();
+        LocalDate       endDateInclusive;
+        for (int i = 0; i < locations.size(); i++) {
+            Location  location           = locations.get(i);
+            LocalDate startDateInclusive = location.getStart();
+            if (i + 1 < locations.size())
+                endDateInclusive = locations.get(i + 1).getStart();//end of this location is start of next location
+            else
+                endDateInclusive = startDateInclusive.plusYears(MAX_PROJECT_LENGTH);
+            HolidayManager holidayManager = HolidayManager.getInstance(ManagerParameters.create(location.getCountry()));
+            Set<Holiday>   holidays       = holidayManager.getHolidays(startDateInclusive, endDateInclusive);
+            for (Holiday holiday : holidays) {
+                ProjectCalendarException pce = pc.addCalendarException(holiday.getDate());
+                pce.setName(holiday.getDescription());
+            }
+        }
+        for (OffDay offDay : getOffDays()) {
+            ProjectCalendarException pce = pc.addCalendarException(offDay.getFirstDay(), offDay.getLastDay());
+            pce.setName(offDay.getType().name());
+        }
+
     }
 
     public void removeAvailability(Availability availability) {

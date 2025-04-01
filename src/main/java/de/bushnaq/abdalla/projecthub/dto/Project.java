@@ -18,6 +18,7 @@
 package de.bushnaq.abdalla.projecthub.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import de.bushnaq.abdalla.projecthub.gantt.GanttContext;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -54,12 +55,12 @@ public class Project extends AbstractTimeAware {
         sprints.add(sprint);
     }
 
-    public void initialize(List<User> allUsers, List<Sprint> allSprints, List<Task> allTasks) {
-        allSprints.forEach(sprint -> {
+    public void initialize(GanttContext gc) {
+        gc.allSprints.forEach(sprint -> {
             if (sprint.getProjectId() == id) {
                 addSprint(sprint);
             }
         });
-        sprints.forEach(sprint -> sprint.initialize(allUsers, allTasks));
+        sprints.forEach(sprint -> sprint.initialize(gc));
     }
 }

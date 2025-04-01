@@ -18,63 +18,61 @@
 package de.bushnaq.abdalla.projecthub.gantt;
 
 import de.bushnaq.abdalla.projecthub.dto.Task;
-import de.bushnaq.abdalla.projecthub.util.AbstractGanttUtil;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInfo;
-import org.junit.jupiter.api.TestMethodOrder;
+import de.bushnaq.abdalla.projecthub.util.AbstractGanttTestUtil;
+import org.junit.jupiter.api.*;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Duration;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Transactional
 @TestMethodOrder(MethodOrderer.MethodName.class)
-public class GanttChartTest extends AbstractGanttUtil {
+public class GanttChartTest extends AbstractGanttTestUtil {
 
+    @DisplayName("dependency between 2 tasks")
     @Test
     public void gantt_01(TestInfo testInfo) throws Exception {
 
         //create tasks
         Task task1 = addParentTask("[1] Parent Task", sprint, null, null);
-        Task task2 = addTask("[2] Child Task", Duration.ofDays(5), resource1, sprint, task1, null);
-        Task task3 = addTask("[3] Child Task", Duration.ofDays(5), resource2, sprint, task1, task2);
+        Task task2 = addTask("[2] Child Task", "5d", resource1, sprint, task1, null);
+        Task task3 = addTask("[3] Child Task", "5d", resource2, sprint, task1, task2);
         generateGanttChart(testInfo);
     }
 
+    @DisplayName("dependency between 2 parent tasks")
     @Test
     public void gantt_02(TestInfo testInfo) throws Exception {
 
         //create tasks
         Task task1 = addParentTask("[1] Parent Task", sprint, null, null);
-        Task task2 = addTask("[2] Child Task ", Duration.ofDays(5), resource1, sprint, task1, null);
-        Task task3 = addTask("[3] Child Task ", Duration.ofDays(5), resource2, sprint, task1, task2);
+        Task task2 = addTask("[2] Child Task ", "5d", resource1, sprint, task1, null);
+        Task task3 = addTask("[3] Child Task ", "5d", resource2, sprint, task1, task2);
 
         Task task4 = addParentTask("[4] Parent Task", sprint, null, task1);
-        Task task5 = addTask("[5] Child Task ", Duration.ofDays(5), resource1, sprint, task4, null);
-        Task task6 = addTask("[6] Child Task ", Duration.ofDays(5), resource2, sprint, task4, task5);
+        Task task5 = addTask("[5] Child Task ", "5d", resource1, sprint, task4, null);
+        Task task6 = addTask("[6] Child Task ", "5d", resource2, sprint, task4, task5);
 
         generateGanttChart(testInfo);
     }
 
+    @DisplayName("2 tasks with different resources and no dependency")
     @Test
     public void gantt_03(TestInfo testInfo) throws Exception {
 
         //create tasks
         Task task1 = addParentTask("[1] Parent Task", sprint, null, null);
-        Task task2 = addTask("[2] Child Task ", Duration.ofDays(5), resource1, sprint, task1, null);
-        Task task3 = addTask("[3] Child Task ", Duration.ofDays(5), resource2, sprint, task1, task2);
+        Task task2 = addTask("[2] Child Task ", "5d", resource1, sprint, task1, null);
+        Task task3 = addTask("[3] Child Task ", "5d", resource2, sprint, task1, task2);
 
         Task task4 = addParentTask("[4] Parent Task", sprint, null, task1);
-        Task task5 = addTask("[5] Child Task ", Duration.ofDays(5), resource1, sprint, task4, null);
-        Task task6 = addTask("[6] Child Task ", Duration.ofDays(5), resource2, sprint, task4, task5);
+        Task task5 = addTask("[5] Child Task ", "5d", resource1, sprint, task4, null);
+        Task task6 = addTask("[6] Child Task ", "5d", resource2, sprint, task4, task5);
 
         Task task7 = addParentTask("[7] Parent Task", sprint, null, task4);
-        Task task8 = addTask("[8] Child Task ", Duration.ofDays(5), resource1, sprint, task7, null);
-        Task task9 = addTask("[9] Child Task ", Duration.ofDays(5), resource2, sprint, task7, null);
+        Task task8 = addTask("[8] Child Task ", "5d", resource1, sprint, task7, null);
+        Task task9 = addTask("[9] Child Task ", "5d", resource2, sprint, task7, null);
 
         generateGanttChart(testInfo);
     }

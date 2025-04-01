@@ -91,7 +91,7 @@ public abstract class Canvas extends ReportLink {
         return String.format("<img class=\"%s\" usemap=\"#%s\" border=\"0\" src=\"%s.%s\">", cssClass, mapName, imageName, extension);
     }
 
-    public void generateImage(String copyright, String path) throws Exception {
+    public void generateImage(String copyright, String description, String path) throws Exception {
         try (Profiler p1 = new Profiler(SampleType.GPU)) {
             if (generateVvg) {
                 String imageFileName;

@@ -131,11 +131,6 @@ public class GanttRenderer extends AbstractGanttRenderer {
         for (Task task : projectFile.getTasks()) {
             if (GanttUtil.isValidTask(task)) {
                 drawTask(0, task, true, true, false, false, null, null, true);
-                //TODO implement this
-//                geh.isTrue(String.format(GanttErrorHandler.ERROR_100_UNSUPPORTED_MULTIPLE_RESOURCES_ASSIGNED, task.getID(), task.getName(), ganttFileName),
-//                        task, task.getResourceAssignments().size() < 2);
-//                String message = String.format(GanttErrorHandler.ERROR_101_UNSUPPORTED_SPLITS, task.getID(), task.getName(), ganttFileName);
-//                geh.isNull(message, task, task.getSplits());
             }
         }
     }
@@ -179,7 +174,8 @@ public class GanttRenderer extends AbstractGanttRenderer {
                 logger.warn(message);
             }
         }
-        //TODO implement this
+//TODO reintroduce bank holidays and vacations
+
 //        if (context.parameters.captureOutOfOfficeFromGantt) {
 //            initOutOfOffice(context.ganttInformationList);
 //        } else if (context.parameters.captureOutOfOfficeFromRam) {

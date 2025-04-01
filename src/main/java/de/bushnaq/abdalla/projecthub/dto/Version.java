@@ -19,6 +19,7 @@ package de.bushnaq.abdalla.projecthub.dto;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import de.bushnaq.abdalla.projecthub.gantt.GanttContext;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -60,12 +61,12 @@ public class Version extends AbstractTimeAware {
         return "V-" + id;
     }
 
-    public void initialize(List<User> allUsers, List<Project> allProjects, List<Sprint> allSprints, List<Task> allTasks) {
-        allProjects.forEach(project -> {
+    public void initialize(GanttContext gc) {
+        gc.allProjects.forEach(project -> {
             if (project.getVersionId() == id) {
                 addProject(project);
             }
         });
-        projects.forEach(project -> project.initialize(allUsers, allSprints, allTasks));
+        projects.forEach(project -> project.initialize(gc));
     }
 }

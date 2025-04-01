@@ -879,6 +879,45 @@ public class DateUtil {
         return b;
     }
 
+    public static Duration parseDurationString(String durationString, double hoursPerDay, double hoursPerWeek) {
+        if (durationString == null || durationString.trim().isEmpty()) {
+            return Duration.ZERO;
+        }
+
+        double   totalHours = 0;
+        String[] parts      = durationString.toLowerCase().split("\\s+");
+
+        for (String part : parts) {
+            part = part.trim();
+            if (part.isEmpty()) continue;
+
+            double value = Double.parseDouble(part.replaceAll("[wdhm]", ""));
+            char   unit  = part.charAt(part.length() - 1);
+
+            switch (unit) {
+                case 'w':
+                    totalHours += value * hoursPerWeek;
+                    break;
+                case 'd':
+                    totalHours += value * hoursPerDay;
+                    break;
+                case 'h':
+                    totalHours += value;
+                    break;
+                case 'm':
+                    totalHours += value / 60.0;
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid duration unit: " + unit);
+            }
+        }
+
+        long hours   = (long) totalHours;
+        long minutes = Math.round((totalHours - hours) * 60);
+
+        return Duration.ofHours(hours).plusMinutes(minutes);
+    }
+
     public static LocalDateTime toDayPrecision(LocalDateTime date) {
         if (date == null) {
             return null;

@@ -22,7 +22,10 @@ import de.bushnaq.abdalla.profiler.SampleType;
 import de.bushnaq.abdalla.projecthub.dao.Context;
 import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.util.GanttErrorHandler;
+import de.bushnaq.abdalla.util.MpxjUtil;
 import de.bushnaq.abdalla.util.date.DateUtil;
+import net.sf.mpxj.ProjectCalendar;
+import net.sf.mpxj.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -162,37 +165,40 @@ public class GanttUtil {
         return anythingChanged;
     }
 
-    public static boolean equals(/*ProjectCalendar calendar,*/ LocalDateTime d1, LocalDateTime d2) {
+    public static boolean equals(ProjectCalendar calendar, LocalDateTime d1, LocalDateTime d2) {
         if (d1 == null && d2 == null) {
             return true;
         }
         if (d1 == null || d2 == null) {
             return false;
         }
-        return d1.equals(d2);
-        //TODO reintroduce calendar
-//        {
-//            //Date might be end of a working day, while reference is beginning of next working day?
-//            //            LocalDateTime nextDay = calendar.getDate(d1, Duration.getInstance(0, TimeUnit.DAYS));
-//            LocalDateTime nextDay = calendar.getNextWorkStart(d1);
-//
-//            if (nextDay.equals(d2)) {
-//                return true;
-//            }
-//        }
-//        {
-//            //Date might be beginning of next day working day, while reference is end of previous working day?
-//            //            LocalDateTime nextDay = calendar.getDate(d2, Duration.getInstance(0, TimeUnit.DAYS));
-//            LocalDateTime nextDay = calendar.getNextWorkStart(d2);
-//            return d1.equals(nextDay);
-//        }
+        if (d1.equals(d2)) {
+            return true;
+        }
+        //TODO reintroduce calendar fixed
+        {
+            //Date might be end of a working day, while reference is beginning of next working day?
+            LocalDateTime nextDay = calendar.getNextWorkStart(d1);
+
+            if (nextDay.equals(d2)) {
+                return true;
+            }
+        }
+        {
+            //Date might be beginning of next day working day, while reference is end of previous working day?
+            LocalDateTime nextDay = calendar.getNextWorkStart(d2);
+            return d1.equals(nextDay);
+        }
     }
 
     public static boolean equals(Duration duration, Duration duration2) {
         return DateUtil.createDurationString(duration, true, true, true).equals(DateUtil.createDurationString(duration2, true, true, true));
     }
 
-    //    public static ProjectCalendar getCalendar(Task task) {
+    public static ProjectCalendar getCalendar(Task task) {
+        if (task.getAssignedUser() != null) {
+            return task.getAssignedUser().getCalendar();
+        }
 //        for (ResourceAssignment ra : task.getResourceAssignments()) {
 //            Resource resource = ra.getResource();
 //            if (resource != null) {
@@ -202,8 +208,9 @@ public class GanttUtil {
 //                }
 //            }
 //        }
-//        return task.getEffectiveCalendar();
-//    }
+        return task.getEffectiveCalendar();
+    }
+
     public Task getDeliveryBufferTask() {
         return deliveryBufferTask;
     }
@@ -456,10 +463,10 @@ public class GanttUtil {
                         Duration duration = getDurationFromWork(eh, task);
                         task.setDuration(duration);
                         if (task.getStart() != null && duration != null) {
-                            //TODO reintroduce calendar
-//                            ProjectCalendar calendar = getCalendar(task);
-//                            LocalDateTime   finish   = calendar.getDate(task.getStart(), duration);
-                            LocalDateTime finish = task.getStart().plus(duration);
+                            //TODO reintroduce calendar fixed
+                            ProjectCalendar calendar = getCalendar(task);
+                            LocalDateTime   finish   = calendar.getDate(task.getStart(), MpxjUtil.toMpjxDuration(duration));
+//                            LocalDateTime finish = task.getStart().plus(duration);
                             task.setFinish(finish);
                         }
                         anythingChanged = true;
@@ -474,10 +481,10 @@ public class GanttUtil {
                     //-children
                     //-dependencies
                     //-parent with start
-                    //TODO reintroduce calendar
-//                    ProjectCalendar calendar = getCalendar(task);
+                    //TODO reintroduce calendar fixed
+                    ProjectCalendar calendar = getCalendar(task);
                     if (!isManual(task) && !hasChildTasks(task) && !hasHierarchicalDependencies(task) && !hasStart(task.getParentTask())
-                            && !equals(/*calendar,*/ currentStartTime, task.getStart())) {
+                            && !equals(calendar, currentStartTime, task.getStart())) {
                         setStart(eh, task, currentStartTime);
                         anythingChanged = true;
                         printCase("2", "setStart", task);
@@ -494,13 +501,10 @@ public class GanttUtil {
                         //+dependency with finish
                         if (!isManual(task) && !hasChildTasks(task)) {
                             if (start != null) {
-                                //TODO reintroduce calendar
-//                                ProjectCalendar calendar = getCalendar(task);
-                                //                                Duration duration = calendar.getWork(task.getStart(), finish, TimeUnit.DAYS);
-                                //                                finish = calendar.getDate(finish, Duration.getInstance(0, TimeUnit.DAYS));//TODO not working anymore
-                                //                                finish = calendar.getDate(finish, duration);//TODO not working anymore
-//                                start = calendar.getNextWorkStart(start);//ensure we are not starting on a none-working-day
-                                if (!equals(/*getCalendar(task),*/ start, task.getStart())) {
+                                //TODO reintroduce calendar fixed
+                                ProjectCalendar calendar = getCalendar(task);
+                                start = calendar.getNextWorkStart(start);//ensure we are not starting on a none-working-day
+                                if (!equals(getCalendar(task), start, task.getStart())) {
                                     setStart(eh, task, start);
                                     anythingChanged = true;
                                     printCase("3", "setStart", task);
@@ -520,10 +524,10 @@ public class GanttUtil {
                         //+children
                         //-dependency
                         LocalDateTime start = getFirstChildStart(task);
-                        //TODO reintroduce calendar
-//                        ProjectCalendar calendar = getCalendar(task);
+                        //TODO reintroduce calendar fixed
+                        ProjectCalendar calendar = getCalendar(task);
                         if (!isManual(task) && hasChildTasks(task) && !depends) {
-                            if (start != null && !equals(/*calendar,*/ start, task.getStart())) {
+                            if (start != null && !equals(calendar, start, task.getStart())) {
                                 setStart(eh, task, start);
                                 anythingChanged = true;
                                 printCase("1", "setStart", task);
@@ -531,7 +535,7 @@ public class GanttUtil {
                         }
                         LocalDateTime finish = getLastChildFinish(task);
                         if (!isManual(task) && hasChildTasks(task) && !depends) {
-                            if (finish != null && !equals(/*calendar,*/ finish, task.getFinish())) {
+                            if (finish != null && !equals(calendar, finish, task.getFinish())) {
                                 setFinish(task, finish);
                                 anythingChanged = true;
                                 printCase("1", "setFinish", task);
@@ -565,30 +569,18 @@ public class GanttUtil {
                             } else {
                                 start = lastStartConstraint;
                             }
-                            //                                                    Date start = getLastStartConstraint(task);
-                            //if (firstChildStart != null)
-                            //start = firstChildStart;
                             LocalDateTime finish = getLastChildFinish(task);
-                            //                            Date dependencyStart = getLastStartConstraint(task);
-                            //                            Date childStart = getFirstChildStart(task);
-                            //                            Date start;
-                            //                            if (dependencyStart.before(childStart))
-                            //                                start = dependencyStart;
-                            //                            else
-                            //                                start = childStart;
-                            //TODO reintroduce calendar
-//                            ProjectCalendar calendar = getCalendar(task);
+                            //TODO reintroduce calendar fixed
+                            ProjectCalendar calendar = getCalendar(task);
                             if (start != null) {
-                                //                                start = calendar.getDate(start, Duration.getInstance(0, TimeUnit.DAYS));
-//                                start = calendar.getNextWorkStart(start);
-                                if (!equals(/*calendar,*/ start, task.getStart())) {
-
+                                start = calendar.getNextWorkStart(start);
+                                if (!equals(calendar, start, task.getStart())) {
                                     setStart(eh, task, start);
                                     anythingChanged = true;
                                     printCase("4", "setStart", task);
                                 }
                             }
-                            if (finish != null && !equals(/*calendar,*/ finish, task.getFinish())) {
+                            if (finish != null && !equals(calendar, finish, task.getFinish())) {
                                 setFinish(task, finish);
                                 anythingChanged = true;
                                 printCase("4", "setFinish", task);
@@ -606,10 +598,10 @@ public class GanttUtil {
                     LocalDateTime start = getStart(task.getParentTask());
                     if (!isManual(task) && !hasChildTasks(task) && !hasDirectDependencies(task) && hasHierarchicalDependencies(task.getParentTask())) {
                         if (start != null) {
-                            //TODO reintroduce calendar
-//                            ProjectCalendar calendar = getCalendar(task);
-//                            start = calendar.getNextWorkStart(start);
-                            if (!equals(/*calendar,*/ start, task.getStart())) {
+                            //TODO reintroduce calendar fixed
+                            ProjectCalendar calendar = getCalendar(task);
+                            start = calendar.getNextWorkStart(start);
+                            if (!equals(calendar, start, task.getStart())) {
 
                                 setStart(eh, task, start);
                                 anythingChanged = true;
@@ -999,42 +991,19 @@ public class GanttUtil {
 
     private void setFinish(Task task, LocalDateTime finish) {
         task.setFinish(finish);
-        if (task.getChildTasks().size() != 0) {
+        if (!task.getChildTasks().isEmpty()) {
             LocalDateTime start = task.getStart();
-            //            if (task.getStart() != null) {
-            //                Duration duration = Duration.getInstance((finish.getTime() - start.getTime()) / (1000 * 60 * 60 * 7.5), TimeUnit.DAYS);
-            //                task.setDuration(duration);
-            //            }
             if (finish != null && start != null) {
-                //                logger.trace("getWork start");
-                //                long now = System.currentTimeMillis();
-                //TODO reintroduce calendar
-//                ProjectCalendar calendar = getCalendar(task);
-//                Duration        duration = calendar.getWork(start, finish, TimeUnit.DAYS);
-                Duration duration = Duration.between(start, finish);
-                //                count++;
-                //                long delta = System.currentTimeMillis() - now;
-                //                logger.trace("getWork end");
-                //                if (delta > 1000) {
-                //                    logger.trace("took too long " + count);
-                //                }
-
-                //                Duration duration = getDuration(task);
+                ProjectCalendar calendar = getCalendar(task);
+                Duration        duration = MpxjUtil.toJavaDuration(calendar.getWork(start, finish, TimeUnit.DAYS));
                 task.setDuration(duration);
-
-                //                if (duration != null && time != null) {
-                //                    Date date = calendar.getDate(time, duration, true);
-                //                    calendar.task.setFinish(date);
-                //                }
             }
         }
     }
 
     private void setStart(GanttErrorHandler eh, Task task, LocalDateTime endOfLastTask) {
-        //TODO reintroduce calendar
-//        ProjectCalendar calendar = getCalendar(task);
-//        LocalDateTime   start    = calendar.getNextWorkStart(endOfLastTask);
-        LocalDateTime start = endOfLastTask;
+        ProjectCalendar calendar = getCalendar(task);
+        LocalDateTime   start    = calendar.getNextWorkStart(endOfLastTask);
         task.setStart(start);
         if (task.isMilestone()) {
             task.setFinish(start);
@@ -1043,19 +1012,12 @@ public class GanttUtil {
         } else if (!hasChildTasks(task)) {//task
             Duration duration = getDurationFromWork(eh, task);
             task.setDuration(duration);
-            //            String d = Util.createDurationString(duration, true, true, true);
-
-            //TODO reintroduce calendar
-            //LocalDateTime finish = calendar.getDate(start, duration);
-            LocalDateTime finish = start.plus(duration);
+            LocalDateTime finish = calendar.getDate(start, MpxjUtil.toMpjxDuration(duration));
             task.setFinish(finish);
         } else {//parent
             LocalDateTime finish = task.getFinish();
             if (start != null & finish != null) {
-
-                //TODO reintroduce calendar
-//                Duration duration = calendar.getWork(start, finish, TimeUnit.DAYS);
-                Duration duration = Duration.between(start, finish);
+                Duration duration = MpxjUtil.toJavaDuration(calendar.getWork(start, finish, TimeUnit.DAYS));
                 task.setDuration(duration);
                 task.setFinish(finish);
             }

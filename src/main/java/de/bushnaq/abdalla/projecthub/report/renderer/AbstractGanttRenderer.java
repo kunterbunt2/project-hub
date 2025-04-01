@@ -22,6 +22,7 @@ import de.bushnaq.abdalla.projecthub.dto.OffDay;
 import de.bushnaq.abdalla.projecthub.dto.Relation;
 import de.bushnaq.abdalla.projecthub.dto.Task;
 import de.bushnaq.abdalla.projecthub.dto.TaskMode;
+import de.bushnaq.abdalla.projecthub.gantt.GanttUtil;
 import de.bushnaq.abdalla.projecthub.report.Canvas;
 import de.bushnaq.abdalla.projecthub.report.dao.*;
 import de.bushnaq.abdalla.svg.util.ExtendedRectangle;
@@ -30,6 +31,7 @@ import de.bushnaq.abdalla.util.ColorUtil;
 import de.bushnaq.abdalla.util.GanttErrorHandler;
 import de.bushnaq.abdalla.util.TaskUtil;
 import de.bushnaq.abdalla.util.date.DateUtil;
+import net.sf.mpxj.ProjectCalendarException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,8 +70,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
     protected              ResourcesUtilization resourcesUtilization       = new ResourcesUtilization();// only used for out of office
     protected              Map<Long, Integer>   taskHeight                 = new HashMap<>();
 
-    public AbstractGanttRenderer(Context context, String sprintName/*, Map<LocalDate, String> bankHolidays*/, boolean completed, int chartWidth, int chartHeight,
-                                 int numberOfLinesPerTask, int preRun, int postRun, BurnDownGraphicsTheme graphicsTheme) throws IOException {
+    public AbstractGanttRenderer(Context context, String sprintName/*, Map<LocalDate, String> bankHolidays*/, boolean completed, int chartWidth, int chartHeight, int numberOfLinesPerTask, int preRun, int postRun, BurnDownGraphicsTheme graphicsTheme) throws IOException {
         super(sprintName/*, bankHolidays*/, completed, chartWidth, chartHeight, preRun, postRun, graphicsTheme);
         this.context              = context;
         this.numberOfLinesPerTask = numberOfLinesPerTask;
@@ -112,10 +113,8 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
             graphics2D.setColor(Color.red);
             for (Conflict c : conflict) {
                 if (c.originalConflict) {
-                    int c1 = calculateX(c.range.start, c.range.start.truncatedTo(ChronoUnit.DAYS).withHour(8), 75 * 6 * 60)
-                            - calendarXAxses.dayOfWeek.getWidth() / 2;
-                    int c2 = calculateX(c.range.end, c.range.end.truncatedTo(ChronoUnit.DAYS).withHour(8), 75 * 6 * 60)
-                            - calendarXAxses.dayOfWeek.getWidth() / 2;
+                    int c1 = calculateX(c.range.start, c.range.start.truncatedTo(ChronoUnit.DAYS).withHour(8), 75 * 6 * 60) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                    int c2 = calculateX(c.range.end, c.range.end.truncatedTo(ChronoUnit.DAYS).withHour(8), 75 * 6 * 60) - calendarXAxses.dayOfWeek.getWidth() / 2;
                     graphics2D.fillRect(c1, y - getTaskHeight() / 2, c2 - c1 - 1, 2);
                     graphics2D.fillRect(c1, y + getTaskHeight() / 2 - 1, c2 - c1 - 1, 2);
                 }
@@ -146,9 +145,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
             graphics2D.setFont(idErrorFont);
             fillColor = graphicsTheme.ganttIdErrorColor;
             textColor = graphicsTheme.ganttIdTextErrorColor;
-            imageMap += String.format("<area alt=\"<font face=arial>%s\" shape=\"rect\" coords=\"%d,%d,%d,%d\" >\n", md.getError(0),
-                    Canvas.transformToMapX(x1 + 1), Canvas.transformToMapY(y - getTaskHeight() / 2), Canvas.transformToMapX(x2 - 1),
-                    Canvas.transformToMapY(y + getTaskHeight() / 2));
+            imageMap += String.format("<area alt=\"<font face=arial>%s\" shape=\"rect\" coords=\"%d,%d,%d,%d\" >\n", md.getError(0), Canvas.transformToMapX(x1 + 1), Canvas.transformToMapY(y - getTaskHeight() / 2), Canvas.transformToMapX(x2 - 1), Canvas.transformToMapY(y + getTaskHeight() / 2));
         } else {
             graphics2D.setFont(idFont);
             fillColor = graphicsTheme.ganttIdColor;
@@ -189,7 +186,34 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
     }
 
     private void drawOutOfOffice(Task task, int y) {
-        //TODO implement this
+        //TODO reintroduce bank holidays and vacations
+
+        if (task.getAssignedUser() != null) {
+            for (ProjectCalendarException calendarException : task.getAssignedUser().getCalendar().getCalendarExceptions()) {
+                for (LocalDate currentDay = calendarException.getFromDate(); currentDay.isBefore(calendarException.getToDate()) || currentDay.isEqual(calendarException.getToDate()); currentDay = currentDay.plusDays(1)) {
+                    int dayIndex = calculateDayIndex(calendarException.getFromDate());
+
+                    int daysX = calculateDayX(currentDay);
+                    if (daysX > 0 && daysX < calendarXAxses.getWidth()) {
+                        // int x1 = daysX - (calendarXAxses.dayOfWeek.width / 2 - 1);
+                        // int y1 = y - (calendarXAxses.dayOfWeek.width / 2) + 2;
+                        // graphics2D.drawImage(outOfOffice, null, x1, y1);
+                        graphics2D.setFont(outOfOfficeFont);
+                        graphics2D.setColor(graphicsTheme.ganttOutOfOfficeColor);
+                        graphics2D.fillRect(daysX - (calendarXAxses.dayOfWeek.getWidth() / 2 - 1), y - (calendarXAxses.dayOfWeek.getWidth() / 2) + 2, calendarXAxses.dayOfWeek.getWidth() - 1, getTaskHeight());
+                        graphics2D.setColor(Color.WHITE);
+                        FontMetrics fm        = graphics2D.getFontMetrics();
+                        String      text      = "O";
+                        int         width     = fm.stringWidth(text);
+                        int         maxAscent = fm.getMaxAscent();
+                        graphics2D.drawString(text, daysX - width / 2, y + (maxAscent + 1) / 2 - 2);
+                    }
+                }
+
+            }
+        }
+
+
 //        ProjectFile parentFile = task.getParentFile();
 //        LocalDate   start      = parentFile.getEarliestStartDate().toLocalDate();
 //        LocalDate   finish     = parentFile.getLatestFinishDate().toLocalDate();
@@ -242,10 +266,8 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         } else {
             y2 += getTaskHeight() / 2 + 1 - 2 + 1;
         }
-        int x1 = calculateX(targetTask.getFinish(), targetTask.getFinish().truncatedTo(ChronoUnit.DAYS).withHour(8), 75 * 6 * 60)
-                - calendarXAxses.dayOfWeek.getWidth() / 2 - 1;
-        int x2 = 8 + calculateX(sourceTask.getStart(), sourceTask.getStart().truncatedTo(ChronoUnit.DAYS).withHour(8), 75 * 6 * 60)
-                - calendarXAxses.dayOfWeek.getWidth() / 2 - 3;
+        int x1 = calculateX(targetTask.getFinish(), targetTask.getFinish().truncatedTo(ChronoUnit.DAYS).withHour(8), 75 * 6 * 60) - calendarXAxses.dayOfWeek.getWidth() / 2 - 1;
+        int x2 = 8 + calculateX(sourceTask.getStart(), sourceTask.getStart().truncatedTo(ChronoUnit.DAYS).withHour(8), 75 * 6 * 60) - calendarXAxses.dayOfWeek.getWidth() / 2 - 3;
         graphics2D.setStroke(new BasicStroke(RELATION_LINE_STROKE_WIDTH));
         if (sourceTask.isCritical() && targetTask.isCritical()) {
             graphics2D.setColor(graphicsTheme.ganttCriticalRelationColor);
@@ -322,11 +344,9 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         }
     }
 
-    public void drawTask(long gantUniqueId, Task task, boolean drawId, boolean drawRelations, boolean labelInside, boolean alien, String marker,
-                         List<Conflict> conflict, boolean drawOutOfOffice) throws Exception {
-        //TODO implement this
-//        if (GanttUtil.isValidTask(task))
-        {
+    public void drawTask(long gantUniqueId, Task task, boolean drawId, boolean drawRelations, boolean labelInside, boolean alien, String marker, List<Conflict> conflict, boolean drawOutOfOffice) throws Exception {
+        //TODO implement this fixed
+        if (GanttUtil.isValidTask(task)) {
 
             graphics2D.setStroke(new BasicStroke(FINE_LINE_STROKE_WIDTH));
             LocalDateTime start = task.getStart();
@@ -361,8 +381,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         }
     }
 
-    private void drawTask(Task task, int x1, int x2, int y, boolean labelInside, boolean alien, String marker, List<Conflict> conflict)
-            throws Exception {
+    private void drawTask(Task task, int x1, int x2, int y, boolean labelInside, boolean alien, String marker, List<Conflict> conflict) throws Exception {
         Color  fillColor           = graphicsTheme.getAuthorColor(28);
         Color  textColor           = Color.black;
         String resourceName        = null;
@@ -376,6 +395,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                 String primaryResourceName = resourceName;
 //                units = task.getWork().assignment.getUnits();
 //                    resourceUtelization = String.format(" (%.0f%%)", units);
+                units = task.getAssignedUser().getAvailabilities().getLast().getAvailability() * 100;
                 taskName += String.format(" (%s %.0f%%)", primaryResourceName, units);
             }
         }
@@ -420,8 +440,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
             } else {
                 LocalDateTime start          = task.getStart();
                 String        dateTimeString = dateUtil.createDateTimeString(task.getStart());
-                graphics2D.drawString(String.format("%s (%s)", taskName, dateUtil.createDateTimeString(task.getStart())), x1 + 2 + 8 + c + milestoneWidth / 2,
-                        y + getTaskHeight() / 2 - (maxAscent + 1) / 4);
+                graphics2D.drawString(String.format("%s (%s)", taskName, dateUtil.createDateTimeString(task.getStart())), x1 + 2 + 8 + c + milestoneWidth / 2, y + getTaskHeight() / 2 - (maxAscent + 1) / 4);
             }
         } else {
             if (task.getChildTasks().size() != 0) {
@@ -464,8 +483,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                     graphics2D.drawString(task.getName(), x1 + 1, y - getTaskHeight() / 2 + 2 + (LINE_HEIGHT) * 3 / 2 + (ascent - 2) / 2 + 1);
                     if (resourceName != null) {
                         String primaryResourceName = resourceName;
-                        graphics2D.drawString(primaryResourceName + resourceUtelization, x1 + 1,
-                                y - getTaskHeight() / 2 + 2 + (LINE_HEIGHT) * 5 / 2 + (ascent - 2) / 2 + 1);
+                        graphics2D.drawString(primaryResourceName + resourceUtelization, x1 + 1, y - getTaskHeight() / 2 + 2 + (LINE_HEIGHT) * 5 / 2 + (ascent - 2) / 2 + 1);
                     }
                     graphics2D.setClip(clip);
                 } else {
@@ -562,8 +580,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         }
     }
 
-    private String generateToolTip(Task task, int x1, int x2, int y, String marker, String resourceName, String resourceUtelization)
-            throws Exception {
+    private String generateToolTip(Task task, int x1, int x2, int y, String marker, String resourceName, String resourceUtelization) throws Exception {
         String start    = DateUtil.createDateString(task.getStart(), dateUtil.dtfymdhms);
         String finish   = DateUtil.createDateString(task.getFinish(), dateUtil.dtfymdhms);
         String progress = null;
@@ -592,8 +609,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
             toolTip += String.format("<b>Progress</b> %s<br>", progress);
         }
         toolTip += String.format("<b>Notes</b> %s", task.getNotes());
-        toolTip += String.format("\" shape=\"rect\" coords=\"%d,%d,%d,%d\"", Canvas.transformToMapX(x1 + 1), Canvas.transformToMapY(y - getTaskHeight() / 2),
-                Canvas.transformToMapX(x2 - 1), Canvas.transformToMapY(y + getTaskHeight() / 2));
+        toolTip += String.format("\" shape=\"rect\" coords=\"%d,%d,%d,%d\"", Canvas.transformToMapX(x1 + 1), Canvas.transformToMapY(y - getTaskHeight() / 2), Canvas.transformToMapX(x2 - 1), Canvas.transformToMapY(y + getTaskHeight() / 2));
         return toolTip;
     }
 
@@ -603,7 +619,8 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
     }
 
     protected void initOutOfOffice(/*GanttInformationList gattInformationList*/) {
-        //TODO implement this
+//TODO reintroduce bank holidays and vacations
+
 //        int vacations = 0;
 //        for (GanttInformation ganttInformation : gattInformationList) {
 //            if (context.debug.filterGantt(ganttInformation)) {
