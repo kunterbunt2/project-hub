@@ -24,6 +24,8 @@ import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.gantt.GanttContext;
 import de.bushnaq.abdalla.util.date.DateUtil;
 import jakarta.annotation.PostConstruct;
+import net.sf.mpxj.ProjectCalendar;
+import net.sf.mpxj.ProjectCalendarException;
 import org.ajbrown.namemachine.Name;
 import org.ajbrown.namemachine.NameGenerator;
 import org.ajbrown.namemachine.NameGeneratorOptions;
@@ -36,6 +38,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.TreeSet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -57,25 +60,20 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     protected           ObjectMapper          objectMapper;
     @LocalServerPort
     private             int                   port;
-    //    @Autowired
     protected           ProductApi            productApi;
     private static      int                   productIndex              = 0;
-    //    @Autowired
     protected           ProjectApi            projectApi;
     private static      int                   projectIndex              = 0;
-    //    @Autowired
-    protected           SprintApi             sprintApi;
-    private static      int                   sprintIndex               = 0;
-    //    @Autowired
-    protected           TaskApi               taskApi;
+    Random random = new Random();
+    protected      SprintApi        sprintApi;
+    private static int              sprintIndex  = 0;
+    protected      TaskApi          taskApi;
     @Autowired
-    private             TestRestTemplate      testRestTemplate; // Use TestRestTemplate instead of RestTemplate
-    //    @Autowired
-    protected           UserApi               userApi;
-    private static      int                   userIndex                 = 0;
-    //    @Autowired
-    protected           VersionApi            versionApi;
-    private static      int                   versionIndex              = 0;
+    private        TestRestTemplate testRestTemplate; // Use TestRestTemplate instead of RestTemplate
+    protected      UserApi          userApi;
+    private static int              userIndex    = 0;
+    protected      VersionApi       versionApi;
+    private static int              versionIndex = 0;
 
     protected void addAvailability(User user, float availability, LocalDate start) {
         Availability a = new Availability(availability, start);
@@ -99,6 +97,101 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         OffDay saved = userApi.persist(a, user.getId());
         user.addOffday(saved);
         expectedOffDays.add(saved);
+        ProjectCalendarException vacation = user.getCalendar().addCalendarException(offDayStart, offDayFinish);
+        switch (type) {
+            case VACATION -> vacation.setName("vacation");
+            case SICK -> vacation.setName("sick");
+            case TRIP -> vacation.setName("trip");
+        }
+    }
+
+    /**
+     * Adds vacation blocks by splitting them when non-working days are encountered
+     * Returns the number of actual vacation days used
+     */
+    private int addOffDayBlockWithSplitting(User user, ProjectCalendar calendar, LocalDate startDate, int workingDaysCount, OffDayType offDayType) {
+        int       daysUsed     = 0;
+        LocalDate currentStart = startDate;
+        LocalDate currentDate  = startDate;
+        boolean   inBlock      = false;
+
+        while (daysUsed < workingDaysCount) {
+            boolean isWorkingDay = calendar.isWorkingDate(currentDate);
+
+            if (isWorkingDay) {
+                if (!inBlock) {
+                    // Start a new block
+                    currentStart = currentDate;
+                    inBlock      = true;
+                }
+                daysUsed++;
+
+                // If we've used all the days, add the final block
+                if (daysUsed >= workingDaysCount) {
+                    addOffDay(user, currentStart, currentDate, offDayType);
+//                    logger.info(String.format("%s %s %s", currentStart, currentDate, "vacation"));
+                    break;
+                }
+            } else {
+                // We hit a non-working day, end the current block if there is one
+                if (inBlock) {
+                    LocalDate blockEnd = currentDate.minusDays(1);
+                    addOffDay(user, currentStart, blockEnd, offDayType);
+//                    logger.info(String.format("%s %s %s", currentStart, blockEnd, "vacation"));
+                    inBlock = false;
+                }
+            }
+
+            currentDate = currentDate.plusDays(1);
+
+            // Safety check to prevent infinite loops
+            if (currentDate.isAfter(startDate.plusYears(1))) {
+                if (inBlock) {
+                    // End any remaining block
+                    LocalDate blockEnd = currentDate.minusDays(1);
+                    addOffDay(user, currentStart, blockEnd, offDayType);
+//                    logger.info(String.format("%s %s %s", currentStart, blockEnd, "vacation"));
+                }
+                break;
+            }
+        }
+
+        return daysUsed;
+    }
+
+    private void addOffDays(User saved, LocalDate firstDate, int annualVacationDays, int year, OffDayType offDayType) {
+        int             remainingDays = annualVacationDays;
+        ProjectCalendar pc            = saved.getCalendar();
+
+        LocalDate yearStart = LocalDate.of(year, 1, 1);
+        LocalDate yearEnd   = yearStart.plusYears(1).minusDays(1);
+
+        // First add a longer summer vacation block (2-4 weeks)
+        int       summerStart         = random.nextInt(60) + 150; // Random start between day 150-210 (June-July)
+        LocalDate summerVacationStart = pc.getNextWorkStart(yearStart.plusDays(summerStart).atStartOfDay()).toLocalDate();
+        int       summerDuration      = random.nextInt(11) + 10; // 10-20 days (2-4 weeks)
+        summerDuration = Math.min(summerDuration, remainingDays);
+
+        // Add summer vacation with proper splitting of non-working days
+        int daysUsed = addOffDayBlockWithSplitting(saved, pc, summerVacationStart, summerDuration, offDayType);
+        remainingDays -= daysUsed;
+
+        // Distribute remaining days throughout the year in smaller blocks
+        while (remainingDays > 0) {
+            int       blockDuration = Math.min(remainingDays, random.nextInt(4) + 3); // 3-6 days blocks
+            LocalDate startDate;
+
+            do {
+                int dayOffset = random.nextInt(365); // Random day in the year
+                startDate = pc.getNextWorkStart(yearStart.plusDays(dayOffset).atStartOfDay()).toLocalDate();
+            } while (startDate.isAfter(yearEnd) || isOverlapping(saved.getOffDays(), startDate, startDate.plusDays(blockDuration)));
+
+            if (!startDate.isAfter(yearEnd)) {
+                // Add vacation block with proper splitting of non-working days
+                int actualDaysUsed = addOffDayBlockWithSplitting(saved, pc, startDate, blockDuration, offDayType);
+                remainingDays -= actualDaysUsed;
+            }
+        }
     }
 
     protected Task addParentTask(String name, Sprint sprint, Task parent, Task dependency) {
@@ -153,29 +246,42 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         return addSprint(project, String.format("sprint-%d", sprintIndex));
     }
 
-    protected User addRandomUser(LocalDate start) {
-        String name  = names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
-        String email = name + "@project-hub.org";
-        User   user  = addUser(name, email, "de", "nw", start, 0.7f, LocalDate.parse(FIRST_OFF_DAY_START_DATE), LocalDate.parse(FIRST_OFF_DAY_FINISH_DATE), OffDayType.VACATION);
-        return user;
+    protected User addRandomUser(LocalDate firstDate) {
+        String       name  = names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
+        String       email = name + "@project-hub.org";
+        User         saved = addUser(name, email, "de", "nw", firstDate, 0.7f);
+        GanttContext gc    = new GanttContext();
+        gc.initialize();
+        saved.initialize(gc);
+        addOffDay(saved, LocalDate.parse(FIRST_OFF_DAY_START_DATE), LocalDate.parse(FIRST_OFF_DAY_FINISH_DATE), OffDayType.VACATION);
+        return saved;
     }
 
     protected User addRandomUser() {
-        String name  = names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
-        String email = name + "@project-hub.org";
-        User   saved = addUser(name, email, "de", "nw", LocalDate.now(), 0.7f, LocalDate.parse(FIRST_OFF_DAY_START_DATE), LocalDate.parse(FIRST_OFF_DAY_FINISH_DATE), OffDayType.VACATION);
+        String       name      = names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
+        String       email     = name + "@project-hub.org";
+        LocalDate    firstDate = LocalDate.now();
+        User         saved     = addUser(name, email, "de", "nw", firstDate, 0.7f, LocalDate.parse(FIRST_OFF_DAY_START_DATE), LocalDate.parse(FIRST_OFF_DAY_FINISH_DATE), OffDayType.VACATION);
+        GanttContext gc        = new GanttContext();
+        gc.initialize();
+        saved.initialize(gc);
+        generateRandomOffDays(saved, firstDate);
         testUsers();
         return saved;
     }
 
     protected void addRandomUsers(int count) {
         for (int i = 0; i < count; i++) {
-            String    name      = names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
-            String    email     = name + "@project-hub.org";
-            LocalDate firstDate = ParameterOptions.now.toLocalDate().minusYears(1);
-            addUser(name, email, "de", "nw", firstDate, 0.5f, LocalDate.parse(FIRST_OFF_DAY_START_DATE), LocalDate.parse(FIRST_OFF_DAY_FINISH_DATE), OffDayType.VACATION);
+            String       name      = names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
+            String       email     = name + "@project-hub.org";
+            LocalDate    firstDate = ParameterOptions.now.toLocalDate().minusYears(1);
+            User         saved     = addUser(name, email, "de", "nw", firstDate, 0.5f);
+            GanttContext gc        = new GanttContext();
+            gc.initialize();
+            saved.initialize(gc);
+            generateRandomOffDays(saved, firstDate);
         }
-        printTables();
+
         testUsers();
     }
 
@@ -200,7 +306,6 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     protected Task addTask(String name, String workString, User user, Sprint sprint, Task parent, Task dependency) {
         return addTask(sprint, parent, name, null, DateUtil.parseDurationString(workString, 7.5, 37.5), user, dependency);
     }
-
 
     protected Task addTask(Sprint sprint, Task parent, String name, LocalDateTime start, Duration work, User user, Task dependency) {
         Task task = new Task();
@@ -240,6 +345,20 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         return saved;
     }
 
+    protected User addUser(String name, String email, String country, String state, LocalDate start, float availability) {
+        User user = new User();
+        user.setName(name);
+        user.setEmail(email);
+        User saved = userApi.persist(user);
+        addLocation(saved, country, state, start);
+        addAvailability(saved, availability, start);
+
+        userIndex++;
+        expectedUsers.add(saved);
+        return saved;
+
+    }
+
     protected User addUser(String name, String email, String country, String state, LocalDate start, float availability, LocalDate offDayStart, LocalDate offDayFinish, OffDayType offDayType) {
         User user = new User();
         user.setName(name);
@@ -247,7 +366,6 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         User saved = userApi.persist(user);
         addLocation(saved, country, state, start);
         addAvailability(saved, availability, start);
-        addOffDay(saved, offDayStart, offDayFinish, offDayType);
 
 
         userIndex++;
@@ -268,6 +386,34 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         return saved;
     }
 
+    private void generateRandomOffDays(User saved, LocalDate employmentDate) {
+        int employmentyear = employmentDate.getYear();
+        for (int yearIndex = 0; yearIndex < 2; yearIndex++) {
+            int year = employmentyear + yearIndex;
+            random.setSeed(generateUserYearSeed(saved, year));
+            addOffDays(saved, employmentDate, 30, year, OffDayType.VACATION);
+            addOffDays(saved, employmentDate, random.nextInt(20), year, OffDayType.SICK);
+        }
+    }
+
+    private static int generateUserYearSeed(User saved, int year) {
+        return (saved.getName() + year).hashCode();
+    }
+
+    private LocalDate getNextWorkingDay(ProjectCalendar calendar, LocalDate start, int workingDays) {
+        LocalDate current   = start;
+        int       daysCount = 0;
+
+        while (daysCount < workingDays) {
+            current = current.plusDays(1);
+            if (calendar.isWorkingDate(current)) {
+                daysCount++;
+            }
+        }
+
+        return current;
+    }
+
     @PostConstruct
     private void init() {
         NameGeneratorOptions options = new NameGeneratorOptions();
@@ -281,6 +427,10 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         taskApi    = new TaskApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
         versionApi = new VersionApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
         sprintApi  = new SprintApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+    }
+
+    private boolean isOverlapping(List<OffDay> offDays, LocalDate start, LocalDate end) {
+        return offDays.stream().anyMatch(offDay -> !(end.isBefore(offDay.getFirstDay()) || start.isAfter(offDay.getLastDay())));
     }
 
     /**
@@ -318,10 +468,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     }
 
     protected void removeProduct(Long id) {
-        Product productToRemove = expectedProducts.stream()
-                .filter(product -> product.getId().equals(id))
-                .findFirst()
-                .orElse(null);
+        Product productToRemove = expectedProducts.stream().filter(product -> product.getId().equals(id)).findFirst().orElse(null);
 
         if (productToRemove != null) {
             // Remove all versions and their projects, sprints, and tasks
@@ -352,10 +499,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     }
 
     protected void removeUser(Long id) {
-        User userToRemove = expectedUsers.stream()
-                .filter(user -> user.getId().equals(id))
-                .findFirst()
-                .orElse(null);
+        User userToRemove = expectedUsers.stream().filter(user -> user.getId().equals(id)).findFirst().orElse(null);
 
         if (userToRemove != null) {
             // Remove all availabilities

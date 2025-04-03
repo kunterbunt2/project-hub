@@ -24,6 +24,7 @@ import de.bushnaq.abdalla.projecthub.dao.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.gantt.GanttContext;
 import de.bushnaq.abdalla.projecthub.gantt.GanttUtil;
+import de.bushnaq.abdalla.projecthub.report.CalendarChart;
 import de.bushnaq.abdalla.projecthub.report.GanttChart;
 import de.bushnaq.abdalla.util.GanttErrorHandler;
 import de.bushnaq.abdalla.util.Util;
@@ -152,9 +153,9 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
     }
 
     @BeforeEach
-    protected void createProductAndUser(TestInfo testInfo) {
+    protected void createProductAndUser(TestInfo testInfo) throws Exception {
 //        ParameterOptions.now = LocalDateTime.parse("1996-03-05T08:00:00");
-        ParameterOptions.now = LocalDateTime.parse("1996-01-01T08:00:00");
+        ParameterOptions.now = LocalDateTime.parse("2025-01-01T08:00:00");
         new File(testResultFolder).mkdirs();
         new File(testReferenceResultFolder).mkdirs();
         addOneProduct(testInfo.getTestMethod().get().getName());
@@ -194,7 +195,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         return maxNameLength;
     }
 
-    protected void initialize() {
+    protected void initialize() throws Exception {
         GanttContext gc = new GanttContext();
         gc.allUsers    = userApi.getAllUsers();
         gc.allProducts = productApi.getAllProducts();
@@ -203,6 +204,12 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         gc.allSprints  = sprintApi.getAllSprints();
         gc.allTasks    = taskApi.getAllTasks();
         gc.initialize();
+
+        for (User user : gc.allUsers) {
+            CalendarChart chart = new CalendarChart(context, ParameterOptions.now, user, "scheduleWithMargin", context.parameters.graphicsTheme);
+            chart.generateImage(Util.generateCopyrightString(ParameterOptions.now), "", testResultFolder);
+        }
+
 
         sprint    = gc.allProducts.getFirst().getVersions().getFirst().getProjects().getFirst().getSprints().getFirst();
         resource1 = gc.allUsers.getFirst();
@@ -236,7 +243,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
             referenceDuration = referenceTask.getDuration();
             //            int minutes = (int) ((duration.getDuration() * 7.5 * 60 * 60) / 60);
             //            double seconds = (duration.getDuration() * 7.5 * 60 * 60 - minutes * 60);
-            String referenceDurationString = DateUtil.createDurationString(referenceDuration, true, true, true);
+//            String referenceDurationString = DateUtil.createDurationString(referenceDuration, true, true, true);
         }
         String          criticalFlag = ANSI_GREEN;
         String          startFlag    = ANSI_GREEN;
@@ -245,51 +252,31 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         ProjectCalendar calendar     = GanttUtil.getCalendar(task);
         if (referenceTask != null) {
             if (task.getChildTasks().isEmpty() && task.isCritical() != referenceTask.isCritical()) {
-//                criticalFlag = "█";
                 criticalFlag = ANSI_RED;
             }
             if (task.getStart() == null) {
-//                startFlag = "█";
                 startFlag = ANSI_RED;
-                //TODO reintroduce calendar fixed
             } else if (!GanttUtil.equals(calendar, task.getStart(), referenceTask.getStart())) {
-//            } else if (!task.getStart().isEqual(referenceTask.getStart())) {
-//                startFlag = "█";
                 startFlag = ANSI_RED;
             } else if (!task.getStart().equals(referenceTask.getStart())) {
-//                startFlag = "░";
                 startFlag = ANSI_YELLOW;
             }
             if (task.getFinish() == null) {
-                finishFlag = "█";
                 finishFlag = ANSI_RED;
-                //TODO reintroduce calendar fixed
             } else if (!GanttUtil.equals(calendar, task.getFinish(), referenceTask.getFinish())) {
-//            } else if (!task.getFinish().isEqual(referenceTask.getFinish())) {
-                finishFlag = "█";
                 finishFlag = ANSI_RED;
 
             } else if (!task.getFinish().equals(referenceTask.getFinish())) {
-                finishFlag = "░";
                 finishFlag = ANSI_YELLOW;
             }
-
-            //            if (task.getFinish() == null || !task.getFinish().equals(referenceTask.getFinish())) {
-            //                finishFlag = "█";
-            //            }
             if (task.getDuration() == null) {
-                durationFlag = "█";
                 durationFlag = ANSI_RED;
-//            } else if (!task.getDuration().getUnits().getName().equals(referenceTask.getDuration().getUnits().getName())) {
-//                durationFlag = "░";
             } else if (!GanttUtil.equals(task.getDuration(), referenceTask.getDuration())) {
-                durationFlag = "█";
                 durationFlag = ANSI_RED;
             }
 
         }
-        String f = String.format("%19s", durationString);
-
+//        String f = String.format("%19s", durationString);
 
         buffer += String.format("[%2d] N='%-" + maxNameLength + "s' C=%s%s%s S='%s%20s%s' D='%s%-19s%s' F='%s%20s%s'", task.getId(),//
                 task.getName(),//

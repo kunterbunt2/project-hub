@@ -20,6 +20,7 @@ package de.bushnaq.abdalla.projecthub.dto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import de.bushnaq.abdalla.projecthub.dao.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.gantt.GanttContext;
 import de.focus_shift.jollyday.core.Holiday;
 import de.focus_shift.jollyday.core.HolidayManager;
@@ -108,7 +109,7 @@ public class User extends AbstractTimeAware implements Comparable<User> {
             if (i + 1 < locations.size())
                 endDateInclusive = locations.get(i + 1).getStart();//end of this location is start of next location
             else
-                endDateInclusive = startDateInclusive.plusYears(MAX_PROJECT_LENGTH);
+                endDateInclusive = ParameterOptions.now.plusYears(MAX_PROJECT_LENGTH).toLocalDate();
             HolidayManager holidayManager = HolidayManager.getInstance(ManagerParameters.create(location.getCountry()));
             Set<Holiday>   holidays       = holidayManager.getHolidays(startDateInclusive, endDateInclusive);
             for (Holiday holiday : holidays) {

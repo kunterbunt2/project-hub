@@ -191,9 +191,9 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         if (task.getAssignedUser() != null) {
             for (ProjectCalendarException calendarException : task.getAssignedUser().getCalendar().getCalendarExceptions()) {
                 for (LocalDate currentDay = calendarException.getFromDate(); currentDay.isBefore(calendarException.getToDate()) || currentDay.isEqual(calendarException.getToDate()); currentDay = currentDay.plusDays(1)) {
-                    int dayIndex = calculateDayIndex(calendarException.getFromDate());
-
-                    int daysX = calculateDayX(currentDay);
+                    int    dayIndex = calculateDayIndex(calendarException.getFromDate());
+                    String name     = calendarException.getName();
+                    int    daysX    = calculateDayX(currentDay);
                     if (daysX > 0 && daysX < calendarXAxses.getWidth()) {
                         // int x1 = daysX - (calendarXAxses.dayOfWeek.width / 2 - 1);
                         // int y1 = y - (calendarXAxses.dayOfWeek.width / 2) + 2;
@@ -545,7 +545,9 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
             //            graphics2D.fillRect(x1, y1, x2 - x1 - 1, h);
             //            graphics2D.drawRect(x1, y - getTaskHeight() / 2 + 2 - 1, x2 - x1 - 1 - 1, getTaskHeight() - 1 - 4 + 2);
             if (x2 - x1 - 1 - 1 > 0) {
-                //sometimes taks are so small, that we cannot draw them.
+                //sometimes tasks are so small, that we cannot draw them.
+
+
                 Shape s = new RectangleWithToolTip(x1, y1, x2 - x1 - 1 - 1, h - 1, toolTip);
                 graphics2D.fill(s);
             }
