@@ -4,6 +4,8 @@ minimalistic project effort estimation and progress tracking and release date in
 
 [Requirements](https://github.com/kunterbunt2/project-hub/wiki/Requirements)
 
+[Mimitations](https://github.com/kunterbunt2/project-hub/wiki/Limitations)
+
 [Design](https://github.com/kunterbunt2/project-hub/wiki/Design)
 
 [ER Diagram](https://github.com/kunterbunt2/project-hub/wiki/ER-Diagram)
