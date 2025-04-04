@@ -18,6 +18,7 @@
 package de.bushnaq.abdalla.projecthub.dao;
 
 import de.bushnaq.abdalla.projecthub.report.dao.GraphicsLightTheme;
+import de.bushnaq.abdalla.util.date.DateUtil;
 import org.apache.commons.cli.*;
 
 import java.time.LocalDateTime;
@@ -63,7 +64,7 @@ public class ProjectsDashboardParameterOptions extends ParameterOptions {
             LocalDateTime     localDateTime = LocalDateTime.parse(dateString, dtf);
             localDateTime.minusHours(localDateTime.getHour() - 8);
             localDateTime.minusMinutes(localDateTime.getMinute());
-            now = localDateTime;
+            now = DateUtil.localDateTimeToOffsetDateTime(localDateTime);
             logger.info("simulating report for " + dtf.format(now));
         } else {
             //revert to default, which is now

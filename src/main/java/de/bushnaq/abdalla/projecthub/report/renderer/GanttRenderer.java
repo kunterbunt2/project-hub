@@ -45,12 +45,9 @@ import java.util.List;
  */
 public class GanttRenderer extends AbstractGanttRenderer {
 
-    private static final int ONE_WEEK = 7;
-
-    //    private final String ganttFileName;
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final Sprint sprint;
-//    private TimeTracker timeTracker;
+    private static final int    ONE_WEEK = 7;
+    private final        Logger logger   = LoggerFactory.getLogger(this.getClass());
+    private final        Sprint sprint;
 
 
     public GanttRenderer(Context context, String sprintName, List<Throwable> exceptions, LocalDateTime now, boolean completed,

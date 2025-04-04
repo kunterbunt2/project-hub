@@ -46,7 +46,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -154,8 +154,8 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
 
     @BeforeEach
     protected void createProductAndUser(TestInfo testInfo) throws Exception {
-//        ParameterOptions.now = LocalDateTime.parse("1996-03-05T08:00:00");
-        ParameterOptions.now = LocalDateTime.parse("2025-01-01T08:00:00");
+//        ParameterOptions.now = OffsetDateTime.parse("1996-03-05T08:00:00");
+        ParameterOptions.now = OffsetDateTime.parse("2025-01-01T08:00:00+01:00");
         new File(testResultFolder).mkdirs();
         new File(testReferenceResultFolder).mkdirs();
         addOneProduct(testInfo.getTestMethod().get().getName());
@@ -167,7 +167,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         initialize();
         GanttUtil         ganttUtil = new GanttUtil(context);
         GanttErrorHandler eh        = new GanttErrorHandler();
-        ganttUtil.levelResources(eh, sprint, "", ParameterOptions.now);
+        ganttUtil.levelResources(eh, sprint, "", ParameterOptions.getLocalNow());
 
         //save back to the database
         sprint.getTasks().forEach(task -> {
@@ -178,9 +178,9 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         storeResult();
 
 
-        GanttChart ganttChart  = new GanttChart(context, "", "/", "Gantt Chart", sprint.getName(), exceptions, ParameterOptions.now, false, sprint/*, 1887, 1000*/, "scheduleWithMargin", context.parameters.graphicsTheme);
+        GanttChart ganttChart  = new GanttChart(context, "", "/", "Gantt Chart", sprint.getName(), exceptions, ParameterOptions.getLocalNow(), false, sprint/*, 1887, 1000*/, "scheduleWithMargin", context.parameters.graphicsTheme);
         String     description = testInfo.getDisplayName();
-        ganttChart.generateImage(Util.generateCopyrightString(ParameterOptions.now), description, testResultFolder);
+        ganttChart.generateImage(Util.generateCopyrightString(ParameterOptions.getLocalNow()), description, testResultFolder);
         printTables();
         compareResults();
     }
@@ -206,8 +206,8 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         gc.initialize();
 
         for (User user : gc.allUsers) {
-            CalendarChart chart = new CalendarChart(context, ParameterOptions.now, user, "scheduleWithMargin", context.parameters.graphicsTheme);
-            chart.generateImage(Util.generateCopyrightString(ParameterOptions.now), "", testResultFolder);
+            CalendarChart chart = new CalendarChart(context, ParameterOptions.getLocalNow(), user, "scheduleWithMargin", context.parameters.graphicsTheme);
+            chart.generateImage(Util.generateCopyrightString(ParameterOptions.getLocalNow()), "", testResultFolder);
         }
 
 

@@ -36,6 +36,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -78,6 +79,8 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     protected void addAvailability(User user, float availability, LocalDate start) {
         Availability a = new Availability(availability, start);
         a.setUser(user);
+        a.setCreated(user.getCreated());
+        a.setUpdated(user.getUpdated());
         Availability saved = userApi.persist(a, user.getId());
         user.addAvailability(saved);
         expectedAvailabilities.add(saved);
@@ -86,15 +89,19 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     protected void addLocation(User user, String country, String state, LocalDate start) {
         Location location = new Location(country, state, start);
         location.setUser(user);
+        location.setCreated(user.getCreated());
+        location.setUpdated(user.getUpdated());
         Location saved = userApi.persist(location, user.getId());
         user.addLocation(saved);
         expectedLocations.add(saved);
     }
 
     protected void addOffDay(User user, LocalDate offDayStart, LocalDate offDayFinish, OffDayType type) {
-        OffDay a = new OffDay(offDayStart, offDayFinish, type);
-        a.setUser(user);
-        OffDay saved = userApi.persist(a, user.getId());
+        OffDay offDay = new OffDay(offDayStart, offDayFinish, type);
+        offDay.setUser(user);
+        offDay.setCreated(user.getCreated());
+        offDay.setUpdated(user.getUpdated());
+        OffDay saved = userApi.persist(offDay, user.getId());
         user.addOffday(saved);
         expectedOffDays.add(saved);
         ProjectCalendarException vacation = user.getCalendar().addCalendarException(offDayStart, offDayFinish);
@@ -109,7 +116,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
      * Adds vacation blocks by splitting them when non-working days are encountered
      * Returns the number of actual vacation days used
      */
-    private int addOffDayBlockWithSplitting(User user, ProjectCalendar calendar, LocalDate startDate, int workingDaysCount, OffDayType offDayType) {
+    private int addOffDayBlockWithSplitting(User user, ProjectCalendar calendar, LocalDate firstDate, LocalDate startDate, int workingDaysCount, OffDayType offDayType) {
         int       daysUsed     = 0;
         LocalDate currentStart = startDate;
         LocalDate currentDate  = startDate;
@@ -173,7 +180,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         summerDuration = Math.min(summerDuration, remainingDays);
 
         // Add summer vacation with proper splitting of non-working days
-        int daysUsed = addOffDayBlockWithSplitting(saved, pc, summerVacationStart, summerDuration, offDayType);
+        int daysUsed = addOffDayBlockWithSplitting(saved, pc, firstDate, summerVacationStart, summerDuration, offDayType);
         remainingDays -= daysUsed;
 
         // Distribute remaining days throughout the year in smaller blocks
@@ -188,7 +195,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
 
             if (!startDate.isAfter(yearEnd)) {
                 // Add vacation block with proper splitting of non-working days
-                int actualDaysUsed = addOffDayBlockWithSplitting(saved, pc, startDate, blockDuration, offDayType);
+                int actualDaysUsed = addOffDayBlockWithSplitting(saved, pc, firstDate, startDate, blockDuration, offDayType);
                 remainingDays -= actualDaysUsed;
             }
         }
@@ -201,6 +208,9 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     protected Product addProduct(String name) {
         Product product = new Product();
         product.setName(name);
+        product.setCreated(ParameterOptions.now);
+        product.setUpdated(ParameterOptions.now);
+
         Product saved = productApi.persist(product);
         expectedProducts.add(saved);
         productIndex++;
@@ -214,6 +224,8 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
 
         project.setVersion(version);
         project.setVersionId(version.getId());
+        project.setCreated(ParameterOptions.now);
+        project.setUpdated(ParameterOptions.now);
         Project saved = projectApi.persist(project, version.getId());
         expectedProjects.add(saved);
 
@@ -273,14 +285,14 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
 
     protected void addRandomUsers(int count) {
         for (int i = 0; i < count; i++) {
-            String       name      = names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
-            String       email     = name + "@project-hub.org";
-            LocalDate    firstDate = ParameterOptions.now.toLocalDate().minusYears(1);
-            User         saved     = addUser(name, email, "de", "nw", firstDate, 0.5f);
-            GanttContext gc        = new GanttContext();
+            String       name       = names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
+            String       email      = name + "@project-hub.org";
+            LocalDate    updateDate = ParameterOptions.now.toLocalDate().minusYears(1);
+            User         saved      = addUser(name, email, "de", "nw", updateDate, 0.5f);
+            GanttContext gc         = new GanttContext();
             gc.initialize();
             saved.initialize(gc);
-            generateRandomOffDays(saved, firstDate);
+            generateRandomOffDays(saved, updateDate);
         }
 
         testUsers();
@@ -296,6 +308,8 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         sprint.setStatus(Status.OPEN);
         sprint.setProject(project);
         sprint.setProjectId(project.getId());
+        sprint.setCreated(ParameterOptions.now);
+        sprint.setUpdated(ParameterOptions.now);
         Sprint saved = sprintApi.persist(sprint, project.getId());
         expectedSprints.add(saved);
         project.addSprint(saved);
@@ -350,6 +364,9 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         User user = new User();
         user.setName(name);
         user.setEmail(email);
+        user.setFirstWorkingDay(start);
+        user.setCreated(DateUtil.localDateToOffsetDateTime(start).plusHours(8));
+        user.setUpdated(DateUtil.localDateToOffsetDateTime(start).plusHours(8));
         User saved = userApi.persist(user);
         addLocation(saved, country, state, start);
         addAvailability(saved, availability, start);
@@ -364,6 +381,9 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         User user = new User();
         user.setName(name);
         user.setEmail(email);
+        user.setFirstWorkingDay(start);
+        user.setCreated(DateUtil.localDateToOffsetDateTime(start).plusHours(8));
+        user.setUpdated(DateUtil.localDateToOffsetDateTime(start).plusHours(8));
         User saved = userApi.persist(user);
         addLocation(saved, country, state, start);
         addAvailability(saved, availability, start);
@@ -380,6 +400,8 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         version.setName(versionName);
         version.setProduct(product);
         version.setProductId(product.getId());
+        version.setCreated(ParameterOptions.now);
+        version.setUpdated(ParameterOptions.now);
         Version saved = versionApi.persist(version, product.getId());
         product.addVersion(saved);
         expectedVersions.add(saved);
@@ -388,9 +410,9 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     }
 
     private void generateRandomOffDays(User saved, LocalDate employmentDate) {
-        int employmentyear = employmentDate.getYear();
+        int employmentYear = employmentDate.getYear();
         for (int yearIndex = 0; yearIndex < 2; yearIndex++) {
-            int year = employmentyear + yearIndex;
+            int year = employmentYear + yearIndex;
             random.setSeed(generateUserYearSeed(saved, year));
             addOffDays(saved, employmentDate, 30, year, OffDayType.VACATION);
             addOffDays(saved, employmentDate, random.nextInt(20), year, OffDayType.SICK);
@@ -418,6 +440,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     @PostConstruct
     private void init() {
         NameGeneratorOptions options = new NameGeneratorOptions();
+        ParameterOptions.now = OffsetDateTime.parse("2025-01-01T08:00:00+01:00");
         options.setRandomSeed(123L);//Get deterministic results by setting a random seed.
         NameGenerator generator = new NameGenerator(options);
         names = generator.generateNames(1000);

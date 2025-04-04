@@ -46,8 +46,8 @@ public class CaptionElement {
     public void draw(ExtendedGraphics2D graphics2D) {
 
         if (text != null) {
-            graphics2D.setColor(backgroundColor);
-            graphics2D.fillRect(0, y, width, height);
+//            graphics2D.setColor(backgroundColor);
+//            graphics2D.fillRect(0, y, width, height);
             graphics2D.setColor(color);
             graphics2D.setFont(font);
             FontMetrics fm           = graphics2D.getFontMetrics();

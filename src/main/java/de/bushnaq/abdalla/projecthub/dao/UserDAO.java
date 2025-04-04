@@ -83,7 +83,8 @@ public class UserDAO extends AbstractTimeAwareDAO {
     @PrePersist
     protected void onCreate() {
         super.onCreate();
-        firstWorkingDay = LocalDate.now();
+        if (firstWorkingDay == null)
+            firstWorkingDay = LocalDate.now();
     }
 
 }

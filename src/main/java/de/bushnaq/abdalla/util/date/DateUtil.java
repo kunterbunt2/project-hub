@@ -369,105 +369,6 @@ public class DateUtil {
         return prefix + _result;
     }
 
-    /**
-     * If aUseCharacters is true, seconds will be followed with s, hours with h... Result will be xd xh:xm:xs or x x:x:x
-     *
-     * @param aTime
-     * @param aUseSeconds
-     * @param aUseCharacters
-     * @param aPrintLeadingZeros
-     * @return String
-     */
-    //    public static String create24hDurationString(long aTime, final boolean aUseSeconds, final boolean useMilliSeconds, final boolean aUseCharacters,
-    //            final boolean aPrintLeadingZeros) {
-    //        String prefix;
-    //        if (aTime < 0) {
-    //            prefix = "-";
-    //            aTime = -aTime;
-    //        }
-    //
-    //        else {
-    //            prefix = "";
-    //        }
-    //        String _result = "";
-    //        final long[] _timePieces = { 0, 0, 0, 0, 0, 0 };
-    //        final DateTimeStruct[] _time = { new DateTimeStruct(":", "ms", 3), new DateTimeStruct(" ", "s", 2), new DateTimeStruct(" ", "m", 2),
-    //                new DateTimeStruct(" ", "h", 2), new DateTimeStruct(" ", "d", 2), new DateTimeStruct(" ", "w", 3) };
-    //        _timePieces[WEEK_INDEX] = aTime / (86400000L * 7L);//assuming 5 day working week
-    //        aTime -= _timePieces[WEEK_INDEX] * (86400000L * 7L);//assuming 5 day working week
-    //        _timePieces[DAY_INDEX] = aTime / 86400000L;//assuming 7.5h day
-    //        aTime -= _timePieces[DAY_INDEX] * 86400000L;//assuming 7.5h day
-    //        _timePieces[HOUR_INDEX] = aTime / 3600000L;
-    //        aTime -= _timePieces[HOUR_INDEX] * 3600000L;
-    //        _timePieces[MINUTE_INDEX] = aTime / 60000L;
-    //        aTime -= _timePieces[MINUTE_INDEX] * 60000L;
-    //        _timePieces[SECONDS_INDEX] = aTime / 1000L;
-    //        aTime -= _timePieces[SECONDS_INDEX] * 1000L;
-    //        _timePieces[MILLI_SECONDS_INDEX] = aTime;
-    //
-    //        boolean _weFoundTheFirstNonezeroValue = aPrintLeadingZeros;
-    //        int _indexEnd = 0;
-    //        if (!useMilliSeconds) {
-    //            _indexEnd = 1;
-    //        }
-    //        if (!aUseSeconds) {
-    //            _indexEnd = 2;
-    //        }
-    //        for (int _index = WEEK_INDEX; _index >= _indexEnd; _index--) {
-    //            if ((_timePieces[_index] != 0) || _weFoundTheFirstNonezeroValue) {
-    //                if (aUseCharacters) {
-    //                    if (_timePieces[_index] != 0) {
-    //                        _result += longToString(_timePieces[_index], _weFoundTheFirstNonezeroValue);
-    //                        _result += _time[_index].character;
-    //                    }
-    //
-    //                    if (_index != _indexEnd) {
-    //                        _result += _time[_index].seperator;
-    //                    } else {
-    //                        // ---Do not add a seperator at the end
-    //                        if (_timePieces[_index] == 0) {
-    //                            _result += "0";
-    //                            _result += _time[_index].character;
-    //                        }
-    //
-    //                    }
-    //                } else {
-    //                    _result += longToString(_timePieces[_index], _weFoundTheFirstNonezeroValue);
-    //                    if (_index != _indexEnd) {
-    //                        _result += _time[_index].seperator;
-    //                    } else {
-    //                        // ---Do not add a seperator at the end
-    //                    }
-    //                }
-    //                _weFoundTheFirstNonezeroValue = true;
-    //            } else {
-    //                // ---Ignore all leading zero values
-    //            }
-    //        }
-    //        // ---In case the result is empty
-    //        if (_result.length() == 0) {
-    //            if (aUseCharacters) {
-    //                if (aUseSeconds) {
-    //                    _result = "0s";
-    //                } else {
-    //                    _result = "0m";
-    //                }
-    //            } else {
-    //                _result = "0";
-    //            }
-    //        } else {
-    //            // ---The result is not empty
-    //        }
-    //        return prefix + _result;
-    //    }
-
-    //    public static String create24hDurationString(Long aTime, final boolean aUseSeconds, final boolean aUseCharacters, final boolean aPrintLeadingZeros) {
-    //        if (aTime == null) {
-    //            return "NA";
-    //        } else {
-    //            return create24hDurationString(aTime, aUseSeconds, false, aUseCharacters, aPrintLeadingZeros);
-    //        }
-    //    }
     public static String create24hDurationString(long aTime, final boolean aUseSeconds, final boolean useMilliSeconds, final boolean aUseCharacters,
                                                  final boolean aPrintLeadingZeros, boolean fixedSize) {
         String prefix;
@@ -825,8 +726,28 @@ public class DateUtil {
         return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
     }
 
+    /**
+     * Converts a LocalDateTime to OffsetDateTime using the system default timezone.
+     */
+    public static OffsetDateTime localDateTimeToOffsetDateTime(LocalDateTime dateTime) {
+        if (dateTime == null) {
+            return null;
+        }
+        return dateTime.atZone(ZoneId.systemDefault()).toOffsetDateTime();
+    }
+
     public static Date localDateToDate(LocalDate localDate) {
         return Date.from(localDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+    }
+
+    /**
+     * Converts a LocalDate to OffsetDateTime at the start of day using the system default timezone.
+     */
+    public static OffsetDateTime localDateToOffsetDateTime(LocalDate date) {
+        if (date == null) {
+            return null;
+        }
+        return date.atStartOfDay(ZoneId.systemDefault()).toOffsetDateTime();
     }
 
     private static String longToString(final Long aValue, final boolean aCreateLeadingZero) {
@@ -879,6 +800,26 @@ public class DateUtil {
         return b;
     }
 
+    /**
+     * Converts an OffsetDateTime to LocalDate using the system default timezone.
+     */
+    public static LocalDate offsetDateTimeToLocalDate(OffsetDateTime offsetDateTime) {
+        if (offsetDateTime == null) {
+            return null;
+        }
+        return offsetDateTime.atZoneSameInstant(ZoneId.systemDefault()).toLocalDate();
+    }
+
+    /**
+     * Converts an OffsetDateTime to LocalDateTime using the system default timezone.
+     */
+    public static LocalDateTime offsetDateTimeToLocalDateTime(OffsetDateTime offsetDateTime) {
+        if (offsetDateTime == null) {
+            return null;
+        }
+        return offsetDateTime.atZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
+    }
+
     public static Duration parseDurationString(String durationString, double hoursPerDay, double hoursPerWeek) {
         if (durationString == null || durationString.trim().isEmpty()) {
             return Duration.ZERO;
@@ -922,8 +863,8 @@ public class DateUtil {
         if (date == null) {
             return null;
         }
-
         return date.truncatedTo(ChronoUnit.DAYS);
     }
 
 }
+

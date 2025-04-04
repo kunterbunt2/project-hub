@@ -147,7 +147,12 @@ public class ExtendedGraphics2D extends Graphics2D {
     }
 
     public void drawRect(int x, int y, int width, int height) {
-        graphics.drawRect(x, y, width, height);
+        //graphics.drawRect(x, y, width, height);
+        //fixing the misalignment of the border
+        graphics.fillRect(x, y, width + 1, 1);
+        graphics.fillRect(x, y + 1, 1, height - 2 + 1);
+        graphics.fillRect(x + width - 1 + 1, y + 1, 1, height - 2 + 1);
+        graphics.fillRect(x, y + height - 1 + 1, width + 1, 1);
     }
 
     public void drawRenderableImage(RenderableImage img, AffineTransform xform) {

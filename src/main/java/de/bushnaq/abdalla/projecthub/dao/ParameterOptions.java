@@ -19,10 +19,12 @@ package de.bushnaq.abdalla.projecthub.dao;
 
 import de.bushnaq.abdalla.projecthub.report.dao.BurnDownGraphicsTheme;
 import de.bushnaq.abdalla.projecthub.report.dao.GraphicsLightTheme;
+import de.bushnaq.abdalla.util.date.DateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,7 +62,7 @@ public abstract class ParameterOptions {
     public                 Integer               limitProjectOverview                        = null;// 6 * 30;
     public                 Integer               limitResourceUtilization                    = null;// 1 * 30;
     protected final        Logger                logger                                      = LoggerFactory.getLogger(this.getClass());
-    public static          LocalDateTime         now                                         = LocalDateTime.now();
+    public static          OffsetDateTime        now                                         = OffsetDateTime.now();
     public                 boolean               outOfOfficeOnly                             = false;//no ramdb cost records
     //    public String password = "PManager2018";
     public                 boolean               queryTeamPlanner;
@@ -73,6 +75,10 @@ public abstract class ParameterOptions {
 //    public SmbParameters smbParameters = new SmbParameters();
     public                 boolean               verbose                                     = false;//in verbose mode, temporary <filename>-tp.xml file will not be deleted.
     public                 String                xlsxFile                                    = null;//used only by Xlsx2mppMain
+
+    public static LocalDateTime getLocalNow() {
+        return DateUtil.offsetDateTimeToLocalDateTime(now);
+    }
 
     public abstract void start(String[] args) throws Exception;
 

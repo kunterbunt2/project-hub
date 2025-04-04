@@ -77,7 +77,7 @@ public abstract class Canvas extends ReportLink {
     }
 
     private void drawBorder(ExtendedGraphics2D g2) {
-        graphics2D.setStroke(new BasicStroke(fine_LINE_STROKE_WIDTH));
+        g2.setStroke(new BasicStroke(fine_LINE_STROKE_WIDTH));
         g2.setColor(graphicsTheme.chartBorderColor);
         g2.drawRect(0, 0, getChartWidth() - 1, getChartHeight() - 1);
     }

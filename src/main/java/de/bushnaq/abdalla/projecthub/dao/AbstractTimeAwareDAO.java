@@ -41,8 +41,10 @@ public abstract class AbstractTimeAwareDAO {
 
     @PrePersist
     protected void onCreate() {
-        created = OffsetDateTime.now();
-        updated = created;
+        if (created == null)
+            created = OffsetDateTime.now();
+        if (updated == null)
+            updated = created;
     }
 
     @PreUpdate
