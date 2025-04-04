@@ -4,6 +4,8 @@ minimalistic project effort estimation and progress tracking and release date in
 
 [Requirements](https://github.com/kunterbunt2/project-hub/wiki/Requirements)
 
+[Limitations](https://github.com/kunterbunt2/project-hub/wiki/Limitations)
+
 [Design](https://github.com/kunterbunt2/project-hub/wiki/Design)
 
 [ER Diagram](https://github.com/kunterbunt2/project-hub/wiki/ER-Diagram)
@@ -42,10 +44,3 @@ minimalistic project effort estimation and progress tracking and release date in
 - sprint priority can be changed by moving them within the list
 
 # Issues
-
-1. task update will not always persist the sprint_id.
-1. rest client still sends null and empty fields as json.
-
-# Limitations
-
- 
