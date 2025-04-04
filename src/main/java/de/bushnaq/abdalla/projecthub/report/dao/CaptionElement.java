@@ -29,15 +29,15 @@ public class CaptionElement {
     public        int    height          = 26;
     private       String imageMap        = "";
     private final String relateCssPath;
-    String text;
-    public int width;
-    public int x = 3;
-    public int y = 0;
+    private final String text;
+    public        int    width;
+    public        int    x               = 3;
+    public        int    y               = 0;
 
-    public CaptionElement(String text, String relateCssPath, int chartWidth, int chartHeight) {
+    public CaptionElement(String text, String relateCssPath/*, int chartWidth, int chartHeight*/) {
         this.text          = text;
         this.relateCssPath = relateCssPath;
-        this.width         = chartWidth;
+//        this.width         = chartWidth;
         if (text == null) {
             height = 0;
         }

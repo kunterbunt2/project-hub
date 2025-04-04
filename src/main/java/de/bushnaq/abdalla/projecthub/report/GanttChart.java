@@ -29,14 +29,13 @@ import java.util.List;
 public class GanttChart extends Chart {
 
     public GanttChart(Context context, String projectRequestKey, String relateCssPath, String column, String sprintName, List<Throwable> exception,
-                      LocalDateTime now, boolean completed, Sprint sprint, int chartWidth, int chartHeight, String cssClass,
+                      LocalDateTime now, boolean completed, Sprint sprint/*, int chartWidth, int chartHeight*/, String cssClass,
                       BurnDownGraphicsTheme graphicsTheme) throws Exception {
-        super("Gantt Chart", projectRequestKey, relateCssPath, column, sprintName, "gantt_map", null, chartWidth, chartHeight, cssClass, graphicsTheme);
-        getRenderers().add(new GanttRenderer(context, sprintName, exception, now, completed, sprint, chartWidth, chartHeight,
-                cssClass, graphicsTheme));
+        super("Gantt Chart", projectRequestKey, relateCssPath, column, sprintName, "gantt_map", null/*, chartWidth, chartHeight*/, cssClass, graphicsTheme);
+        getRenderers().add(new GanttRenderer(context, sprintName, exception, now, completed, sprint/*, chartWidth, chartHeight*/, cssClass, graphicsTheme));
         this.setChartWidth(getRenderers().get(0).chartWidth);
         this.setChartHeight(getRenderers().get(0).chartHeight + captionElement.height + footerElement.height - 1);
-        captionElement.width = chartWidth;
+        captionElement.width = getChartWidth();
         footerElement.y      = getRenderers().get(0).chartHeight + captionElement.height;
     }
 

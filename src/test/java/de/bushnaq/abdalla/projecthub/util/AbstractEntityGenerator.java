@@ -258,11 +258,12 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     }
 
     protected User addRandomUser() {
-        String       name      = names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
-        String       email     = name + "@project-hub.org";
-        LocalDate    firstDate = LocalDate.now();
-        User         saved     = addUser(name, email, "de", "nw", firstDate, 0.7f, LocalDate.parse(FIRST_OFF_DAY_START_DATE), LocalDate.parse(FIRST_OFF_DAY_FINISH_DATE), OffDayType.VACATION);
-        GanttContext gc        = new GanttContext();
+        String    name      = names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
+        String    email     = name + "@project-hub.org";
+        LocalDate firstDate = LocalDate.now();
+
+        User         saved = addUser(name, email, "de", "nw", firstDate, 0.7f, LocalDate.parse(FIRST_OFF_DAY_START_DATE), LocalDate.parse(FIRST_OFF_DAY_FINISH_DATE), OffDayType.VACATION);
+        GanttContext gc    = new GanttContext();
         gc.initialize();
         saved.initialize(gc);
         generateRandomOffDays(saved, firstDate);

@@ -99,7 +99,6 @@ public class User extends AbstractTimeAware implements Comparable<User> {
             setCalendar(resourceCalendar);
         }
 
-
         //TODO rethink employee leaving company and coming back
         ProjectCalendar pc = getCalendar();
         LocalDate       endDateInclusive;

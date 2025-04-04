@@ -27,4 +27,8 @@ public class GraphicsTheme {
     public              Color  chartBackgroundColor;
     public              Color  chartBorderColor;
     public              ETheme cssTheme         = ETheme.light;
+    public              Color  holidayColor     = new Color(183, 216, 240);  // Light blue;
+    public              Color  sickColor        = new Color(0xfff2e8); // Light red;
+    public              Color  tripColor        = new Color(0xfffcea);  // Light yellow;
+    public              Color  vacationColor    = new Color(183, 240, 216);  // Light green;
 }

@@ -22,7 +22,6 @@ import de.bushnaq.abdalla.projecthub.dto.OffDayType;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.report.dao.BurnDownGraphicsTheme;
 import de.bushnaq.abdalla.svg.util.ExtendedGraphics2D;
-import net.sf.mpxj.DayType;
 import net.sf.mpxj.ProjectCalendar;
 import net.sf.mpxj.ProjectCalendarException;
 import org.slf4j.Logger;
@@ -84,15 +83,15 @@ public class CalendarRenderer extends AbstractRenderer {
         // Colors
         Color yearColor = new Color(80, 80, 80);  // Dark gray for year display
 
-        Color xxxBgColor   = new Color(0xfffcea);  // Light yellow
-        Color xxxTextColor = new Color(0xff931e);  // Light yellow
 
-        Color vacationBgColor   = new Color(183, 240, 216);  // Light blue
-        Color vacationTextColor = new Color(123, 200, 180);  // Light blue
+        Color vacationBgColor   = new Color(183, 240, 216);  // Light green
+        Color vacationTextColor = new Color(123, 200, 180);  // Light green
         Color sickBgColor       = new Color(0xfff2e8); // Light red
         Color sickTextColor     = new Color(0xff6d5b); // Light red
-        Color holidayBgColor    = new Color(183, 216, 240);  // Light yellow
-        Color holidayTextColor  = new Color(123, 180, 200);  // Light yellow
+        Color holidayBgColor    = new Color(183, 216, 240);  // Light blue
+        Color holidayTextColor  = new Color(123, 180, 200);  // Light blue
+        Color tripBgColor       = new Color(0xfffcea);  // Light yellow
+        Color tripTextColor     = new Color(0xff931e);  // Light yellow
 
         Color weekendBgColor   = null;
         Color weekendTextColor = new Color(180, 180, 180);  // Light gray for weekends
@@ -182,8 +181,7 @@ public class CalendarRenderer extends AbstractRenderer {
                 int dayCenterY = dayY + (DAY_SIZE / 2) - 6; // Adjusted to center the text better
 
                 ProjectCalendar pc        = user.getCalendar();
-                DayType         dayType   = pc.getCalendarDayType(currentDate.getDayOfWeek());
-                boolean         isWeekend = dayType == DayType.NON_WORKING;
+                boolean         isWeekend = !pc.isWorkingDay(currentDate.getDayOfWeek());
                 // Check if today
                 boolean isToday = currentDate.equals(today);
 
@@ -198,10 +196,10 @@ public class CalendarRenderer extends AbstractRenderer {
                     ProjectCalendarException exception = pc.getException(currentDate);
                     if (exception != null) {
                         String name = exception.getName();
-                        if (exception.getName().equals(OffDayType.VACATION.name())) {
+                        if (name.equals(OffDayType.VACATION.name())) {
                             bgColor   = vacationBgColor;
                             textColor = vacationTextColor;
-                        } else if (exception.getName().equals(OffDayType.SICK.name())) {
+                        } else if (name.equals(OffDayType.SICK.name())) {
                             bgColor   = sickBgColor;
                             textColor = sickTextColor;
                         } else {

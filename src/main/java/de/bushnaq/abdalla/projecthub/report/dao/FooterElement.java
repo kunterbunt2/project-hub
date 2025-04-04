@@ -20,10 +20,10 @@ package de.bushnaq.abdalla.projecthub.report.dao;
 import java.awt.*;
 
 public class FooterElement {
-    private final Color backgroundColor = Color.white;
-    private final Color color           = new Color(0x2c, 0x7b, 0xf4);
-    public        int   height          = 14;
-    private final String imageMap = "";
+    private final Color  backgroundColor = Color.white;
+    private final Color  color           = new Color(0x2c, 0x7b, 0xf4);
+    public        int    height          = 14;
+    private final String imageMap        = "";
     private final String projectRequestKey;
     private final Font   signFont        = new Font("Arial", Font.PLAIN, 10);
     //    private Graphics2D graphics2D;
@@ -32,11 +32,11 @@ public class FooterElement {
     public int x = 3;
     public int y = 1;
 
-    public FooterElement(String text, String projectRequestKey, int chartWidth, int chartHeight) {
+    public FooterElement(String text, String projectRequestKey/*, int chartWidth, int chartHeight*/) {
         this.text              = text;
         this.projectRequestKey = projectRequestKey;
-        this.width             = chartWidth;
-        y                      = chartHeight;
+//        this.width             = chartWidth;
+//        y                      = chartHeight;
         if (text == null) {
             height = 0;
         }

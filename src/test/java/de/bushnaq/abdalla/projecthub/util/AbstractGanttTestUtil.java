@@ -178,7 +178,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         storeResult();
 
 
-        GanttChart ganttChart  = new GanttChart(context, "", "/", "Gantt Chart", sprint.getName(), exceptions, ParameterOptions.now, false, sprint, 1887, 1000, "scheduleWithMargin", context.parameters.graphicsTheme);
+        GanttChart ganttChart  = new GanttChart(context, "", "/", "Gantt Chart", sprint.getName(), exceptions, ParameterOptions.now, false, sprint/*, 1887, 1000*/, "scheduleWithMargin", context.parameters.graphicsTheme);
         String     description = testInfo.getDisplayName();
         ganttChart.generateImage(Util.generateCopyrightString(ParameterOptions.now), description, testResultFolder);
         printTables();

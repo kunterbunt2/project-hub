@@ -68,18 +68,14 @@ public abstract class AbstractRenderer {
         calendarXAxses     = new CalendarXAxses(this, dao.preRun, dao.postRun);
     }
 
-    public AbstractRenderer(String sprintName/*, Map<LocalDate, String> bankHolidays*/, boolean completed, int chartWidth, int chartHeight, int preRun, int postRun,
+    public AbstractRenderer(String sprintName/*, Map<LocalDate, String> bankHolidays*/, boolean completed/*, int chartWidth, int chartHeight*/, int preRun, int postRun,
                             BurnDownGraphicsTheme graphicsTheme) throws IOException {
 //        this.bankHolidays  = bankHolidays;
         this.graphicsTheme = graphicsTheme;
-        this.chartWidth    = chartWidth;
-        this.chartHeight   = chartHeight;
-        milestones         = new Milestones(sprintName);
-        calendarXAxses     = new CalendarXAxses(this, preRun, postRun);
-    }
-
-    protected int caculateMaxDays() {
-        return DateUtil.calculateDays(milestones.firstMilestone, milestones.lastMilestone) + 1 + calendarXAxses.getPriRun() + calendarXAxses.getPostRun();
+//        this.chartWidth    = chartWidth;
+//        this.chartHeight   = chartHeight;
+        milestones     = new Milestones(sprintName);
+        calendarXAxses = new CalendarXAxses(this, preRun, postRun);
     }
 
     protected int calculateChartHeight() {
@@ -105,7 +101,7 @@ public abstract class AbstractRenderer {
     }
 
     protected void calculateDayWidth() {
-        days = caculateMaxDays();
+        days = calculateMaxDays();
         calendarXAxses.dayOfWeek.setWidth((chartWidth) / days);
     }
 
@@ -113,6 +109,10 @@ public abstract class AbstractRenderer {
         LocalDate firstMilestoneDay = milestones.firstMilestone;
         int       firstMilestoneX   = firstDayX + calendarXAxses.dayOfWeek.getWidth() / 2;
         return firstMilestoneX + (DateUtil.calculateDays(firstMilestoneDay, date) + calendarXAxses.getPriRun()) * calendarXAxses.dayOfWeek.getWidth();
+    }
+
+    protected int calculateMaxDays() {
+        return DateUtil.calculateDays(milestones.firstMilestone, milestones.lastMilestone) + 1 + calendarXAxses.getPriRun() + calendarXAxses.getPostRun();
     }
 
     protected int calculateX(LocalDateTime date, LocalDateTime startTime, long secondsPeerDay) {

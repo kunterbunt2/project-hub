@@ -18,10 +18,7 @@
 package de.bushnaq.abdalla.projecthub.report.renderer;
 
 import de.bushnaq.abdalla.projecthub.dao.Context;
-import de.bushnaq.abdalla.projecthub.dto.OffDay;
-import de.bushnaq.abdalla.projecthub.dto.Relation;
-import de.bushnaq.abdalla.projecthub.dto.Task;
-import de.bushnaq.abdalla.projecthub.dto.TaskMode;
+import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.gantt.GanttUtil;
 import de.bushnaq.abdalla.projecthub.report.Canvas;
 import de.bushnaq.abdalla.projecthub.report.dao.*;
@@ -70,8 +67,8 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
     protected              ResourcesUtilization resourcesUtilization       = new ResourcesUtilization();// only used for out of office
     protected              Map<Long, Integer>   taskHeight                 = new HashMap<>();
 
-    public AbstractGanttRenderer(Context context, String sprintName/*, Map<LocalDate, String> bankHolidays*/, boolean completed, int chartWidth, int chartHeight, int numberOfLinesPerTask, int preRun, int postRun, BurnDownGraphicsTheme graphicsTheme) throws IOException {
-        super(sprintName/*, bankHolidays*/, completed, chartWidth, chartHeight, preRun, postRun, graphicsTheme);
+    public AbstractGanttRenderer(Context context, String sprintName/*, Map<LocalDate, String> bankHolidays*/, boolean completed/*, int chartWidth, int chartHeight*/, int numberOfLinesPerTask, int preRun, int postRun, BurnDownGraphicsTheme graphicsTheme) throws IOException {
+        super(sprintName/*, bankHolidays*/, completed/*, chartWidth, chartHeight*/, preRun, postRun, graphicsTheme);
         this.context              = context;
         this.numberOfLinesPerTask = numberOfLinesPerTask;
     }
@@ -191,25 +188,23 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         if (task.getAssignedUser() != null) {
             for (ProjectCalendarException calendarException : task.getAssignedUser().getCalendar().getCalendarExceptions()) {
                 for (LocalDate currentDay = calendarException.getFromDate(); currentDay.isBefore(calendarException.getToDate()) || currentDay.isEqual(calendarException.getToDate()); currentDay = currentDay.plusDays(1)) {
-                    int    dayIndex = calculateDayIndex(calendarException.getFromDate());
-                    String name     = calendarException.getName();
-                    int    daysX    = calculateDayX(currentDay);
-                    if (daysX > 0 && daysX < calendarXAxses.getWidth()) {
-                        // int x1 = daysX - (calendarXAxses.dayOfWeek.width / 2 - 1);
-                        // int y1 = y - (calendarXAxses.dayOfWeek.width / 2) + 2;
-                        // graphics2D.drawImage(outOfOffice, null, x1, y1);
-                        graphics2D.setFont(outOfOfficeFont);
-                        graphics2D.setColor(graphicsTheme.ganttOutOfOfficeColor);
-                        graphics2D.fillRect(daysX - (calendarXAxses.dayOfWeek.getWidth() / 2 - 1), y - (calendarXAxses.dayOfWeek.getWidth() / 2) + 2, calendarXAxses.dayOfWeek.getWidth() - 1, getTaskHeight());
-                        graphics2D.setColor(Color.WHITE);
-                        FontMetrics fm        = graphics2D.getFontMetrics();
-                        String      text      = "O";
-                        int         width     = fm.stringWidth(text);
-                        int         maxAscent = fm.getMaxAscent();
-                        graphics2D.drawString(text, daysX - width / 2, y + (maxAscent + 1) / 2 - 2);
+//                    int    dayIndex = calculateDayIndex(calendarException.getFromDate());
+                    String name = calendarException.getName();
+                    if (name.equals(OffDayType.VACATION.name()) || name.equals(OffDayType.HOLIDAY.name()) || name.equals(OffDayType.SICK.name()) || name.equals(OffDayType.TRIP.name())) {
+                        int daysX = calculateDayX(currentDay);
+                        if (daysX > 0 && daysX < calendarXAxses.getWidth()) {
+                            graphics2D.setFont(outOfOfficeFont);
+                            graphics2D.setColor(graphicsTheme.ganttOutOfOfficeColor);
+//                            graphics2D.fillRect(daysX - (calendarXAxses.dayOfWeek.getWidth() / 2 - 1), y - (calendarXAxses.dayOfWeek.getWidth() / 2) + 2, calendarXAxses.dayOfWeek.getWidth() - 1, getTaskHeight());
+                            graphics2D.setColor(Color.WHITE);
+                            FontMetrics fm        = graphics2D.getFontMetrics();
+                            String      text      = "O";
+                            int         width     = fm.stringWidth(text);
+                            int         maxAscent = fm.getMaxAscent();
+//                            graphics2D.drawString(text, daysX - width / 2, y + (maxAscent + 1) / 2 - 2);
+                        }
                     }
                 }
-
             }
         }
 
@@ -547,6 +542,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
             if (x2 - x1 - 1 - 1 > 0) {
                 //sometimes tasks are so small, that we cannot draw them.
 
+                //TODO rewrite to only cover working days
 
                 Shape s = new RectangleWithToolTip(x1, y1, x2 - x1 - 1 - 1, h - 1, toolTip);
                 graphics2D.fill(s);

@@ -52,12 +52,12 @@ public abstract class Canvas extends ReportLink {
     private final        Logger             logger                 = LoggerFactory.getLogger(this.getClass());
     protected            SVGGraphics2D      svgGenerator;
 
-    public Canvas(String column, String imageName, String mapName, String link, int chartWidth, int chartHeight, String cssClass, GraphicsTheme graphicsTheme)
+    public Canvas(String column, String imageName, String mapName, String link/*, int chartWidth, int chartHeight*/, String cssClass, GraphicsTheme graphicsTheme)
             throws IOException {
         super(column, generateCellText(cssClass, mapName, imageName), link);
         this.imageName = imageName;
-        this.setChartWidth(chartWidth);
-        this.setChartHeight(chartHeight);
+//        this.setChartWidth(chartWidth);
+//        this.setChartHeight(chartHeight);
         this.graphicsTheme = graphicsTheme;
     }
 

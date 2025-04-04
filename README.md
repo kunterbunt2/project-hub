@@ -48,6 +48,4 @@ minimalistic project effort estimation and progress tracking and release date in
 
 # Limitations
 
-1. a task cannot have more than one resource assigned to it.
-2. a task cannot have a calendar assigned to it.
  

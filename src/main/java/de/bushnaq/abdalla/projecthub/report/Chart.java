@@ -35,12 +35,12 @@ public abstract class Chart extends Canvas {
     private final String                 mapName;
     private final List<AbstractRenderer> renderers = new ArrayList<>();
 
-    public Chart(String caption, String projectRequestKey, String relateCssPath, String column, String imageName, String mapName, String link, int chartWidth,
-                 int chartHeight, String cssClass, GraphicsTheme graphicsTheme) throws IOException {
-        super(column, imageName, mapName, link, chartWidth, chartHeight, cssClass, graphicsTheme);
-        captionElement = new CaptionElement(caption, relateCssPath, chartWidth, chartHeight);
-        footerElement  = new FooterElement(Util.generateCopyrightString(LocalDateTime.now()), projectRequestKey, chartWidth,
-                chartHeight + captionElement.height);
+    public Chart(String caption, String projectRequestKey, String relateCssPath, String column, String imageName, String mapName, String link/*, int chartWidth,
+                 int chartHeight*/, String cssClass, GraphicsTheme graphicsTheme) throws IOException {
+        super(column, imageName, mapName, link/*, chartWidth, chartHeight*/, cssClass, graphicsTheme);
+        captionElement = new CaptionElement(caption, relateCssPath/*, chartWidth, chartHeight*/);
+        footerElement  = new FooterElement(Util.generateCopyrightString(LocalDateTime.now()), projectRequestKey/*, chartWidth,
+                chartHeight + captionElement.height*/);
         this.mapName   = mapName;
     }
 

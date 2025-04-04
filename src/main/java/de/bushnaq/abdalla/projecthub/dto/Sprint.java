@@ -92,8 +92,8 @@ public class Sprint extends AbstractTimeAware {
         LocalDateTime latestDate = null;
         for (Task task : getTasks()) {
             if (!task.isMilestone() && (task.getChildTasks().isEmpty()) && (task.getDuration() != null && !task.getDuration().isZero())) {
-                if (latestDate == null || task.getStart().isAfter(latestDate)) {
-                    latestDate = task.getStart();
+                if (latestDate == null || task.getFinish().isAfter(latestDate)) {
+                    latestDate = task.getFinish();
                 }
             } else {
                 //ignore milestones

@@ -17,6 +17,10 @@
 
 package de.bushnaq.abdalla.projecthub.report.dao;
 
+import de.bushnaq.abdalla.projecthub.dto.OffDayType;
+import net.sf.mpxj.ProjectCalendar;
+import net.sf.mpxj.ProjectCalendarException;
+
 import java.awt.*;
 import java.time.LocalDate;
 
@@ -57,7 +61,7 @@ public class GraphColorUtil {
             case FRIDAY:
                 return graphicsTheme.fridayStripeColor;
             case MONDAY:
-                return graphicsTheme.wednesdayColor;
+                return graphicsTheme.mondayColor;
             case SATURDAY:
                 return graphicsTheme.saturdayStripeColor;
             case SUNDAY:
@@ -70,8 +74,27 @@ public class GraphColorUtil {
                 return graphicsTheme.wednesdayStripeColor;
             default:
                 return null;
-
         }
 
+    }
+
+    public static Color getDayStripeColor(BurnDownGraphicsTheme graphicsTheme, ProjectCalendar pc, LocalDate currentDate) {
+        if (pc.isWorkingDate(currentDate)) {
+            return graphicsTheme.mondayColor;
+        } else {
+            ProjectCalendarException exception = pc.getException(currentDate);
+            if (exception != null) {
+                if (exception.getName().equals(OffDayType.VACATION.name())) {
+                    return graphicsTheme.vacationColor;
+                } else if (exception.getName().equals(OffDayType.TRIP.name())) {
+                    return graphicsTheme.tripColor;
+                } else if (exception.getName().equals(OffDayType.SICK.name())) {
+                    return graphicsTheme.sickColor;
+                } else {
+                    return graphicsTheme.holidayColor;
+                }
+            }
+            return graphicsTheme.sundayStripeColor;
+        }
     }
 }
