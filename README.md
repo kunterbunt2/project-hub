@@ -10,6 +10,12 @@ minimalistic project effort estimation and progress tracking and release date in
 
 [ER Diagram](https://github.com/kunterbunt2/project-hub/wiki/ER-Diagram)
 
+# Screenshots
+
+[[/gantt/gantt-03.svg|gantt-03]]
+
+[[/calendar/Christopher Paul.de.nw.svg|Christopher Paul.de.nw]]
+
 # Status
 
 ## Locations
@@ -44,3 +50,8 @@ minimalistic project effort estimation and progress tracking and release date in
 - sprint priority can be changed by moving them within the list
 
 # Issues
+
+# License
+
+[Apache License, version 2.0](https://github.com/kunterbunt2/project-hub/blob/main/LICENSE)
+

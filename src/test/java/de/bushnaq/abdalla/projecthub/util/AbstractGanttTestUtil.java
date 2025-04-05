@@ -79,7 +79,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         int count = 1;
 
         for (int i = 0; i < count; i++) {
-            Product product = addProduct("Product " + i);
+            Product product = addProduct("Product-" + i);
             Version version = addVersion(product, String.format("1.%d.0", i));
             Project project = addProject(version, String.format("Project-%d", i), String.format("Requester-%d", i));
             sprint = addSprint(project, sprintName);
@@ -158,7 +158,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         ParameterOptions.now = OffsetDateTime.parse("2025-01-01T08:00:00+01:00");
         new File(testResultFolder).mkdirs();
         new File(testReferenceResultFolder).mkdirs();
-        addOneProduct(testInfo.getTestMethod().get().getName());
+        addOneProduct(testInfo.getTestMethod().get().getName().replace("_", "-"));
         addRandomUsers(2);
         initialize();
     }
@@ -179,7 +179,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
 
 
         GanttChart ganttChart  = new GanttChart(context, "", "/", "Gantt Chart", sprint.getName(), exceptions, ParameterOptions.getLocalNow(), false, sprint/*, 1887, 1000*/, "scheduleWithMargin", context.parameters.graphicsTheme);
-        String     description = testInfo.getDisplayName();
+        String     description = testInfo.getDisplayName().replace("_", "-");
         ganttChart.generateImage(Util.generateCopyrightString(ParameterOptions.getLocalNow()), description, testResultFolder);
         printTables();
         compareResults();
