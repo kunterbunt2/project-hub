@@ -12,9 +12,9 @@ minimalistic project effort estimation and progress tracking and release date in
 
 # Screenshots
 
-[[/gantt/gantt-03.svg|gantt-03]]
+[/gantt/gantt-03.svg|gantt-03]
 
-[[/calendar/Christopher Paul.de.nw.svg|Christopher Paul.de.nw]]
+[/calendar/Christopher Paul.de.nw.svg|Christopher Paul.de.nw]
 
 # Status
 
