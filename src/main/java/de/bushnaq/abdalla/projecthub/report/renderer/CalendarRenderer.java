@@ -77,29 +77,14 @@ public class CalendarRenderer extends AbstractRenderer {
     void drawCalendar(Graphics2D graphics2D, int year, LocalDate today, int x, int y) {
         int holidays = 0;
 
-        // Colors
-
-
         // Save original font and color
         Font  originalFont  = graphics2D.getFont();
         Color originalColor = graphics2D.getColor();
 
         // Fonts
-        Font yearFont  = new Font("Helvetica", Font.PLAIN, 24);
         Font smallFont = new Font("Helvetica", Font.PLAIN, 6);
 
-        // Draw the year at the top
-        graphics2D.setFont(yearFont);
-        graphics2D.setColor(graphicsTheme.calendarYearTextColor);
-        String yearText = String.valueOf(year);
-
-        // Calculate year text dimensions
-        FontMetrics yearMetrics    = graphics2D.getFontMetrics(yearFont);
-        int         yearTextHeight = yearMetrics.getHeight();
-        int         yearTextWidth  = yearMetrics.stringWidth(yearText);
-
-        // Center the year text
-        graphics2D.drawString(yearText, x + 5, y + yearMetrics.getAscent());
+        int yearTextHeight = drawYear(graphics2D, year, x, y);
 
         // Calculate offset for calendar to position below the year text
         int yearOffset = yearTextHeight + 20; // Add some padding
@@ -168,7 +153,7 @@ public class CalendarRenderer extends AbstractRenderer {
 
                 // Check off days
                 Color bgColor   = null;
-                Color textColor = graphicsTheme.normalDayBgColor;
+                Color textColor = graphicsTheme.normalDayTextColor;
 
                 if (isWeekend) {
                     bgColor   = graphicsTheme.weekendBgColor;
@@ -336,6 +321,22 @@ public class CalendarRenderer extends AbstractRenderer {
             graphics2D.setColor(graphicsTheme.weekDayTextColor);
             graphics2D.drawString(weekdays[i], weekdayX + DAY_SIZE / 2 - 5, weekdayY);
         }
+    }
+
+    private int drawYear(Graphics2D graphics2D, int year, int x, int y) {
+        Font yearFont = new Font("Helvetica", Font.PLAIN, 24);
+        graphics2D.setFont(yearFont);
+        graphics2D.setColor(graphicsTheme.calendarYearTextColor);
+        String yearText = String.valueOf(year);
+
+        // Calculate year text dimensions
+        FontMetrics yearMetrics    = graphics2D.getFontMetrics(yearFont);
+        int         yearTextHeight = yearMetrics.getHeight();
+        int         yearTextWidth  = yearMetrics.stringWidth(yearText);
+
+        // Center the year text
+        graphics2D.drawString(yearText, x + 5, y + yearMetrics.getAscent());
+        return yearTextHeight;
     }
 }
 

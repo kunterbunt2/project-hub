@@ -115,7 +115,7 @@ public abstract class AbstractRenderer {
         return DateUtil.calculateDays(milestones.firstMilestone, milestones.lastMilestone) + 1 + calendarXAxses.getPriRun() + calendarXAxses.getPostRun();
     }
 
-    protected int calculateX(LocalDateTime date, LocalDateTime startTime, long secondsPeerDay) {
+    protected int calculateX(LocalDateTime date, LocalDateTime startTime, long secondsPerDay) {
         LocalDate firstMilestoneDay = milestones.firstMilestone;
         int       firstMilestoneX   = firstDayX + calendarXAxses.dayOfWeek.getWidth() / 2;
         // String createDateTimeString = DateUtil.createDateTimeString(date);
@@ -123,7 +123,7 @@ public abstract class AbstractRenderer {
         Duration workedToday = Duration.between(startTime, date);
         int dayX = firstMilestoneX
                 + (DateUtil.calculateDays(firstMilestoneDay, DateUtil.toDayPrecision(date)) + calendarXAxses.getPriRun()) * calendarXAxses.dayOfWeek.getWidth();
-        int timeOfDayX = (int) (((workedToday.getSeconds()) * calendarXAxses.dayOfWeek.getWidth()) / secondsPeerDay);
+        int timeOfDayX = (int) (((workedToday.getSeconds()) * calendarXAxses.dayOfWeek.getWidth()) / secondsPerDay);
         return dayX + timeOfDayX;
     }
 

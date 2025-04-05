@@ -19,6 +19,7 @@ package de.bushnaq.abdalla.projecthub.report.renderer;
 
 import de.bushnaq.abdalla.projecthub.dao.Context;
 import de.bushnaq.abdalla.projecthub.dto.*;
+import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.gantt.GanttUtil;
 import de.bushnaq.abdalla.projecthub.report.Canvas;
 import de.bushnaq.abdalla.projecthub.report.dao.*;
@@ -28,6 +29,7 @@ import de.bushnaq.abdalla.util.ColorUtil;
 import de.bushnaq.abdalla.util.GanttErrorHandler;
 import de.bushnaq.abdalla.util.TaskUtil;
 import de.bushnaq.abdalla.util.date.DateUtil;
+import net.sf.mpxj.ProjectCalendar;
 import net.sf.mpxj.ProjectCalendarException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -125,7 +127,40 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
             graphics2D.drawRect(x1, y - getTaskHeight() / 2 + 2 - 1, x2 - x1 - 1 - 1, getTaskHeight() - 1 - 4 + 2);
         } else {
             graphics2D.setColor(graphicsTheme.ganttTaskBorderColor);
-            graphics2D.drawRect(x1, y - getTaskHeight() / 2 + 2 - 1, x2 - x1 - 1 - 1, getTaskHeight() - 1 - 4 + 2);
+//            graphics2D.drawRect(x1, y - getTaskHeight() / 2 + 2 - 1, x2 - x1 - 1 - 1, getTaskHeight() - 1 - 4 + 2);
+            User user = task.getAssignedUser();
+            if (user != null && user.getCalendar() != null) {
+                for (LocalDateTime currentDay = task.getStart(); currentDay.isBefore(task.getFinish()); currentDay = currentDay.plusDays(1)) {
+                    ProjectCalendar pc  = user.getCalendar();
+                    int             x11 = calculateX(currentDay, currentDay.truncatedTo(ChronoUnit.DAYS).withHour(8), 75 * 6 * 60) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                    int             x21 = x11 + calendarXAxses.dayOfWeek.getWidth() + 2;
+                    if (pc.isWorkingDate(currentDay.toLocalDate())) {
+
+                        graphics2D.fillRect(x11, y - getTaskHeight() / 2 + 2 - 1 + 1, calendarXAxses.dayOfWeek.getWidth(), 1);
+                        graphics2D.fillRect(x11, y + getTaskHeight() / 2 - 4 + 2 - 1, calendarXAxses.dayOfWeek.getWidth(), 1);
+                        if (currentDay.equals(task.getStart())) {
+                            graphics2D.fillRect(x11, y - getTaskHeight() / 2 + 2 - 1 + 1 + 1, 1, getTaskHeight() - 1 - 4 + 2 - 2 - 2);
+                        } else if (!currentDay.plusDays(1).isBefore(task.getFinish())) {
+                            graphics2D.fillRect(x2 - 3, y - getTaskHeight() / 2 + 2 - 1 + 1 + 1, 1, getTaskHeight() - 1 - 4 + 2 - 2 - 2);
+                        }
+//                        Shape s = new RectangleWithToolTip(x11, y, x21 - x11 - 1 - 1, getTaskHeight() - 1 - 4 + 2);
+//                        graphics2D.fill(s);
+                    } else {
+                        for (int i = 0; i < calendarXAxses.dayOfWeek.getWidth() - 1; i++) {
+                            int x = i + x11;
+                            if (x % 4 == 0) {
+                                graphics2D.fillRect(x, y - getTaskHeight() / 2 + 2 - 1 + 1, 2, 1);
+                                graphics2D.fillRect(x, y + getTaskHeight() / 2 - 4 + 2 - 1, 2, 1);
+                            }
+                        }
+//                        Stroke dashed = new BasicStroke(1, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_BEVEL, 0, new float[]{9}, 0);
+//                        graphics2D.setStroke(new BasicStroke());
+//                        graphics2D.drawLine(x11, y - getTaskHeight() / 2 + 2 - 1, x11 + calendarXAxses.dayOfWeek.getWidth() - 1, y - getTaskHeight() / 2 + 2 - 1);
+//                        graphics2D.drawLine(x11, y + getTaskHeight() / 2 - 4 + 2, x11 + calendarXAxses.dayOfWeek.getWidth() - 1, y + getTaskHeight() / 2 - 4 + 2);
+                    }
+                }
+            }
+
         }
     }
 
@@ -455,9 +490,9 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                 String tooltip = generateToolTip(task, x1, x2, y, marker, resourceName, resourceUtelization);
                 // task
                 if (task.getProgress() == null) {
-                    drawTaskBody(x1, x2, y, fillColor, alien, 0.0f, tooltip);
+                    drawTaskBody(task, x1, x2, y, fillColor, alien, 0.0f, tooltip);
                 } else {
-                    drawTaskBody(x1, x2, y, fillColor, alien, task.getProgress().doubleValue(), tooltip);
+                    drawTaskBody(task, x1, x2, y, fillColor, alien, task.getProgress().doubleValue(), tooltip);
                 }
                 drawConflictMarker(y, conflict);
                 drawCriticalMarker(task, x1, x2, y);
@@ -530,7 +565,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         }
     }
 
-    private void drawTaskBody(int x1, int x2, int y, Color fillColor, boolean alien, double progress, String toolTip) {
+    private void drawTaskBody(Task task, int x1, int x2, int y, Color fillColor, boolean alien, double progress, String toolTip) {
         Color originalColor = fillColor;
         if (!alien) {
             graphics2D.setColor(Color.white);
@@ -542,10 +577,18 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
             if (x2 - x1 - 1 - 1 > 0) {
                 //sometimes tasks are so small, that we cannot draw them.
 
-                //TODO rewrite to only cover working days
-
-                Shape s = new RectangleWithToolTip(x1, y1, x2 - x1 - 1 - 1, h - 1, toolTip);
-                graphics2D.fill(s);
+                User user = task.getAssignedUser();
+                if (user != null && user.getCalendar() != null) {
+                    for (LocalDateTime currentDay = task.getStart(); currentDay.isBefore(task.getFinish()); currentDay = currentDay.plusDays(1)) {
+                        ProjectCalendar pc = user.getCalendar();
+                        if (pc.isWorkingDate(currentDay.toLocalDate())) {
+                            int   x11 = calculateX(currentDay, currentDay.truncatedTo(ChronoUnit.DAYS).withHour(8), 75 * 6 * 60) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                            int   x21 = x11 + calendarXAxses.dayOfWeek.getWidth() + 2;
+                            Shape s   = new RectangleWithToolTip(x11, y1 + 1, x21 - x11 - 1 - 1, h - 1 - 2, toolTip);
+                            graphics2D.fill(s);
+                        }
+                    }
+                }
             }
 
             if (progress > 0.0 && numberOfLinesPerTask == 1) {

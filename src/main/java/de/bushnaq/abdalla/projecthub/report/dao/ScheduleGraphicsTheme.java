@@ -87,8 +87,5 @@ public class ScheduleGraphicsTheme extends GraphicsTheme {
     public Color weekBackgroundColor;
     public Color weekBoderColor;
     public Color weekTextColor;
-    public Color yearBackgroundColor;
-    public Color yearBoderColor;
-    public Color yearTextColor;//already exists in parent class
 
 }

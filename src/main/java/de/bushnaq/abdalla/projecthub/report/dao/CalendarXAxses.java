@@ -60,7 +60,7 @@ public class CalendarXAxses {
 
     /**
      * @param parent
-     * @param priRun,  how many days to draw prior to the time range we are
+     * @param preRun,  how many days to draw prior to the time range we are
      *                 interested in
      * @param postRun, how many days to draw post to the time range we are
      *                 interested in
@@ -71,11 +71,11 @@ public class CalendarXAxses {
         this.postRun    = postRun;
         this.milestones = parent.milestones;
         int margine = 4;
-        year       = new CalendarElement(new Font("Arial", Font.BOLD, 14), null, null, 13 + margine);
-        month      = new CalendarElement(new Font("Arial", Font.BOLD, 12), null, null, 12 + margine);
-        week       = new CalendarElement(new Font("Arial", Font.BOLD, 10), null, null, 10 + margine);
-        dayOfMonth = new CalendarElement(new Font("Arial", Font.PLAIN, 10), null, 20, 10 + margine);
-        dayOfWeek  = new CalendarElement(new Font("Arial", Font.PLAIN, 10), null, 20, 10 + margine);
+        year       = new CalendarElement(new Font("Arial", Font.PLAIN, 14), null, null, 13 + margine);
+        month      = new CalendarElement(new Font("Arial", Font.PLAIN, 12), null, null, 12 + margine);
+        week       = new CalendarElement(new Font("Arial", Font.PLAIN, 10), null, null, 10 + margine);
+        dayOfMonth = new CalendarElement(new Font("Arial", Font.BOLD, 10), null, 20, 10 + margine);
+        dayOfWeek  = new CalendarElement(new Font("Arial", Font.BOLD, 10), null, 20, 10 + margine);
         milestone  = new CalendarMilestoneElement(null, null, 11, 10 + margine, new Font("Arial", Font.BOLD, 10), null, 13, new Font("Arial", Font.PLAIN, 11));
     }
 
@@ -117,8 +117,8 @@ public class CalendarXAxses {
                         }
                         int x2 = calculateDayX(end) - dayOfWeek.getWidth() / 2;
                         drawTextBox(daysX - (dayOfWeek.getWidth() / 2 - 1), x2 + dayOfWeek.getWidth(), year.getY(), year.getHeight(),
-                                String.valueOf(startCal.getYear()), parent.graphicsTheme.yearTextColor, parent.graphicsTheme.yearBackgroundColor,
-                                parent.graphicsTheme.yearBoderColor, year.getFont(), false);
+                                String.valueOf(startCal.getYear()), parent.graphicsTheme.calendarYearTextColor, parent.graphicsTheme.calendarYearBackgroundColor,
+                                parent.graphicsTheme.calendarYearBoderColor, year.getFont(), false);
                         yearWasDrawn = true;
                     }
                 } else if (phase == 3 && (startCal.getDayOfMonth() == 1 || !monthWasDrawn) && isMonthVisible()) {
@@ -136,21 +136,9 @@ public class CalendarXAxses {
                         monthWasDrawn = true;
                     }
                 } else if (phase == 2 && (startCal.getDayOfWeek() == DayOfWeek.MONDAY || !firstWeekWasDrawn) && isWeekVisible()) {
-                    // --beginning of the week
+                    // --week of the year
                     {
-                        //StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
                         LocalDate end = DateUtil.getWeekSunday(startCal);
-                        //                        end.setFirstDayOfWeek(Calendar.MONDAY);// Otherwise next instruction will fail on system that have Sunday as first day of week
-                        //                        end.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
-                        // if (stackTrace[3].getFileName().equals("ProjectOverviewRenderer.java"))
-                        // {
-                        // logger.trace(String.format("Drawing week [%s]",
-                        // DateUtil.createDateString(end.getTimeInMillis(), sdtmf)));
-                        // end.getFirstDayOfWeek();
-                        // }
-                        // if (stackTrace[3].getFileName().equals("ProjectOverviewRenderer.java"))
-                        // logger.trace(String.format("Drawing week [%s]",
-                        // DateUtil.createDateString(end.getTimeInMillis(), sdtmf)));
                         if (end.isAfter(lastDay)) {
                             end = lastDay;
                         }
@@ -158,19 +146,15 @@ public class CalendarXAxses {
                         String calendarWeek;
                         if (isDayOfWeekVisible()) {
                             TemporalField woy = WeekFields.of(Locale.CANADA).weekOfWeekBasedYear();
-                            //                            LocalDate ld = Instant.ofEpochMilli(currentDay).atZone(ZoneId.systemDefault()).toLocalDate();
                             calendarWeek = "W" + currentDay.get(woy);
                         } else {
                             calendarWeek = DateUtil.createDateString(currentDay, sdf);
                         }
-                        // if (stackTrace[3].getFileName().equals("ProjectOverviewRenderer.java"))
-                        // logger.trace(String.format("Drawing week [%s][%s]-[%s] in %s %d %d
-                        // weekWidth=%d", calendarWeek, DateUtil.createDateString(currentDay, sdtmf),
-                        // DateUtil.createDateString(end.getTimeInMillis(), sdtmf),
-                        // stackTrace[3].getFileName(), daysX - (dayOfWeek.width / 2 - 1), x2 +
-                        // dayOfWeek.width, dayOfWeek.width));
-                        drawTextBox(daysX - (dayOfWeek.getWidth() / 2 - 1), x2 + dayOfWeek.getWidth(), week.getY(), week.getHeight(), calendarWeek,
-                                parent.graphicsTheme.weekTextColor, parent.graphicsTheme.weekBackgroundColor, parent.graphicsTheme.weekBoderColor,
+//                        drawTextBox(daysX - (dayOfWeek.getWidth() / 2 - 1), x2 + dayOfWeek.getWidth(), week.getY(), week.getHeight(), calendarWeek,
+//                                parent.graphicsTheme.weekTextColor, parent.graphicsTheme.weekBackgroundColor, parent.graphicsTheme.weekBoderColor,
+//                                week.getFont(), false);
+                        drawTextBox(daysX - (dayOfWeek.getWidth() / 2 - 1), x2 + dayOfWeek.getWidth(), week.getY(), week.getHeight() - 1, calendarWeek,
+                                parent.graphicsTheme.weekDayTextColor, parent.graphicsTheme.weekDayBgColor, parent.graphicsTheme.weekBoderColor,
                                 week.getFont(), false);
                         firstWeekWasDrawn = true;
                     }
@@ -179,45 +163,37 @@ public class CalendarXAxses {
                     {
                         Color color;
                         if (startCal.getDayOfWeek() == DayOfWeek.SATURDAY || startCal.getDayOfWeek() == DayOfWeek.SUNDAY) {
-                            color = GraphColorUtil.getDayOfWeekColor(parent.graphicsTheme, startCal);
+//                            color = GraphColorUtil.getDayOfWeekColor(parent.graphicsTheme, startCal);
+//                            drawTextBox(daysX - (dayOfMonth.getWidth() / 2 - 1), daysX - (dayOfMonth.getWidth() / 2 - 1) + (dayOfMonth.getWidth() - 1),
+//                                    dayOfMonth.getY(), dayOfMonth.getHeight(), "" + startCal.getDayOfMonth(), Color.BLACK, color,
+//                                    parent.graphicsTheme.dayOfMonthBorderColor, dayOfMonth.getFont(), true);
                             drawTextBox(daysX - (dayOfMonth.getWidth() / 2 - 1), daysX - (dayOfMonth.getWidth() / 2 - 1) + (dayOfMonth.getWidth() - 1),
-                                    dayOfMonth.getY(), dayOfMonth.getHeight(), "" + startCal.getDayOfMonth(), Color.BLACK, color,
+                                    dayOfMonth.getY(), dayOfMonth.getHeight(), "" + startCal.getDayOfMonth(), parent.graphicsTheme.weekendTextColor, parent.graphicsTheme.sundayStripeColor,
                                     parent.graphicsTheme.dayOfMonthBorderColor, dayOfMonth.getFont(), true);
                         } else {
-                            color = parent.graphicsTheme.dayOfMonthBackgroundColor;
+//                            color = parent.graphicsTheme.weekDayBgColor;
+//                            drawTextBox(daysX - (dayOfMonth.getWidth() / 2 - 1), daysX - (dayOfMonth.getWidth() / 2 - 1) + (dayOfMonth.getWidth() - 1),
+//                                    dayOfMonth.getY(), dayOfMonth.getHeight(), "" + startCal.getDayOfMonth(), parent.graphicsTheme.dayOfMonthTextColor, color,
+//                                    parent.graphicsTheme.dayOfMonthBorderColor, dayOfMonth.getFont(), true);
                             drawTextBox(daysX - (dayOfMonth.getWidth() / 2 - 1), daysX - (dayOfMonth.getWidth() / 2 - 1) + (dayOfMonth.getWidth() - 1),
-                                    dayOfMonth.getY(), dayOfMonth.getHeight(), "" + startCal.getDayOfMonth(), parent.graphicsTheme.dayOfMonthTextColor, color,
+                                    dayOfMonth.getY(), dayOfMonth.getHeight(), "" + startCal.getDayOfMonth(), parent.graphicsTheme.normalDayTextColor, parent.graphicsTheme.weekDayBgColor,
                                     parent.graphicsTheme.dayOfMonthBorderColor, dayOfMonth.getFont(), true);
                         }
 
                         // father.graphics2D.setColor(graphicsTheme.dayDiagramBorderColor);
                     }
+
                     // --day of week
                     {
-                        Color color = GraphColorUtil.getDayOfWeekColor(parent.graphicsTheme, startCal);
-                        // if (startCal.getTime().getTime() < milestones.get("N").time) {
-                        // //past
-                        // color = graphicsTheme.pastWorkDayRequestColor;
-                        // if (startCal.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY) {
-                        // color = graphicsTheme.pastWeekendRequestColor;
-                        // } else if (startCal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
-                        // color = graphicsTheme.pastWeekendRequestColor;
-                        // }
-                        // } else {
-                        // //future
-                        // color = graphicsTheme.futureWorkDayRequestColor;
-                        // if (startCal.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY) {
-                        // color = graphicsTheme.futureWeekendRequestColor;
-                        // } else if (startCal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
-                        // color = graphicsTheme.futureWeekendRequestColor;
-                        // }
-                        // }
+                        Color color = GraphColorUtil.getDayOfWeekStripeColor(parent.graphicsTheme, startCal);
+//                        drawTextBox(daysX - (dayOfWeek.getWidth() / 2 - 1), daysX - (dayOfWeek.getWidth() / 2 - 1) + (dayOfWeek.getWidth() - 1),
+//                                dayOfWeek.getY(), dayOfWeek.getHeight(), weekDays[startCal.getDayOfWeek().getValue() - 1], parent.graphicsTheme.dayTextColor,
+//                                color, parent.graphicsTheme.dayBorderColor, dayOfWeek.getFont(), true);
                         drawTextBox(daysX - (dayOfWeek.getWidth() / 2 - 1), daysX - (dayOfWeek.getWidth() / 2 - 1) + (dayOfWeek.getWidth() - 1),
-                                dayOfWeek.getY(), dayOfWeek.getHeight(), weekDays[startCal.getDayOfWeek().getValue() - 1], parent.graphicsTheme.dayTextColor,
+                                dayOfWeek.getY(), dayOfWeek.getHeight(), weekDays[startCal.getDayOfWeek().getValue() - 1], parent.graphicsTheme.weekDayTextColor,
                                 color, parent.graphicsTheme.dayBorderColor, dayOfWeek.getFont(), true);
-                        parent.graphics2D.setColor(parent.graphicsTheme.dayDiagramBorderColor);
-                        parent.graphics2D.fillRect(daysX - (dayOfWeek.getWidth() / 2 - 1) + (dayOfWeek.getWidth() - 1), milestone.flagY, 1,
-                                milestone.flagHeight - 1);
+//                        parent.graphics2D.setColor(parent.graphicsTheme.dayDiagramBorderColor);
+//                        parent.graphics2D.fillRect(daysX - (dayOfWeek.getWidth() / 2 - 1) + (dayOfWeek.getWidth() - 1), milestone.flagY, 1, milestone.flagHeight - 1);
                     }
                 } else if (phase == 0) {
                     {
@@ -226,25 +202,17 @@ public class CalendarXAxses {
                         }
                     }
                     if (milestonesVisible()) {
-                        Color color = GraphColorUtil.getDayOfWeekColor(parent.graphicsTheme, startCal);
+                        Color color = GraphColorUtil.getDayOfWeekStripeColor(parent.graphicsTheme, startCal);
                         parent.graphics2D.setColor(color);
                         //                        father.graphics2D.setColor(Color.red);
-                        parent.graphics2D.fillRect(daysX - (dayOfWeek.getWidth() / 2 - 1), milestone.flagY, dayOfWeek.getWidth(), milestone.flagHeight - 1);
+//                        parent.graphics2D.fillRect(daysX - (dayOfWeek.getWidth() / 2 - 1), milestone.flagY, dayOfWeek.getWidth() - 1, milestone.flagHeight - 1);
+                        drawTextBox(daysX - (dayOfWeek.getWidth() / 2 - 1), daysX - (dayOfWeek.getWidth() / 2 - 1) + (dayOfWeek.getWidth() - 1),
+                                milestone.flagY, milestone.flagHeight, null, parent.graphicsTheme.weekDayTextColor,
+                                color, parent.graphicsTheme.dayBorderColor, null, true);
                     }
                 }
             }
         }
-
-        // {
-        // long dayIndex = milestones.get("N").time - ONE_DAY_MILLIS * (width / 2 + 60)
-        // / day.width;
-        // Calendar startCal = Calendar.getInstance();
-        // startCal.setTimeInMillis(dayIndex);
-        // father.graphics2D.setFont(year.font);
-        // father.graphics2D.setColor(graphicsTheme.yearTextColor);
-        // father.graphics2D.drawString(String.valueOf(startCal.get(Calendar.YEAR)), 1,
-        // year.y + 1);
-        // }
     }
 
     public String drawMilestone(Milestone m, LocalDate time, int x, Color fillColor, String text, boolean drawMilestone, Color flagTextColor) {
@@ -345,21 +313,26 @@ public class CalendarXAxses {
 
     public void drawTextBox(int x1, int x2, Integer y1, int height, String text, Color textColor, Color backgroundColor, Color borderColor, Font font,
                             boolean centered) {
-        parent.graphics2D.setColor(backgroundColor);
-        parent.graphics2D.setFont(font);
-        FontMetrics fm    = parent.graphics2D.getFontMetrics();
-        int         width = fm.stringWidth(text);
-        // int fontHeight = fm.getHeight()+fm.getMaxAscent()+fm.getMaxDescent();
-        parent.graphics2D.fillRect(x1, y1, x2 - x1, height - 1);
-        parent.graphics2D.setColor(borderColor);
-        parent.graphics2D.fillRect(x2, y1, 1, height - 1);
-        parent.graphics2D.fillRect(x1, y1 + height - 1, x2 - x1 + 1, 1);
-        parent.graphics2D.setColor(textColor);
-        int maxAscent = fm.getMaxAscent();
-        if (centered) {
-            parent.graphics2D.drawString(text, x1 + (x2 - x1) / 2 - width / 2, y1 + height / 2 + (maxAscent + 1) / 2 - 2);
-        } else {
-            parent.graphics2D.drawString(text, x1 + 1 + 1, y1 + height / 2 + (maxAscent + 1) / 2 - 2);
+        {
+            parent.graphics2D.setColor(backgroundColor);
+            parent.graphics2D.fillRect(x1, y1, x2 - x1, height - 1);
+        }
+        {
+            parent.graphics2D.setColor(borderColor);
+            parent.graphics2D.fillRect(x1 - 1, y1 - 1, x2 - x1 + 1, 1);
+            parent.graphics2D.fillRect(x2, y1, 1, height - 1);
+        }
+        if (text != null) {
+            parent.graphics2D.setFont(font);
+            FontMetrics fm    = parent.graphics2D.getFontMetrics();
+            int         width = fm.stringWidth(text);
+            parent.graphics2D.setColor(textColor);
+            int maxAscent = fm.getMaxAscent();
+            if (centered) {
+                parent.graphics2D.drawString(text, x1 + (x2 - x1) / 2 - width / 2, y1 + height / 2 + (maxAscent + 1) / 2 - 2);
+            } else {
+                parent.graphics2D.drawString(text, x1 + 1 + 1, y1 + height / 2 + (maxAscent + 1) / 2 - 2);
+            }
         }
     }
 

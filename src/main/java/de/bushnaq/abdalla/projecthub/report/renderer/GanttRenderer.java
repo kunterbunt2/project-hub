@@ -120,8 +120,6 @@ public class GanttRenderer extends AbstractGanttRenderer {
             } else {
                 pc = sprint.getDefaultCalendar();
             }
-            Color color = GraphColorUtil.getDayStripeColor(graphicsTheme, pc, currentDay);
-            graphics2D.setColor(color);
 
             Integer lane = taskHeight.get(gantUniqueId * 10000 + task.getId());
             int     y    = lane + getTaskHeight() / 2;
@@ -129,8 +127,20 @@ public class GanttRenderer extends AbstractGanttRenderer {
             int     y1   = y - getTaskHeight() / 2;
             int     x1   = x - (calendarXAxses.dayOfWeek.getWidth() / 2 - 1);
 
-            Shape s = new Rectangle(x1, y1, calendarXAxses.dayOfWeek.getWidth() - 1, getTaskHeight());
-            graphics2D.fill(s);
+            {
+                Color color = graphicsTheme.ganttGridColor;
+                graphics2D.setColor(color);
+//                graphics2D.drawRect(x1 - 1, y1 - 1, calendarXAxses.dayOfWeek.getWidth() + 1, getTaskHeight() + 1);
+                graphics2D.fillRect(x1 - 1, y1 - 1, calendarXAxses.dayOfWeek.getWidth(), 1);
+                graphics2D.fillRect(x1 - 1, y1 - 1 + 1, 1, getTaskHeight() + 1 - 1);
+
+            }
+            {
+                Color color = GraphColorUtil.getDayStripeColor(graphicsTheme, pc, currentDay);
+                graphics2D.setColor(color);
+                Shape s = new Rectangle(x1, y1, calendarXAxses.dayOfWeek.getWidth() - 1, getTaskHeight());
+                graphics2D.fill(s);
+            }
         }
     }
 

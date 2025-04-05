@@ -60,6 +60,7 @@ public class GraphicsLightTheme extends BurnDownGraphicsTheme {
     };
 
     public GraphicsLightTheme() {
+        ganttGridColor = new Color(0x7fe4e8f3, true);
 
         // gray
         Color basicTextColor       = Color.WHITE;
@@ -72,11 +73,11 @@ public class GraphicsLightTheme extends BurnDownGraphicsTheme {
 
         dayOfMonthTextColor       = basicTextColor;
         dayOfMonthBackgroundColor = basicBackgroundColor;
-        dayOfMonthBorderColor     = basicBorderColor;
+        dayOfMonthBorderColor     = ganttGridColor;
 
         dayTextColor          = Color.BLACK;
         dayBackgroundColor    = Color.WHITE;
-        dayBorderColor        = Color.WHITE;
+        dayBorderColor        = ganttGridColor;
         dayDiagramBorderColor = new Color(0xf6f8ff);
 
         delayClosedEventColor = new Color(255, 184, 184);
@@ -109,9 +110,9 @@ public class GraphicsLightTheme extends BurnDownGraphicsTheme {
         saturdayStripeColor  = new Color(0xfafafa);//new Color(0xd9, 0xe6, 0xff, 0x88);
         sundayStripeColor    = new Color(0xf7f7f7);//new Color(0xff, 0xd9, 0xd9, 0x88);
 
-        yearBackgroundColor = basicBackgroundColor;
-        yearTextColor       = basicTextColor;
-        yearBoderColor      = basicBorderColor;
+//        calendarYearBackgroundColor = basicBackgroundColor;
+//        calendarYearTextColor       = basicTextColor;
+//        calendarYearBoderColor = basicBorderColor;
 
         weekBackgroundColor = basicBackgroundColor;
         weekTextColor       = basicTextColor;
@@ -126,7 +127,6 @@ public class GraphicsLightTheme extends BurnDownGraphicsTheme {
         ganttTaskTextColor           = new Color(0x30, 0x30, 0x30, 0xff);
         ganttTaskBorderColor         = new Color(0x30, 0x30, 0x30, 0x7F);
         burnDownBorderColor          = new Color(0xff, 0xcc, 0x00, 0x77);
-        ganttGridColor               = new Color(0xe4e8f3);
         ganttIdColor                 = new Color(0xff, 0xff, 0xff, 0xff);
         ganttIdErrorColor            = new Color(0xff, 0x0, 0x0, 0xff);
         ganttIdTextColor             = new Color(0xaa, 0xaa, 0xaa, 0xff);
@@ -251,7 +251,7 @@ public class GraphicsLightTheme extends BurnDownGraphicsTheme {
         futureWeekendRequestColor = new Color(0x60, 0x60, 0x60, 0x40);
         requestMilestoneColor     = Color.RED/*new Color(0xa7, 0x00, 0x00)*/;
 
-        int ma = 0xff;
+        int ma = 0x7f;
         monthColor[0]  = new Color(0x18, 0x7d, 0xc3, ma);
         monthColor[1]  = new Color(0x24, 0xae, 0xef, ma);
         monthColor[2]  = new Color(0x27, 0x9e, 0x68, ma);
