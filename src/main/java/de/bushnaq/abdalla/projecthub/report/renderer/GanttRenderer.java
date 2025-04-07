@@ -45,15 +45,17 @@ import java.util.List;
  */
 public class GanttRenderer extends AbstractGanttRenderer {
 
-    private static final int    ONE_WEEK = 7;
-    private final        Logger logger   = LoggerFactory.getLogger(this.getClass());
+    private static final int    GANTT_TASK_POST_SPACE = 50;
+    private static final int    GANTT_TASK_PRI_SPACE  = 50;
+    private static final int    ONE_WEEK              = 7;
+    private final        Logger logger                = LoggerFactory.getLogger(this.getClass());
     private final        Sprint sprint;
 
 
     public GanttRenderer(Context context, String sprintName, List<Throwable> exceptions, LocalDateTime now, boolean completed,
                          Sprint sprint/*, int chartWidth, int chartHeight*/, String cssClass, BurnDownGraphicsTheme graphicsTheme)
             throws Exception {
-        super(context, sprintName/*, context.bankHolidays*/, completed/*, chartWidth, chartHeight*/, 1, 7, 14, graphicsTheme);
+        super(context, sprintName/*, context.bankHolidays*/, completed/*, chartWidth, chartHeight*/, 1, 14, 14, graphicsTheme);
 //        this.ganttFileName = ganttFileName;
         this.sprint = sprint;
 //        this.timeTracker   = context.timeTracker;
@@ -74,7 +76,7 @@ public class GanttRenderer extends AbstractGanttRenderer {
 
     @Override
     protected int calculateChartHeight() {
-        return GanttUtil.calculateNumberOfTasks(sprint) * (getTaskHeight() + 1) + calendarXAxses.getHeight();
+        return calendarXAxses.getHeight() + GANTT_TASK_PRI_SPACE + GanttUtil.calculateNumberOfTasks(sprint) * (getTaskHeight() + 1) + GANTT_TASK_POST_SPACE;
     }
 
     @Override
@@ -89,8 +91,8 @@ public class GanttRenderer extends AbstractGanttRenderer {
         calendarXAxses.dayOfWeek.setWidth(20);
     }
 
-    protected void calculateTaskHightMap(int yOffset) {
-        int y = yOffset;
+    protected void calculateTaskHeightMap(int yOffset) {
+        int y = yOffset + GANTT_TASK_PRI_SPACE;
         for (Task task : sprint.getTasks()) {
             if (GanttUtil.isValidTask(task)) {
                 taskHeight.put(task.getId(), y);
@@ -103,7 +105,7 @@ public class GanttRenderer extends AbstractGanttRenderer {
     public void draw(ExtendedGraphics2D graphics2D, int x, int y) throws Exception {
         this.graphics2D = graphics2D;
         initPosition(x, y);
-        calculateTaskHightMap(y + calendarXAxses.getHeight());
+        calculateTaskHeightMap(y + calendarXAxses.getHeight());
         drawCalendar();
         drawMilestones();
         drawGanttChart();

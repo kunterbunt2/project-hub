@@ -26,8 +26,14 @@ import net.sf.mpxj.ProjectCalendar;
 import net.sf.mpxj.ProjectCalendarException;
 
 import java.awt.*;
+import java.awt.font.TextAttribute;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 /**
  * renders a gantt chart using ms project mpp file as base
@@ -50,8 +56,12 @@ public class CalendarRenderer extends AbstractRenderer {
     private final int                   cellWidth             = 16;
     //    private       ExtendedGraphics2D    graphics2D;
     private final BurnDownGraphicsTheme graphicsTheme;
+    private       int                   holidays;
     private final LocalDateTime         now;
+    private       int                   sickDays;
+    private       int                   tripDays;
     private final User                  user;
+    private       int                   vacationDays          = 0;
 
     public CalendarRenderer(Context context, User user, LocalDateTime now, String cssClass, BurnDownGraphicsTheme graphicsTheme) throws Exception {
         this.user          = user;
@@ -74,7 +84,7 @@ public class CalendarRenderer extends AbstractRenderer {
         drawCalendar(graphics2D, 2025, now.toLocalDate(), x, y);
     }
 
-    void drawCalendar(Graphics2D graphics2D, int year, LocalDate today, int x, int y) {
+    void drawCalendar(Graphics2D graphics2D, int year, LocalDate today, int x, int y) throws IOException, FontFormatException {
         int holidays = 0;
 
         // Save original font and color
@@ -82,7 +92,7 @@ public class CalendarRenderer extends AbstractRenderer {
         Color originalColor = graphics2D.getColor();
 
         // Fonts
-        Font smallFont = new Font("Helvetica", Font.PLAIN, 6);
+        Font smallFont = new Font("Arial", Font.PLAIN, 6);
 
         int yearTextHeight = drawYear(graphics2D, year, x, y);
 
@@ -165,12 +175,19 @@ public class CalendarRenderer extends AbstractRenderer {
                         if (name.equals(OffDayType.VACATION.name())) {
                             bgColor   = graphicsTheme.vacationBgColor;
                             textColor = graphicsTheme.vacationTextColor;
+                            vacationDays++;
                         } else if (name.equals(OffDayType.SICK.name())) {
                             bgColor   = graphicsTheme.sickBgColor;
                             textColor = graphicsTheme.sickTextColor;
+                            sickDays++;
+                        } else if (name.equals(OffDayType.TRIP.name())) {
+                            bgColor   = graphicsTheme.tripBgColor;
+                            textColor = graphicsTheme.tripTextColor;
+                            tripDays++;
                         } else {
                             bgColor   = graphicsTheme.holidayBgColor;
                             textColor = graphicsTheme.holidayTextColor;
+                            this.holidays++;
                         }
                     }
                 }
@@ -220,7 +237,7 @@ public class CalendarRenderer extends AbstractRenderer {
         String      dayStr    = String.valueOf(day);
         FontMetrics metrics   = graphics2D.getFontMetrics();
         int         textWidth = metrics.stringWidth(dayStr);
-        Font        dayFont   = new Font("Helvetica", Font.BOLD, 10);
+        Font        dayFont   = new Font("Arial", Font.BOLD, 10);
         graphics2D.setFont(dayFont);
         graphics2D.drawString(dayStr, dayCenterX - (textWidth / 2), dayCenterY + (metrics.getAscent() / 2));
     }
@@ -229,17 +246,18 @@ public class CalendarRenderer extends AbstractRenderer {
     private void drawExampleDayNumber(Graphics2D graphics2D, int x, int y, int squareSize, String dayNumber) {
         Font originalFont = graphics2D.getFont();
         // Use the same font style as in the actual calendar
-        Font dayFont = new Font("Helvetica", Font.BOLD, 10);
+        Font dayFont = new Font("Arial", Font.BOLD, 10);
         graphics2D.setFont(dayFont);
 
-        FontMetrics metrics   = graphics2D.getFontMetrics();
-        int         textWidth = metrics.stringWidth(dayNumber);
+        FontMetrics fm        = graphics2D.getFontMetrics();
+        int         textWidth = fm.stringWidth(dayNumber);
+        int         yShift    = fm.getAscent() - fm.getHeight() / 2;
 
         // Center the day number in the square
         int centerX = x + squareSize / 2;
         int centerY = y + squareSize / 2;
 
-        graphics2D.drawString(dayNumber, centerX - (textWidth / 2), centerY + (metrics.getAscent() / 2) - 2);
+        graphics2D.drawString(dayNumber, centerX - (textWidth / 2), centerY + yShift);
 
         // Restore original font
         graphics2D.setFont(originalFont);
@@ -250,7 +268,7 @@ public class CalendarRenderer extends AbstractRenderer {
         Font  originalFont  = graphics2D.getFont();
         Color originalColor = graphics2D.getColor();
 
-        Font legendFont = new Font("Helvetica", Font.PLAIN, 12);
+        Font legendFont = new Font("Arial", Font.PLAIN, 12);
         graphics2D.setFont(legendFont);
 
         int itemWidth  = 100;
@@ -258,29 +276,32 @@ public class CalendarRenderer extends AbstractRenderer {
         int squareSize = 16;
         int gap        = 10;
 
-        // Draw vacation legend item
-        graphics2D.setColor(graphicsTheme.vacationBgColor);
-        graphics2D.fillRect(x, y, squareSize, squareSize);
-        graphics2D.setColor(graphicsTheme.vacationTextColor);
-        // Add example day number inside the vacation box
-        drawExampleDayNumber(graphics2D, x, y, squareSize, "15");
-        graphics2D.drawString("Vacation", x + squareSize + 5, y + squareSize - 2);
+        // Create legend items
+        List<LegendItem> legendItems = Arrays.asList(
+                new LegendItem(graphicsTheme.vacationBgColor, graphicsTheme.vacationTextColor, "Vacation", "" + vacationDays),
+                new LegendItem(graphicsTheme.sickBgColor, graphicsTheme.sickTextColor, "Sick Leave", "" + sickDays),
+                new LegendItem(graphicsTheme.holidayBgColor, graphicsTheme.holidayTextColor, "Holiday", "" + holidays),
+                new LegendItem(graphicsTheme.tripBgColor, graphicsTheme.tripTextColor, "Business Trip", "" + tripDays)
+        );
 
-        // Draw sick day legend item
-        graphics2D.setColor(graphicsTheme.sickBgColor);
-        graphics2D.fillRect(x + itemWidth, y, squareSize, squareSize);
-        graphics2D.setColor(graphicsTheme.sickTextColor);
-        // Add example day number inside the sick box
-        drawExampleDayNumber(graphics2D, x + itemWidth, y, squareSize, "7");
-        graphics2D.drawString("Sick", x + itemWidth + squareSize + 5, y + squareSize - 2);
+        // Draw each legend item
+        for (int i = 0; i < legendItems.size(); i++) {
+            LegendItem item  = legendItems.get(i);
+            int        itemX = x + (itemWidth * i);
 
-        // Draw holiday legend item
-        graphics2D.setColor(graphicsTheme.holidayBgColor);
-        graphics2D.fillRect(x + itemWidth * 2, y, squareSize, squareSize);
-        graphics2D.setColor(graphicsTheme.holidayTextColor);
-        // Add example day number inside the holiday box
-        drawExampleDayNumber(graphics2D, x + itemWidth * 2, y, squareSize, "25");
-        graphics2D.drawString("Holiday", x + itemWidth * 2 + squareSize + 5, y + squareSize - 2);
+            // Draw the colored box
+            graphics2D.setColor(item.bgColor);
+            graphics2D.fillRect(itemX, y, squareSize, squareSize);
+
+            // Draw example day number
+            graphics2D.setColor(item.textColor);
+            drawExampleDayNumber(graphics2D, itemX, y, squareSize, item.exampleNumber);
+
+            // Draw the label
+            FontMetrics fm     = graphics2D.getFontMetrics();
+            int         yShift = fm.getAscent() - fm.getHeight() / 2;
+            graphics2D.drawString(item.label, itemX + squareSize + 5, y + squareSize / 2 + yShift);
+        }
 
         // Restore original settings
         graphics2D.setFont(originalFont);
@@ -289,7 +310,7 @@ public class CalendarRenderer extends AbstractRenderer {
 
     private void drawMonthName(Graphics2D graphics2D, int monthStartX, int monthStartY, String monthName) {
         // Draw month name
-        Font monthFont = new Font("Helvetica", Font.PLAIN, 14);
+        Font monthFont = new Font("Arial", Font.PLAIN, 14);
         graphics2D.setFont(monthFont);
         graphics2D.setColor(graphicsTheme.monthNameColor);
         FontMetrics monthMetrics = graphics2D.getFontMetrics();
@@ -307,7 +328,7 @@ public class CalendarRenderer extends AbstractRenderer {
         // Draw weekday headers
         // Day of week labels
         String[] weekdays    = {"M", "T", "W", "T", "F", "S", "S"};
-        Font     weekdayFont = new Font("Helvetica", Font.BOLD, 10);
+        Font     weekdayFont = new Font("Arial", Font.BOLD, 10);
         graphics2D.setFont(weekdayFont);
         FontMetrics weekdayMetrics = graphics2D.getFontMetrics();
         int         weekdayAscent  = weekdayMetrics.getAscent();
@@ -323,8 +344,9 @@ public class CalendarRenderer extends AbstractRenderer {
         }
     }
 
-    private int drawYear(Graphics2D graphics2D, int year, int x, int y) {
-        Font yearFont = new Font("Helvetica", Font.PLAIN, 24);
+    private int drawYear(Graphics2D graphics2D, int year, int x, int y) throws IOException, FontFormatException {
+        Font yearFont = new Font("Arial", Font.PLAIN, 24);
+//        Font yearFont = loadFont("Inter[opsz,wght].ttf", 24f);
         graphics2D.setFont(yearFont);
         graphics2D.setColor(graphicsTheme.calendarYearTextColor);
         String yearText = String.valueOf(year);
@@ -337,6 +359,33 @@ public class CalendarRenderer extends AbstractRenderer {
         // Center the year text
         graphics2D.drawString(yearText, x + 5, y + yearMetrics.getAscent());
         return yearTextHeight;
+    }
+
+    Font loadFont(String fontName, float size) {
+        try (FileInputStream fontStream = new FileInputStream("resources/fonts/ofl/inter/" + fontName)) {
+            Font font = Font.createFont(Font.TRUETYPE_FONT, fontStream);
+            // Use FontVariation API for Java 17+
+            Map map = Map.of(TextAttribute.WEIGHT, TextAttribute.WEIGHT_LIGHT);
+            return font.deriveFont(map).deriveFont(size);
+
+        } catch (FontFormatException | IOException e) {
+            logger.error(e.getMessage(), e);
+            return new Font("Arial", Font.PLAIN, 24);
+        }
+    }
+
+    private static class LegendItem {
+        private final Color  bgColor;
+        private final String exampleNumber;
+        private final String label;
+        private final Color  textColor;
+
+        public LegendItem(Color bgColor, Color textColor, String label, String exampleNumber) {
+            this.bgColor       = bgColor;
+            this.textColor     = textColor;
+            this.label         = label;
+            this.exampleNumber = exampleNumber;
+        }
     }
 }
 

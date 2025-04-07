@@ -31,6 +31,8 @@ public class GraphicsTheme {
     public              Color  chartBorderColor;
     public              ETheme cssTheme                    = ETheme.light;
     public              Color  fillingDayTextColor         = new Color(0xe2dbdb); // very Light gray for filling days before and after the days we are interested in
+    public              Color  ganttTaskTickLineColor      = new Color(183, 216, 240);
+    public              Color  ganttTaskTickTextColor      = new Color(0, 0, 0, 127);
     public              Color  holidayBgColor              = new Color(183, 216, 240);  // Light blue
     public              Color  holidayColor                = new Color(183, 216, 240);  // Light blue;
     public              Color  holidayTextColor            = new Color(123, 180, 200);  // Light blue
@@ -41,9 +43,9 @@ public class GraphicsTheme {
     public              Color  sickTextColor               = new Color(0xff6d5b); // Light red
     public              Color  todayBgColor                = new Color(0xff3a30);  // Red circle for today
     public              Color  todayTextColor              = Color.white;  // White text for today
-    public              Color  tripBgColor                 = new Color(0xfffcea);  // Light yellow
-    public              Color  tripColor                   = new Color(0xfffcea);  // Light yellow;
-    public              Color  tripTextColor               = new Color(0xff931e);  // Light yellow
+    public              Color  tripBgColor                 = new Color(183, 183, 183);// new Color(0xfffcea);  // Light yellow
+    public              Color  tripColor                   = new Color(183, 183, 183);//new Color(0xfffcea);  // Light yellow;
+    public              Color  tripTextColor               = new Color(64, 64, 64);//new Color(0xff931e);  // Light yellow
     public              Color  vacationBgColor             = new Color(183, 240, 216);  // Light green
     public              Color  vacationColor               = new Color(183, 240, 216);  // Light green;
     public              Color  vacationTextColor           = new Color(123, 200, 180);  // Light green

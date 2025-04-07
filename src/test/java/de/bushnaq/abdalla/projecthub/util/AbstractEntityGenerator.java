@@ -65,16 +65,16 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     private static      int                   productIndex              = 0;
     protected           ProjectApi            projectApi;
     private static      int                   projectIndex              = 0;
-    Random random = new Random();
-    protected      SprintApi        sprintApi;
-    private static int              sprintIndex  = 0;
-    protected      TaskApi          taskApi;
+    private final       Random                random                    = new Random();
+    protected           SprintApi             sprintApi;
+    private static      int                   sprintIndex               = 0;
+    protected           TaskApi               taskApi;
     @Autowired
-    private        TestRestTemplate testRestTemplate; // Use TestRestTemplate instead of RestTemplate
-    protected      UserApi          userApi;
-    private static int              userIndex    = 0;
-    protected      VersionApi       versionApi;
-    private static int              versionIndex = 0;
+    private             TestRestTemplate      testRestTemplate; // Use TestRestTemplate instead of RestTemplate
+    protected           UserApi               userApi;
+    protected static    int                   userIndex                 = 0;
+    protected           VersionApi            versionApi;
+    private static      int                   versionIndex              = 0;
 
     protected void addAvailability(User user, float availability, LocalDate start) {
         Availability a = new Availability(availability, start);
@@ -166,7 +166,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         return daysUsed;
     }
 
-    private void addOffDays(User saved, LocalDate firstDate, int annualVacationDays, int year, OffDayType offDayType) {
+    private void addOffDays(User saved, LocalDate firstDate, int annualVacationDays, int year, OffDayType offDayType, int summerDurationMin, int summerDurationMax) {
         int             remainingDays = annualVacationDays;
         ProjectCalendar pc            = saved.getCalendar();
 
@@ -176,7 +176,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         // First add a longer summer vacation block (2-4 weeks)
         int       summerStart         = random.nextInt(60) + 150; // Random start between day 150-210 (June-July)
         LocalDate summerVacationStart = pc.getNextWorkStart(yearStart.plusDays(summerStart).atStartOfDay()).toLocalDate();
-        int       summerDuration      = random.nextInt(11) + 10; // 10-20 days (2-4 weeks)
+        int       summerDuration      = random.nextInt(summerDurationMax - summerDurationMin + 1) + summerDurationMin; // 10-20 days (2-4 weeks)
         summerDuration = Math.min(summerDuration, remainingDays);
 
         // Add summer vacation with proper splitting of non-working days
@@ -283,16 +283,29 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         return saved;
     }
 
+    protected User addRandomUser(int index, float availability) {
+        String       name      = names.get(index).getFirstName() + " " + names.get(index).getLastName();
+        String       email     = name + "@project-hub.org";
+        LocalDate    firstDate = ParameterOptions.now.toLocalDate().minusYears(1);
+        User         saved     = addUser(name, email, "de", "nw", firstDate, availability);
+        GanttContext gc        = new GanttContext();
+        gc.initialize();
+        saved.initialize(gc);
+        generateRandomOffDays(saved, firstDate);
+        testUsers();
+        return saved;
+    }
+
     protected void addRandomUsers(int count) {
         for (int i = 0; i < count; i++) {
-            String       name       = names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
-            String       email      = name + "@project-hub.org";
-            LocalDate    updateDate = ParameterOptions.now.toLocalDate().minusYears(1);
-            User         saved      = addUser(name, email, "de", "nw", updateDate, 0.5f);
-            GanttContext gc         = new GanttContext();
+            String       name      = names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
+            String       email     = name + "@project-hub.org";
+            LocalDate    firstDate = ParameterOptions.now.toLocalDate().minusYears(1);
+            User         saved     = addUser(name, email, "de", "nw", firstDate, 0.5f);
+            GanttContext gc        = new GanttContext();
             gc.initialize();
             saved.initialize(gc);
-            generateRandomOffDays(saved, updateDate);
+            generateRandomOffDays(saved, firstDate);
         }
 
         testUsers();
@@ -414,8 +427,9 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         for (int yearIndex = 0; yearIndex < 2; yearIndex++) {
             int year = employmentYear + yearIndex;
             random.setSeed(generateUserYearSeed(saved, year));
-            addOffDays(saved, employmentDate, 30, year, OffDayType.VACATION);
-            addOffDays(saved, employmentDate, random.nextInt(20), year, OffDayType.SICK);
+            addOffDays(saved, employmentDate, 30, year, OffDayType.VACATION, 10, 20);
+            addOffDays(saved, employmentDate, random.nextInt(20), year, OffDayType.SICK, 1, 5);
+            addOffDays(saved, employmentDate, random.nextInt(5), year, OffDayType.TRIP, 1, 5);
         }
     }
 

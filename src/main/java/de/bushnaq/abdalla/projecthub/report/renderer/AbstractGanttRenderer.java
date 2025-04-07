@@ -38,6 +38,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
@@ -51,8 +52,11 @@ import java.util.Map;
  */
 public abstract class AbstractGanttRenderer extends AbstractRenderer {
     private static final   float                FINE_LINE_STROKE_WIDTH     = 1.0f;
-    private static final   int                  LINE_HEIGHT                = 13;
+    private static final   int                  LINE_HEIGHT                = 18;
+    private static final   int                  RELATION_CORNER_LENGTH     = 14;
     private static final   float                RELATION_LINE_STROKE_WIDTH = 1f;
+    public static final    int                  SECONDS_PER_DAY            = 75 * 6 * 60;
+    private static final   int                  TASK_BODY_BORDER           = 4;
     private final static   Font                 graphFont                  = new Font("Arial", Font.PLAIN, 12);
     private final static   Font                 idErrorFont                = new Font("Arial", Font.BOLD, 12);
     private final static   Font                 idFont                     = new Font("Arial", Font.PLAIN, 12);
@@ -60,6 +64,8 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
     private final static   Font                 storyFont                  = new Font("Arial", Font.BOLD, 12);
     private final static   Font                 taskInlineFont             = new Font("Arial", Font.PLAIN, 12);
     private final static   Font                 taskProgressFont           = new Font("Arial", Font.PLAIN, 8);
+    private final static   Font                 taskResourceLocationFont   = new Font("Arial", Font.PLAIN, 8);
+    private final static   Font                 taskTickFont               = new Font("Arial", Font.PLAIN, 5);
     protected              AuthorsContribution  authorsContribution        = new AuthorsContribution();// remaining and worked per author
     protected              Context              context;
     private final          DateUtil             dateUtil                   = new DateUtil();
@@ -112,8 +118,8 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
             graphics2D.setColor(Color.red);
             for (Conflict c : conflict) {
                 if (c.originalConflict) {
-                    int c1 = calculateX(c.range.start, c.range.start.truncatedTo(ChronoUnit.DAYS).withHour(8), 75 * 6 * 60) - calendarXAxses.dayOfWeek.getWidth() / 2;
-                    int c2 = calculateX(c.range.end, c.range.end.truncatedTo(ChronoUnit.DAYS).withHour(8), 75 * 6 * 60) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                    int c1 = calculateX(c.range.start, c.range.start.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                    int c2 = calculateX(c.range.end, c.range.end.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
                     graphics2D.fillRect(c1, y - getTaskHeight() / 2, c2 - c1 - 1, 2);
                     graphics2D.fillRect(c1, y + getTaskHeight() / 2 - 1, c2 - c1 - 1, 2);
                 }
@@ -127,36 +133,46 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
             graphics2D.drawRect(x1, y - getTaskHeight() / 2 + 2 - 1, x2 - x1 - 1 - 1, getTaskHeight() - 1 - 4 + 2);
         } else {
             graphics2D.setColor(graphicsTheme.ganttTaskBorderColor);
-//            graphics2D.drawRect(x1, y - getTaskHeight() / 2 + 2 - 1, x2 - x1 - 1 - 1, getTaskHeight() - 1 - 4 + 2);
             User user = task.getAssignedUser();
             if (user != null && user.getCalendar() != null) {
                 for (LocalDateTime currentDay = task.getStart(); currentDay.isBefore(task.getFinish()); currentDay = currentDay.plusDays(1)) {
-                    ProjectCalendar pc  = user.getCalendar();
-                    int             x11 = calculateX(currentDay, currentDay.truncatedTo(ChronoUnit.DAYS).withHour(8), 75 * 6 * 60) - calendarXAxses.dayOfWeek.getWidth() / 2;
-                    int             x21 = x11 + calendarXAxses.dayOfWeek.getWidth() + 2;
+                    ProjectCalendar pc = user.getCalendar();
                     if (pc.isWorkingDate(currentDay.toLocalDate())) {
 
-                        graphics2D.fillRect(x11, y - getTaskHeight() / 2 + 2 - 1 + 1, calendarXAxses.dayOfWeek.getWidth(), 1);
-                        graphics2D.fillRect(x11, y + getTaskHeight() / 2 - 4 + 2 - 1, calendarXAxses.dayOfWeek.getWidth(), 1);
                         if (currentDay.equals(task.getStart())) {
-                            graphics2D.fillRect(x11, y - getTaskHeight() / 2 + 2 - 1 + 1 + 1, 1, getTaskHeight() - 1 - 4 + 2 - 2 - 2);
+                            //is this the left end?
+                            int xStart  = calculateX(task.getStart(), currentDay.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                            int xFinish = calculateX(currentDay.truncatedTo(ChronoUnit.DAYS).withHour(8).plusSeconds(SECONDS_PER_DAY), currentDay.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                            graphics2D.fillRect(xStart, y - getTaskHeight() / 2 + TASK_BODY_BORDER, xFinish - xStart, 1);//upper -
+                            graphics2D.fillRect(xStart, y + getTaskHeight() / 2 - TASK_BODY_BORDER - 1, xFinish - xStart, 1);//lower -
+                            graphics2D.fillRect(xStart, y - getTaskHeight() / 2 + TASK_BODY_BORDER + 1, 1, getTaskHeight() - TASK_BODY_BORDER * 2 - 2);//start |
                         } else if (!currentDay.plusDays(1).isBefore(task.getFinish())) {
-                            graphics2D.fillRect(x2 - 3, y - getTaskHeight() / 2 + 2 - 1 + 1 + 1, 1, getTaskHeight() - 1 - 4 + 2 - 2 - 2);
+                            //or is this the right end?
+                            int xStart  = calculateX(currentDay.truncatedTo(ChronoUnit.DAYS).withHour(8), currentDay.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                            int xFinish = calculateX(task.getFinish(), currentDay.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+//                            graphics2D.fillRect(xStart, y - getTaskHeight() / 2 + TASK_BODY_BORDER, xFinish - xStart + 1, 1);//upper -
+//                            graphics2D.fillRect(xStart, y + getTaskHeight() / 2 - TASK_BODY_BORDER - 1, xFinish - xStart + 1, 1);//lower -
+//                            graphics2D.fillRect(xFinish, y - getTaskHeight() / 2 + TASK_BODY_BORDER + 1, 1, getTaskHeight() - TASK_BODY_BORDER * 2 - 2);
+                        } else {
+                            int xStart = calculateX(currentDay.truncatedTo(ChronoUnit.DAYS).withHour(8), currentDay.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                            graphics2D.fillRect(xStart, y - getTaskHeight() / 2 + TASK_BODY_BORDER, calendarXAxses.dayOfWeek.getWidth(), 1);
+                            graphics2D.fillRect(xStart, y + getTaskHeight() / 2 - TASK_BODY_BORDER - 1, calendarXAxses.dayOfWeek.getWidth(), 1);
                         }
-//                        Shape s = new RectangleWithToolTip(x11, y, x21 - x11 - 1 - 1, getTaskHeight() - 1 - 4 + 2);
+//                        Shape s = new RectangleWithToolTip(xStart, y, x21 - xStart - 1 - 1, getTaskHeight() - 1 - 4 + 2);
 //                        graphics2D.fill(s);
                     } else {
                         for (int i = 0; i < calendarXAxses.dayOfWeek.getWidth() - 1; i++) {
-                            int x = i + x11;
+                            int xStart = calculateX(currentDay.truncatedTo(ChronoUnit.DAYS).withHour(8), currentDay.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                            int x      = i + xStart;
                             if (x % 4 == 0) {
-                                graphics2D.fillRect(x, y - getTaskHeight() / 2 + 2 - 1 + 1, 2, 1);
-                                graphics2D.fillRect(x, y + getTaskHeight() / 2 - 4 + 2 - 1, 2, 1);
+                                graphics2D.fillRect(x, y - getTaskHeight() / 2 + TASK_BODY_BORDER, 2, 1);
+                                graphics2D.fillRect(x, y + getTaskHeight() / 2 - TASK_BODY_BORDER - 1, 2, 1);
                             }
                         }
 //                        Stroke dashed = new BasicStroke(1, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_BEVEL, 0, new float[]{9}, 0);
 //                        graphics2D.setStroke(new BasicStroke());
-//                        graphics2D.drawLine(x11, y - getTaskHeight() / 2 + 2 - 1, x11 + calendarXAxses.dayOfWeek.getWidth() - 1, y - getTaskHeight() / 2 + 2 - 1);
-//                        graphics2D.drawLine(x11, y + getTaskHeight() / 2 - 4 + 2, x11 + calendarXAxses.dayOfWeek.getWidth() - 1, y + getTaskHeight() / 2 - 4 + 2);
+//                        graphics2D.drawLine(xStart, y - getTaskHeight() / 2 + 2 - 1, xStart + calendarXAxses.dayOfWeek.getWidth() - 1, y - getTaskHeight() / 2 + 2 - 1);
+//                        graphics2D.drawLine(xStart, y + getTaskHeight() / 2 - 4 + 2, xStart + calendarXAxses.dayOfWeek.getWidth() - 1, y + getTaskHeight() / 2 - 4 + 2);
                     }
                 }
             }
@@ -189,12 +205,14 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         // getTaskHeight() - 1);
         {
             graphics2D.setColor(textColor);
-            FontMetrics fm        = graphics2D.getFontMetrics();
-            int         maxAscent = fm.getMaxAscent();
+            FontMetrics fm = graphics2D.getFontMetrics();
+//            int         maxAscent = fm.getMaxAscent();
+            int yShift = fm.getAscent() - fm.getHeight() / 2;
+
             if (md != null) {
-                graphics2D.drawString(String.format("%02d", task.getId()), x1 + 4, y + getTaskHeight() / 2 - (maxAscent + 1) / 4, md.getError(0));
+                graphics2D.drawString(String.format("%02d", task.getId()), x1 + 4, y + yShift, md.getError(0));
             } else {
-                graphics2D.drawString(String.format("%02d", task.getId()), x1 + 4, y + getTaskHeight() / 2 - (maxAscent + 1) / 4);
+                graphics2D.drawString(String.format("%02d", task.getId()), x1 + 4, y + yShift);
             }
         }
     }
@@ -291,13 +309,16 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
     private void drawRelation(Task sourceTask, int y2, Task targetTask, int y1) throws Exception {
 
         int signum = (int) Math.signum(y2 - y1);
+        int y3;
         if (signum > 0) {
             y2 -= getTaskHeight() / 2 + 1 - 2 + 1;
+            y3 = y2 - 5;
         } else {
             y2 += getTaskHeight() / 2 + 1 - 2 + 1;
+            y3 = y2 + 5;
         }
-        int x1 = calculateX(targetTask.getFinish(), targetTask.getFinish().truncatedTo(ChronoUnit.DAYS).withHour(8), 75 * 6 * 60) - calendarXAxses.dayOfWeek.getWidth() / 2 - 1;
-        int x2 = 8 + calculateX(sourceTask.getStart(), sourceTask.getStart().truncatedTo(ChronoUnit.DAYS).withHour(8), 75 * 6 * 60) - calendarXAxses.dayOfWeek.getWidth() / 2 - 3;
+        int x1 = calculateX(targetTask.getFinish(), targetTask.getFinish().truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+        int x2 = RELATION_CORNER_LENGTH + calculateX(sourceTask.getStart(), sourceTask.getStart().truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2 - 3;
         graphics2D.setStroke(new BasicStroke(RELATION_LINE_STROKE_WIDTH));
         if (sourceTask.isCritical() && targetTask.isCritical()) {
             graphics2D.setColor(graphicsTheme.ganttCriticalRelationColor);
@@ -305,26 +326,28 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         } else {
             graphics2D.setColor(graphicsTheme.ganttRelationColor);
         }
-        graphics2D.drawLine(x1, y1, x2, y1);
-        graphics2D.drawLine(x2, y1, x2, y2);
+//        graphics2D.drawLine(x1, y1, x2, y1);
+        graphics2D.fillRect(x1 + 1, y1, x2 - x1, 1);
+//        graphics2D.drawLine(x2, y1, x2, y2);
+        graphics2D.fillRect(x2, y1 + 1, 1, y3 - y1);
         if (y2 > y1) {
             // x2-d,y2-d x2+D,y2-D
             // x2,Y2
 
             int   d       = 5;
-            int[] xpoints = {x2 - d, x2 + d, x2};
-            int[] ypoints = {y2 - d + signum, y2 - d + signum, y2 + signum};
+            int[] xPoints = {x2 - d, x2 + d, x2};
+            int[] yPoints = {y2 - d + signum, y2 - d + signum, y2 + signum};
             graphics2D.setColor(graphicsTheme.ganttRelationColor);
-            graphics2D.fillPolygon(xpoints, ypoints, xpoints.length);
+            graphics2D.fillPolygon(xPoints, yPoints, xPoints.length);
         } else {
             // x2,Y2
             // x2+3,y2+3 x2-3,y2+3
 
             int   d       = 5;
-            int[] xpoints = {x2 + d, x2 - d, x2};
-            int[] ypoints = {y2 + d + signum, y2 + d + signum, y2 + signum};
+            int[] xPoints = {x2 + d, x2 - d, x2};
+            int[] yPoints = {y2 + d + signum, y2 + d + signum, y2 + signum};
             graphics2D.setColor(graphicsTheme.ganttRelationColor);
-            graphics2D.fillPolygon(xpoints, ypoints, xpoints.length);
+            graphics2D.fillPolygon(xPoints, yPoints, xPoints.length);
         }
 
     }
@@ -340,9 +363,21 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         Color originalColor = fillColor;
         if (marker == null) {
             graphics2D.setColor(fillColor);
-            graphics2D.fillRect(x1 + 1, y - getTaskHeight() / 2 + 2, x2 - x1 - 1, 2);
-            graphics2D.fillRect(x1 + 1, y - getTaskHeight() / 2 + 2, 2, getTaskHeight() - 4);
-            graphics2D.fillRect(x1 + 1 + x2 - x1 - 1 - 2, y - getTaskHeight() / 2 + 2, 2, getTaskHeight() - 4);
+            int radius = 10;
+            int y1     = y + 6;
+            graphics2D.setStroke(new BasicStroke(2.0f));
+            graphics2D.drawLine(x1 + radius, y1 - getTaskHeight() / 2, x2 - radius, y1 - getTaskHeight() / 2);//upper -
+
+            graphics2D.drawArc(x1, y1 - getTaskHeight() / 2, radius * 2, radius * 2, 180, -90);//left corner
+            graphics2D.drawLine(x1, y1 - getTaskHeight() / 2 + radius, x1, y1);//left |
+
+            graphics2D.drawArc(x2 - radius * 2, y1 - getTaskHeight() / 2, radius * 2, radius * 2, 90, -90);//right corner
+            graphics2D.drawLine(x2, y1 - getTaskHeight() / 2 + radius, x2, y1);//right |
+
+
+//            graphics2D.fillRect(x1, y - getTaskHeight() / 2, x2 - x1 - 1, 2);
+//            graphics2D.fillRect(x1, y - getTaskHeight() / 2, 2, getTaskHeight() - 4);
+//            graphics2D.fillRect(x1 + x2 - x1 - 1, y - getTaskHeight() / 2, 2, getTaskHeight() - 4);
             if (x2 - x1 - 1 > 0) {
                 ExtendedRectangle s = new ExtendedRectangle(x1 + 1, y - getTaskHeight() / 2 + 2, x2 - x1 - 1, getTaskHeight() - 4);
                 s.setToolTip(toolTip);
@@ -381,8 +416,8 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
             graphics2D.setStroke(new BasicStroke(FINE_LINE_STROKE_WIDTH));
             LocalDateTime start = task.getStart();
             LocalDateTime stop  = task.getFinish();
-            int           x1    = calculateX(start, start.truncatedTo(ChronoUnit.DAYS).withHour(8), 75 * 6 * 60) - calendarXAxses.dayOfWeek.getWidth() / 2;
-            int           x2    = calculateX(stop, stop.truncatedTo(ChronoUnit.DAYS).withHour(8), 75 * 6 * 60) - calendarXAxses.dayOfWeek.getWidth() / 2;
+            int           x1    = calculateX(start, start.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+            int           x2    = calculateX(stop, stop.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
             Integer       lane  = taskHeight.get(gantUniqueId * 10000 + task.getId());
             int           y     = lane + getTaskHeight() / 2;
             if (drawOutOfOffice) {
@@ -415,18 +450,19 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         Color  fillColor           = graphicsTheme.getAuthorColor(28);
         Color  textColor           = Color.black;
         String resourceName        = null;
-        String resourceUtelization = null;
+        String resourceUtilization = null;
         Number units               = null;
 
         String taskName = task.getName();
         if (!task.isMilestone()) {
             if (task.getAssignedUser() != null) {
                 resourceName = task.getAssignedUser().getName();
-                String primaryResourceName = resourceName;
-//                units = task.getWork().assignment.getUnits();
-//                    resourceUtelization = String.format(" (%.0f%%)", units);
-                units = task.getAssignedUser().getAvailabilities().getLast().getAvailability() * 100;
-                taskName += String.format(" (%s %.0f%%)", primaryResourceName, units);
+//                String primaryResourceName = resourceName;
+                units               = task.getAssignedUser().getAvailabilities().getLast().getAvailability() * 100;
+                resourceUtilization = String.format("%.0f%%", units);
+//                resourceName += resourceUtilization;
+//                units = task.getAssignedUser().getAvailabilities().getLast().getAvailability() * 100;
+//                taskName += String.format(" (%s %.0f%%)", primaryResourceName, units);
             }
         }
         if (task.isMilestone() && task.getChildTasks().size() == 0) {
@@ -438,11 +474,11 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
             fillColor = graphicsTheme.ganttStoryColor;
             textColor = graphicsTheme.ganttStoryTextColor;
         } else if (resourceName != null && units != null) {
-            String primaryResourceName = resourceName;
+            //task
             textColor = graphicsTheme.ganttTaskTextColor;
-            int authorIndex = authorsContribution.getSortedKeyList().indexOf(primaryResourceName);
+            int authorIndex = authorsContribution.getSortedKeyList().indexOf(resourceName);
             if (authorIndex != -1) {
-                fillColor = authors.get(primaryResourceName).color;
+                fillColor = authors.get(resourceName).color;
             }
         }
         if (task.isMilestone() && task.getChildTasks().size() == 0) {
@@ -470,25 +506,25 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
             } else {
                 LocalDateTime start          = task.getStart();
                 String        dateTimeString = dateUtil.createDateTimeString(task.getStart());
-                graphics2D.drawString(String.format("%s (%s)", taskName, dateUtil.createDateTimeString(task.getStart())), x1 + 2 + 8 + c + milestoneWidth / 2, y + getTaskHeight() / 2 - (maxAscent + 1) / 4);
+                graphics2D.drawString(String.format("%s (%s)", taskName, dateTimeString), x1 + 2 + 8 + c + milestoneWidth / 2, y + getTaskHeight() / 2 - (maxAscent + 1) / 4);
             }
         } else {
             if (task.getChildTasks().size() != 0) {
                 // story
-                String tooltip = generateToolTip(task, x1, x2, y, marker, resourceName, resourceUtelization);
+                String tooltip = generateToolTip(task, x1, x2, y, marker, resourceName, resourceUtilization);
                 drawStoryBody(task, x1, x2, y, fillColor, marker, tooltip);
                 graphics2D.setFont(storyFont);
                 graphics2D.setColor(textColor);
-                FontMetrics fm        = graphics2D.getFontMetrics();
-                int         maxAscent = fm.getMaxAscent();
+                FontMetrics fm     = graphics2D.getFontMetrics();
+                int         yShift = fm.getAscent() - fm.getHeight() / 2;
                 if (labelInside) {
                     // only used for team planner chart
                 } else {
-                    graphics2D.drawString(taskName, x2 + 2 + 8, y + getTaskHeight() / 2 - (maxAscent + 1) / 4);
+                    graphics2D.drawString(taskName, x2 + 2 + 8, y + yShift);
                 }
             } else if (!task.isMilestone()) {
-                String tooltip = generateToolTip(task, x1, x2, y, marker, resourceName, resourceUtelization);
-                // task
+                //task
+                String tooltip = generateToolTip(task, x1, x2, y, marker, resourceName, resourceUtilization);
                 if (task.getProgress() == null) {
                     drawTaskBody(task, x1, x2, y, fillColor, alien, 0.0f, tooltip);
                 } else {
@@ -503,17 +539,16 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                     graphics2D.setColor(textColor);
                     graphics2D.setFont(taskInlineFont);
                     FontMetrics fm     = graphics2D.getFontMetrics();
-                    int         ascent = fm.getAscent();
-
-                    Shape clip = graphics2D.getClip();
+                    int         yShift = fm.getAscent() - fm.getHeight() / 2;
+                    Shape       clip   = graphics2D.getClip();
                     graphics2D.setClip(x1 + 1, y - getTaskHeight() / 2 + 3, x2 - x1 - 1 - 2, getTaskHeight() - 6);
                     if (marker != null) {
-                        graphics2D.drawString(marker, x1 + 1, y - getTaskHeight() / 2 + 2 + (LINE_HEIGHT) / 2 + (ascent - 2) / 2 + 1);
+                        graphics2D.drawString(marker, x1 + 1, y - getTaskHeight() / 2 + (LINE_HEIGHT) / 2 + yShift);
                     }
-                    graphics2D.drawString(task.getName(), x1 + 1, y - getTaskHeight() / 2 + 2 + (LINE_HEIGHT) * 3 / 2 + (ascent - 2) / 2 + 1);
+                    graphics2D.drawString(task.getName(), x1 + 1, y - getTaskHeight() / 2 + (LINE_HEIGHT) * 3 / 2 + yShift + 1);
                     if (resourceName != null) {
-                        String primaryResourceName = resourceName;
-                        graphics2D.drawString(primaryResourceName + resourceUtelization, x1 + 1, y - getTaskHeight() / 2 + 2 + (LINE_HEIGHT) * 5 / 2 + (ascent - 2) / 2 + 1);
+                        int stringWidth = fm.stringWidth(resourceName);
+                        graphics2D.drawString(resourceName + resourceUtilization, x1 - stringWidth, y + (LINE_HEIGHT) * 5 / 2 + yShift);
                     }
                     graphics2D.setClip(clip);
                 } else {
@@ -535,17 +570,35 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                             int         ascent = fm.getAscent();
                             Shape       clip   = graphics2D.getClip();
                             graphics2D.setClip(x1 + 1, y - getTaskHeight() / 2 + 3, x2 - x1 - 1 - 2, getTaskHeight() - 6);
-                            graphics2D.drawString(text, x1 + (x2 - x1) / 2 + 1 - width / 2, y + (ascent - 2) / 2 + 1);
+                            graphics2D.drawString(text, x1 + (x2 - x1) / 2 + 1 - width / 2, y + (ascent - 2) / 2);
                             graphics2D.setClip(clip);
                         }
 
                     }
 
-                    graphics2D.setColor(textColor);
-                    graphics2D.setFont(graphFont);
-                    FontMetrics fm     = graphics2D.getFontMetrics();
-                    int         ascent = fm.getAscent();
-                    graphics2D.drawString(taskName, x2 + 2 + 8, y + (ascent - 2) / 2 + 1);
+                    {
+                        //Task name
+                        graphics2D.setColor(textColor);
+                        graphics2D.setFont(graphFont);
+                        FontMetrics fm     = graphics2D.getFontMetrics();
+                        int         yShift = fm.getAscent() - fm.getHeight() / 2;
+                        graphics2D.drawString(taskName, x2 + 5 + 8, y + yShift);
+                    }
+                    if (resourceName != null) {
+                        //resource name+info
+                        graphics2D.setColor(textColor);
+                        graphics2D.setFont(graphFont);
+                        FontMetrics fm          = graphics2D.getFontMetrics();
+                        int         yShift      = fm.getAscent();
+                        int         stringWidth = fm.stringWidth(resourceName);
+                        graphics2D.drawString(resourceName, x1 - stringWidth - 3, y - getTaskHeight() / 2 + yShift);
+                        {
+                            graphics2D.setFont(taskResourceLocationFont);
+                            String location = task.getAssignedUser().getLocations().getLast().getCountry() + "/" + task.getAssignedUser().getLocations().getLast().getState();
+                            String text     = String.format("%s      %s", resourceUtilization, location);
+                            graphics2D.drawString(text, x1 - stringWidth - 3, y + getTaskHeight() / 2);
+                        }
+                    }
                 }
             }
             {
@@ -559,7 +612,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                 //                }
                 //                String duration = MpxjUtil.createDurationString(task.getDuration(), true, true, true);
                 imageMap += "<area alt=\"<font face=arial>";
-                imageMap += generateToolTip(task, x1, x2, y, marker, resourceName, resourceUtelization);
+                imageMap += generateToolTip(task, x1, x2, y, marker, resourceName, resourceUtilization);
                 imageMap += " >\n";
             }
         }
@@ -569,22 +622,42 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         Color originalColor = fillColor;
         if (!alien) {
             graphics2D.setColor(Color.white);
-            int y1 = y - getTaskHeight() / 2 + 2 - 1;
-            int h  = getTaskHeight() - 4 + 2;
-            graphics2D.setColor(fillColor);
+            int y1 = y - getTaskHeight() / 2 + TASK_BODY_BORDER - 1;
+            int h  = getTaskHeight() - TASK_BODY_BORDER * 2;
             //            graphics2D.fillRect(x1, y1, x2 - x1 - 1, h);
             //            graphics2D.drawRect(x1, y - getTaskHeight() / 2 + 2 - 1, x2 - x1 - 1 - 1, getTaskHeight() - 1 - 4 + 2);
             if (x2 - x1 - 1 - 1 > 0) {
                 //sometimes tasks are so small, that we cannot draw them.
+
+                drawTick(task.getStart(), x1, y);
+                drawTick(task.getFinish(), x2, y);
 
                 User user = task.getAssignedUser();
                 if (user != null && user.getCalendar() != null) {
                     for (LocalDateTime currentDay = task.getStart(); currentDay.isBefore(task.getFinish()); currentDay = currentDay.plusDays(1)) {
                         ProjectCalendar pc = user.getCalendar();
                         if (pc.isWorkingDate(currentDay.toLocalDate())) {
-                            int   x11 = calculateX(currentDay, currentDay.truncatedTo(ChronoUnit.DAYS).withHour(8), 75 * 6 * 60) - calendarXAxses.dayOfWeek.getWidth() / 2;
-                            int   x21 = x11 + calendarXAxses.dayOfWeek.getWidth() + 2;
-                            Shape s   = new RectangleWithToolTip(x11, y1 + 1, x21 - x11 - 1 - 1, h - 1 - 2, toolTip);
+                            graphics2D.setColor(fillColor);
+                            if (currentDay.equals(task.getStart())) {
+                                //is this the left end?
+                                int   xStart  = calculateX(task.getStart(), currentDay.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                                int   xFinish = calculateX(currentDay.truncatedTo(ChronoUnit.DAYS).withHour(8).plusSeconds(SECONDS_PER_DAY), currentDay.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                                Shape s       = new RectangleWithToolTip(xStart, y1 + 1, xFinish - xStart, h, toolTip);
+                                graphics2D.fill(s);
+                            } else if (!currentDay.plusDays(1).isBefore(task.getFinish())) {
+                                //or is this the right end?
+                                int   xStart = calculateX(currentDay.truncatedTo(ChronoUnit.DAYS).withHour(8), currentDay.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                                Shape s      = new RectangleWithToolTip(xStart, y1 + 1, x2 - xStart + 1, h, toolTip);
+                                graphics2D.fill(s);
+                            } else {
+                                int   xStart = calculateX(currentDay.truncatedTo(ChronoUnit.DAYS).withHour(8), currentDay.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                                Shape s      = new RectangleWithToolTip(xStart, y1 + 1, calendarXAxses.dayOfWeek.getWidth(), h, toolTip);
+                                graphics2D.fill(s);
+                            }
+                        } else {
+                            graphics2D.setColor(new Color(fillColor.getRed(), fillColor.getGreen(), fillColor.getBlue(), 64));//very trabsparent
+                            int   xStart = calculateX(currentDay.truncatedTo(ChronoUnit.DAYS).withHour(8), currentDay.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                            Shape s      = new RectangleWithToolTip(xStart, y1 + 1, calendarXAxses.dayOfWeek.getWidth(), h, toolTip);
                             graphics2D.fill(s);
                         }
                     }
@@ -619,6 +692,18 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
             }
             graphics2D.setClip(clip);
         }
+    }
+
+    private void drawTick(LocalDateTime time, int x, int y) {
+        DateTimeFormatter formatter  = DateTimeFormatter.ofPattern("HH:mm");
+        String            timeString = time.format(formatter);
+        graphics2D.setColor(graphicsTheme.ganttTaskTickLineColor);
+        graphics2D.fillRect(x, y - getTaskHeight() / 2 + TASK_BODY_BORDER - 2, 1, 2);
+        graphics2D.setFont(taskTickFont);
+        graphics2D.setColor(graphicsTheme.ganttTaskTickTextColor);
+        FontMetrics fm    = graphics2D.getFontMetrics();
+        int         width = fm.stringWidth(timeString);
+        graphics2D.drawString(timeString, x - width / 2, y - getTaskHeight() / 2 + TASK_BODY_BORDER - 3);
     }
 
     private String generateToolTip(Task task, int x1, int x2, int y, String marker, String resourceName, String resourceUtelization) throws Exception {

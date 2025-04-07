@@ -104,7 +104,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
             });
             assertEquals(referenceUsers.size(), users.size(), "Number of users differs");
             for (String key : referenceUsers.keySet()) {
-                assertTrue(users.containsKey(key), "Missing user: " + key);
+                assertTrue(users.containsKey(key), "Missing user: " + referenceUsers.get(key).getName());
                 assertUserEquals(referenceUsers.get(key), users.get(key));
             }
 
@@ -159,8 +159,6 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         new File(testResultFolder).mkdirs();
         new File(testReferenceResultFolder).mkdirs();
         addOneProduct(testInfo.getTestMethod().get().getName().replace("_", "-"));
-        addRandomUsers(2);
-        initialize();
     }
 
     protected void generateGanttChart(TestInfo testInfo) throws Exception {

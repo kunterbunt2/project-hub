@@ -14,7 +14,7 @@ minimalistic project effort estimation and progress tracking and release date in
 
 [/gantt/gantt-03.svg|gantt-03]
 
-[/calendar/Christopher Paul.de.nw.svg|Christopher Paul.de.nw]
+[https://github.com/kunterbunt2/project-hub.wiki.git/calendar/Christopher Paul.de.nw.svg|Christopher Paul.de.nw]
 
 # Status
 

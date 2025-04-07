@@ -29,12 +29,16 @@ public class CalendarChart extends Chart {
 
     public CalendarChart(Context context, LocalDateTime now, User user, String cssClass,
                          BurnDownGraphicsTheme graphicsTheme) throws Exception {
-        super("User Calendar", "", "", "", user.getName() + "." + user.getLocations().getLast().getCountry() + "." + user.getLocations().getLast().getState(), "gantt_map", null/*, 100, 100*/, cssClass, graphicsTheme);
+        super(createCaption(user), "", "", "", user.getName() + "." + user.getLocations().getLast().getCountry() + "." + user.getLocations().getLast().getState(), "gantt_map", null/*, 100, 100*/, cssClass, graphicsTheme);
         getRenderers().add(new CalendarRenderer(context, user, now, cssClass, graphicsTheme));
         this.setChartWidth(getRenderers().get(0).chartWidth);
         this.setChartHeight(getRenderers().get(0).chartHeight + captionElement.height + footerElement.height - 1);
         captionElement.width = 100;
         footerElement.y      = getRenderers().get(0).chartHeight + captionElement.height;
+    }
+
+    private static String createCaption(User user) {
+        return user.getName() + "." + user.getLocations().getLast().getState() + "." + user.getLocations().getLast().getCountry();
     }
 
     @Override

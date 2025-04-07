@@ -48,7 +48,7 @@ public class Util {
         moduleVersion = MavenProperiesProvider.getProperty(Application.class, "module.version");
         buildTime     = MavenProperiesProvider.getProperty(Application.class, "build.time");
         module        = String.format("%s %s built at %s", moduleName, moduleVersion, buildTime);
-        copyright     = String.format("%s %s built at %s, generated %%s", moduleName, moduleVersion, buildTime);
+        copyright     = String.format("%s %s, generated %%s", moduleName, moduleVersion);
 
     }
 
