@@ -26,10 +26,12 @@ import lombok.*;
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 public class Relation {
 
-    Long id;
-    Long predecessorId;
+    Long    id;
+    Long    predecessorId;
+    boolean visible;
 
-    public Relation(Task dependency) {
+    public Relation(Task dependency, boolean visible) {
+        this.visible  = visible;
         predecessorId = dependency.getId();
     }
 }

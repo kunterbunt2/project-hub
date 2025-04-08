@@ -42,4 +42,7 @@ public class RelationDAO {
     @Column(nullable = false)
     Long predecessorId;
 
+    @Column(nullable = false)
+    Boolean visible;
+
 }

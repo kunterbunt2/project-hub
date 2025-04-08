@@ -351,7 +351,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
             task.setResourceId(user.getId());
         }
         if (dependency != null) {
-            task.addPredecessor(dependency);
+            task.addPredecessor(dependency, true);
         }
         if (sprint != null) {
             task.setSprint(sprint);

@@ -85,8 +85,8 @@ public class Task {
         childTasks.add(childTask);
     }
 
-    public void addPredecessor(Task dependency) {
-        predecessors.add(new Relation(dependency));
+    public void addPredecessor(Task dependency, boolean isVisible) {
+        predecessors.add(new Relation(dependency, isVisible));
     }
 
     @JsonIgnore

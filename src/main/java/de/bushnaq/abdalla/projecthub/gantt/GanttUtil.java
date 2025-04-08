@@ -153,7 +153,7 @@ public class GanttUtil {
                         if (overlap(task1, task2)) {
                             if (!hasDependency(task1, task2)) {
                                 //move second one after first one
-                                task2.addPredecessor(task1);
+                                task2.addPredecessor(task1, false);
                                 anythingChanged = true;
                                 return true;
                             }

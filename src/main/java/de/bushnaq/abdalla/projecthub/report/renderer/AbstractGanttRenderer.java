@@ -311,10 +311,10 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         int signum = (int) Math.signum(y2 - y1);
         int y3;
         if (signum > 0) {
-            y2 -= getTaskHeight() / 2 + 1 - 2 + 1;
+            y2 -= getTaskHeight() / 2 - TASK_BODY_BORDER;
             y3 = y2 - 5;
         } else {
-            y2 += getTaskHeight() / 2 + 1 - 2 + 1;
+            y2 += getTaskHeight() / 2 - TASK_BODY_BORDER;
             y3 = y2 + 5;
         }
         int x1 = calculateX(targetTask.getFinish(), targetTask.getFinish().truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
@@ -327,10 +327,11 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
             graphics2D.setColor(graphicsTheme.ganttRelationColor);
         }
 //        graphics2D.drawLine(x1, y1, x2, y1);
-        graphics2D.fillRect(x1 + 1, y1, x2 - x1, 1);
+        graphics2D.fillRect(x1 + 1, y1, x2 - x1, 1);// -
 //        graphics2D.drawLine(x2, y1, x2, y2);
-        graphics2D.fillRect(x2, y1 + 1, 1, y3 - y1);
+        graphics2D.fillRect(x2, y1 + 1, 1, y3 - y1);// |
         if (y2 > y1) {
+            //arrow head down
             // x2-d,y2-d x2+D,y2-D
             // x2,Y2
 
@@ -340,6 +341,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
             graphics2D.setColor(graphicsTheme.ganttRelationColor);
             graphics2D.fillPolygon(xPoints, yPoints, xPoints.length);
         } else {
+            //arrow head up
             // x2,Y2
             // x2+3,y2+3 x2-3,y2+3
 
@@ -434,8 +436,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                         Task sourceTask = task;
                         Task targetTask = task.getSprint().getTaskById(relation.getPredecessorId());
                         //TODO implement this
-//                        if (!relation.getLag().equals(Duration.getInstance(0, TimeUnit.MINUTES)))
-                        {
+                        if (relation.isVisible()) {
                             int y1 = taskHeight.get(gantUniqueId * 10000 + targetTask.getId()) + getTaskHeight() / 2;
                             int y2 = taskHeight.get(gantUniqueId * 10000 + sourceTask.getId()) + getTaskHeight() / 2;
                             drawRelation(sourceTask, y2, targetTask, y1);
