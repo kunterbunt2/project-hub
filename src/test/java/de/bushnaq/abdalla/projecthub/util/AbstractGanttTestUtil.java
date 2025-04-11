@@ -30,6 +30,7 @@ import de.bushnaq.abdalla.util.GanttErrorHandler;
 import de.bushnaq.abdalla.util.Util;
 import de.bushnaq.abdalla.util.date.DateUtil;
 import net.sf.mpxj.ProjectCalendar;
+import net.sf.mpxj.ProjectFile;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestInfo;
@@ -145,6 +146,10 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
 
     }
 
+    protected void compareResults(ProjectFile projectFile) throws IOException {
+        compareResults();
+    }
+
     private static void compareTasks(List<Task> tasks, List<Task> referenceTasks) {
         assertEquals(referenceTasks.size(), tasks.size(), "Number of tasks differs");
         for (int i = 0; i < referenceTasks.size(); i++) {
@@ -158,10 +163,14 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         ParameterOptions.now = OffsetDateTime.parse("2025-01-01T08:00:00+01:00");
         new File(testResultFolder).mkdirs();
         new File(testReferenceResultFolder).mkdirs();
-        addOneProduct(testInfo.getTestMethod().get().getName().replace("_", "-"));
+        addOneProduct(sanitise(testInfo.getDisplayName()));
     }
 
     protected void generateGanttChart(TestInfo testInfo) throws Exception {
+        generateGanttChart(testInfo, null);
+    }
+
+    protected void generateGanttChart(TestInfo testInfo, ProjectFile projectFile) throws Exception {
         initialize();
         GanttUtil         ganttUtil = new GanttUtil(context);
         GanttErrorHandler eh        = new GanttErrorHandler();
@@ -171,21 +180,23 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         sprint.getTasks().forEach(task -> {
             taskApi.persist(task);
         });
+        printTables();
         initialize();
-        storeExpectedResult();
-        storeResult();
+        if (projectFile == null) {
+            storeExpectedResult();
+            storeResult();
+        }
 
 
         GanttChart ganttChart  = new GanttChart(context, "", "/", "Gantt Chart", sprint.getName(), exceptions, ParameterOptions.getLocalNow(), false, sprint/*, 1887, 1000*/, "scheduleWithMargin", context.parameters.graphicsTheme);
         String     description = testInfo.getDisplayName().replace("_", "-");
         ganttChart.generateImage(Util.generateCopyrightString(ParameterOptions.getLocalNow()), description, testResultFolder);
-        printTables();
-        compareResults();
+        compareResults(projectFile);
     }
 
-    private int getMaxTaskNameLength(Sprint sprint) {
+    private int getMaxTaskNameLength(List<Task> taskList) {
         int maxNameLength = 0;
-        for (Task task : sprint.getTasks()) {
+        for (Task task : taskList) {
             if (GanttUtil.isValidTask(task)) {
                 maxNameLength = Math.max(maxNameLength, task.getName().length());
             }
@@ -214,10 +225,17 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         resource2 = gc.allUsers.get(1);
     }
 
+    public static boolean isValidTask(net.sf.mpxj.Task task) {
+        //ignore task with ID 0
+        //ignore tasks that have no name
+        //ignore tasks that do not have a start date or finish date
+        return task.getID() != 0 && task.getUniqueID() != null && task.getName() != null && task.getStart() != null && task.getFinish() != null && (task.getID() != 1);
+    }
+
     private void logProjectTasks(String fileName, Sprint sprint, String referenceFileName, Sprint referenceSprint) {
         logger.trace("----------------------------------------------------------------------");
         logger.trace("Reference File Name=" + referenceFileName);
-        logTasks(referenceSprint);
+        logTasks(referenceSprint.getTasks());
         logger.trace("----------------------------------------------------------------------");
         logger.trace("File Name=" + fileName);
         logTasks(sprint, referenceSprint);
@@ -274,8 +292,6 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
             }
 
         }
-//        String f = String.format("%19s", durationString);
-
         buffer += String.format("[%2d] N='%-" + maxNameLength + "s' C=%s%s%s S='%s%20s%s' D='%s%-19s%s' F='%s%20s%s'", task.getId(),//
                 task.getName(),//
                 criticalFlag, criticalString, ANSI_RESET,//
@@ -283,23 +299,22 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
                 durationFlag, durationString, ANSI_RESET,//
                 finishFlag, finishString, ANSI_RESET);
         logger.trace(buffer);
-
     }
 
-    private void logTasks(Sprint sprint) {
-        int maxNameLength = getMaxTaskNameLength(sprint);
-        for (Task task : sprint.getTasks()) {
+    protected void logTasks(List<Task> taskList) {
+        int maxNameLength = getMaxTaskNameLength(taskList);
+        for (Task task : taskList) {
             if (GanttUtil.isValidTask(task)) {
                 logTask(task, null, maxNameLength);
             }
         }
     }
 
-    private void logTasks(Sprint projectFile, Sprint referenceProjectFile) {
-        int maxNameLength = getMaxTaskNameLength(projectFile);
-        for (Task task : projectFile.getTasks()) {
+    protected void logTasks(Sprint sprint, Sprint referenceSprint) {
+        int maxNameLength = getMaxTaskNameLength(sprint.getTasks());
+        for (Task task : sprint.getTasks()) {
             if (GanttUtil.isValidTask(task)) {
-                logTask(task, referenceProjectFile.getTaskById(task.getId()), maxNameLength);
+                logTask(task, referenceSprint.getTaskById(task.getId()), maxNameLength);
             }
         }
     }
@@ -310,6 +325,10 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
             return Files.readAllLines(filePath, StandardCharsets.UTF_8);
         }
         return new ArrayList<>();
+    }
+
+    private String sanitise(String displayName) {
+        return displayName.replace("_", "-").replace("\\", "-").replace("/", "-").replace(":", "-");
     }
 
     private void store(String directory, boolean overwrite) throws IOException {

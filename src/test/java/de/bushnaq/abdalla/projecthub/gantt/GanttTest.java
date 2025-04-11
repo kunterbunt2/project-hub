@@ -30,7 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 @TestMethodOrder(MethodOrderer.MethodName.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-public class GanttChartTest extends AbstractGanttTestUtil {
+public class GanttTest extends AbstractGanttTestUtil {
 
     @DisplayName("dependency between 2 tasks")
     @Test

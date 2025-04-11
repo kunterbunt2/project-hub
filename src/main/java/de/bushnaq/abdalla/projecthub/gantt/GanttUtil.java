@@ -266,14 +266,18 @@ public class GanttUtil {
             float    availability = resourceAssignment.getAvailabilities().getLast().getAvailability();
             Duration work         = task.getWork();
             if (work != null) {
+                long workSeconds = work.getSeconds();
 //                if (work.getUnits() == TimeUnit.HOURS)
                 {
                     double inverseAvailability = 1 / availability;
                     double durationUnits       = inverseAvailability * work.getSeconds();
-                    if (durationUnits > 0.0) {
-                        durationUnits = Math.max(durationUnits * 60, 1) / (60.0);
-                    }
-                    durationUnits = (Math.round(durationUnits * 60 * 10) * 6) / (60 * 10 * 6.0);//calculate in 6 second accuracy, assuming that unit is hours
+//                    if (durationUnits > 0.0) {
+//                        durationUnits = Math.max(durationUnits * 60, 1) / (60.0);
+//                    }
+//                    long seconds = Math.round(durationUnits * 60 * 10) * 6;
+//                    durationUnits = (Math.round(durationUnits * 60 * 10) * 6) / (60 * 10 * 6.0);//calculate in 6 second accuracy, assuming that unit is hours
+                    durationUnits = Math.round(durationUnits / 6) * 6;
+
                     Duration duration = Duration.of((long) durationUnits, SECONDS);
                     return duration;
                 }
@@ -649,7 +653,7 @@ public class GanttUtil {
             do {
                 anythingChanged = false;
                 for (Task task : projectFile.getTasks()) {
-//                    anythingChanged = testCritical(startDate, finishDate, anythingChanged, task);
+                    anythingChanged = testCritical(startDate, finishDate, anythingChanged, task);
                     checks++;
                 }
             } while (anythingChanged);
@@ -1024,156 +1028,158 @@ public class GanttUtil {
         }
     }
 
-    //    /**
-//     * Task is critical if it cannot move and all tasks that depend on it can also not move until the end date
-//     *
-//     * @param startDate
-//     * @param finishDate
-//     * @param anythingChanged
-//     * @param task
-//     * @return
-//     */
-//    private boolean testCritical(LocalDateTime startDate, LocalDateTime finishDate, boolean anythingChanged, Task task) {
-//        if (!startSet.contains(task)) {
-//            //are we starting at the beginning of the project?
-//            ProjectCalendar calendar = getCalendar(task);
-//            if (equals(calendar, task.getStart(), startDate)) {
-//                startSet.add(task);
-//                anythingChanged = true;
-//            }
-//        }
-//        if (!startSet.contains(task)) {
-//            //are we starting after a task that is in the startSet?
-//            for (Relation r : task.getPredecessors()) {
-//                Task predecessor = r.getTargetTask();
-//                if (startSet.contains(predecessor)) {
-//                    ProjectCalendar calendar = getCalendar(task);
-//                    if (equals(calendar, task.getStart(), predecessor.getFinish())) {
-//                        startSet.add(task);
-//                        anythingChanged = true;
-//                    }
-//                }
-//            }
-//        }
-//        if (!startSet.contains(task)) {
-//            //are we starting with a parent that is in the startSet?
-//            ProjectCalendar calendar = getCalendar(task);
-//            Task            parent   = task.getParentTask();
-//            if (startSet.contains(parent)) {
-//                if (parent != null && equals(calendar, task.getStart(), parent.getStart())) {
-//                    startSet.add(task);
-//                    anythingChanged = true;
-//                }
-//            }
-//
-//        }
-//        if (!startSet.contains(task)) {
-//            //are we starting with a child that is in the startSet
-//            for (Task child : task.getChildTasks()) {
-//                if (startSet.contains(child)) {
-//                    ProjectCalendar calendar = getCalendar(child);
-//                    if (equals(calendar, task.getStart(), child.getStart())) {
-//                        startSet.add(task);
-//                        anythingChanged = true;
-//                    }
-//                }
-//
-//            }
-//        }
-//
-//        if (!manualSet.contains(task)) {
-//            for (Relation r : task.getPredecessors()) {
-//                Task predecessor = r.getTargetTask();
-//                if (manualSet.contains(predecessor)) {
-//                    //are we starting after a task that is in the manualSet?
-//                    ProjectCalendar calendar = getCalendar(task);
-//                    if (equals(calendar, task.getStart(), predecessor.getFinish())) {
-//                        manualSet.add(task);
-//                        anythingChanged = true;
-//                    }
-//                }
-//            }
-//        }
-//        if (!manualSet.contains(task)) {
-//            //are we starting with a parent that is in the manualSet?
-//            ProjectCalendar calendar = getCalendar(task);
-//            Task            parent   = task.getParentTask();
-//            if (manualSet.contains(parent)) {
-//                if (parent != null && equals(calendar, task.getStart(), parent.getStart())) {
-//                    manualSet.add(task);
-//                    anythingChanged = true;
-//                }
-//            }
-//
-//        }
-//        if (!manualSet.contains(task)) {
-//            //are we starting with a child that is in the manualSet
-//            for (Task child : task.getChildTasks()) {
-//                if (manualSet.contains(child)) {
-//                    ProjectCalendar calendar = getCalendar(child);
-//                    if (equals(calendar, task.getStart(), child.getStart())) {
-//                        manualSet.add(task);
-//                        anythingChanged = true;
-//                    }
-//                }
-//
-//            }
-//        }
-//
-//        if (!finishSet.contains(task)) {
-//            ProjectCalendar calendar = getCalendar(task);
-//            //are we ending at the end of the project?
-//            if (equals(calendar, task.getFinish(), finishDate)) {
-//                finishSet.add(task);
-//                anythingChanged = true;
-//            }
-//        }
-//        if (!finishSet.contains(task)) {
-//            //are we ending with a parent that is in the finishSet?
-//            ProjectCalendar calendar = getCalendar(task);
-//            Task            parent   = task.getParentTask();
-//            if (finishSet.contains(parent)) {
-//                if (parent != null && equals(calendar, task.getFinish(), parent.getFinish())) {
-//                    finishSet.add(task);
-//                    anythingChanged = true;
-//                }
-//            }
-//
-//        }
-//        if (finishSet.contains(task)) {
-//            for (Relation r : task.getPredecessors()) {
-//                Task predecessor = r.getTargetTask();
-//                if (!finishSet.contains(predecessor)) {
-//                    //predecessor finishes at same time a task starts that is in the finishSet?
-//                    ProjectCalendar calendar = getCalendar(task);
-//                    if (equals(calendar, predecessor.getFinish(), task.getStart())) {
-//                        finishSet.add(predecessor);
-//                        anythingChanged = true;
-//                    }
-//                }
-//            }
-//
-//        }
-//        if (!finishSet.contains(task)) {
-//            for (Task child : task.getChildTasks()) {
-//                if (finishSet.contains(child)) {
-//                    ProjectCalendar calendar = getCalendar(child);
-//                    if (equals(calendar, task.getFinish(), child.getFinish())) {
-//                        finishSet.add(task);
-//                        anythingChanged = true;
-//                    }
-//                }
-//
-//            }
-//        }
-//        if (finishSet.contains(task) && task.getTaskMode() == TaskMode.MANUALLY_SCHEDULED) {
-//            manualSet.add(task);
-//        }
-//        for (Relation r : task.getPredecessors()) {
-//            anythingChanged = testCritical(startDate, finishDate, anythingChanged, r.getTargetTask());
-//        }
-//        return anythingChanged;
-//    }
+    /**
+     * Task is critical if it cannot move and all tasks that depend on it can also not move until the end date
+     *
+     * @param startDate
+     * @param finishDate
+     * @param anythingChanged
+     * @param task
+     * @return
+     */
+    private boolean testCritical(LocalDateTime startDate, LocalDateTime finishDate, boolean anythingChanged, Task task) {
+        if (!startSet.contains(task)) {
+            //are we starting at the beginning of the project?
+            ProjectCalendar calendar = getCalendar(task);
+            if (equals(calendar, task.getStart(), startDate)) {
+                startSet.add(task);
+                anythingChanged = true;
+            }
+        }
+        if (!startSet.contains(task)) {
+            //are we starting after a task that is in the startSet?
+            for (Relation r : task.getPredecessors()) {
+                Task predecessor = task.getSprint().getTaskById(r.getPredecessorId());
+                if (startSet.contains(predecessor)) {
+                    ProjectCalendar calendar = getCalendar(task);
+                    if (equals(calendar, task.getStart(), predecessor.getFinish())) {
+                        startSet.add(task);
+                        anythingChanged = true;
+                    }
+                }
+            }
+        }
+        if (!startSet.contains(task)) {
+            //are we starting with a parent that is in the startSet?
+            ProjectCalendar calendar = getCalendar(task);
+            Task            parent   = task.getParentTask();
+            if (startSet.contains(parent)) {
+                if (parent != null && equals(calendar, task.getStart(), parent.getStart())) {
+                    startSet.add(task);
+                    anythingChanged = true;
+                }
+            }
+
+        }
+        if (!startSet.contains(task)) {
+            //are we starting with a child that is in the startSet
+            for (Task child : task.getChildTasks()) {
+                if (startSet.contains(child)) {
+                    ProjectCalendar calendar = getCalendar(child);
+                    if (equals(calendar, task.getStart(), child.getStart())) {
+                        startSet.add(task);
+                        anythingChanged = true;
+                    }
+                }
+
+            }
+        }
+
+        if (!manualSet.contains(task)) {
+            for (Relation r : task.getPredecessors()) {
+                Task predecessor = task.getSprint().getTaskById(r.getPredecessorId());
+                if (manualSet.contains(predecessor)) {
+                    //are we starting after a task that is in the manualSet?
+                    ProjectCalendar calendar = getCalendar(task);
+                    if (equals(calendar, task.getStart(), predecessor.getFinish())) {
+                        manualSet.add(task);
+                        anythingChanged = true;
+                    }
+                }
+            }
+        }
+        if (!manualSet.contains(task)) {
+            //are we starting with a parent that is in the manualSet?
+            ProjectCalendar calendar = getCalendar(task);
+            Task            parent   = task.getParentTask();
+            if (manualSet.contains(parent)) {
+                if (parent != null && equals(calendar, task.getStart(), parent.getStart())) {
+                    manualSet.add(task);
+                    anythingChanged = true;
+                }
+            }
+
+        }
+        if (!manualSet.contains(task)) {
+            //are we starting with a child that is in the manualSet
+            for (Task child : task.getChildTasks()) {
+                if (manualSet.contains(child)) {
+                    ProjectCalendar calendar = getCalendar(child);
+                    if (equals(calendar, task.getStart(), child.getStart())) {
+                        manualSet.add(task);
+                        anythingChanged = true;
+                    }
+                }
+
+            }
+        }
+
+        if (!finishSet.contains(task)) {
+            ProjectCalendar calendar = getCalendar(task);
+            //are we ending at the end of the project?
+            if (equals(calendar, task.getFinish(), finishDate)) {
+                finishSet.add(task);
+                anythingChanged = true;
+            }
+        }
+        if (!finishSet.contains(task)) {
+            //are we ending with a parent that is in the finishSet?
+            ProjectCalendar calendar = getCalendar(task);
+            Task            parent   = task.getParentTask();
+            if (finishSet.contains(parent)) {
+                if (parent != null && equals(calendar, task.getFinish(), parent.getFinish())) {
+                    finishSet.add(task);
+                    anythingChanged = true;
+                }
+            }
+
+        }
+        if (finishSet.contains(task)) {
+            for (Relation r : task.getPredecessors()) {
+                Task predecessor = task.getSprint().getTaskById(r.getPredecessorId());
+                if (!finishSet.contains(predecessor)) {
+                    //predecessor finishes at same time a task starts that is in the finishSet?
+                    ProjectCalendar calendar = getCalendar(task);
+                    if (equals(calendar, predecessor.getFinish(), task.getStart())) {
+                        finishSet.add(predecessor);
+                        anythingChanged = true;
+                    }
+                }
+            }
+
+        }
+        if (!finishSet.contains(task)) {
+            for (Task child : task.getChildTasks()) {
+                if (finishSet.contains(child)) {
+                    ProjectCalendar calendar = getCalendar(child);
+                    if (equals(calendar, task.getFinish(), child.getFinish())) {
+                        finishSet.add(task);
+                        anythingChanged = true;
+                    }
+                }
+
+            }
+        }
+        if (finishSet.contains(task) && task.getTaskMode() == TaskMode.MANUALLY_SCHEDULED) {
+            manualSet.add(task);
+        }
+        for (Relation r : task.getPredecessors()) {
+            Task predecessor = task.getSprint().getTaskById(r.getPredecessorId());
+            anythingChanged = testCritical(startDate, finishDate, anythingChanged, predecessor);
+        }
+        return anythingChanged;
+    }
+
     private long testForNull(/*GanttErrorHandler eh,*/ Sprint projectFile, long checks) {
         for (Task task : projectFile.getTasks()) {
             printCase("TS", "testForNull", task);

@@ -24,16 +24,17 @@ import net.sf.mpxj.*;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
 public class GanttContext {
-    public        List<Product>   allProducts;
-    public        List<Project>   allProjects;
-    public        List<Sprint>    allSprints;
-    public        List<Task>      allTasks;
-    public        List<User>      allUsers;
-    public        List<Version>   allVersions;
+    public        List<Product>   allProducts = new ArrayList<>();
+    public        List<Project>   allProjects = new ArrayList<>();
+    public        List<Sprint>    allSprints  = new ArrayList<>();
+    public        List<Task>      allTasks    = new ArrayList<>();
+    public        List<User>      allUsers    = new ArrayList<>();
+    public        List<Version>   allVersions = new ArrayList<>();
     private       ProjectCalendar calendar;
     private final ProjectFile     projectFile = new ProjectFile();
 
@@ -68,15 +69,15 @@ public class GanttContext {
         setProjectProperties();
         initializeCalendar();
 
-        if (allUsers != null)
+        if (!allUsers.isEmpty())
             allUsers.forEach(user -> user.initialize(this));
-        if (allProducts != null)
+        if (!allProducts.isEmpty())
             allProducts.forEach(product -> product.initialize(this));
-        else if (allVersions != null)
+        else if (!allVersions.isEmpty())
             allVersions.forEach(version -> version.initialize(this));
-        else if (allProjects != null)
+        else if (!allProjects.isEmpty())
             allProjects.forEach(project -> project.initialize(this));
-        else if (allSprints != null)
+        else if (!allSprints.isEmpty())
             allSprints.forEach(sprint -> sprint.initialize(this));
     }
 
