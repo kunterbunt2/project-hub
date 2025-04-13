@@ -68,13 +68,11 @@ public class TaskDAO {
     private Long id;
 
     @Column(nullable = false)
+    private boolean milestone;
+
+    @Column(nullable = false)
     private String name;
 
-    //    @ManyToOne(fetch = FetchType.EAGER)
-//    @JoinColumn(name = "parent_id")
-//    @JsonBackReference(value = "task-task")
-//    @ToString.Exclude//help intellij debugger not to go into a loop
-//    private TaskDAO parentTask;
     @Column(nullable = true)
     private Long parentTaskId;
 
@@ -88,13 +86,9 @@ public class TaskDAO {
     @Column(nullable = true)
     private Long resourceId;
 
-    //    @ManyToOne(fetch = FetchType.LAZY)
-//    @JsonBackReference(value = "sprint-task")
-//    @ToString.Exclude//help intellij debugger not to go into a loop
     @Column(nullable = false)
     private Long sprintId;
 
-    //    List<Relation> successors = new ArrayList<>();
     @Column(nullable = true)
     private LocalDateTime start;
 

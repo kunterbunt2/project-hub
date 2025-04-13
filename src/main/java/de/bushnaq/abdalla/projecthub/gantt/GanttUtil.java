@@ -258,35 +258,25 @@ public class GanttUtil {
 //    }
 
     private Duration getDurationFromWork(GanttErrorHandler eh, Task task) {
+        float availability = 1;//tasks without resources have 100% availability
         if (task.getAssignedUser() != null) {
             User resourceAssignment = task.getAssignedUser();
-            //            Resource resource = resourceAssignment.getResource();
+            availability = resourceAssignment.getAvailabilities().getLast().getAvailability();
+        }
+        Duration work = task.getWork();
+        if (work != null) {
+            {
+                double inverseAvailability = 1 / availability;
+                double durationUnits       = inverseAvailability * work.getSeconds();
+                durationUnits = Math.round(durationUnits / 6) * 6;
 
-//            Number   units = resourceAssignment.getUnits();
-            float    availability = resourceAssignment.getAvailabilities().getLast().getAvailability();
-            Duration work         = task.getWork();
-            if (work != null) {
-                long workSeconds = work.getSeconds();
-//                if (work.getUnits() == TimeUnit.HOURS)
-                {
-                    double inverseAvailability = 1 / availability;
-                    double durationUnits       = inverseAvailability * work.getSeconds();
-//                    if (durationUnits > 0.0) {
-//                        durationUnits = Math.max(durationUnits * 60, 1) / (60.0);
-//                    }
-//                    long seconds = Math.round(durationUnits * 60 * 10) * 6;
-//                    durationUnits = (Math.round(durationUnits * 60 * 10) * 6) / (60 * 10 * 6.0);//calculate in 6 second accuracy, assuming that unit is hours
-                    durationUnits = Math.round(durationUnits / 6) * 6;
-
-                    Duration duration = Duration.of((long) durationUnits, SECONDS);
-                    return duration;
-                }
-            } else {
-                Duration duration = Duration.ZERO;
+                Duration duration = Duration.of((long) durationUnits, SECONDS);
                 return duration;
             }
+        } else {
+            Duration duration = Duration.ZERO;
+            return duration;
         }
-        return Duration.ZERO;
     }
 
 //    private static Resource getDummyResource(ProjectFile projectFile) {

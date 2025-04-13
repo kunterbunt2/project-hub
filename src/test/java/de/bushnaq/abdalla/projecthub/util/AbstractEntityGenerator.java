@@ -323,7 +323,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         sprint.setProjectId(project.getId());
         sprint.setCreated(ParameterOptions.now);
         sprint.setUpdated(ParameterOptions.now);
-        Sprint saved = sprintApi.persist(sprint, project.getId());
+        Sprint saved = sprintApi.persist(sprint);
         expectedSprints.add(saved);
         project.addSprint(saved);
 
@@ -332,21 +332,25 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     }
 
     protected Task addTask(String name, String workString, User user, Sprint sprint, Task parent, Task dependency) {
-        return addTask(sprint, parent, name, null, DateUtil.parseDurationString(workString, 7.5, 37.5), user, dependency);
+        return addTask(sprint, parent, name, null, DateUtil.parseDurationString(workString, 7.5, 37.5), user, dependency, null, false);
     }
 
     protected Task addTask(Sprint sprint, Task parent, String name, LocalDateTime start, Duration work, User user, Task dependency) {
+        return addTask(sprint, parent, name, start, work, user, dependency, null, false);
+    }
+
+    protected Task addTask(Sprint sprint, Task parent, String name, LocalDateTime start, Duration work, User user, Task dependency, TaskMode taskMode, boolean milestone) {
         Task task = new Task();
         task.setName(name);
         task.setStart(start);
-//        task.setProgress(0);
-//        task.setTaskMode(TaskMode.AUTO_SCHEDULED);
         if (work != null) {
 
             task.setWork(work);
-//            if (start != null)
-//                task.setFinish(start.plus(duration));
         }
+        if (taskMode != null) {
+            task.setTaskMode(taskMode);
+        }
+        task.setMilestone(milestone);
         if (user != null) {
             task.setResourceId(user.getId());
         }

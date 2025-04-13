@@ -42,6 +42,9 @@ public class DurationSerializer extends JsonSerializer<Duration> {
         if (hours > 0) sb.append(hours).append("h ");
         if (minutes > 0) sb.append(minutes).append("m ");
         if (seconds > 0) sb.append(seconds).append("s");
+        if (duration.toSeconds() == 0) {
+            sb.append("0s");
+        }
 
         gen.writeString(sb.toString().trim());
     }

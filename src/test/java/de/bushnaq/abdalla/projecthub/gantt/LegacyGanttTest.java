@@ -51,7 +51,14 @@ import java.util.stream.Stream;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
 
-    //    @DisplayName("critical path test against actual ms project files")
+    /**
+     * Test method to read MPP files, clone all tasks, users and relations and then compare both after leveling the resources.
+     * ensures that our leveling aligns with mpp.
+     *
+     * @param mppFileName
+     * @param testInfo
+     * @throws Exception
+     */
     @MethodSource("listFilesByExtension")
     @ParameterizedTest
     public void legacyTest(Path mppFileName, TestInfo testInfo) throws Exception {
@@ -69,20 +76,25 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
                     if (!mpxjTask.getResourceAssignments().isEmpty()) {
                         ResourceAssignment resourceAssignment = mpxjTask.getResourceAssignments().get(0);
                         Resource           resource           = resourceAssignment.getResource();
-                        String             resourceName       = resource.getName();
-                        if (resourceMap.get(resourceName) != null) {
-                            resourceMap.put(resourceName, resource);//store resources
-                        }
-                        if (userMap.get(resourceName) == null) {
-                            Number   units        = resourceAssignment.getUnits();
-                            Duration work         = resourceAssignment.getWork();
-                            double   availability = units.doubleValue() / 100;
-                            String   emailAddress = resource.getEmailAddress();
-                            if (emailAddress == null) {
-                                emailAddress = resourceName.replaceAll(" ", "_") + "@example.com";
+                        if (resource != null) {
+                            String resourceName = resource.getName();
+                            if (resourceMap.get(resourceName) != null) {
+                                resourceMap.put(resourceName, resource);//store resources
                             }
-                            User user = addUser(resourceName, emailAddress, "de", "nw", resource.getCreationDate().toLocalDate(), (float) availability);
-                            userMap.put(resourceName, user);//store users
+                            if (userMap.get(resourceName) == null) {
+                                Number   units        = resourceAssignment.getUnits();
+                                Duration work         = resourceAssignment.getWork();
+                                TimeUnit units1       = work.getUnits();
+                                double   duration1    = work.getDuration();
+                                double   availability = units.doubleValue() / 100;
+                                String   emailAddress = resource.getEmailAddress();
+                                if (emailAddress == null) {
+                                    emailAddress = resourceName.replaceAll(" ", "_") + "@example.com";
+                                }
+                                User user = addUser(resourceName, emailAddress, "de", "nw", date.toLocalDate(), (float) availability);
+
+                                userMap.put(resourceName, user);//store users
+                            }
                         }
                     }
                 }
@@ -91,18 +103,29 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
             //populate taskMap
             for (net.sf.mpxj.Task mpxjTask : projectFile.getTasks()) {
                 if (isValidTask(mpxjTask)) {
-                    String name = mpxjTask.getName();
-                    if (!mpxjTask.getResourceAssignments().isEmpty()) {
+                    String                                     name     = mpxjTask.getName();
+                    LocalDateTime                              start    = null;
+                    de.bushnaq.abdalla.projecthub.dto.TaskMode taskMode = de.bushnaq.abdalla.projecthub.dto.TaskMode.AUTO_SCHEDULED;
+                    if (mpxjTask.getTaskMode().equals(TaskMode.MANUALLY_SCHEDULED)) {
+                        start    = mpxjTask.getStart();
+                        taskMode = de.bushnaq.abdalla.projecthub.dto.TaskMode.MANUALLY_SCHEDULED;
+                    }
+                    if (!mpxjTask.getResourceAssignments().isEmpty() && mpxjTask.getResourceAssignments().get(0).getResource() != null) {
                         ResourceAssignment resourceAssignment = mpxjTask.getResourceAssignments().get(0);
                         Resource           resource           = resourceAssignment.getResource();
                         String             resourceName       = resource.getName();
                         Duration           work               = resourceAssignment.getWork();
                         net.sf.mpxj.Task   parent             = mpxjTaskMap.get(mpxjTask.getParentTask().getName());
                         User               user               = userMap.get(resourceName);
-                        Task               task               = addTask(sprint, null, mpxjTask.getName(), null, MpxjUtil.toJavaDuration(work), user, null);
+                        Task               task               = addTask(sprint, null, mpxjTask.getName(), start, MpxjUtil.toJavaDuration(work), user, null, taskMode, mpxjTask.getMilestone());
+                        taskMap.put(task.getName(), task);
+                    } else if (!mpxjTask.hasChildTasks()) {
+                        //no user assigned to this task
+                        Duration work = mpxjTask.getDuration();
+                        Task     task = addTask(sprint, null, mpxjTask.getName(), start, MpxjUtil.toJavaDuration(work), null, null, taskMode, mpxjTask.getMilestone());//parent task
                         taskMap.put(task.getName(), task);
                     } else {
-                        Task task = addTask(sprint, null, mpxjTask.getName(), null, null, null, null);//parent task
+                        Task task = addTask(sprint, null, mpxjTask.getName(), start, null, null, null, taskMode, mpxjTask.getMilestone());//parent task
                         taskMap.put(task.getName(), task);
                     }
                 }
@@ -114,26 +137,32 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
                     Task   task = taskMap.get(name);
                     //set parent
                     if (mpxjTask.getParentTask() != null) {
-                        net.sf.mpxj.Task mpxjParent = mpxjTaskMap.get(mpxjTask.getParentTask().getName());
+                        String           parentTaskName = mpxjTask.getParentTask().getName();
+                        net.sf.mpxj.Task mpxjParent     = mpxjTaskMap.get(mpxjTask.getParentTask().getName());
                         if (mpxjParent != null) {
                             //probably not valid task
                             Task parent = taskMap.get(mpxjParent.getName());
                             task.setParentTaskId(parent.getId());
+                            parent.addChildTask(task);
                         }
                     }
                     //set relations
-                    for (Relation r : mpxjTask.getPredecessors()) {
-                        net.sf.mpxj.Task mpxjPredecessor = r.getPredecessorTask();
-                        Task             predecessor     = taskMap.get(mpxjPredecessor.getName());
-                        task.addPredecessor(predecessor, true);
+                    for (Relation relation : mpxjTask.getPredecessors()) {
+                        if (!relation.getLag().equals(Duration.getInstance(0, TimeUnit.MINUTES))) {
+                            net.sf.mpxj.Task mpxjPredecessor = relation.getPredecessorTask();
+                            Task             predecessor     = taskMap.get(mpxjPredecessor.getName());
+                            task.addPredecessor(predecessor, true);
+                        }
                     }
                 }
             }
             for (Task value : taskMap.values()) {
                 taskApi.persist(value);
             }
+            sprint.setUserId(userMap.values().stream().findFirst().get().getId());
+            sprintApi.persist(sprint);
 
-            initialize();
+//            initialize();
             generateGanttChart(testInfo, projectFile);
         }
     }
@@ -155,6 +184,7 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
             return stream
                     .filter(Files::isRegularFile)
                     .filter(path -> path.toString().endsWith(extension))
+                    .sorted()
                     .collect(Collectors.toList());
         }
     }

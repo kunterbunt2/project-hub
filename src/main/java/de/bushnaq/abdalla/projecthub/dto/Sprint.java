@@ -42,7 +42,7 @@ import java.util.Map;
 public class Sprint extends AbstractTimeAware {
 
     @JsonIgnore
-    private ProjectCalendar defaultCalendar;
+    private ProjectCalendar calendar;
 
     private OffsetDateTime end;
     private Long           id;
@@ -61,6 +61,7 @@ public class Sprint extends AbstractTimeAware {
     @JsonIgnore
 //    @JsonManagedReference(value = "sprint-task")
     private   List<Task>      tasks   = new ArrayList<>();
+    private   Long            userId;
     @JsonIgnore
     transient Map<Long, User> userMap = new HashMap<>();
 
@@ -106,6 +107,11 @@ public class Sprint extends AbstractTimeAware {
         return tasks.stream().filter(task -> task.getId().equals(predecessorId)).findFirst().orElse(null);
     }
 
+    @JsonIgnore
+    public User getUser() {
+        return getuser(userId);
+    }
+
     public User getuser(Long resourceId) {
         return userMap.get(resourceId);
     }
@@ -131,7 +137,11 @@ public class Sprint extends AbstractTimeAware {
             task.setSprint(this);
             task.initialize();
         });
-        defaultCalendar = gc.getProjectFile().getDefaultCalendar();
+        if (userId == null)
+            calendar = gc.getProjectFile().getDefaultCalendar();
+        else {
+            calendar = getUser().getCalendar();
+        }
 
     }
 }

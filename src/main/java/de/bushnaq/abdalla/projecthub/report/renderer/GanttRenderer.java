@@ -120,7 +120,7 @@ public class GanttRenderer extends AbstractGanttRenderer {
             if (user != null) {
                 pc = user.getCalendar();
             } else {
-                pc = sprint.getDefaultCalendar();
+                pc = sprint.getCalendar();
             }
 
             Integer lane = taskHeight.get(gantUniqueId * 10000 + task.getId());

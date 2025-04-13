@@ -57,13 +57,12 @@ public class SprintApi extends AbstractApi {
         ));
     }
 
-    public Sprint persist(Sprint sprint, Long projectId) {
+    public Sprint persist(Sprint sprint) {
         return executeWithErrorHandling(() ->
                 restTemplate.postForObject(
-                        baseUrl + "/sprint/{projectId}",
+                        baseUrl + "/sprint",
                         sprint,
-                        Sprint.class,
-                        projectId
+                        Sprint.class
                 ));
     }
 }

@@ -17,7 +17,6 @@
 
 package de.bushnaq.abdalla.projecthub.rest.controller;
 
-import de.bushnaq.abdalla.projecthub.dao.ProjectDAO;
 import de.bushnaq.abdalla.projecthub.dao.SprintDAO;
 import de.bushnaq.abdalla.projecthub.repository.ProjectRepository;
 import de.bushnaq.abdalla.projecthub.repository.SprintRepository;
@@ -56,19 +55,18 @@ public class SprintController {
 //        return sprintRepository.save(sprintEntity);
 //    }
 
-    @PostMapping("/{projectId}")
-    public SprintDAO save(@RequestBody SprintDAO sprintDAO, @PathVariable Long projectId) {
-        ProjectDAO project = projectRepository.getById(projectId);
-//        sprintDAO.setProject(project);
+    @PostMapping()
+    public SprintDAO save(@RequestBody SprintDAO sprintDAO) {
+//        ProjectDAO project = projectRepository.getById(sprintDAO.getProjectId());
         SprintDAO save = sprintRepository.save(sprintDAO);
         return save;
     }
 
-    @PutMapping("/{id}")
-    public SprintDAO update(@PathVariable Long id, @RequestBody SprintDAO sprintEntity) {
-//        ProjectEntity project = projectRepository.findById(id).orElseThrow();
-//        project.setName(projectDetails.getName());
-//        project.setRequester(projectDetails.getRequester());
-        return sprintRepository.save(sprintEntity);
-    }
+//    @PutMapping("/{id}")
+//    public SprintDAO update(@PathVariable Long id, @RequestBody SprintDAO sprintEntity) {
+////        ProjectEntity project = projectRepository.findById(id).orElseThrow();
+////        project.setName(projectDetails.getName());
+////        project.setRequester(projectDetails.getRequester());
+//        return sprintRepository.save(sprintEntity);
+//    }
 }

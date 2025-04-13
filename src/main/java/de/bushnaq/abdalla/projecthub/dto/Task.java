@@ -50,22 +50,18 @@ public class Task {
     private Duration      duration;
     private LocalDateTime finish;
     private Long          id;
-    //    List<Relation> successors   = new ArrayList<>();
+    private boolean       milestone;
     private String        name;
     @JsonIgnore
     private String        notes;
-
     @JsonIgnore
     @ToString.Exclude//help intellij debugger not to go into a loop
-    private Task parentTask;
+    private Task          parentTask;
 
     private Long           parentTaskId;
-    //    @JsonManagedReference
     private List<Relation> predecessors = new ArrayList<>();
     private Number         progress     = 0;
     private Long           resourceId;
-    //    @JsonBackReference(value = "sprint-task")
-//    @ToString.Exclude//help intellij debugger not to go into a loop
     @JsonIgnore
     @ToString.Exclude//help intellij debugger not to go into a loop
     private Sprint         sprint;
@@ -96,13 +92,9 @@ public class Task {
 
     @JsonIgnore
     public ProjectCalendar getEffectiveCalendar() {
-        return getSprint().getDefaultCalendar();
+        return getSprint().getCalendar();
     }
 
-    //    public void setDuration(Duration duration) {
-//        this.duration = duration;
-//        setFinish(getStart().plus(duration));
-//    }
     @JsonIgnore
     public String getKey() {
         return "T-" + id;
@@ -111,10 +103,10 @@ public class Task {
     public void initialize() {
     }
 
-    @JsonIgnore
-    public boolean isMilestone() {
-        return work == null || work.isZero();
-    }
+//    @JsonIgnore
+//    public boolean isMilestone() {
+//        return work == null || work.isZero();
+//    }
 
     public void removeChildTask(Task childTask) {
         childTasks.remove(childTask);

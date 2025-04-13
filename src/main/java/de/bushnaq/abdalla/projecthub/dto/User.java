@@ -25,14 +25,18 @@ import de.bushnaq.abdalla.projecthub.gantt.GanttContext;
 import de.focus_shift.jollyday.core.Holiday;
 import de.focus_shift.jollyday.core.HolidayManager;
 import de.focus_shift.jollyday.core.ManagerParameters;
+import de.focus_shift.jollyday.core.parameter.UrlManagerParameter;
 import lombok.*;
 import net.sf.mpxj.ProjectCalendar;
 import net.sf.mpxj.ProjectCalendarException;
 
+import java.net.URL;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -73,7 +77,6 @@ public class User extends AbstractTimeAware implements Comparable<User> {
             throw new IllegalArgumentException("start date is null");
         if (location.getState() == null)
             throw new IllegalArgumentException("start date is null");
-//        Location l = new Location(country, state, start);
         locations.add(location);
     }
 
@@ -110,7 +113,14 @@ public class User extends AbstractTimeAware implements Comparable<User> {
             else
                 endDateInclusive = ParameterOptions.now.plusYears(MAX_PROJECT_LENGTH).toLocalDate();
             HolidayManager holidayManager = HolidayManager.getInstance(ManagerParameters.create(location.getCountry()));
-            Set<Holiday>   holidays       = holidayManager.getHolidays(startDateInclusive, endDateInclusive);
+            List<Holiday>  holidays       = holidayManager.getHolidays(startDateInclusive, endDateInclusive, location.getState()).stream().sorted().collect(Collectors.toList());
+            URL            url            = getClass().getClassLoader().getResource("holidays/carnival-holidays.xml");
+            if (url != null && "nw".equals(location.getState())) {
+                UrlManagerParameter urlManParam        = new UrlManagerParameter(url, new Properties());
+                HolidayManager      customManager      = HolidayManager.getInstance(urlManParam);
+                Set<Holiday>        additionalHolidays = customManager.getHolidays(startDateInclusive, endDateInclusive, location.getState());
+                holidays.addAll(additionalHolidays.stream().toList());
+            }
             for (Holiday holiday : holidays) {
                 ProjectCalendarException pce = pc.addCalendarException(holiday.getDate());
                 pce.setName(holiday.getDescription());

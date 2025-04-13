@@ -21,7 +21,9 @@ import de.bushnaq.abdalla.projecthub.dto.Sprint;
 import de.bushnaq.abdalla.projecthub.dto.Task;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.gantt.GanttContext;
+import de.bushnaq.abdalla.projecthub.gantt.GanttUtil;
 import de.bushnaq.abdalla.util.MpxjUtil;
+import net.sf.mpxj.ProjectCalendar;
 import net.sf.mpxj.ProjectFile;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -34,6 +36,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
@@ -70,9 +73,10 @@ public class AbstractLegacyGanttTestUtil extends AbstractGanttTestUtil {
         logTasks(sprint, gc.allSprints.getFirst());
         for (net.sf.mpxj.Task mpxjTask : projectFile.getTasks()) {
             if (isValidTask(mpxjTask)) {
-                Task task = taskMap.get(mpxjTask.getName());
-                assertEquals(mpxjTask.getStart(), task.getStart(), String.format("unexpected task: %s start", task.getName()));
-                assertEquals(mpxjTask.getFinish(), task.getFinish(), String.format("unexpected task: %s finish", task.getName()));
+                Task            task     = taskMap.get(mpxjTask.getName());
+                ProjectCalendar calendar = task.getEffectiveCalendar();
+                assertTrue(GanttUtil.equals(calendar, task.getStart(), mpxjTask.getStart()), String.format("unexpected task: %s start", task.getName()));
+                assertTrue(GanttUtil.equals(calendar, task.getFinish(), mpxjTask.getFinish()), String.format("unexpected task: %s finish", task.getName()));
                 assertEquals(MpxjUtil.toJavaDuration(mpxjTask.getDuration()), task.getDuration(), String.format("unexpected task: %s duration", task.getName()));
                 boolean c = mpxjTask.getCritical();
                 if (mpxjTask.getChildTasks().isEmpty()) {
@@ -104,6 +108,5 @@ public class AbstractLegacyGanttTestUtil extends AbstractGanttTestUtil {
         }
         sprint = gc.allSprints.getFirst();
     }
-
 
 }

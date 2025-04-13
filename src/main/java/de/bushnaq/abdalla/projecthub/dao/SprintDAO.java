@@ -47,9 +47,6 @@ public class SprintDAO extends AbstractTimeAwareDAO {
 
     @Column(nullable = false)
     private String name;
-    //    @ManyToOne(fetch = FetchType.LAZY)
-//    @ToString.Exclude//help intellij debugger not to go into a loop
-//    @JsonBackReference(value = "project-sprint")
 
     @Column(nullable = false)
     private Long projectId;
@@ -59,6 +56,11 @@ public class SprintDAO extends AbstractTimeAwareDAO {
 
     @Column(nullable = false)
     private Status status;
+    //    @ManyToOne(fetch = FetchType.LAZY)
+//    @ToString.Exclude//help intellij debugger not to go into a loop
+//    @JsonBackReference(value = "project-sprint")
+    @Column(nullable = true)
+    private Long   userId;
 
 //    @OneToMany(mappedBy = "sprint", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
 //    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
