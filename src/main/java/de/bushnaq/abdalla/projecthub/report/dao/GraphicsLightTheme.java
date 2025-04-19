@@ -131,7 +131,7 @@ public class GraphicsLightTheme extends BurnDownGraphicsTheme {
         ganttIdErrorColor            = new Color(0xff, 0x0, 0x0, 0xff);
         ganttIdTextColor             = new Color(0xaa, 0xaa, 0xaa, 0xff);
         ganttIdTextErrorColor        = new Color(0xff, 0xff, 0xff, 0xff);
-        ganttCriticalTaskBorderColor = new Color(0xff, 0x0, 0x0, 0x7F);
+        ganttCriticalTaskBorderColor = new Color(0xff, 0x0, 0x0, 0xC0);
         ganttOutOfOfficeColor        = new Color(0xff, 0x33, 0x33, 0x33);
 
         int ps;//primary color

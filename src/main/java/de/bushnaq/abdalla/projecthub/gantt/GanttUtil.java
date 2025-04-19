@@ -270,12 +270,10 @@ public class GanttUtil {
                 double durationUnits       = inverseAvailability * work.getSeconds();
                 durationUnits = Math.round(durationUnits / 6) * 6;
 
-                Duration duration = Duration.of((long) durationUnits, SECONDS);
-                return duration;
+                return Duration.of((long) durationUnits, SECONDS);
             }
         } else {
-            Duration duration = Duration.ZERO;
-            return duration;
+            return Duration.ZERO;
         }
     }
 
@@ -452,7 +450,7 @@ public class GanttUtil {
                 //-children, this means +work
                 for (Task task : sprint.getTasks()) {
                     checks++;
-                    if (isManual(task) && !task.isMilestone() && (task.getDuration() == null || task.getDuration().isZero())
+                    if (isManual(task) /*&& !task.isMilestone()*/ && (task.getDuration() == null || task.getDuration().isZero())
                             && !hasChildTasks(task)) {
                         Duration duration = getDurationFromWork(eh, task);
                         task.setDuration(duration);

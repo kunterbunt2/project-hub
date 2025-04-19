@@ -111,6 +111,7 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
                         taskMode = de.bushnaq.abdalla.projecthub.dto.TaskMode.MANUALLY_SCHEDULED;
                     }
                     if (!mpxjTask.getResourceAssignments().isEmpty() && mpxjTask.getResourceAssignments().get(0).getResource() != null) {
+                        //user assigned to this task
                         ResourceAssignment resourceAssignment = mpxjTask.getResourceAssignments().get(0);
                         Resource           resource           = resourceAssignment.getResource();
                         String             resourceName       = resource.getName();
@@ -125,6 +126,7 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
                         Task     task = addTask(sprint, null, mpxjTask.getName(), start, MpxjUtil.toJavaDuration(work), null, null, taskMode, mpxjTask.getMilestone());//parent task
                         taskMap.put(task.getName(), task);
                     } else {
+                        //story
                         Task task = addTask(sprint, null, mpxjTask.getName(), start, null, null, null, taskMode, mpxjTask.getMilestone());//parent task
                         taskMap.put(task.getName(), task);
                     }
@@ -161,8 +163,6 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
             }
             sprint.setUserId(userMap.values().stream().findFirst().get().getId());
             sprintApi.persist(sprint);
-
-//            initialize();
             generateGanttChart(testInfo, projectFile);
         }
     }

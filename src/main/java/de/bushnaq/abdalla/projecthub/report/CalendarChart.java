@@ -25,7 +25,7 @@ import de.bushnaq.abdalla.projecthub.report.renderer.CalendarRenderer;
 import java.time.LocalDateTime;
 
 
-public class CalendarChart extends Chart {
+public class CalendarChart extends AbstractChart {
 
     public CalendarChart(Context context, LocalDateTime now, User user, String cssClass,
                          BurnDownGraphicsTheme graphicsTheme) throws Exception {

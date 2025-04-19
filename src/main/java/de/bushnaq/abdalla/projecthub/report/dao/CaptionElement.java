@@ -17,7 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.report.dao;
 
-import de.bushnaq.abdalla.projecthub.report.Canvas;
+import de.bushnaq.abdalla.projecthub.report.AbstractCanvas;
 import de.bushnaq.abdalla.svg.util.ExtendedGraphics2D;
 
 import java.awt.*;
@@ -57,8 +57,8 @@ public class CaptionElement {
             String link = relateCssPath + text + ".png";
             graphics2D.drawStringWithLink(text, x, y + height / 2 + (ascent - 2) / 2 - 1, link);
             link = replaceSpaceWithDash(link);
-            imageMap += String.format("<area shape=\"rect\" coords=\"%d,%d,%d,%d\" href=\"%s\" >\n", Canvas.transformToMapX(x), Canvas.transformToMapY(y),
-                    Canvas.transformToMapX(x + captionWidth), Canvas.transformToMapY(y + height), link);
+            imageMap += String.format("<area shape=\"rect\" coords=\"%d,%d,%d,%d\" href=\"%s\" >\n", AbstractCanvas.transformToMapX(x), AbstractCanvas.transformToMapY(y),
+                    AbstractCanvas.transformToMapX(x + captionWidth), AbstractCanvas.transformToMapY(y + height), link);
         }
     }
 

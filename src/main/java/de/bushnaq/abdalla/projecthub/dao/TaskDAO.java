@@ -100,8 +100,4 @@ public class TaskDAO {
     @JsonDeserialize(using = DurationDeserializer.class)
     private Duration work;
 
-    public boolean isMilestone() {
-        return false;
-    }
-
 }

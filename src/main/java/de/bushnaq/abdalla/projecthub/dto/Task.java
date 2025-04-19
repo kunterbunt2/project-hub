@@ -103,11 +103,6 @@ public class Task {
     public void initialize() {
     }
 
-//    @JsonIgnore
-//    public boolean isMilestone() {
-//        return work == null || work.isZero();
-//    }
-
     public void removeChildTask(Task childTask) {
         childTasks.remove(childTask);
         childTask.setParentTask(null);

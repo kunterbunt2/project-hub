@@ -344,9 +344,11 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         task.setName(name);
         task.setStart(start);
         if (work != null) {
-
             task.setWork(work);
         }
+//        if (work == null || work.equals(Duration.ZERO)) {
+//            task.setFinish(start);
+//        }
         if (taskMode != null) {
             task.setTaskMode(taskMode);
         }

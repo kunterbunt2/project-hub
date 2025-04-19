@@ -40,7 +40,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 
-public abstract class Canvas extends ReportLink {
+public abstract class AbstractCanvas extends ReportLink {
     private static final float              fine_LINE_STROKE_WIDTH = 1f;
     private              int                borderWidth            = 1;
     private              int                chartHeight;
@@ -52,7 +52,7 @@ public abstract class Canvas extends ReportLink {
     private final        Logger             logger                 = LoggerFactory.getLogger(this.getClass());
     protected            SVGGraphics2D      svgGenerator;
 
-    public Canvas(String column, String imageName, String mapName, String link/*, int chartWidth, int chartHeight*/, String cssClass, GraphicsTheme graphicsTheme)
+    public AbstractCanvas(String column, String imageName, String mapName, String link/*, int chartWidth, int chartHeight*/, String cssClass, GraphicsTheme graphicsTheme)
             throws IOException {
         super(column, generateCellText(cssClass, mapName, imageName), link);
         this.imageName = imageName;

@@ -32,7 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class GanttTest extends AbstractGanttTestUtil {
 
-    @DisplayName("dependency between 2 tasks")
+    @DisplayName("01-dependency between two tasks")
     @Test
     public void gantt_01(TestInfo testInfo) throws Exception {
         addRandomUser(0, 0.3f);
@@ -46,7 +46,7 @@ public class GanttTest extends AbstractGanttTestUtil {
         generateGanttChart(testInfo);
     }
 
-    @DisplayName("dependency between 2 parent tasks")
+    @DisplayName("02-dependency between two parent tasks")
     @Test
     public void gantt_02(TestInfo testInfo) throws Exception {
         addRandomUser(2, 0.5f);
@@ -65,7 +65,7 @@ public class GanttTest extends AbstractGanttTestUtil {
         generateGanttChart(testInfo);
     }
 
-    @DisplayName("2 tasks with different resources and no dependency")
+    @DisplayName("03-two tasks with different resources and no dependency")
     @Test
     public void gantt_03(TestInfo testInfo) throws Exception {
         addRandomUser(0, 0.5f);

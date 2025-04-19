@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 
-public class GanttChart extends Chart {
+public class GanttChart extends AbstractChart {
 
     public GanttChart(Context context, String projectRequestKey, String relateCssPath, String column, String sprintName, List<Throwable> exception,
                       LocalDateTime now, boolean completed, Sprint sprint/*, int chartWidth, int chartHeight*/, String cssClass,

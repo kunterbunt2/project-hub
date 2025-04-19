@@ -17,7 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.report.dao;
 
-import de.bushnaq.abdalla.projecthub.report.Canvas;
+import de.bushnaq.abdalla.projecthub.report.AbstractCanvas;
 import de.bushnaq.abdalla.projecthub.report.renderer.AbstractRenderer;
 import de.bushnaq.abdalla.util.Util;
 import de.bushnaq.abdalla.util.date.DateUtil;
@@ -268,9 +268,9 @@ public class CalendarXAxses {
                 String lable = DateUtil.createDateString(time, imageMapSdf);
                 imageMap += "<area alt=\"<font face=arial>";
                 imageMap += String.format("<b>%s</b> = %s<br>%s.<br>", text, m.name, lable);
-                imageMap += String.format("\" shape=\"rect\" coords=\"%d,%d,%d,%d\"", Canvas.transformToMapX(centerX - milestone.width / 2),
-                        Canvas.transformToMapY(centerY), Canvas.transformToMapX(centerX + milestone.width / 2),
-                        Canvas.transformToMapY(centerY + milestone.height - 1));
+                imageMap += String.format("\" shape=\"rect\" coords=\"%d,%d,%d,%d\"", AbstractCanvas.transformToMapX(centerX - milestone.width / 2),
+                        AbstractCanvas.transformToMapY(centerY), AbstractCanvas.transformToMapX(centerX + milestone.width / 2),
+                        AbstractCanvas.transformToMapY(centerY + milestone.height - 1));
                 imageMap += " >\n";
             }
         }
