@@ -137,45 +137,52 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         } else {
             graphics2D.setColor(graphicsTheme.ganttTaskBorderColor);
         }
-        User user = task.getAssignedUser();
+        ProjectCalendar pc;
+        User            user = task.getAssignedUser();
         if (user != null && user.getCalendar() != null) {
-            ProjectCalendar pc   = user.getCalendar();
-            int             days = (int) Duration.between(task.getStart().truncatedTo(ChronoUnit.DAYS), task.getFinish().truncatedTo(ChronoUnit.DAYS)).toDays();
-            for (int day = 0; day <= days; day++) {
-                LocalDateTime currentDay = task.getStart().truncatedTo(ChronoUnit.DAYS).plusDays(day);
-                if (pc.isWorkingDate(currentDay.toLocalDate())) {
-                    if (day == 0) {
-                        //is this the left end?
-                        int xStart  = calculateX(task.getStart(), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
-                        int xFinish = calculateX(currentDay.withHour(8).plusSeconds(SECONDS_PER_DAY), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
-                        graphics2D.fillRect(xStart, y - getTaskHeight() / 2 + TASK_BODY_BORDER, xFinish - xStart, 1);//upper -
-                        graphics2D.fillRect(xStart, y + getTaskHeight() / 2 - TASK_BODY_BORDER - 1, xFinish - xStart, 1);//lower -
-                        graphics2D.fillRect(xStart, y - getTaskHeight() / 2 + TASK_BODY_BORDER + 1, 1, getTaskHeight() - TASK_BODY_BORDER * 2 - 2);//start |
-                    } else if (day == days) {
-                        //or is this the right end?
-                        int xStart  = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
-                        int xFinish = calculateX(task.getFinish(), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
-                        graphics2D.fillRect(xStart, y - getTaskHeight() / 2 + TASK_BODY_BORDER, xFinish - xStart + 1, 1);//upper -
-                        graphics2D.fillRect(xStart, y + getTaskHeight() / 2 - TASK_BODY_BORDER - 1, xFinish - xStart + 1, 1);//lower -
-                        graphics2D.fillRect(xFinish, y - getTaskHeight() / 2 + TASK_BODY_BORDER + 1, 1, getTaskHeight() - TASK_BODY_BORDER * 2 - 2);
+            pc = user.getCalendar();
+        } else {
+            pc = task.getEffectiveCalendar();
+        }
+        int days = (int) Duration.between(task.getStart().truncatedTo(ChronoUnit.DAYS), task.getFinish().truncatedTo(ChronoUnit.DAYS)).toDays();
+        for (int day = 0; day <= days; day++) {
+            LocalDateTime currentDay = task.getStart().truncatedTo(ChronoUnit.DAYS).plusDays(day);
+            if (pc.isWorkingDate(currentDay.toLocalDate())) {
+                if (days == 0) {
+                    //this is the left and right end
+                    graphics2D.fillRect(x1, y - getTaskHeight() / 2 + TASK_BODY_BORDER, x2 - x1 + 1, 1);//upper -
+                    graphics2D.fillRect(x1, y + getTaskHeight() / 2 - TASK_BODY_BORDER - 1, x2 - x1 + 1, 1);//lower -
+                    graphics2D.fillRect(x1, y - getTaskHeight() / 2 + TASK_BODY_BORDER + 1, 1, getTaskHeight() - TASK_BODY_BORDER * 2 - 2);//start |
+                    graphics2D.fillRect(x2, y - getTaskHeight() / 2 + TASK_BODY_BORDER + 1, 1, getTaskHeight() - TASK_BODY_BORDER * 2 - 2);//end |
+                } else if (day == 0) {
+                    //this is the left end
+                    int xFinish = calculateX(currentDay.withHour(8).plusSeconds(SECONDS_PER_DAY), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                    graphics2D.fillRect(x1, y - getTaskHeight() / 2 + TASK_BODY_BORDER, xFinish - x1, 1);//upper -
+                    graphics2D.fillRect(x1, y + getTaskHeight() / 2 - TASK_BODY_BORDER - 1, xFinish - x1, 1);//lower -
+                    graphics2D.fillRect(x1, y - getTaskHeight() / 2 + TASK_BODY_BORDER + 1, 1, getTaskHeight() - TASK_BODY_BORDER * 2 - 2);//start |
+                } else if (day == days) {
+                    //this is the right end
+                    int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                    graphics2D.fillRect(xStart, y - getTaskHeight() / 2 + TASK_BODY_BORDER, x2 - xStart + 1, 1);//upper -
+                    graphics2D.fillRect(xStart, y + getTaskHeight() / 2 - TASK_BODY_BORDER - 1, x2 - xStart + 1, 1);//lower -
+                    graphics2D.fillRect(x2, y - getTaskHeight() / 2 + TASK_BODY_BORDER + 1, 1, getTaskHeight() - TASK_BODY_BORDER * 2 - 2);//end |
 
-                    } else {
-                        int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
-                        graphics2D.fillRect(xStart, y - getTaskHeight() / 2 + TASK_BODY_BORDER, calendarXAxses.dayOfWeek.getWidth(), 1);
-                        graphics2D.fillRect(xStart, y + getTaskHeight() / 2 - TASK_BODY_BORDER - 1, calendarXAxses.dayOfWeek.getWidth(), 1);
-                    }
                 } else {
-                    for (int i = 0; i < calendarXAxses.dayOfWeek.getWidth() - 1; i++) {
-                        int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
-                        int x      = i + xStart;
-                        if (x % 4 == 0) {
-                            graphics2D.fillRect(x, y - getTaskHeight() / 2 + TASK_BODY_BORDER, 2, 1);
-                            graphics2D.fillRect(x, y + getTaskHeight() / 2 - TASK_BODY_BORDER - 1, 2, 1);
-                        }
+                    //this is the middle
+                    int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                    graphics2D.fillRect(xStart, y - getTaskHeight() / 2 + TASK_BODY_BORDER, calendarXAxses.dayOfWeek.getWidth(), 1);
+                    graphics2D.fillRect(xStart, y + getTaskHeight() / 2 - TASK_BODY_BORDER - 1, calendarXAxses.dayOfWeek.getWidth(), 1);
+                }
+            } else {
+                for (int i = 0; i < calendarXAxses.dayOfWeek.getWidth() - 1; i++) {
+                    int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                    int x      = i + xStart;
+                    if (x % 4 == 0) {
+                        graphics2D.fillRect(x, y - getTaskHeight() / 2 + TASK_BODY_BORDER, 2, 1);
+                        graphics2D.fillRect(x, y + getTaskHeight() / 2 - TASK_BODY_BORDER - 1, 2, 1);
                     }
                 }
             }
-
         }
     }
 
@@ -394,20 +401,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         if (marker == null) {
             drawTick(task.getStart(), x1, y);
             drawTick(task.getFinish(), x2, y);
-            int y1 = y + TASK_BODY_BORDER;
-            //rounded corners
-//            graphics2D.setColor(fillColor);
-//            int radius = 10;
-//            int y1     = y + 6;
-//            graphics2D.setStroke(new BasicStroke(2.0f));
-//            graphics2D.drawLine(x1 + radius, y1 - getTaskHeight() / 2, x2 - radius, y1 - getTaskHeight() / 2);//upper -
-//
-//            graphics2D.drawArc(x1, y1 - getTaskHeight() / 2, radius * 2, radius * 2, 180, -90);//left corner
-//            graphics2D.drawLine(x1, y1 - getTaskHeight() / 2 + radius, x1, y1);//left |
-//
-//            graphics2D.drawArc(x2 - radius * 2, y1 - getTaskHeight() / 2, radius * 2, radius * 2, 90, -90);//right corner
-//            graphics2D.drawLine(x2, y1 - getTaskHeight() / 2 + radius, x2, y1);//right |
-
+            int y1        = y + TASK_BODY_BORDER;
             int thickness = 2;
             graphics2D.fillRect(x1, y1 - getTaskHeight() / 2, x2 - x1 + 1, thickness);//upper ---
             graphics2D.fillRect(x1, y1 - getTaskHeight() / 2 + thickness, thickness, getTaskHeight() - TASK_BODY_BORDER * 2 - thickness);//left |
@@ -647,40 +641,41 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                 //sometimes tasks are so small, that we cannot draw them.
                 drawTick(task.getStart(), x1, y);
                 drawTick(task.getFinish(), x2, y);
-
-                User user = task.getAssignedUser();
+                ProjectCalendar pc;
+                User            user = task.getAssignedUser();
                 if (user != null && user.getCalendar() != null) {
-                    int             days = (int) Duration.between(task.getStart().truncatedTo(ChronoUnit.DAYS), task.getFinish().truncatedTo(ChronoUnit.DAYS)).toDays();
-                    ProjectCalendar pc   = user.getCalendar();
-                    for (int day = 0; day <= days; day++) {
-                        LocalDateTime currentDay = task.getStart().truncatedTo(ChronoUnit.DAYS).plusDays(day);
-                        if (pc.isWorkingDate(currentDay.toLocalDate())) {
-                            graphics2D.setColor(fillColor);
-                            if (day == 0) {
-                                //is this the left end?
-                                int   xStart  = calculateX(task.getStart(), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
-                                int   xFinish = calculateX(currentDay.withHour(8).plusSeconds(SECONDS_PER_DAY), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
-                                Shape s       = new RectangleWithToolTip(xStart, y1 + 1, xFinish - xStart, h, toolTip);
-                                graphics2D.fill(s);
-                            } else if (day == days) {
-                                //or is this the right end?
-                                int   xStart  = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
-                                int   xFinish = calculateX(task.getFinish(), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
-                                Shape s       = new RectangleWithToolTip(xStart, y1 + 1, x2 - xStart + 1, h, toolTip);
-                                graphics2D.fill(s);
-
-                            } else {
-                                int   xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
-                                Shape s      = new RectangleWithToolTip(xStart, y1 + 1, calendarXAxses.dayOfWeek.getWidth(), h, toolTip);
-                                graphics2D.fill(s);
-                            }
+                    pc = user.getCalendar();
+                } else {
+                    pc = task.getEffectiveCalendar();
+                }
+                int days = (int) Duration.between(task.getStart().truncatedTo(ChronoUnit.DAYS), task.getFinish().truncatedTo(ChronoUnit.DAYS)).toDays();
+                for (int day = 0; day <= days; day++) {
+                    LocalDateTime currentDay = task.getStart().truncatedTo(ChronoUnit.DAYS).plusDays(day);
+                    Shape         s;
+                    if (pc.isWorkingDate(currentDay.toLocalDate())) {
+                        graphics2D.setColor(fillColor);
+                        if (days == 0) {
+                            //this is the left and right end
+                            s = new RectangleWithToolTip(x1, y1 + 1, x2 - x1, h, toolTip);
+                        } else if (day == 0) {
+                            //this is the left end
+                            int xFinish = calculateX(currentDay.withHour(8).plusSeconds(SECONDS_PER_DAY), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                            s = new RectangleWithToolTip(x1, y1 + 1, xFinish - x1, h, toolTip);
+                        } else if (day == days) {
+                            //this is the right end
+                            int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                            s = new RectangleWithToolTip(xStart, y1 + 1, x2 - xStart + 1, h, toolTip);
                         } else {
-                            graphics2D.setColor(new Color(fillColor.getRed(), fillColor.getGreen(), fillColor.getBlue(), 64));//very trabsparent
-                            int   xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
-                            Shape s      = new RectangleWithToolTip(xStart, y1 + 1, calendarXAxses.dayOfWeek.getWidth(), h, toolTip);
-                            graphics2D.fill(s);
+                            //this is the middle
+                            int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                            s = new RectangleWithToolTip(xStart, y1 + 1, calendarXAxses.dayOfWeek.getWidth(), h, toolTip);
                         }
+                    } else {
+                        graphics2D.setColor(new Color(fillColor.getRed(), fillColor.getGreen(), fillColor.getBlue(), 64));//very trabsparent
+                        int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                        s = new RectangleWithToolTip(xStart, y1 + 1, calendarXAxses.dayOfWeek.getWidth(), h, toolTip);
                     }
+                    graphics2D.fill(s);
                 }
             }
 

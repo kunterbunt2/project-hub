@@ -51,12 +51,12 @@ minimalistic project effort estimation and progress tracking and release date in
 
 # Issues
 
-1. tasks without resource assignment have no filling color. e.g. gantt11-rcp.mpp
+1. task ticks text overlaps if tasks are very short
+2. task starting and ending on the same day are not shown correctly. e.g. gantt01-rcp.mpp
 2. gantt calendar too light.
 3. none working days are too dark.
 4. gantt calendar should be using sprint calendar.
-5. sometimes tasks are not drawn at all. e.g. gantt11-rcp.mpp
-6. manual scheduled task start date/time text overlays the username.
+5. manual scheduled task start date/time text overlays the username.
 
 # License
 
