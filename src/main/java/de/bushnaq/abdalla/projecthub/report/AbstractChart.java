@@ -45,18 +45,6 @@ public abstract class AbstractChart extends AbstractCanvas {
     }
 
     @Override
-    protected void createMap() {
-        text += String.format("<map name=\"%s\">\n", mapName);
-        text += captionElement.getImageMap();
-        for (AbstractRenderer worker : getRenderers()) {
-            if (!worker.getImageMap().isEmpty()) {
-                text += worker.getImageMap();
-            }
-        }
-        text += "\n</map>";
-    }
-
-    @Override
     protected void drawBackground() {
         graphics2D.setColor(graphicsTheme.chartBackgroundColor);
         graphics2D.fillRect(0, captionElement.height, getChartWidth() - 1, getChartHeight() - captionElement.height - 1);

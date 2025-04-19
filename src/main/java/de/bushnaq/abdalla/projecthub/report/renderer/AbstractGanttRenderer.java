@@ -192,28 +192,15 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         Color    fillColor = graphicsTheme.ganttIdColor;
         Color    textColor = graphicsTheme.ganttIdTextColor;
         MetaData md        = TaskUtil.getTaskMetaData(task);
-        // HashMap<Task, MetaData> mdMap = (HashMap<Task, MetaData>)
-        // task.getParentFile().getProjectProperties().getCustomProperties().get(MetaData.METADATA);
-        // MetaData md = mdMap.get(task);
-        if (md != null) {
-            graphics2D.setFont(idErrorFont);
-            fillColor = graphicsTheme.ganttIdErrorColor;
-            textColor = graphicsTheme.ganttIdTextErrorColor;
-            imageMap += String.format("<area alt=\"<font face=arial>%s\" shape=\"rect\" coords=\"%d,%d,%d,%d\" >\n", md.getError(0), AbstractCanvas.transformToMapX(x1 + 1), AbstractCanvas.transformToMapY(y - getTaskHeight() / 2), AbstractCanvas.transformToMapX(x2 - 1), AbstractCanvas.transformToMapY(y + getTaskHeight() / 2));
-        } else {
-            graphics2D.setFont(idFont);
-            fillColor = graphicsTheme.ganttIdColor;
-            textColor = graphicsTheme.ganttIdTextColor;
-        }
+        graphics2D.setFont(idFont);
+        fillColor = graphicsTheme.ganttIdColor;
+        textColor = graphicsTheme.ganttIdTextColor;
         graphics2D.setColor(fillColor);
         graphics2D.fillRect(x1 + 1, y - getTaskHeight() / 2, x2 - x1 - 1, getTaskHeight());
-        // graphics2D.drawRect(x1 + 1, y - getTaskHeight() / 2, x2 - x1 - 2,
-        // getTaskHeight() - 1);
         {
             graphics2D.setColor(textColor);
-            FontMetrics fm = graphics2D.getFontMetrics();
-//            int         maxAscent = fm.getMaxAscent();
-            int yShift = fm.getAscent() - fm.getHeight() / 2;
+            FontMetrics fm     = graphics2D.getFontMetrics();
+            int         yShift = fm.getAscent() - fm.getHeight() / 2;
 
             if (md != null) {
                 graphics2D.drawString(String.format("%02d", task.getId()), x1 + 4, y + yShift, md.getError(0));
@@ -399,8 +386,8 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
     private void drawStoryBody(Task task, int x1, int x2, int y, Color fillColor, String marker, String toolTip) {
         Color originalColor = fillColor;
         if (marker == null) {
-            drawTick(task.getStart(), x1, y);
-            drawTick(task.getFinish(), x2, y);
+            drawTick(task.getStart(), x1, y, TextAlignment.left);
+            drawTick(task.getFinish(), x2, y, TextAlignment.right);
             int y1        = y + TASK_BODY_BORDER;
             int thickness = 2;
             graphics2D.fillRect(x1, y1 - getTaskHeight() / 2, x2 - x1 + 1, thickness);//upper ---
@@ -484,13 +471,9 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         String taskName = task.getName();
         if (!task.isMilestone()) {
             if (task.getAssignedUser() != null) {
-                resourceName = task.getAssignedUser().getName();
-//                String primaryResourceName = resourceName;
+                resourceName        = task.getAssignedUser().getName();
                 units               = task.getAssignedUser().getAvailabilities().getLast().getAvailability() * 100;
                 resourceUtilization = String.format("%.0f%%", units);
-//                resourceName += resourceUtilization;
-//                units = task.getAssignedUser().getAvailabilities().getLast().getAvailability() * 100;
-//                taskName += String.format(" (%s %.0f%%)", primaryResourceName, units);
             }
         }
         if (task.isMilestone() && task.getChildTasks().size() == 0) {
@@ -509,11 +492,11 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                 fillColor = authors.get(resourceName).color;
             }
         }
-        if (task.isMilestone() && task.getChildTasks().size() == 0) {
+        if (task.isMilestone() && task.getChildTasks().isEmpty()) {
             // milestone
             drawMilestoneTask(task, x1, y, labelInside, fillColor, textColor, taskName);
         } else {
-            if (task.getChildTasks().size() != 0) {
+            if (!task.getChildTasks().isEmpty()) {
                 // story
                 String tooltip = generateToolTip(task, x1, x2, y, marker, resourceName, resourceUtilization);
                 drawStoryBody(task, x1, x2, y, fillColor, marker, tooltip);
@@ -526,7 +509,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                 } else {
                     graphics2D.drawString(taskName, x2 + 2 + 8, y + yShift);
                 }
-            } else if (!task.isMilestone()) {
+            } else {
                 //task
                 String tooltip = generateToolTip(task, x1, x2, y, marker, resourceName, resourceUtilization);
                 if (task.getProgress() == null) {
@@ -563,12 +546,12 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                             blendedColor = ColorUtil.calculateColorBlending(fillColor, blendedColor);// we are drawing
                             // two times
                         }
-                        Color heighestContrast = ColorUtil.heighestContrast(blendedColor);
-                        graphics2D.setColor(heighestContrast);
+                        Color highestContrast = ColorUtil.heighestContrast(blendedColor);
+                        graphics2D.setColor(highestContrast);
                         graphics2D.setFont(taskProgressFont);
                         String text  = String.format("%2.0f%%", task.getProgress().doubleValue() * 100);
                         int    width = graphics2D.getFontMetrics().stringWidth(text);
-                        // will the progess text fit into the task?
+                        // will the process text fit into the task?
                         if (width < x2 - x1) {
                             FontMetrics fm     = graphics2D.getFontMetrics();
                             int         ascent = fm.getAscent();
@@ -577,7 +560,6 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                             graphics2D.drawString(text, x1 + (x2 - x1) / 2 + 1 - width / 2, y + (ascent - 2) / 2);
                             graphics2D.setClip(clip);
                         }
-
                     }
 
                     {
@@ -607,27 +589,10 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                             String location      = task.getAssignedUser().getLocations().getLast().getCountry() + "/" + task.getAssignedUser().getLocations().getLast().getState();
                             int    locationWidth = fm2.stringWidth(location);
                             int    locationX     = x1 - locationWidth - RESOURCE_NAME_TO_TASK_GAP;
-//                            graphics2D.setColor(Color.orange);
-//                            graphics2D.fillRect(locationX, y - getTaskHeight() / 2 + 1, locationWidth, 5);
-//                            graphics2D.setColor(Color.black);
                             graphics2D.drawString(location, locationX, infoY);
                         }
                     }
                 }
-            }
-            {
-                // image map
-                //                String start = DateUtil.createDateString(task.getStart(), dateUtil.dtfymdhms);
-                //                String finish = DateUtil.createDateString(task.getFinish(), dateUtil.dtfymdhms);
-                //                String progress = null;
-                //                if (task.getPercentageComplete() != null) {
-                //                    progress = String.format("%2.0f%%", task.getPercentageComplete().doubleValue() * 100);
-                //
-                //                }
-                //                String duration = MpxjUtil.createDurationString(task.getDuration(), true, true, true);
-                imageMap += "<area alt=\"<font face=arial>";
-                imageMap += generateToolTip(task, x1, x2, y, marker, resourceName, resourceUtilization);
-                imageMap += " >\n";
             }
         }
     }
@@ -635,12 +600,12 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
     private void drawTaskBody(Task task, int x1, int x2, int y, Color fillColor, boolean alien, double progress, String toolTip) {
         Color originalColor = fillColor;
         if (!alien) {
-            int y1 = y - getTaskHeight() / 2 + TASK_BODY_BORDER - 1;
+            int y1 = y - getTaskHeight() / 2 + TASK_BODY_BORDER;
             int h  = getTaskHeight() - TASK_BODY_BORDER * 2;
             if (x2 - x1 - 1 - 1 > 0) {
                 //sometimes tasks are so small, that we cannot draw them.
-                drawTick(task.getStart(), x1, y);
-                drawTick(task.getFinish(), x2, y);
+                drawTick(task.getStart(), x1, y, TextAlignment.left);
+                drawTick(task.getFinish(), x2, y, TextAlignment.right);
                 ProjectCalendar pc;
                 User            user = task.getAssignedUser();
                 if (user != null && user.getCalendar() != null) {
@@ -656,24 +621,24 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                         graphics2D.setColor(fillColor);
                         if (days == 0) {
                             //this is the left and right end
-                            s = new RectangleWithToolTip(x1, y1 + 1, x2 - x1, h, toolTip);
+                            s = new RectangleWithToolTip(x1, y1, x2 - x1, h, toolTip);
                         } else if (day == 0) {
                             //this is the left end
                             int xFinish = calculateX(currentDay.withHour(8).plusSeconds(SECONDS_PER_DAY), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
-                            s = new RectangleWithToolTip(x1, y1 + 1, xFinish - x1, h, toolTip);
+                            s = new RectangleWithToolTip(x1, y1, xFinish - x1, h, toolTip);
                         } else if (day == days) {
                             //this is the right end
                             int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
-                            s = new RectangleWithToolTip(xStart, y1 + 1, x2 - xStart + 1, h, toolTip);
+                            s = new RectangleWithToolTip(xStart, y1, x2 - xStart + 1, h, toolTip);
                         } else {
                             //this is the middle
                             int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
-                            s = new RectangleWithToolTip(xStart, y1 + 1, calendarXAxses.dayOfWeek.getWidth(), h, toolTip);
+                            s = new RectangleWithToolTip(xStart, y1, calendarXAxses.dayOfWeek.getWidth(), h, toolTip);
                         }
                     } else {
                         graphics2D.setColor(new Color(fillColor.getRed(), fillColor.getGreen(), fillColor.getBlue(), 64));//very trabsparent
                         int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
-                        s = new RectangleWithToolTip(xStart, y1 + 1, calendarXAxses.dayOfWeek.getWidth(), h, toolTip);
+                        s = new RectangleWithToolTip(xStart, y1, calendarXAxses.dayOfWeek.getWidth(), h, toolTip);
                     }
                     graphics2D.fill(s);
                 }
@@ -709,7 +674,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         }
     }
 
-    private void drawTick(LocalDateTime time, int x, int y) {
+    private void drawTick(LocalDateTime time, int x, int y, TextAlignment alignment) {
         DateTimeFormatter formatter  = DateTimeFormatter.ofPattern("HH:mm");
         String            timeString = time.format(formatter);
         graphics2D.setColor(graphicsTheme.ganttTaskTickLineColor);
@@ -718,7 +683,16 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         graphics2D.setColor(graphicsTheme.ganttTaskTickTextColor);
         FontMetrics fm    = graphics2D.getFontMetrics();
         int         width = fm.stringWidth(timeString);
-        graphics2D.drawString(timeString, x - width / 2, y - getTaskHeight() / 2 + TASK_BODY_BORDER - RESOURCE_NAME_TO_TASK_GAP);
+        int         testX;
+        switch (alignment) {
+            case left:
+                testX = x - width;
+                break;
+            default:
+                testX = x;
+                break;
+        }
+        graphics2D.drawString(timeString, testX, y - getTaskHeight() / 2 + TASK_BODY_BORDER - 2);
     }
 
     private String generateToolTip(Task task, int x1, int x2, int y, String marker, String resourceName, String resourceUtelization) throws Exception {

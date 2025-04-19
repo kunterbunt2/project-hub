@@ -51,12 +51,10 @@ minimalistic project effort estimation and progress tracking and release date in
 
 # Issues
 
-1. task ticks text overlaps if tasks are very short
-2. task starting and ending on the same day are not shown correctly. e.g. gantt01-rcp.mpp
+1. manual scheduled task start date/time text overlays the username. e.g. gantt12-rcp.mpp
 2. gantt calendar too light.
 3. none working days are too dark.
 4. gantt calendar should be using sprint calendar.
-5. manual scheduled task start date/time text overlays the username.
 
 # License
 

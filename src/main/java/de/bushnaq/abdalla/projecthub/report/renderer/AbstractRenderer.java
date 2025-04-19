@@ -51,7 +51,6 @@ public abstract class AbstractRenderer {
     protected              int                   firstDayX                  = 0;
     public                 ExtendedGraphics2D    graphics2D;
     public                 BurnDownGraphicsTheme graphicsTheme;
-    protected              String                imageMap                   = "";
     protected final        Logger                logger                     = LoggerFactory.getLogger(this.getClass());
     public                 Milestones            milestones;
 
@@ -291,15 +290,11 @@ public abstract class AbstractRenderer {
     }
 
     protected void drawMilestones() {
-        imageMap += calendarXAxses.drawMilestones();
+        calendarXAxses.drawMilestones();
     }
 
     public int getDayWidth() {
         return calendarXAxses.dayOfWeek.getWidth();
-    }
-
-    public String getImageMap() {
-        return imageMap;
     }
 
     protected int getTaskHeight() {
