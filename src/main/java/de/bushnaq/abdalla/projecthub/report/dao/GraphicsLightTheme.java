@@ -71,13 +71,13 @@ public class GraphicsLightTheme extends BurnDownGraphicsTheme {
         chartBackgroundColor = Color.white;
         chartBorderColor     = new Color(0xaaaaaa);//new Color(0x2c, 0x7b, 0xf4);
 
-        dayOfMonthTextColor       = basicTextColor;
-        dayOfMonthBackgroundColor = basicBackgroundColor;
-        dayOfMonthBorderColor     = ganttGridColor;
+        dayOfMonthTextColor        = basicTextColor;
+        dayOfMonthBackgroundColor  = basicBackgroundColor;
+        ganttDayOfMonthBorderColor = ganttGridColor;
 
         dayTextColor          = Color.BLACK;
         dayBackgroundColor    = Color.WHITE;
-        dayBorderColor        = ganttGridColor;
+        ganttDayBorderColor   = ganttGridColor;
         dayDiagramBorderColor = new Color(0xf6f8ff);
 
         delayClosedEventColor = new Color(255, 184, 184);
@@ -87,28 +87,28 @@ public class GraphicsLightTheme extends BurnDownGraphicsTheme {
         milestoneFlagColor = chartBackgroundColor;
         milestoneTextColor = basicTextColor;
 
-        monthTextColor   = basicTextColor;
-        monthBorderColor = Color.WHITE;
+        ganntMonthTextColor   = basicTextColor;
+        ganttMonthBorderColor = Color.WHITE;
 
         nowEventColor        = Color.gray;
         pastEventColor       = Color.lightGray;
         ticksBackgroundColor = chartBackgroundColor;
 
-        mondayColor    = Color.WHITE;
-        tuesdayColor   = Color.WHITE;
-        wednesdayColor = Color.WHITE;
-        thursdayColor  = Color.WHITE;
-        fridayColor    = Color.WHITE;
-        saturdayColor  = new Color(0xd7d7d7);//new Color(0xd9, 0xe6, 0xff, 0x88);
-        sundayColor    = new Color(0xd7d7d7);//new Color(0xff, 0xd9, 0xd9, 0x88);
+        ganttMondayColor = Color.WHITE;
+        tuesdayColor     = Color.WHITE;
+        wednesdayColor   = Color.WHITE;
+        thursdayColor    = Color.WHITE;
+        fridayColor      = Color.WHITE;
+        saturdayColor    = new Color(0xd7d7d7);//new Color(0xd9, 0xe6, 0xff, 0x88);
+        sundayColor      = new Color(0xd7d7d7);//new Color(0xff, 0xd9, 0xd9, 0x88);
 
-        mondayStripeColor    = Color.WHITE;
-        tuesdayStripeColor   = Color.WHITE;
-        wednesdayStripeColor = Color.WHITE;
-        thursdayStripeColor  = Color.WHITE;
-        fridayStripeColor    = Color.WHITE;
-        saturdayStripeColor  = new Color(0xfafafa);//new Color(0xd9, 0xe6, 0xff, 0x88);
-        sundayStripeColor    = new Color(0xf7f7f7);//new Color(0xff, 0xd9, 0xd9, 0x88);
+        mondayStripeColor      = Color.WHITE;
+        tuesdayStripeColor     = Color.WHITE;
+        wednesdayStripeColor   = Color.WHITE;
+        thursdayStripeColor    = Color.WHITE;
+        fridayStripeColor      = Color.WHITE;
+        saturdayStripeColor    = new Color(0xfafafa);//new Color(0xd9, 0xe6, 0xff, 0x88);
+        ganttSundayStripeColor = new Color(0xf7f7f7);//new Color(0xff, 0xd9, 0xd9, 0x88);
 
 //        calendarYearBackgroundColor = basicBackgroundColor;
 //        calendarYearTextColor       = basicTextColor;
@@ -116,7 +116,7 @@ public class GraphicsLightTheme extends BurnDownGraphicsTheme {
 
         weekBackgroundColor = basicBackgroundColor;
         weekTextColor       = basicTextColor;
-        weekBoderColor      = basicBorderColor;
+        ganttWeekBoderColor = basicBorderColor;
 
         ganttRelationColor           = new Color(0x34, 0x66, 0xed, 0x7f);
         ganttCriticalRelationColor   = new Color(0xff, 0, 0, 0x7f);
@@ -162,11 +162,11 @@ public class GraphicsLightTheme extends BurnDownGraphicsTheme {
         inTimeColor              = COLOR_DARK_GREEN;
         watermarkColor           = new Color(0x10, 0x10, 0x10, 0x10);
 
-        pastWorkDayRequestColor   = new Color(0x60, 0x00, 0xff, 0x40);
-        pastWeekendRequestColor   = new Color(0x60, 0x60, 0x60, 0x40);
-        futureWorkDayRequestColor = new Color(0x00, 0x60, 0xff, 0x40);
-        futureWeekendRequestColor = new Color(0x60, 0x60, 0x60, 0x40);
-        requestMilestoneColor     = Color.RED/*new Color(0xa7, 0x00, 0x00)*/;
+        pastWorkDayRequestColor    = new Color(0x60, 0x00, 0xff, 0x40);
+        pastWeekendRequestColor    = new Color(0x60, 0x60, 0x60, 0x40);
+        futureWorkDayRequestColor  = new Color(0x00, 0x60, 0xff, 0x40);
+        futureWeekendRequestColor  = new Color(0x60, 0x60, 0x60, 0x40);
+        ganttRequestMilestoneColor = Color.RED/*new Color(0xa7, 0x00, 0x00)*/;
 
         int ma = 0x7f;
         monthColor[0]  = new Color(0x18, 0x7d, 0xc3, ma);

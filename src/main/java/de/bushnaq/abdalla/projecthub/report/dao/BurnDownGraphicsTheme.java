@@ -24,10 +24,10 @@ public class BurnDownGraphicsTheme extends ScheduleGraphicsTheme {
     public              Color   bankHolidayColor;
     public              Color   burnDownBorderColor;
     protected           Color[] burnDownColor    = new Color[MAX_AUTHOR_COLOR];
+    public              Color   ganttRequestMilestoneColor;
     public              Color   graphTextBackgroundColor;
     public              Color   optimaleGuideColor;
     public              Color   plannedGuideColor;
-    public              Color   requestMilestoneColor;
     public              Color   surroundingSquareColor;
     public              Color   tickTextColor;
     public              Color   ticksColor;

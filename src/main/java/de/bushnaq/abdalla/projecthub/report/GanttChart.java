@@ -20,7 +20,7 @@ package de.bushnaq.abdalla.projecthub.report;
 import de.bushnaq.abdalla.projecthub.dao.Context;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
 import de.bushnaq.abdalla.projecthub.report.dao.BurnDownGraphicsTheme;
-import de.bushnaq.abdalla.projecthub.report.renderer.GanttRenderer;
+import de.bushnaq.abdalla.projecthub.report.renderer.gantt.GanttRenderer;
 
 import java.time.LocalDateTime;
 import java.util.List;

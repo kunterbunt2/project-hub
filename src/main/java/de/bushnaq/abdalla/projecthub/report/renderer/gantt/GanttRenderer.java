@@ -15,13 +15,11 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.report.renderer;
+package de.bushnaq.abdalla.projecthub.report.renderer.gantt;
 
 import de.bushnaq.abdalla.projecthub.dao.Context;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
 import de.bushnaq.abdalla.projecthub.dto.Task;
-import de.bushnaq.abdalla.projecthub.dto.User;
-import de.bushnaq.abdalla.projecthub.gantt.GanttUtil;
 import de.bushnaq.abdalla.projecthub.report.dao.*;
 import de.bushnaq.abdalla.svg.util.ExtendedGraphics2D;
 import de.bushnaq.abdalla.util.ErrorException;
@@ -47,6 +45,7 @@ public class GanttRenderer extends AbstractGanttRenderer {
 
     private static final int    GANTT_TASK_POST_SPACE = 50;
     private static final int    GANTT_TASK_PRI_SPACE  = 50;
+    private final static Font   NoneWorkingDayFont    = new Font(Font.SANS_SERIF, Font.BOLD, 24);
     private static final int    ONE_WEEK              = 7;
     private final        Logger logger                = LoggerFactory.getLogger(this.getClass());
     private final        Sprint sprint;
@@ -76,19 +75,19 @@ public class GanttRenderer extends AbstractGanttRenderer {
 
     @Override
     protected int calculateChartHeight() {
-        return calendarXAxses.getHeight() + GANTT_TASK_PRI_SPACE + GanttUtil.calculateNumberOfTasks(sprint) * (getTaskHeight() + 1) + GANTT_TASK_POST_SPACE;
+        return calendarXAxes.getHeight() + GANTT_TASK_PRI_SPACE + GanttUtil.calculateNumberOfTasks(sprint) * (getTaskHeight() + 1) + GANTT_TASK_POST_SPACE;
     }
 
     @Override
     protected int calculateChartWidth() {
         //TODO why are we ignoring postRun days?
-        return calendarXAxses.dayOfWeek.getWidth() * (days + calendarXAxses.getPriRun() /*+ calendarXAxses.getPostRun()*/);
+        return calendarXAxes.dayOfWeek.getWidth() * (days + calendarXAxes.getPriRun() /*+ calendarXAxses.getPostRun()*/);
     }
 
     @Override
     protected void calculateDayWidth() {
         super.calculateDayWidth();
-        calendarXAxses.dayOfWeek.setWidth(20);
+        calendarXAxes.dayOfWeek.setWidth(20);
     }
 
     protected void calculateTaskHeightMap(int yOffset) {
@@ -105,7 +104,7 @@ public class GanttRenderer extends AbstractGanttRenderer {
     public void draw(ExtendedGraphics2D graphics2D, int x, int y) throws Exception {
         this.graphics2D = graphics2D;
         initPosition(x, y);
-        calculateTaskHeightMap(y + calendarXAxses.getHeight());
+        calculateTaskHeightMap(y + calendarXAxes.getHeight());
         drawCalendar();
         drawMilestones();
         drawGanttChart();
@@ -113,41 +112,40 @@ public class GanttRenderer extends AbstractGanttRenderer {
 
     @Override
     public void drawDayBars(LocalDate currentDay) {
-        int gantUniqueId = 0;
+        int ganttUniqueId = 0;
         for (Task task : sprint.getTasks()) {
-            User            user = task.getAssignedUser();
-            ProjectCalendar pc;
-            if (user != null) {
-                pc = user.getCalendar();
-            } else {
-                pc = sprint.getCalendar();
-            }
-
-            Integer lane = taskHeight.get(gantUniqueId * 10000 + task.getId());
-            int     y    = lane + getTaskHeight() / 2;
-            int     x    = calculateDayX(currentDay);
-            int     y1   = y - getTaskHeight() / 2;
-            int     x1   = x - (calendarXAxses.dayOfWeek.getWidth() / 2 - 1);
-
+            ProjectCalendar pc   = task.getEffectiveCalendar();
+            Integer         lane = taskHeight.get(ganttUniqueId * 10000 + task.getId());
+            int             y    = lane + getTaskHeight() / 2;
+            int             x    = calculateDayX(currentDay);
+            int             y1   = y - getTaskHeight() / 2;
+            int             x1   = x - (calendarXAxes.dayOfWeek.getWidth() / 2 - 1);
             {
-                Color color = graphicsTheme.ganttGridColor;
-                graphics2D.setColor(color);
-//                graphics2D.drawRect(x1 - 1, y1 - 1, calendarXAxses.dayOfWeek.getWidth() + 1, getTaskHeight() + 1);
-                graphics2D.fillRect(x1 - 1, y1 - 1, calendarXAxses.dayOfWeek.getWidth(), 1);
-                graphics2D.fillRect(x1 - 1, y1 - 1 + 1, 1, getTaskHeight() + 1 - 1);
-
+                //grid
+                graphics2D.setColor(graphicsTheme.ganttGridColor);
+                graphics2D.fillRect(x1 - 1, y1 - 1, calendarXAxes.dayOfWeek.getWidth(), 1);//top --
+                graphics2D.fillRect(x1 - 1, y1, 1, getTaskHeight());//left |
             }
             {
-                Color color = GraphColorUtil.getDayStripeColor(graphicsTheme, pc, currentDay);
-                graphics2D.setColor(color);
-                Shape s = new Rectangle(x1, y1, calendarXAxses.dayOfWeek.getWidth() - 1, getTaskHeight());
-                graphics2D.fill(s);
+                //background
+                graphics2D.setColor(GraphColorUtil.getGanttDayStripeColor(graphicsTheme, pc, currentDay));
+                Shape  s      = new Rectangle(x1, y1, calendarXAxes.dayOfWeek.getWidth() - 1, getTaskHeight());
+                String letter = GraphColorUtil.getDayLetter(graphicsTheme, pc, currentDay);
+                if (letter != null) {
+                    graphics2D.fill(s);
+                    graphics2D.setColor(Color.white);
+                    graphics2D.setFont(NoneWorkingDayFont);
+                    FontMetrics fm     = graphics2D.getFontMetrics();
+                    int         yShift = fm.getAscent() - fm.getHeight() / 2;
+                    int         xShift = fm.stringWidth(letter) / 2;
+                    graphics2D.drawString(letter, x - xShift, y + yShift);
+                }
             }
         }
     }
 
     protected void drawGanttChart() throws Exception {
-        drawGanttChart(calendarXAxses.getHeight());
+        drawGanttChart(calendarXAxes.getHeight());
         //        drawAuthorLegend();
         //        drawGraphFrame(firstDayX);
     }

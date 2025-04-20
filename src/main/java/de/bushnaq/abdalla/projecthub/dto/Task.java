@@ -92,7 +92,12 @@ public class Task {
 
     @JsonIgnore
     public ProjectCalendar getEffectiveCalendar() {
-        return getSprint().getCalendar();
+        User user = getAssignedUser();
+        if (user != null) {
+            return user.getCalendar();
+        } else {
+            return sprint.getCalendar();
+        }
     }
 
     @JsonIgnore

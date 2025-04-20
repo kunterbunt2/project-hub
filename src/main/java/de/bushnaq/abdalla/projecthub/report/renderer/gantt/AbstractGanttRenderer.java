@@ -15,14 +15,16 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.report.renderer;
+package de.bushnaq.abdalla.projecthub.report.renderer.gantt;
 
 import de.bushnaq.abdalla.projecthub.dao.Context;
-import de.bushnaq.abdalla.projecthub.dto.*;
+import de.bushnaq.abdalla.projecthub.dto.Relation;
+import de.bushnaq.abdalla.projecthub.dto.Task;
+import de.bushnaq.abdalla.projecthub.dto.TaskMode;
 import de.bushnaq.abdalla.projecthub.dto.User;
-import de.bushnaq.abdalla.projecthub.gantt.GanttUtil;
 import de.bushnaq.abdalla.projecthub.report.AbstractCanvas;
 import de.bushnaq.abdalla.projecthub.report.dao.*;
+import de.bushnaq.abdalla.projecthub.report.renderer.AbstractRenderer;
 import de.bushnaq.abdalla.svg.util.ExtendedRectangle;
 import de.bushnaq.abdalla.svg.util.RectangleWithToolTip;
 import de.bushnaq.abdalla.util.ColorUtil;
@@ -30,14 +32,12 @@ import de.bushnaq.abdalla.util.GanttErrorHandler;
 import de.bushnaq.abdalla.util.TaskUtil;
 import de.bushnaq.abdalla.util.date.DateUtil;
 import net.sf.mpxj.ProjectCalendar;
-import net.sf.mpxj.ProjectCalendarException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.io.IOException;
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -61,15 +61,15 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
     public static final    int                  SECONDS_PER_DAY            = 85 * 6 * 60;//seconds between work start and work end, including lunch hour
     private static final   int                  TASK_BODY_BORDER           = 4;
     public static final    int                  TASK_NAME_TO_TASK_GAP      = 5 + 8;
-    private final static   Font                 graphFont                  = new Font("Arial", Font.PLAIN, 12);
-    private final static   Font                 idErrorFont                = new Font("Arial", Font.BOLD, 12);
-    private final static   Font                 idFont                     = new Font("Arial", Font.PLAIN, 12);
-    protected final static Font                 outOfOfficeFont            = new Font("Arial", Font.BOLD, 20);
-    private final static   Font                 storyFont                  = new Font("Arial", Font.BOLD, 12);
-    private final static   Font                 taskInlineFont             = new Font("Arial", Font.PLAIN, 12);
-    private final static   Font                 taskProgressFont           = new Font("Arial", Font.PLAIN, 8);
-    private final static   Font                 taskResourceLocationFont   = new Font("Arial", Font.PLAIN, 8);
-    private final static   Font                 taskTickFont               = new Font("Arial", Font.PLAIN, 5);
+    private final static   Font                 graphFont                  = new Font(Font.SANS_SERIF, Font.PLAIN, 12);
+    private final static   Font                 idErrorFont                = new Font(Font.SANS_SERIF, Font.BOLD, 12);
+    private final static   Font                 idFont                     = new Font(Font.SANS_SERIF, Font.PLAIN, 12);
+    protected final static Font                 outOfOfficeFont            = new Font(Font.SANS_SERIF, Font.BOLD, 20);
+    private final static   Font                 storyFont                  = new Font(Font.SANS_SERIF, Font.BOLD, 12);
+    private final static   Font                 taskInlineFont             = new Font(Font.SANS_SERIF, Font.PLAIN, 12);
+    private final static   Font                 taskProgressFont           = new Font(Font.SANS_SERIF, Font.PLAIN, 8);
+    private final static   Font                 taskResourceLocationFont   = new Font(Font.SANS_SERIF, Font.PLAIN, 8);
+    private final static   Font                 taskTickFont               = new Font(Font.SANS_SERIF, Font.PLAIN, 5);
     protected              AuthorsContribution  authorsContribution        = new AuthorsContribution();// remaining and worked per author
     protected              Context              context;
     private final          DateUtil             dateUtil                   = new DateUtil();
@@ -85,45 +85,45 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         this.numberOfLinesPerTask = numberOfLinesPerTask;
     }
 
-    private int addVacation(ResourceUtilization ru, String resourceName, OffDay pce) {
-        int days = 0;
-//        RecurringData recurring = pce.getRecurring();
-//        if (recurring != null) {
-//            LocalDate[] dates = recurring.getDates();
-//            for (int i = 0; i < dates.length; i++) {
-//                LocalDate exceptionDate = dates[i];
-//                int       dayIndex      = calculateDayIndex(exceptionDate);
+//    private int addVacation(ResourceUtilization ru, String resourceName, OffDay pce) {
+//        int days = 0;
+
+    /// /        RecurringData recurring = pce.getRecurring();
+    /// /        if (recurring != null) {
+    /// /            LocalDate[] dates = recurring.getDates();
+    /// /            for (int i = 0; i < dates.length; i++) {
+    /// /                LocalDate exceptionDate = dates[i];
+    /// /                int       dayIndex      = calculateDayIndex(exceptionDate);
+    /// /                if (dayIndex > -1) {
+    /// /                    ru.addVacation(dayIndex, 1.0);
+    /// /                    days++;
+    /// /                    // logger.trace(String.format("%s is out of office on %s.", resourceName,
+    /// /                    // dateUtil.createDateString(exceptionDate.getTime())));
+    /// /                }
+    /// /            }
+    /// /        } else
+//        {
+//            LocalDate fromDate = pce.getFirstDay();
+//            while (fromDate.isBefore(pce.getLastDay()) || fromDate.isEqual(pce.getLastDay())) {
+//                //                logger.trace(String.format("%s is out of office on %s.", resourceName, dateUtil.createDateString(fromDate.getTime())));
+//                int dayIndex = calculateDayIndex(fromDate);
 //                if (dayIndex > -1) {
 //                    ru.addVacation(dayIndex, 1.0);
 //                    days++;
-//                    // logger.trace(String.format("%s is out of office on %s.", resourceName,
-//                    // dateUtil.createDateString(exceptionDate.getTime())));
 //                }
+//                fromDate = DateUtil.addDay(fromDate, 1);
 //            }
-//        } else
-        {
-            LocalDate fromDate = pce.getFirstDay();
-            while (fromDate.isBefore(pce.getLastDay()) || fromDate.isEqual(pce.getLastDay())) {
-                //                logger.trace(String.format("%s is out of office on %s.", resourceName, dateUtil.createDateString(fromDate.getTime())));
-                int dayIndex = calculateDayIndex(fromDate);
-                if (dayIndex > -1) {
-                    ru.addVacation(dayIndex, 1.0);
-                    days++;
-                }
-                fromDate = DateUtil.addDay(fromDate, 1);
-            }
-        }
-        return days;
-    }
-
+//        }
+//        return days;
+//    }
     private void drawConflictMarker(int y, List<Conflict> conflict) {
         if (conflict != null) {
             // only used in team planner chart
             graphics2D.setColor(Color.red);
             for (Conflict c : conflict) {
                 if (c.originalConflict) {
-                    int c1 = calculateX(c.range.start, c.range.start.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
-                    int c2 = calculateX(c.range.end, c.range.end.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                    int c1 = calculateX(c.range.start, c.range.start.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;
+                    int c2 = calculateX(c.range.end, c.range.end.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;
                     graphics2D.fillRect(c1, y - getTaskHeight() / 2, c2 - c1 - 1, 2);
                     graphics2D.fillRect(c1, y + getTaskHeight() / 2 - 1, c2 - c1 - 1, 2);
                 }
@@ -156,26 +156,26 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                     graphics2D.fillRect(x2, y - getTaskHeight() / 2 + TASK_BODY_BORDER + 1, 1, getTaskHeight() - TASK_BODY_BORDER * 2 - 2);//end |
                 } else if (day == 0) {
                     //this is the left end
-                    int xFinish = calculateX(currentDay.withHour(8).plusSeconds(SECONDS_PER_DAY), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                    int xFinish = calculateX(currentDay.withHour(8).plusSeconds(SECONDS_PER_DAY), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;
                     graphics2D.fillRect(x1, y - getTaskHeight() / 2 + TASK_BODY_BORDER, xFinish - x1, 1);//upper -
                     graphics2D.fillRect(x1, y + getTaskHeight() / 2 - TASK_BODY_BORDER - 1, xFinish - x1, 1);//lower -
                     graphics2D.fillRect(x1, y - getTaskHeight() / 2 + TASK_BODY_BORDER + 1, 1, getTaskHeight() - TASK_BODY_BORDER * 2 - 2);//start |
                 } else if (day == days) {
                     //this is the right end
-                    int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                    int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;
                     graphics2D.fillRect(xStart, y - getTaskHeight() / 2 + TASK_BODY_BORDER, x2 - xStart + 1, 1);//upper -
                     graphics2D.fillRect(xStart, y + getTaskHeight() / 2 - TASK_BODY_BORDER - 1, x2 - xStart + 1, 1);//lower -
                     graphics2D.fillRect(x2, y - getTaskHeight() / 2 + TASK_BODY_BORDER + 1, 1, getTaskHeight() - TASK_BODY_BORDER * 2 - 2);//end |
 
                 } else {
                     //this is the middle
-                    int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
-                    graphics2D.fillRect(xStart, y - getTaskHeight() / 2 + TASK_BODY_BORDER, calendarXAxses.dayOfWeek.getWidth(), 1);
-                    graphics2D.fillRect(xStart, y + getTaskHeight() / 2 - TASK_BODY_BORDER - 1, calendarXAxses.dayOfWeek.getWidth(), 1);
+                    int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;
+                    graphics2D.fillRect(xStart, y - getTaskHeight() / 2 + TASK_BODY_BORDER, calendarXAxes.dayOfWeek.getWidth(), 1);
+                    graphics2D.fillRect(xStart, y + getTaskHeight() / 2 - TASK_BODY_BORDER - 1, calendarXAxes.dayOfWeek.getWidth(), 1);
                 }
             } else {
-                for (int i = 0; i < calendarXAxses.dayOfWeek.getWidth() - 1; i++) {
-                    int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                for (int i = 0; i < calendarXAxes.dayOfWeek.getWidth() - 1; i++) {
+                    int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;
                     int x      = i + xStart;
                     if (x % 4 == 0) {
                         graphics2D.fillRect(x, y - getTaskHeight() / 2 + TASK_BODY_BORDER, 2, 1);
@@ -188,7 +188,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
 
     private void drawId(Task task, int y) {
         int      x1        = firstDayX;
-        int      x2        = x1 + calendarXAxses.dayOfWeek.getWidth();
+        int      x2        = x1 + calendarXAxes.dayOfWeek.getWidth();
         Color    fillColor = graphicsTheme.ganttIdColor;
         Color    textColor = graphicsTheme.ganttIdTextColor;
         MetaData md        = TaskUtil.getTaskMetaData(task);
@@ -214,17 +214,17 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         if (task.getTaskMode() == TaskMode.MANUALLY_SCHEDULED) {
             graphics2D.setColor(Color.red);
             graphics2D.fillRect(x1, y - getTaskHeight() / 2, 1, getTaskHeight());
-            graphics2D.setFont(graphFont);
-            graphics2D.setColor(textColor);
-            FontMetrics fm     = graphics2D.getFontMetrics();
-            int         yShift = fm.getAscent() - fm.getHeight() / 2;
-            String      label  = String.format("%s", dateUtil.createDateTimeString(task.getStart()));
-            int         width  = fm.stringWidth(label);
-            if (labelInside) {
-
-            } else {
-                graphics2D.drawString(label, x1 - width, y + yShift);
-            }
+            //timestamp
+//            graphics2D.setFont(graphFont);
+//            graphics2D.setColor(textColor);
+//            FontMetrics fm     = graphics2D.getFontMetrics();
+//            int         yShift = fm.getAscent() - fm.getHeight() / 2;
+//            String      label  = String.format("%s", dateUtil.createDateTimeString(task.getStart()));
+//            int         width  = fm.stringWidth(label);
+//            if (labelInside) {
+//            } else {
+//                graphics2D.drawString(label, x1 - width, y + yShift);
+//            }
         }
     }
 
@@ -236,13 +236,13 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         } else {
             graphics2D.setColor(Color.gray);
         }
-        int   milestoneWidth = getTaskHeight() / 2;
+        int   milestoneWidth = getTaskHeight() / 2 - TASK_BODY_BORDER;
         int   c              = 0;
-        int[] xpoints        = {x1 + c, x1 + c + milestoneWidth, x1 + c, x1 + c - milestoneWidth, x1 + c};
-        int[] ypoints        = {y - getTaskHeight() / 2, y, y + getTaskHeight() / 2, y, y - getTaskHeight() / 2};
-        int   npoints        = 5;
-        graphics2D.fillPolygon(xpoints, ypoints, npoints);
-        graphics2D.drawPolygon(xpoints, ypoints, npoints);
+        int[] xPoints        = {x1 + c, x1 + c + milestoneWidth, x1 + c, x1 + c - milestoneWidth, x1 + c};
+        int[] yPoints        = {y - milestoneWidth, y, y + milestoneWidth, y, y - milestoneWidth};
+        int   nPoints        = 5;
+        graphics2D.fillPolygon(xPoints, yPoints, nPoints);
+        graphics2D.drawPolygon(xPoints, yPoints, nPoints);
         graphics2D.setFont(graphFont);
         graphics2D.setColor(textColor);
         FontMetrics fm     = graphics2D.getFontMetrics();
@@ -257,69 +257,69 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         }
     }
 
-    private void drawOutOfOffice(Task task, int y) {
-        //TODO reintroduce bank holidays and vacations
-
-        if (task.getAssignedUser() != null) {
-            for (ProjectCalendarException calendarException : task.getAssignedUser().getCalendar().getCalendarExceptions()) {
-                for (LocalDate currentDay = calendarException.getFromDate(); currentDay.isBefore(calendarException.getToDate()) || currentDay.isEqual(calendarException.getToDate()); currentDay = currentDay.plusDays(1)) {
-//                    int    dayIndex = calculateDayIndex(calendarException.getFromDate());
-                    String name = calendarException.getName();
-                    if (name.equals(OffDayType.VACATION.name()) || name.equals(OffDayType.HOLIDAY.name()) || name.equals(OffDayType.SICK.name()) || name.equals(OffDayType.TRIP.name())) {
-                        int daysX = calculateDayX(currentDay);
-                        if (daysX > 0 && daysX < calendarXAxses.getWidth()) {
-                            graphics2D.setFont(outOfOfficeFont);
-                            graphics2D.setColor(graphicsTheme.ganttOutOfOfficeColor);
-//                            graphics2D.fillRect(daysX - (calendarXAxses.dayOfWeek.getWidth() / 2 - 1), y - (calendarXAxses.dayOfWeek.getWidth() / 2) + 2, calendarXAxses.dayOfWeek.getWidth() - 1, getTaskHeight());
-                            graphics2D.setColor(Color.WHITE);
-                            FontMetrics fm        = graphics2D.getFontMetrics();
-                            String      text      = "O";
-                            int         width     = fm.stringWidth(text);
-                            int         maxAscent = fm.getMaxAscent();
-//                            graphics2D.drawString(text, daysX - width / 2, y + (maxAscent + 1) / 2 - 2);
-                        }
-                    }
-                }
-            }
-        }
-
-
-//        ProjectFile parentFile = task.getParentFile();
-//        LocalDate   start      = parentFile.getEarliestStartDate().toLocalDate();
-//        LocalDate   finish     = parentFile.getLatestFinishDate().toLocalDate();
-//        String resourceName = null;
-//        if (!task.getMilestone() && task.getResourceAssignments().size() == 1) {
-//            for (ResourceAssignment assignment : task.getResourceAssignments()) {
-//                Resource resource = assignment.getResource();
-//                if (resource != null) {
-//                    resourceName = resource.getName();
-//                    break;
+//    private void drawOutOfOffice(Task task, int y) {
+//        //TODO reintroduce bank holidays and vacations
+//
+//        if (task.getAssignedUser() != null) {
+//            for (ProjectCalendarException calendarException : task.getAssignedUser().getCalendar().getCalendarExceptions()) {
+//                for (LocalDate currentDay = calendarException.getFromDate(); currentDay.isBefore(calendarException.getToDate()) || currentDay.isEqual(calendarException.getToDate()); currentDay = currentDay.plusDays(1)) {
+////                    int    dayIndex = calculateDayIndex(calendarException.getFromDate());
+//                    String name = calendarException.getName();
+//                    if (name.equals(OffDayType.VACATION.name()) || name.equals(OffDayType.HOLIDAY.name()) || name.equals(OffDayType.SICK.name()) || name.equals(OffDayType.TRIP.name())) {
+//                        int daysX = calculateDayX(currentDay);
+//                        if (daysX > 0 && daysX < calendarXAxes.getWidth()) {
+//                            graphics2D.setFont(outOfOfficeFont);
+//                            graphics2D.setColor(graphicsTheme.ganttOutOfOfficeColor);
+////                            graphics2D.fillRect(daysX - (calendarXAxses.dayOfWeek.getWidth() / 2 - 1), y - (calendarXAxses.dayOfWeek.getWidth() / 2) + 2, calendarXAxses.dayOfWeek.getWidth() - 1, getTaskHeight());
+//                            graphics2D.setColor(Color.WHITE);
+//                            FontMetrics fm        = graphics2D.getFontMetrics();
+//                            String      text      = "O";
+//                            int         width     = fm.stringWidth(text);
+//                            int         maxAscent = fm.getMaxAscent();
+////                            graphics2D.drawString(text, daysX - width / 2, y + (maxAscent + 1) / 2 - 2);
+//                        }
+//                    }
 //                }
 //            }
 //        }
-//        if (resourceName != null) {
-//            ResourceUtilization ru = resourcesUtilization.get(Authors.mapToPrimaryLoginName(resourceName));
-//            for (LocalDate currentDay = start; currentDay.isBefore(finish); currentDay = currentDay.plusDays(1)) {
-//                int dayIndex = calculateDayIndex(currentDay);
-//                if (ru != null && (ru.getVacation(dayIndex) != null || ru.getSickness(dayIndex) != null)) {
-//                    int daysX = calculateDayX(currentDay);
-//                    // int x1 = daysX - (calendarXAxses.dayOfWeek.width / 2 - 1);
-//                    // int y1 = y - (calendarXAxses.dayOfWeek.width / 2) + 2;
-//                    // graphics2D.drawImage(outOfOffice, null, x1, y1);
-//                    graphics2D.setFont(outOfOfficeFont);
-//                    graphics2D.setColor(graphicsTheme.ganttOutOfOfficeColor);
-//                    graphics2D.fillRect(daysX - (calendarXAxses.dayOfWeek.getWidth() / 2 - 1), y - (calendarXAxses.dayOfWeek.getWidth() / 2) + 2,
-//                            calendarXAxses.dayOfWeek.getWidth() - 1, getTaskHeight());
-//                    graphics2D.setColor(Color.WHITE);
-//                    FontMetrics fm        = graphics2D.getFontMetrics();
-//                    String      text      = "O";
-//                    int         width     = fm.stringWidth(text);
-//                    int         maxAscent = fm.getMaxAscent();
-//                    graphics2D.drawString(text, daysX - width / 2, y + (maxAscent + 1) / 2 - 2);
-//                }
-//            }
-//        }
-    }
+//
+//
+////        ProjectFile parentFile = task.getParentFile();
+////        LocalDate   start      = parentFile.getEarliestStartDate().toLocalDate();
+////        LocalDate   finish     = parentFile.getLatestFinishDate().toLocalDate();
+////        String resourceName = null;
+////        if (!task.getMilestone() && task.getResourceAssignments().size() == 1) {
+////            for (ResourceAssignment assignment : task.getResourceAssignments()) {
+////                Resource resource = assignment.getResource();
+////                if (resource != null) {
+////                    resourceName = resource.getName();
+////                    break;
+////                }
+////            }
+////        }
+////        if (resourceName != null) {
+////            ResourceUtilization ru = resourcesUtilization.get(Authors.mapToPrimaryLoginName(resourceName));
+////            for (LocalDate currentDay = start; currentDay.isBefore(finish); currentDay = currentDay.plusDays(1)) {
+////                int dayIndex = calculateDayIndex(currentDay);
+////                if (ru != null && (ru.getVacation(dayIndex) != null || ru.getSickness(dayIndex) != null)) {
+////                    int daysX = calculateDayX(currentDay);
+////                    // int x1 = daysX - (calendarXAxses.dayOfWeek.width / 2 - 1);
+////                    // int y1 = y - (calendarXAxses.dayOfWeek.width / 2) + 2;
+////                    // graphics2D.drawImage(outOfOffice, null, x1, y1);
+////                    graphics2D.setFont(outOfOfficeFont);
+////                    graphics2D.setColor(graphicsTheme.ganttOutOfOfficeColor);
+////                    graphics2D.fillRect(daysX - (calendarXAxses.dayOfWeek.getWidth() / 2 - 1), y - (calendarXAxses.dayOfWeek.getWidth() / 2) + 2,
+////                            calendarXAxses.dayOfWeek.getWidth() - 1, getTaskHeight());
+////                    graphics2D.setColor(Color.WHITE);
+////                    FontMetrics fm        = graphics2D.getFontMetrics();
+////                    String      text      = "O";
+////                    int         width     = fm.stringWidth(text);
+////                    int         maxAscent = fm.getMaxAscent();
+////                    graphics2D.drawString(text, daysX - width / 2, y + (maxAscent + 1) / 2 - 2);
+////                }
+////            }
+////        }
+//    }
 
     /**
      * T------------| | | C
@@ -339,8 +339,8 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
             y2 += getTaskHeight() / 2 - TASK_BODY_BORDER;
             y3 = y2 + 5;
         }
-        int x1 = calculateX(targetTask.getFinish(), targetTask.getFinish().truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
-        int x2 = RELATION_CORNER_LENGTH + calculateX(sourceTask.getStart(), sourceTask.getStart().truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2 - RESOURCE_NAME_TO_TASK_GAP;
+        int x1 = calculateX(targetTask.getFinish(), targetTask.getFinish().truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;
+        int x2 = RELATION_CORNER_LENGTH + calculateX(sourceTask.getStart(), sourceTask.getStart().truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2 - RESOURCE_NAME_TO_TASK_GAP;
         graphics2D.setStroke(new BasicStroke(RELATION_LINE_STROKE_WIDTH));
         if (sourceTask.isCritical() && targetTask.isCritical()) {
             graphics2D.setColor(graphicsTheme.ganttCriticalRelationColor);
@@ -431,13 +431,13 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
             graphics2D.setStroke(new BasicStroke(FINE_LINE_STROKE_WIDTH));
             LocalDateTime start = task.getStart();
             LocalDateTime stop  = task.getFinish();
-            int           x1    = calculateX(start, start.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
-            int           x2    = calculateX(stop, stop.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+            int           x1    = calculateX(start, start.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;
+            int           x2    = calculateX(stop, stop.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;
             Integer       lane  = taskHeight.get(gantUniqueId * 10000 + task.getId());
             int           y     = lane + getTaskHeight() / 2;
-            if (drawOutOfOffice) {
-                drawOutOfOffice(task, y);
-            }
+//            if (drawOutOfOffice) {
+//                drawOutOfOffice(task, y);
+//            }
             drawTask(task, x1, x2, y, labelInside, alien, marker, conflict);
             if (drawId) {
                 drawId(task, y);
@@ -575,7 +575,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                         graphics2D.setColor(textColor);
                         graphics2D.setFont(graphFont);
                         FontMetrics fm1               = graphics2D.getFontMetrics();
-                        int         yShift            = fm1.getAscent();
+                        int         yShift            = fm1.getAscent() - 1;
                         int         resourceNameWidth = fm1.stringWidth(resourceName);
                         int         resourceNameX     = x1 - resourceNameWidth - RESOURCE_NAME_TO_TASK_GAP;
                         graphics2D.drawString(resourceName, resourceNameX, y - getTaskHeight() / 2 + yShift);
@@ -624,21 +624,21 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                             s = new RectangleWithToolTip(x1, y1, x2 - x1, h, toolTip);
                         } else if (day == 0) {
                             //this is the left end
-                            int xFinish = calculateX(currentDay.withHour(8).plusSeconds(SECONDS_PER_DAY), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                            int xFinish = calculateX(currentDay.withHour(8).plusSeconds(SECONDS_PER_DAY), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;
                             s = new RectangleWithToolTip(x1, y1, xFinish - x1, h, toolTip);
                         } else if (day == days) {
                             //this is the right end
-                            int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
+                            int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;
                             s = new RectangleWithToolTip(xStart, y1, x2 - xStart + 1, h, toolTip);
                         } else {
                             //this is the middle
-                            int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
-                            s = new RectangleWithToolTip(xStart, y1, calendarXAxses.dayOfWeek.getWidth(), h, toolTip);
+                            int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;
+                            s = new RectangleWithToolTip(xStart, y1, calendarXAxes.dayOfWeek.getWidth(), h, toolTip);
                         }
                     } else {
                         graphics2D.setColor(new Color(fillColor.getRed(), fillColor.getGreen(), fillColor.getBlue(), 64));//very trabsparent
-                        int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxses.dayOfWeek.getWidth() / 2;
-                        s = new RectangleWithToolTip(xStart, y1, calendarXAxses.dayOfWeek.getWidth(), h, toolTip);
+                        int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;
+                        s = new RectangleWithToolTip(xStart, y1, calendarXAxes.dayOfWeek.getWidth(), h, toolTip);
                     }
                     graphics2D.fill(s);
                 }
@@ -733,37 +733,37 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         return LINE_HEIGHT * numberOfLinesPerTask + 4;
     }
 
-    protected void initOutOfOffice(/*GanttInformationList gattInformationList*/) {
-//TODO reintroduce bank holidays and vacations
-
-//        int vacations = 0;
-//        for (GanttInformation ganttInformation : gattInformationList) {
-//            if (context.debug.filterGantt(ganttInformation)) {
-//                logger.trace("Extracting out-of-Office information from " + ganttInformation.projectFileName);
-//                for (Resource resource : ganttInformation.projectFile.getResources()) {
-//                    String                                                     primaryResourcename = Authors.mapToPrimaryLoginName(resource.getName());
-//                    com.ricoh.sdced.projects.dashboard.dao.ResourceUtilization ru                  = resourcesUtilization.get(primaryResourcename);
-//                    if (ru == null && primaryResourcename != null) {
-//                        ru = new ResourceUtilization(milestones.firstMilestone, days);
-//                        ru.setMaxUnit(0.7);
-//                        resourcesUtilization.put(primaryResourcename, ru);
-//                    }
-//                    ProjectCalendar resourceCalendar = resource.getCalendar();
-//                    if (resourceCalendar != null && ru != null) {
-//                        for (ProjectCalendarException pce : resourceCalendar.getCalendarExceptions()) {
-//                            vacations += addVacation(ru, resource.getName(), pce);
-//                        }
-//                    } else if (resource.getID() == 0) {
-//                        // we do not expect a calendar
-//                    } else {
-//                        logger.trace(resource.getName() + " has no calendar");
-//                    }
-//                }
-//            }
-//        }
-//        logger.info(String.format("Included %d vacation days from %d gantt charts.", vacations, gattInformationList.size()));
-
-    }
+//    protected void initOutOfOffice(/*GanttInformationList gattInformationList*/) {
+////TODO reintroduce bank holidays and vacations
+//
+////        int vacations = 0;
+////        for (GanttInformation ganttInformation : gattInformationList) {
+////            if (context.debug.filterGantt(ganttInformation)) {
+////                logger.trace("Extracting out-of-Office information from " + ganttInformation.projectFileName);
+////                for (Resource resource : ganttInformation.projectFile.getResources()) {
+////                    String                                                     primaryResourcename = Authors.mapToPrimaryLoginName(resource.getName());
+////                    com.ricoh.sdced.projects.dashboard.dao.ResourceUtilization ru                  = resourcesUtilization.get(primaryResourcename);
+////                    if (ru == null && primaryResourcename != null) {
+////                        ru = new ResourceUtilization(milestones.firstMilestone, days);
+////                        ru.setMaxUnit(0.7);
+////                        resourcesUtilization.put(primaryResourcename, ru);
+////                    }
+////                    ProjectCalendar resourceCalendar = resource.getCalendar();
+////                    if (resourceCalendar != null && ru != null) {
+////                        for (ProjectCalendarException pce : resourceCalendar.getCalendarExceptions()) {
+////                            vacations += addVacation(ru, resource.getName(), pce);
+////                        }
+////                    } else if (resource.getID() == 0) {
+////                        // we do not expect a calendar
+////                    } else {
+////                        logger.trace(resource.getName() + " has no calendar");
+////                    }
+////                }
+////            }
+////        }
+////        logger.info(String.format("Included %d vacation days from %d gantt charts.", vacations, gattInformationList.size()));
+//
+//    }
 
 //    protected void initOutOfOffice(TimeTracker timeTracker) {
 //        if (timeTracker != null) {

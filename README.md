@@ -51,10 +51,8 @@ minimalistic project effort estimation and progress tracking and release date in
 
 # Issues
 
-1. manual scheduled task start date/time text overlays the username. e.g. gantt12-rcp.mpp
 2. gantt calendar too light.
-3. none working days are too dark.
-4. gantt calendar should be using sprint calendar.
+3. gantt calendar should be using sprint calendar.
 
 # License
 

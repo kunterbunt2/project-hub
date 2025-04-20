@@ -25,7 +25,7 @@ import java.awt.*;
 public class CaptionElement {
     private final Color  backgroundColor = Color.white;
     private final Color  color           = new Color(0x2c, 0x7b, 0xf4);
-    public        Font   font            = new Font("Arial", Font.PLAIN, 18);
+    public        Font   font            = new Font(Font.SANS_SERIF, Font.PLAIN, 18);
     public        int    height          = 26;
     private       String imageMap        = "";
     private final String relateCssPath;

@@ -25,7 +25,7 @@ public class FooterElement {
     public        int    height          = 14;
     private final String imageMap        = "";
     private final String projectRequestKey;
-    private final Font   signFont        = new Font("Arial", Font.PLAIN, 10);
+    private final Font   signFont        = new Font(Font.SANS_SERIF, Font.PLAIN, 10);
     //    private Graphics2D graphics2D;
     String text;
     public int width;

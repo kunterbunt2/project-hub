@@ -18,7 +18,7 @@
 package de.bushnaq.abdalla.projecthub.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import de.bushnaq.abdalla.projecthub.gantt.GanttContext;
+import de.bushnaq.abdalla.projecthub.report.renderer.gantt.GanttContext;
 import lombok.*;
 
 import java.util.ArrayList;
