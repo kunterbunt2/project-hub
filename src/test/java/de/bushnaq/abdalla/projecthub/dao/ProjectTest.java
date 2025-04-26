@@ -15,9 +15,10 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub;
+package de.bushnaq.abdalla.projecthub.dao;
 
-import de.bushnaq.abdalla.projecthub.util.AbstractTestUtil;
+import de.bushnaq.abdalla.projecthub.util.AbstractEntityGenerator;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,22 +32,32 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Transactional
-public class ProjectTest extends AbstractTestUtil {
+public class ProjectTest extends AbstractEntityGenerator {
     Logger logger = LoggerFactory.getLogger(ProjectTest.class);
 
-//    @Test
-//    public void create() throws Exception {
-//
-//        for (int i = 0; i < 1; i++) {
-//            Project project        = createProject();
-//            Project createdProject = productApi.persist(project);
-//            Project retrievedProject = productApi.getProject(createdProject.getId());
-//            asserEqual(createdProject, retrievedProject);
-//        }
-//        printTables();
-//    }
-//
-//
+    @Test
+    public void create() throws Exception {
+        addRandomProducts(1);
+
+        testProducts();
+        printTables();
+    }
+
+    @Test
+    public void delete() throws Exception {
+
+        //create the users
+        addRandomProducts(2);
+        removeProject(expectedProjects.getFirst().getId());
+
+        //delete by unknown id should be ignored
+        {
+            projectApi.deleteById(9999999L);
+        }
+        testUsers();
+        printTables();
+    }
+
 //    @Test
 //    public void getAll() throws Exception {
 //        List<Project> allProjects = productApi.getAllProjects();

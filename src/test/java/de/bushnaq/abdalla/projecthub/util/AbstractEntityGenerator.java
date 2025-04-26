@@ -56,6 +56,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     protected           List<Task>            expectedTasks             = new ArrayList<>();
     protected           TreeSet<User>         expectedUsers             = new TreeSet<>();
     protected           List<Version>         expectedVersions          = new ArrayList<>();
+    protected           List<Worklog>         expectedWorklogs          = new ArrayList<>();
     private             List<Name>            names;
     @Autowired
     protected           ObjectMapper          objectMapper;
@@ -75,13 +76,14 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     protected static    int                   userIndex                 = 0;
     protected           VersionApi            versionApi;
     private static      int                   versionIndex              = 0;
+    protected           WorklogApi            worklogApi;
 
     protected void addAvailability(User user, float availability, LocalDate start) {
         Availability a = new Availability(availability, start);
         a.setUser(user);
         a.setCreated(user.getCreated());
         a.setUpdated(user.getUpdated());
-        Availability saved = userApi.persist(a, user.getId());
+        Availability saved = userApi.save(a, user.getId());
         user.addAvailability(saved);
         expectedAvailabilities.add(saved);
     }
@@ -91,7 +93,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         location.setUser(user);
         location.setCreated(user.getCreated());
         location.setUpdated(user.getUpdated());
-        Location saved = userApi.persist(location, user.getId());
+        Location saved = userApi.save(location, user.getId());
         user.addLocation(saved);
         expectedLocations.add(saved);
     }
@@ -101,7 +103,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         offDay.setUser(user);
         offDay.setCreated(user.getCreated());
         offDay.setUpdated(user.getUpdated());
-        OffDay saved = userApi.persist(offDay, user.getId());
+        OffDay saved = userApi.save(offDay, user.getId());
         user.addOffday(saved);
         expectedOffDays.add(saved);
         ProjectCalendarException vacation = user.getCalendar().addCalendarException(offDayStart, offDayFinish);
@@ -386,7 +388,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         user.setFirstWorkingDay(start);
         user.setCreated(DateUtil.localDateToOffsetDateTime(start).plusHours(8));
         user.setUpdated(DateUtil.localDateToOffsetDateTime(start).plusHours(8));
-        User saved = userApi.persist(user);
+        User saved = userApi.save(user);
         addLocation(saved, country, state, start);
         addAvailability(saved, availability, start);
 
@@ -403,7 +405,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         user.setFirstWorkingDay(start);
         user.setCreated(DateUtil.localDateToOffsetDateTime(start).plusHours(8));
         user.setUpdated(DateUtil.localDateToOffsetDateTime(start).plusHours(8));
-        User saved = userApi.persist(user);
+        User saved = userApi.save(user);
         addLocation(saved, country, state, start);
         addAvailability(saved, availability, start);
 
@@ -425,6 +427,20 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         product.addVersion(saved);
         expectedVersions.add(saved);
         versionIndex++;
+        return saved;
+    }
+
+    protected Worklog addWorklog(Task task, User user, OffsetDateTime start, Duration timeSpent, String comment) {
+        Worklog worklog = new Worklog();
+        worklog.setSprintId(task.getSprintId());
+        worklog.setTaskId(task.getId());
+        worklog.setAuthorId(user.getId());
+        worklog.setStart(start);
+        worklog.setTimeSpent(timeSpent);
+        worklog.setComment(comment);
+        task.addWorklog(worklog);
+        Worklog saved = worklogApi.persist(worklog);
+        expectedWorklogs.add(saved);
         return saved;
     }
 
@@ -471,6 +487,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         taskApi    = new TaskApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
         versionApi = new VersionApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
         sprintApi  = new SprintApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        worklogApi = new WorklogApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
     }
 
     private boolean isOverlapping(List<OffDay> offDays, LocalDate start, LocalDate end) {
@@ -535,6 +552,21 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         productApi.deleteById(id);
     }
 
+    protected void removeProject(Long id) {
+        Project projectToRemove = expectedProjects.stream().filter(project -> project.getId().equals(id)).findFirst().orElse(null);
+        if (projectToRemove != null) {
+            // Remove all versions and their projects, sprints, and tasks
+            for (Sprint sprint : projectToRemove.getSprints()) {
+                //TODO reintroduce tests
+//                        for (Task task : sprint.getTasks()) {
+//                            removeTaskTree(task);
+//                        }
+                expectedSprints.remove(sprint);
+            }
+            expectedProjects.remove(projectToRemove);
+        }
+    }
+
     private void removeTaskTree(Task task) {
         for (Task childTask : task.getChildTasks()) {
             removeTaskTree(childTask);
@@ -574,7 +606,10 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         gc.allVersions = versionApi.getAllVersions();
         gc.allProjects = projectApi.getAllProjects();
         gc.allSprints  = sprintApi.getAllSprints();
-        gc.allTasks    = taskApi.getAllTasks();
+        for (Sprint sprint : gc.allSprints) {
+            sprint.setWorklogs(worklogApi.getAllWorklogs(sprint.getId()));
+        }
+        gc.allTasks = taskApi.getAllTasks();
         gc.initialize();
 
         assertEquals(expectedProducts.size(), gc.allProducts.size());

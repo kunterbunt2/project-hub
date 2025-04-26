@@ -29,10 +29,6 @@ import org.hibernate.annotations.Proxy;
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
-//@JsonIdentityInfo(
-//        scope = VersionDAO.class,
-//        generator = ObjectIdGenerators.PropertyGenerator.class,
-//        property = "id")
 public class VersionDAO extends AbstractTimeAwareDAO {
 
     @Id
@@ -43,14 +39,7 @@ public class VersionDAO extends AbstractTimeAwareDAO {
     @Column(nullable = false)
     private String name;
 
-    //    @ManyToOne(fetch = FetchType.LAZY)
-//    @ToString.Exclude//help intellij debugger not to go into a loop
-//    @JsonBackReference(value = "product-version")
     @Column(nullable = false)
     private Long productId;
-
-//    @OneToMany(mappedBy = "version", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-//    @JsonManagedReference(value = "version-project")
-//    private List<ProjectDAO> projects = new ArrayList<>();
 
 }

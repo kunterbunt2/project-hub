@@ -43,10 +43,6 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
-//@JsonIdentityInfo(
-//        scope = User.class,
-//        generator = ObjectIdGenerators.PropertyGenerator.class,
-//        property = "id")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class User extends AbstractTimeAware implements Comparable<User> {
 

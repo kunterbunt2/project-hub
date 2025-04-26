@@ -15,7 +15,7 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub;
+package de.bushnaq.abdalla.projecthub.dao;
 
 import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.util.AbstractEntityGenerator;
@@ -51,13 +51,6 @@ public class TaskTest extends AbstractEntityGenerator {
             Task task3 = addTask(sprint, task1, "Implementation", LocalDateTime.now().plusDays(4), Duration.ofDays(6), user1, task1);
         }
 
-        // Verify the structure
-//        {
-//            assertNotNull(task1.getId());
-//            assertEquals(2, task1.getChildTasks().size());
-//            assertTrue(task1.getChildTasks().stream()
-//                    .allMatch(child -> child.getParent().getId().equals(task1.getId())));
-//        }
         printTables();
         testAll();
     }
@@ -78,31 +71,12 @@ public class TaskTest extends AbstractEntityGenerator {
         }
 
         testAll();
-        // Verify the structure
-//        {
-//            assertNotNull(task1.getId());
-//            assertEquals(2, task1.getChildTasks().size());
-//            assertTrue(task1.getChildTasks().stream()
-//                    .allMatch(child -> child.getParent().getId().equals(task1.getId())));
-//        }
 
         //update
         {
-//            task2 = task1.getChildTasks().getFirst();
-//            task3 = task1.getChildTasks().get(1);
             move(expectedSprints.getFirst(), expectedTasks.get(2), expectedTasks.get(1));
         }
 
-        // Verify the structure
-//        {
-////            System.out.println(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(task1));
-//            Task savedParent2 = taskApi.getTask(task1.getId());
-//            assertNotNull(savedParent2.getId());
-//            assertEquals(1, savedParent2.getChildTasks().size());
-//            assertEquals(savedParent2.getId(), savedParent2.getChildTasks().getFirst().getParent().getId());
-//            assertEquals(savedParent2.getChildTasks().getFirst().getId(), savedParent2.getChildTasks().getFirst().getChildTasks().getFirst().getParent().getId());
-//            assertEquals(1, savedParent2.getChildTasks().getFirst().getChildTasks().size());
-//        }
         printTables();
         testAll();
 

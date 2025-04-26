@@ -35,17 +35,10 @@ import java.util.List;
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
-//@JsonIdentityInfo(
-//        scope = UserDAO.class,
-//        generator = ObjectIdGenerators.PropertyGenerator.class,
-//        property = "id")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class UserDAO extends AbstractTimeAwareDAO {
 
-    //    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    //    @OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-//    @JoinColumn(name = "user_id", referencedColumnName = "id")
     @JsonManagedReference
     private List<AvailabilityDAO> availabilities = new ArrayList<>();
 
@@ -63,20 +56,14 @@ public class UserDAO extends AbstractTimeAwareDAO {
     @Column(nullable = true)
     private LocalDate lastWorkingDay;//last working day
 
-    //    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    //    @OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-//    @JoinColumn(name = "user_id", referencedColumnName = "id")
     @JsonManagedReference
     private List<LocationDAO> locations = new ArrayList<>();
 
     @Column(nullable = false)
     private String name;
 
-    //    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-//        @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-//    @JoinColumn(name = "user_id", referencedColumnName = "id")
     @JsonManagedReference
     private List<OffDayDAO> offDays = new ArrayList<>();
 

@@ -17,15 +17,14 @@
 
 package de.bushnaq.abdalla.projecthub.rest.controller;
 
-import de.bushnaq.abdalla.projecthub.dao.ProductDAO;
 import de.bushnaq.abdalla.projecthub.dao.VersionDAO;
 import de.bushnaq.abdalla.projecthub.repository.ProductRepository;
 import de.bushnaq.abdalla.projecthub.repository.VersionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/version")
@@ -42,9 +41,9 @@ public class VersionController {
     }
 
     @GetMapping("/{id}")
-    public Optional<VersionDAO> get(@PathVariable Long id) {
-        VersionDAO projectEntity = versionRepository.findById(id).orElseThrow();
-        return Optional.of(projectEntity);
+    public ResponseEntity<VersionDAO> get(@PathVariable Long id) {
+        return versionRepository.findById(id).map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping
@@ -53,11 +52,11 @@ public class VersionController {
     }
 
     @PostMapping("/{productId}")
-    public VersionDAO save(@RequestBody VersionDAO version, @PathVariable Long productId) {
-        ProductDAO product = productRepository.getById(productId);
-//        version.setProduct(product);
-        VersionDAO save = versionRepository.save(version);
-        return save;
+    public ResponseEntity<VersionDAO> save(@RequestBody VersionDAO version, @PathVariable Long productId) {
+        return productRepository.findById(productId).map(product -> {
+            VersionDAO save = versionRepository.save(version);
+            return ResponseEntity.ok(save);
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")

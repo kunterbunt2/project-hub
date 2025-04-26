@@ -18,14 +18,13 @@
 package de.bushnaq.abdalla.projecthub.rest.controller;
 
 import de.bushnaq.abdalla.projecthub.dao.AvailabilityDAO;
-import de.bushnaq.abdalla.projecthub.dao.UserDAO;
 import de.bushnaq.abdalla.projecthub.repository.AvailabilityRepository;
 import de.bushnaq.abdalla.projecthub.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Objects;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/availability")
@@ -38,34 +37,39 @@ public class AvailabilityController {
     private UserRepository userRepository;
 
     @DeleteMapping("/{userId}/{id}")
-    public void delete(@PathVariable Long userId, @PathVariable Long id) {
-        UserDAO         user         = userRepository.getById(userId);
-        AvailabilityDAO availability = availabilityRepository.findById(id).orElseThrow();
-        if (Objects.equals(user.getAvailabilities().getFirst().getId(), id))
-            throw new IllegalArgumentException("Cannot delete the first availability");
-        user.getAvailabilities().remove(availability);
-        userRepository.save(user);
-        availabilityRepository.deleteById(id);
+    public ResponseEntity<Object> delete(@PathVariable Long userId, @PathVariable Long id) {
+        return userRepository.findById(userId).map(user ->
+                availabilityRepository.findById(id).map(availability -> {
+                    if (Objects.equals(user.getAvailabilities().getFirst().getId(), id))
+                        throw new IllegalArgumentException("Cannot delete the first availability");
+                    user.getAvailabilities().remove(availability);
+                    userRepository.save(user);
+                    availabilityRepository.deleteById(id);
+                    return ResponseEntity.ok().build();
+                }).orElse(ResponseEntity.notFound().build()) // Return 404 if availability not found
+        ).orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/{id}")
-    public Optional<AvailabilityDAO> getById(@PathVariable Long id) {
-        AvailabilityDAO e = availabilityRepository.findById(id).orElseThrow();
-        return Optional.of(e);
+    public ResponseEntity<AvailabilityDAO> getById(@PathVariable Long id) {
+        return availabilityRepository.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/{userId}")
-    public AvailabilityDAO save(@RequestBody AvailabilityDAO availability, @PathVariable Long userId) {
-        UserDAO user = userRepository.getById(userId);
-        availability.setUser(user);
-        AvailabilityDAO save = availabilityRepository.save(availability);
-        return save;
+    public ResponseEntity<AvailabilityDAO> save(@RequestBody AvailabilityDAO availability, @PathVariable Long userId) {
+        return userRepository.findById(userId).map(user -> {
+            availability.setUser(user);
+            AvailabilityDAO save = availabilityRepository.save(availability);
+            return ResponseEntity.ok(save);
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{userId}")
-    public void update(@RequestBody AvailabilityDAO availability, @PathVariable Long userId) {
-        UserDAO user = userRepository.getById(userId);
-        availability.setUser(user);
-        AvailabilityDAO save = availabilityRepository.save(availability);
+    public ResponseEntity<Object> update(@RequestBody AvailabilityDAO availability, @PathVariable Long userId) {
+        return userRepository.findById(userId).map(user -> {
+            availability.setUser(user);
+            AvailabilityDAO save = availabilityRepository.save(availability);
+            return ResponseEntity.ok().build();
+        }).orElse(ResponseEntity.notFound().build());
     }
 }

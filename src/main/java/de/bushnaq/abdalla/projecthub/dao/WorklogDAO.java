@@ -17,39 +17,47 @@
 
 package de.bushnaq.abdalla.projecthub.dao;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Proxy;
 
-import java.time.LocalDate;
+import java.time.Duration;
+import java.time.OffsetDateTime;
 
-/**
- * Represents the availability of a user at a certain time.
- */
 @Entity
-@Table(name = "availabilities")
+@Table(name = "worklogs")
 @Getter
 @Setter
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
-public class AvailabilityDAO extends AbstractTimeAwareDAO {
+public class WorklogDAO extends AbstractTimeAwareDAO {
 
     @Column(nullable = false)
-    private float availability;
+    private Long authorId;
+
+    @Column(nullable = true)
+    private String comment;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Long  id;
+    private Long id;
 
     @Column(nullable = false)
-    private LocalDate start;
+    private Long sprintId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @ToString.Exclude//help intellij debugger not to go into a loop
-    @JsonBackReference
-    private UserDAO user;
+    @Column(nullable = false)
+    private OffsetDateTime start;
+
+    @Column(nullable = false)
+    private Long taskId;
+
+    @Column(nullable = false)
+    private Duration timeSpent;
+
+    @Column(nullable = true)
+    private Long updateAuthorId;
 
 }

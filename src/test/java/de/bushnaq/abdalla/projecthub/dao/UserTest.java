@@ -15,7 +15,7 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub;
+package de.bushnaq.abdalla.projecthub.dao;
 
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.util.AbstractEntityGenerator;
@@ -25,10 +25,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ServerErrorException;
 
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 
 @ExtendWith(SpringExtension.class)
@@ -44,8 +46,9 @@ public class UserTest extends AbstractEntityGenerator {
 
         //create the users
         addRandomUsers(1);
-        printTables();
 
+        testUsers();
+        printTables();
     }
 
     @Test
@@ -54,8 +57,60 @@ public class UserTest extends AbstractEntityGenerator {
         //create the users
         addRandomUsers(2);
         removeUser(expectedUsers.getFirst().getId());
-        testUsers();
 
+        //delete by unknown id should be ignored
+        {
+            userApi.deleteById(9999999L);
+        }
+        testUsers();
+        printTables();
+    }
+
+    @Test
+    public void getAllEmpty() throws Exception {
+        //get empty list
+        userApi.getAllUsers();
+    }
+
+    @Test
+    public void getById() throws Exception {
+
+        //create the users
+        addRandomUsers(1);
+
+        //get user by id
+        {
+            User user = userApi.getUser(expectedUsers.first().getId());
+        }
+        //get by unknown id
+        {
+            try {
+                User user = userApi.getUser(9999999L);
+                fail("User should not exist");
+            } catch (ServerErrorException e) {
+                //expected
+            }
+        }
+        testUsers();
+        printTables();
+    }
+
+    @Test
+    public void getByUnknownId() throws Exception {
+
+        //create the users
+        addRandomUsers(1);
+
+        //get by unknown id
+        {
+            try {
+                User user = userApi.getUser(9999999L);
+                fail("User should not exist");
+            } catch (ServerErrorException e) {
+                //expected
+            }
+        }
+        testUsers();
         printTables();
     }
 
@@ -84,33 +139,9 @@ public class UserTest extends AbstractEntityGenerator {
             updateUser(user);
         }
 
-        //test if user was updated correctly
-//        {
-//            User user = userApi.getUser(id);
-//            assertEquals(LocalDate.parse(SECOND_START_DATE), user.getLastWorkingDay());
-//        }
-
         testUsers();
         printTables();
     }
 
-
-//
-//
-//    @Test
-//    public void getAll() throws Exception {
-//        List<Project> allProjects = client.getAllProjects();
-//        printTables();
-//    }
-//
-//    @Test
-//    public void getById() throws Exception {
-//        Project project        = createProject();
-//        Project createdProject = client.createProject(project);
-//
-//        Project retrievedProject = client.getProjectById(createdProject.getId());
-//        asserEqual(createdProject, retrievedProject);
-//        printTables();
-//    }
 
 }

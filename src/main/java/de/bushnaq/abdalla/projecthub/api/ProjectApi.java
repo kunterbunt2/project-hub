@@ -40,8 +40,14 @@ public class ProjectApi extends AbstractApi {
         this.restTemplate = restTemplate;
     }
 
-    public List<Project> getAllProjects() {
+    public void deleteById(long id) {
+        executeWithErrorHandling(() -> restTemplate.delete(
+                baseUrl + "/project/{id}",
+                id
+        ));
+    }
 
+    public List<Project> getAllProjects() {
         ResponseEntity<Project[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(
                 baseUrl + "/project",
                 Project[].class
@@ -66,25 +72,4 @@ public class ProjectApi extends AbstractApi {
                         versionId
                 ));
     }
-
-//    public Sprint persist(Sprint sprint, Long projectId) {
-//        return executeWithErrorHandling(() ->
-//                restTemplate.postForObject(
-//                        baseUrl + "/sprint/{projectId}",
-//                        sprint,
-//                        Sprint.class,
-//                        projectId
-//                ));
-//    }
-
-    // Example usage with Sprint
-//    public Sprint persist(Sprint sprint, Long projectId, String version) {
-//        return restTemplate.postForObject(
-//                baseUrl + "/project/{id}/versions/{version}/sprints",
-//                sprint,
-//                Sprint.class,
-//                projectId,
-//                version
-//        );
-//    }
 }

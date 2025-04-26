@@ -17,38 +17,26 @@
 
 package de.bushnaq.abdalla.projecthub.dto;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import de.bushnaq.abdalla.projecthub.dao.AbstractTimeAwareDAO;
 import lombok.*;
 
-import java.time.LocalDate;
+import java.time.Duration;
+import java.time.OffsetDateTime;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
-public class Availability extends AbstractTimeAware implements Comparable<Availability> {
-    private float     availability;
-    private Long      id;
-    private LocalDate start;
+public class Worklog extends AbstractTimeAwareDAO {
 
-    @ToString.Exclude//help intellij debugger not to go into a loop
-    @JsonBackReference
-    private User user;
-
-    public Availability(float availability, LocalDate firstDate) {
-        super();
-        this.availability = availability;
-        setStart(firstDate);
-    }
-
-    @Override
-    public int compareTo(Availability other) {
-        return this.id.compareTo(other.id);
-    }
-
-    String getKey() {
-        return "A-" + id;
-    }
+    private Long           authorId;
+    private String         comment;
+    private Long           id;
+    private Long           sprintId;
+    private OffsetDateTime start;
+    private Long           taskId;
+    private Duration       timeSpent;
+    private Long           updateAuthorId;
 
 }

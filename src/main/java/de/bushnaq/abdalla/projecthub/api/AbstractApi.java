@@ -51,26 +51,37 @@ public class AbstractApi {
         this.baseUrl = baseUrl;
         // Configure message converters for JSON
         restTemplate.getMessageConverters().clear();
-        restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
+//        restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
+        MappingJackson2HttpMessageConverter messageConverter = new MappingJackson2HttpMessageConverter();
+        messageConverter.setObjectMapper(objectMapper);
+        restTemplate.getMessageConverters().add(messageConverter);
     }
 
     protected AbstractApi() {
     }
-
-//    protected AbstractApi(RestTemplate restTemplate) {
-//        this.restTemplate = restTemplate;
-//    }
 
     protected void executeWithErrorHandling(RestOperation operation) {
         try {
             operation.execute();
         } catch (HttpClientErrorException e) {
             try {
-                ErrorResponse error = objectMapper.readValue(e.getResponseBodyAsString(), ErrorResponse.class);
-                throw new ServerErrorException(error.getMessage(), error.getException());
+                if (e instanceof HttpClientErrorException.BadRequest) {
+                    throw new ServerErrorException(e.getMessage(), e.getCause());
+                } else if (e instanceof HttpClientErrorException.NotFound) {
+                    throw new ServerErrorException(e.getMessage(), e.getCause());
+                } else {
+                    ErrorResponse error = objectMapper.readValue(e.getResponseBodyAsString(), ErrorResponse.class);
+                    throw new ServerErrorException(error.getMessage(), error.getException());
+                }
             } catch (JsonProcessingException ex) {
                 throw new IllegalArgumentException(String.format("Error processing server response '%s'.", e.getResponseBodyAsString()));
             }
+//            try {
+//                ErrorResponse error = objectMapper.readValue(e.getResponseBodyAsString(), ErrorResponse.class);
+//                throw new ServerErrorException(error.getMessage(), error.getException());
+//            } catch (JsonProcessingException ex) {
+//                throw new IllegalArgumentException(String.format("Error processing server response '%s'.", e.getResponseBodyAsString()));
+//            }
         }
     }
 
@@ -79,8 +90,12 @@ public class AbstractApi {
             return operation.execute();
         } catch (HttpClientErrorException e) {
             try {
-                ErrorResponse error = objectMapper.readValue(e.getResponseBodyAsString(), ErrorResponse.class);
-                throw new ServerErrorException(error.getMessage(), error.getException());
+                if (e instanceof HttpClientErrorException.NotFound) {
+                    throw new ServerErrorException(e.getMessage(), e.getCause());
+                } else {
+                    ErrorResponse error = objectMapper.readValue(e.getResponseBodyAsString(), ErrorResponse.class);
+                    throw new ServerErrorException(error.getMessage(), error.getException());
+                }
             } catch (JsonProcessingException ex) {
                 throw new IllegalArgumentException(String.format("Error processing server response '%s'.", e.getResponseBodyAsString()));
             }

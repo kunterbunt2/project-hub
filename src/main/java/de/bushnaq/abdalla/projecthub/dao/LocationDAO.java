@@ -32,10 +32,6 @@ import java.time.LocalDate;
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
-//@JsonIdentityInfo(
-//        scope = LocationDAO.class,
-//        generator = ObjectIdGenerators.PropertyGenerator.class,
-//        property = "id")
 public class LocationDAO extends AbstractTimeAwareDAO {
     @Column(nullable = false)
     private String country;
@@ -55,6 +51,4 @@ public class LocationDAO extends AbstractTimeAwareDAO {
     @ToString.Exclude//help intellij debugger not to go into a loop
     @JsonBackReference
     private UserDAO user;
-//    @Column(name = "USER_ID", insertable = false, updatable = false)
-//    private Long      userId;
 }

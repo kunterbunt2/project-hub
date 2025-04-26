@@ -31,20 +31,9 @@ import java.util.List;
 
 @Service
 public class UserApi extends AbstractApi {
-//    private String       baseUrl = "http://localhost:8080"; // Configure as needed
-//    private ObjectMapper objectMapper;
-//    private RestTemplate restTemplate;
 
     public UserApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
         super(restTemplate, objectMapper, baseUrl);
-//        this.restTemplate = restTemplate;
-//        this.objectMapper = objectMapper;
-//        this.restTemplate.setErrorHandler(new DefaultResponseErrorHandler());
-//
-//        this.baseUrl = baseUrl;
-//        // Configure message converters for JSON
-//        restTemplate.getMessageConverters().clear();
-//        restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
     }
 
     public UserApi() {
@@ -84,32 +73,6 @@ public class UserApi extends AbstractApi {
                 id
         ));
     }
-
-//    private void executeWithErrorHandling(RestOperation operation) {
-//        try {
-//            operation.execute();
-//        } catch (HttpClientErrorException e) {
-//            try {
-//                ErrorResponse error = objectMapper.readValue(e.getResponseBodyAsString(), ErrorResponse.class);
-//                throw new ServerErrorException(error.getMessage(), error.getException());
-//            } catch (JsonProcessingException ex) {
-//                throw new IllegalArgumentException(String.format("Error processing server response '%s'.", e.getResponseBodyAsString()));
-//            }
-//        }
-//    }
-//
-//    private <T> T executeWithErrorHandling(RestOperationWithResult<T> operation) {
-//        try {
-//            return operation.execute();
-//        } catch (HttpClientErrorException e) {
-//            try {
-//                ErrorResponse error = objectMapper.readValue(e.getResponseBodyAsString(), ErrorResponse.class);
-//                throw new ServerErrorException(error.getMessage(), error.getException());
-//            } catch (JsonProcessingException ex) {
-//                throw new IllegalArgumentException(String.format("Error processing server response '%s'.", e.getResponseBodyAsString()));
-//            }
-//        }
-//    }
 
     public List<User> getAllUsers() {
 
@@ -156,7 +119,7 @@ public class UserApi extends AbstractApi {
                 ));
     }
 
-    public User persist(User user) {
+    public User save(User user) {
         return executeWithErrorHandling(() ->
                 restTemplate.postForObject(
                         baseUrl + "/user",
@@ -165,7 +128,7 @@ public class UserApi extends AbstractApi {
                 ));
     }
 
-    public Location persist(Location location, Long userId) {
+    public Location save(Location location, Long userId) {
         return executeWithErrorHandling(() ->
                 restTemplate.postForObject(
                         baseUrl + "/location/{userId}",
@@ -175,7 +138,7 @@ public class UserApi extends AbstractApi {
                 ));
     }
 
-    public Availability persist(Availability availability, Long userId) {
+    public Availability save(Availability availability, Long userId) {
         return executeWithErrorHandling(() ->
                 restTemplate.postForObject(
                         baseUrl + "/availability/{userId}",
@@ -185,7 +148,7 @@ public class UserApi extends AbstractApi {
                 ));
     }
 
-    public OffDay persist(OffDay offDay, Long userId) {
+    public OffDay save(OffDay offDay, Long userId) {
         return executeWithErrorHandling(() ->
                 restTemplate.postForObject(
                         baseUrl + "/offday/{userId}",
@@ -226,13 +189,4 @@ public class UserApi extends AbstractApi {
         ));
     }
 
-//    @FunctionalInterface
-//    private interface RestOperation {
-//        void execute() throws HttpClientErrorException;
-//    }
-//
-//    @FunctionalInterface
-//    private interface RestOperationWithResult<T> {
-//        T execute() throws HttpClientErrorException;
-//    }
 }

@@ -15,7 +15,7 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub;
+package de.bushnaq.abdalla.projecthub.dao;
 
 import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.util.AbstractEntityGenerator;

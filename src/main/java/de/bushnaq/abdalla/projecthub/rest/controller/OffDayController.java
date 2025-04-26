@@ -18,10 +18,10 @@
 package de.bushnaq.abdalla.projecthub.rest.controller;
 
 import de.bushnaq.abdalla.projecthub.dao.OffDayDAO;
-import de.bushnaq.abdalla.projecthub.dao.UserDAO;
 import de.bushnaq.abdalla.projecthub.repository.OffDayRepository;
 import de.bushnaq.abdalla.projecthub.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -37,12 +37,16 @@ public class OffDayController {
     private UserRepository userRepository;
 
     @DeleteMapping("/{userId}/{id}")
-    public void delete(@PathVariable Long userId, @PathVariable Long id) {
-        UserDAO   user   = userRepository.getById(userId);
-        OffDayDAO offDay = offDayRepository.findById(id).orElseThrow();
-        user.getOffDays().remove(offDay);
-        userRepository.save(user);
-        offDayRepository.deleteById(id);
+    public ResponseEntity<Object> delete(@PathVariable Long userId, @PathVariable Long id) {
+        return userRepository.findById(userId).map(
+                user -> {
+                    OffDayDAO offDay = offDayRepository.findById(id).orElseThrow();
+                    user.getOffDays().remove(offDay);
+                    userRepository.save(user);
+                    offDayRepository.deleteById(id);
+                    return ResponseEntity.ok().build(); // Return 200 OK
+                }
+        ).orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/{id}")
@@ -52,17 +56,20 @@ public class OffDayController {
     }
 
     @PostMapping("/{userId}")
-    public OffDayDAO save(@RequestBody OffDayDAO offDay, @PathVariable Long userId) {
-        UserDAO user = userRepository.getById(userId);
-        offDay.setUser(user);
-        OffDayDAO save = offDayRepository.save(offDay);
-        return save;
+    public ResponseEntity<OffDayDAO> save(@RequestBody OffDayDAO offDay, @PathVariable Long userId) {
+        return userRepository.findById(userId).map(user -> {
+            offDay.setUser(user);
+            OffDayDAO save = offDayRepository.save(offDay);
+            return ResponseEntity.ok(save); // Return 200 OK
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{userId}")
-    public void update(@RequestBody OffDayDAO offDay, @PathVariable Long userId) {
-        UserDAO user = userRepository.getById(userId);
-        offDay.setUser(user);
-        OffDayDAO save = offDayRepository.save(offDay);
+    public ResponseEntity<Object> update(@RequestBody OffDayDAO offDay, @PathVariable Long userId) {
+        return userRepository.findById(userId).map(user -> {
+            offDay.setUser(user);
+            OffDayDAO save = offDayRepository.save(offDay);
+            return ResponseEntity.ok().build(); // Return 200 OK
+        }).orElse(ResponseEntity.notFound().build());
     }
 }

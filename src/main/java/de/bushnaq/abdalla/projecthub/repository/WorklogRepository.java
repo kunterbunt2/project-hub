@@ -17,8 +17,11 @@
 
 package de.bushnaq.abdalla.projecthub.repository;
 
-import de.bushnaq.abdalla.projecthub.dao.SprintDAO;
+import de.bushnaq.abdalla.projecthub.dao.WorklogDAO;
 import org.springframework.data.repository.ListCrudRepository;
 
-public interface SprintRepository extends ListCrudRepository<SprintDAO, Long> {
+import java.util.List;
+
+public interface WorklogRepository extends ListCrudRepository<WorklogDAO, Long> {
+    List<WorklogDAO> findBySprintId(Long sprintId);
 }

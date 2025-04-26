@@ -35,10 +35,6 @@ import java.util.Map;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
-//@JsonIdentityInfo(
-//        scope = SprintDAO.class,
-//        generator = ObjectIdGenerators.PropertyGenerator.class,
-//        property = "id")
 public class Sprint extends AbstractTimeAware {
 
     @JsonIgnore
@@ -47,23 +43,29 @@ public class Sprint extends AbstractTimeAware {
     private OffsetDateTime end;
     private Long           id;
     private String         name;
-    //    @ToString.Exclude//help intellij debugger not to go into a loop
-//    @JsonBackReference(value = "project-sprint")
     @JsonIgnore
     @ToString.Exclude//help intellij debugger not to go into a loop
     private Project        project;
 
-    private   Long            projectId;
-    private   OffsetDateTime  start;
-    private   Status          status;
+    private Long projectId;
+
+    private OffsetDateTime start;
+
+    private Status status;
+
     @JsonIgnore
     transient Map<Long, Task> taskMap = new HashMap<>();
+
     @JsonIgnore
-//    @JsonManagedReference(value = "sprint-task")
-    private   List<Task>      tasks   = new ArrayList<>();
-    private   Long            userId;
+    private List<Task> tasks = new ArrayList<>();
+
+    private Long userId;
+
     @JsonIgnore
     transient Map<Long, User> userMap = new HashMap<>();
+
+    @JsonIgnore
+    private List<Worklog> worklogs = new ArrayList<>();
 
     public void addTask(Task task) {
         tasks.add(task);
@@ -133,6 +135,9 @@ public class Sprint extends AbstractTimeAware {
                 task.setParentTask(taskMap.get(task.getParentTaskId()));
                 //add the task to the parent task
                 task.getParentTask().addChildTask(task);
+            }
+            for (Worklog worklog : worklogs) {
+                task.addWorklog(worklog);
             }
             task.setSprint(this);
             task.initialize();

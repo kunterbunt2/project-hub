@@ -15,7 +15,7 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub;
+package de.bushnaq.abdalla.projecthub.dao;
 
 import de.bushnaq.abdalla.projecthub.dto.Location;
 import de.bushnaq.abdalla.projecthub.dto.User;
@@ -72,34 +72,13 @@ public class LocationTest extends AbstractEntityGenerator {
             //moving to Germany
             addLocation(user, "de", "nw", LocalDate.parse(SECOND_START_DATE));
 //            user.addLocation("de", "nw", LocalDate.parse(SECOND_START_DATE));
-            userApi.persist(user);//persist the new location
+            userApi.save(user);//persist the new location
         }
 
         //test the new location
         {
             User user = userApi.getUser(id);
             assertEquals(LocalDate.parse(SECOND_START_DATE), user.getLocations().get(1).getStart());
-        }
-
-        printTables();
-    }
-
-    @Test
-    public void create() throws Exception {
-        Long id;
-
-        //create the user with australian locale
-        {
-            Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
-            User user = addRandomUser(LocalDate.parse(FIRST_START_DATE));
-            Locale.setDefault(Locale.getDefault());
-            id = user.getId();
-        }
-
-        //test if the location was persisted correctly
-        {
-            User user = userApi.getUser(id);
-            assertEquals(LocalDate.parse(FIRST_START_DATE), user.getLocations().getFirst().getStart());
         }
 
         printTables();
@@ -117,12 +96,6 @@ public class LocationTest extends AbstractEntityGenerator {
             id = user.getId();
         }
 
-        //test if new location was persisted correctly
-//        {
-//            User user = userApi.getUser(id);
-//            assertEquals(LocalDate.parse(FIRST_START_DATE), user.getLocations().getFirst().getStart());
-//        }
-
         //try to delete the first location
         {
             User user = expectedUsers.getFirst();
@@ -131,7 +104,6 @@ public class LocationTest extends AbstractEntityGenerator {
                 fail("should not be able to delete the first location");
             } catch (ServerErrorException e) {
                 //expected
-                logger.error(e.getMessage(), e);
             }
         }
 
@@ -140,24 +112,44 @@ public class LocationTest extends AbstractEntityGenerator {
             User user = expectedUsers.getFirst();
             //moving to Germany
             addLocation(user, "de", "nw", LocalDate.parse(SECOND_START_DATE));
-//            user.addLocation("de", "nw", LocalDate.parse(SECOND_START_DATE));
-            userApi.persist(user);//persist the new location
+            userApi.save(user);//persist the new location
         }
         testUsers();
-        //test the new location
-//        {
-//            User user = userApi.getUser(id);
-//            assertEquals(LocalDate.parse(SECOND_START_DATE), user.getLocations().get(1).getStart());
-//        }
 
         //try to delete the second location
         {
             User     user     = expectedUsers.getFirst();
             Location location = user.getLocations().get(1);
             removeLocation(location, user);
-//            user = userApi.getUser(id);
-//            assertEquals(1, user.getLocations().size());
             testUsers();
+        }
+
+        //try to delete using fake user id
+        {
+            User user   = expectedUsers.getFirst();
+            Long userId = user.getId();
+            user.setId(999999L);
+            try {
+                userApi.delete(user, user.getLocations().getFirst());
+                fail("should not be able to delete");
+            } catch (ServerErrorException e) {
+                //expected
+            }
+            user.setId(userId);
+        }
+        //try to delete using fake location id
+        {
+            User     user       = expectedUsers.getFirst();
+            Location location   = user.getLocations().getFirst();
+            Long     locationId = location.getId();
+            location.setId(999999L);
+            try {
+                userApi.delete(user, user.getLocations().getFirst());
+                fail("should not be able to delete");
+            } catch (ServerErrorException e) {
+                //expected
+            }
+            location.setId(locationId);
         }
         printTables();
     }
@@ -166,15 +158,11 @@ public class LocationTest extends AbstractEntityGenerator {
     @Test
     public void update() throws Exception {
         Long id;
-        Long locationId;
 
         //create the user with australian locale
         {
-//            Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
             User user = addRandomUser(LocalDate.parse(FIRST_START_DATE));
-//            Locale.setDefault(Locale.getDefault());
-            id         = user.getId();
-            locationId = user.getLocations().getFirst().getId();
+            id = user.getId();
         }
 
         //test if the location was persisted correctly
@@ -198,13 +186,42 @@ public class LocationTest extends AbstractEntityGenerator {
         printTables();
         //test if the location was updated correctly
         testUsers();
-//        {
-//            User user = userApi.getUser(id);
-//            assertEquals(SECOND_COUNTRY, user.getLocations().getFirst().getCountry());
-//            assertEquals(SECOND_STATE, user.getLocations().getFirst().getState());
-//            assertEquals(LocalDate.parse(SECOND_START_DATE), user.getLocations().getFirst().getStart());
-//        }
 
+        //update using fake user id
+        {
+            User user   = expectedUsers.getFirst();
+            Long userId = user.getId();
+            user.setId(999999L);
+            Location location = user.getLocations().getFirst();
+            location.setCountry(SECOND_COUNTRY);
+            location.setState(SECOND_STATE);
+            location.setStart(LocalDate.parse(SECOND_START_DATE));
+            try {
+                updateLocation(location, user);
+                fail("should not be able to update");
+            } catch (ServerErrorException e) {
+                //expected
+            }
+            user.setId(userId);
+        }
+
+        //update using fake location id
+        {
+            User     user       = expectedUsers.getFirst();
+            Location location   = user.getLocations().getFirst();
+            Long     locationId = location.getId();
+            location.setId(999999L);
+            location.setCountry(SECOND_COUNTRY);
+            location.setState(SECOND_STATE);
+            location.setStart(LocalDate.parse(SECOND_START_DATE));
+            try {
+                updateLocation(location, user);
+                fail("should not be able to update");
+            } catch (ServerErrorException e) {
+                //expected
+            }
+            location.setId(locationId);
+        }
     }
 
 }

@@ -18,6 +18,8 @@
 package de.bushnaq.abdalla.projecthub.dao;
 
 import de.bushnaq.abdalla.projecthub.dto.Status;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Proxy;
@@ -32,10 +34,8 @@ import java.time.OffsetDateTime;
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
-//@JsonIdentityInfo(
-//        scope = SprintDAO.class,
-//        generator = ObjectIdGenerators.PropertyGenerator.class,
-//        property = "id")
+@Hidden
+@Schema(hidden = true)
 public class SprintDAO extends AbstractTimeAwareDAO {
     @Column(name = "end_date", nullable = true)  // renamed from 'end' as it is reserved in H2 databases
     private OffsetDateTime end;
@@ -56,15 +56,8 @@ public class SprintDAO extends AbstractTimeAwareDAO {
 
     @Column(nullable = false)
     private Status status;
-    //    @ManyToOne(fetch = FetchType.LAZY)
-//    @ToString.Exclude//help intellij debugger not to go into a loop
-//    @JsonBackReference(value = "project-sprint")
-    @Column(nullable = true)
-    private Long   userId;
 
-//    @OneToMany(mappedBy = "sprint", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-//    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-//    @JoinColumn(name = "sprint_id", referencedColumnName = "id")
-//    @JsonManagedReference(value = "sprint-task")
-//    private List<TaskDAO> tasks = new ArrayList<>();
+    @Column(nullable = true)
+    private Long userId;
+
 }

@@ -15,7 +15,7 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub;
+package de.bushnaq.abdalla.projecthub.dao;
 
 import de.bushnaq.abdalla.projecthub.dto.Product;
 import de.bushnaq.abdalla.projecthub.util.AbstractEntityGenerator;
@@ -44,6 +44,7 @@ public class ProductTest extends AbstractEntityGenerator {
 
         addRandomProducts(1);
 
+        testProducts();
         printTables();
     }
 
@@ -51,6 +52,7 @@ public class ProductTest extends AbstractEntityGenerator {
     public void delete() throws Exception {
         addRandomProducts(2);
         removeProduct(expectedProducts.get(0).getId());
+        removeProduct(999999L);
         testProducts();
         printTables();
     }
@@ -59,6 +61,8 @@ public class ProductTest extends AbstractEntityGenerator {
     public void getAll() throws Exception {
         addRandomProducts(3);
         List<Product> allProducts = productApi.getAllProducts();
+
+        testProducts();
         printTables();
     }
 

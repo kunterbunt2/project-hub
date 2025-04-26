@@ -71,6 +71,8 @@ public class Task {
     @JsonSerialize(using = DurationSerializer.class)
     @JsonDeserialize(using = DurationDeserializer.class)
     private Duration       work         = Duration.ZERO;
+    @JsonIgnore
+    private List<Worklog>  worklogs     = new ArrayList<>();
 
     public void addChildTask(Task childTask) {
         if (childTask.getParentTask() != null) {
@@ -83,6 +85,11 @@ public class Task {
 
     public void addPredecessor(Task dependency, boolean isVisible) {
         predecessors.add(new Relation(dependency, isVisible));
+    }
+
+    public void addWorklog(Worklog worklog) {
+        worklog.setTaskId(id);
+        worklogs.add(worklog);
     }
 
     @JsonIgnore

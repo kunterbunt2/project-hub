@@ -27,9 +27,21 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(IllegalArgumentException.class)
+    //    @ExceptionHandler(IllegalArgumentException.class)
+//    @ResponseStatus(HttpStatus.BAD_REQUEST)
+//    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
+//        ErrorResponse error = new ErrorResponse(
+//                HttpStatus.BAD_REQUEST.value(),
+//                ex.getMessage(), ex
+//        );
+//        return ResponseEntity
+//                .status(HttpStatus.BAD_REQUEST)
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .body(error);
+//    }
+    @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
+    public ResponseEntity<ErrorResponse> handleException(Exception ex) {
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 ex.getMessage(), ex

@@ -15,7 +15,7 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.gantt;
+package de.bushnaq.abdalla.projecthub.report.renderer.gantt;
 
 import de.bushnaq.abdalla.projecthub.dto.Task;
 import de.bushnaq.abdalla.projecthub.util.AbstractGanttTestUtil;

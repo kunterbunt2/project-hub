@@ -30,10 +30,6 @@ import java.util.List;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
-//@JsonIdentityInfo(
-//        scope = Version.class,
-//        generator = ObjectIdGenerators.PropertyGenerator.class,
-//        property = "id")
 public class Version extends AbstractTimeAware {
 
     private Long id;
@@ -46,7 +42,6 @@ public class Version extends AbstractTimeAware {
 
     private Long productId;
 
-    //    @JsonManagedReference(value = "version-project")
     @JsonIgnore
     @ToString.Exclude//help intellij debugger not to go into a loop
     private List<Project> projects = new ArrayList<>();
