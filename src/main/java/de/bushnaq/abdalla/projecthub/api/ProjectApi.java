@@ -73,4 +73,12 @@ public class ProjectApi extends AbstractApi {
                         versionId
                 ));
     }
+
+    public void update(Project project, Long versionId) {
+        executeWithErrorHandling(() -> restTemplate.put(
+                baseUrl + "/project/{versionId}",
+                project,
+                versionId
+        ));
+    }
 }

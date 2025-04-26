@@ -692,6 +692,13 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         expectedProducts.add(product);//replace old products with the updated one
     }
 
+    protected void updateProject(Project project, Long versionId) {
+        projectApi.update(project, versionId);
+        expectedProjects.remove(project);
+        expectedProjects.add(project);//replace old products with the updated one
+    }
+
+
     protected void updateUser(User user) throws ServerErrorException {
         userApi.update(user);
         expectedUsers.remove(user);

@@ -32,6 +32,9 @@ import java.util.List;
 @Service
 public class UserApi extends AbstractApi {
 
+    //TODO move availability to its own api
+    //TODO move location to its own api
+    //TODO move offday to its own api
     public UserApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
         super(restTemplate, objectMapper, baseUrl);
     }
@@ -43,6 +46,7 @@ public class UserApi extends AbstractApi {
         this.restTemplate = restTemplate;
     }
 
+    //TODO use ids instead of objects
     public void delete(User user, Location location) throws org.springframework.web.client.RestClientException {
         executeWithErrorHandling(() -> restTemplate.delete(
                 baseUrl + "/location/{userId}/{id}",
@@ -51,6 +55,7 @@ public class UserApi extends AbstractApi {
         ));
     }
 
+    //TODO use ids instead of objects
     public void delete(User user, OffDay offDay) throws org.springframework.web.client.RestClientException {
         executeWithErrorHandling(() -> restTemplate.delete(
                 baseUrl + "/offday/{userId}/{id}",
@@ -59,6 +64,7 @@ public class UserApi extends AbstractApi {
         ));
     }
 
+    //TODO use ids instead of objects
     public void delete(User user, Availability availability) throws org.springframework.web.client.RestClientException {
         executeWithErrorHandling(() -> restTemplate.delete(
                 baseUrl + "/availability/{userId}/{id}",

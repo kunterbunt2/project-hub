@@ -80,14 +80,20 @@ public class DTOAsserts {
     }
 
     protected static void assertProjectEquals(Project expected, Project actual) {
+        assertProjectEquals(expected, actual, false);
+    }
+
+    protected static void assertProjectEquals(Project expected, Project actual, boolean shallow) {
         assertEquals(expected.getCreated(), actual.getCreated(), String.format("Project '%s' created date does not match", actual.getName()));
 //        assertEquals(expected.getUpdated(), actual.getUpdated(), String.format("Project '%s' updated date does not match", actual.getName()));
         assertEquals(expected.getId(), actual.getId(), "Project IDs do not match");
         assertEquals(expected.getName(), actual.getName(), "Project names do not match");
         assertEquals(expected.getRequester(), actual.getRequester(), "Project requesters do not match");
-        assertEquals(expected.getSprints().size(), actual.getSprints().size(), "Number of sprints in project do not match");
-        for (int i = 0; i < expected.getSprints().size(); i++) {
-            assertSprintEquals(expected.getSprints().get(i), actual.getSprints().get(i));
+        if (!shallow) {
+            assertEquals(expected.getSprints().size(), actual.getSprints().size(), "Number of sprints in project do not match");
+            for (int i = 0; i < expected.getSprints().size(); i++) {
+                assertSprintEquals(expected.getSprints().get(i), actual.getSprints().get(i));
+            }
         }
     }
 

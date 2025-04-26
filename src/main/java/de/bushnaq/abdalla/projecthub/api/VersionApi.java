@@ -64,7 +64,7 @@ public class VersionApi extends AbstractApi {
         return Arrays.asList(response.getBody());
     }
 
-    public Version getVersion(Long id) {
+    public Version getById(Long id) {
         return executeWithErrorHandling(() ->
                 restTemplate.getForObject(
                         baseUrl + "/version/{id}",
@@ -83,10 +83,10 @@ public class VersionApi extends AbstractApi {
                 ));
     }
 
-    public void update(Version user) {
+    public void update(Version version) {
         executeWithErrorHandling(() -> restTemplate.put(
                 baseUrl + "/version",
-                user
+                version
         ));
     }
 

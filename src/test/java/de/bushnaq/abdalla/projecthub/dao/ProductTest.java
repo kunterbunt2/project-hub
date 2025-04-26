@@ -30,6 +30,7 @@ import org.springframework.web.server.ServerErrorException;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 @ExtendWith(SpringExtension.class)
@@ -76,6 +77,7 @@ public class ProductTest extends AbstractEntityGenerator {
     public void getAll() throws Exception {
         addRandomProducts(3);
         List<Product> allProducts = productApi.getAll();
+        assertEquals(3, allProducts.size());
 
         testProducts();
         printTables();
@@ -109,7 +111,7 @@ public class ProductTest extends AbstractEntityGenerator {
 
         addRandomProducts(1);
         Product product = productApi.getById(expectedProducts.getFirst().getId());
-        product.setVersions(versionApi.getAll(product.getId()));
+//        product.setVersions(versionApi.getAll(product.getId()));
         assertProductEquals(expectedProducts.getFirst(), product, true);//shallow test
 
         testProducts();

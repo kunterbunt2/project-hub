@@ -55,36 +55,4 @@ public class SprintTest extends AbstractEntityGenerator {
         testAll();
     }
 
-//    @Test
-//    public void create() throws Exception {
-//        Project project = createProject();
-//
-//        // Create sprint
-//        {
-//            Sprint sprint = new Sprint();
-//            sprint.setName("Sprint 1");
-//            sprint.setStart(OffsetDateTime.now());
-//            sprint.setEnd(OffsetDateTime.now().plusWeeks(2));
-//            sprint.setStatus(Status.OPEN);
-//            project.getVersions().getFirst().setSprints(List.of(sprint));
-//        }
-//
-//
-//        Project createdProject = productApi.persist(project);
-//
-//        Project retrievedProject = productApi.getProject(createdProject.getId());
-//
-//        asserEqual(createdProject, retrievedProject);
-//        List<Sprint> sprints = retrievedProject.getVersions().get(0).getSprints();
-//        assertFalse(retrievedProject.getVersions().get(0).getSprints().isEmpty());
-//        Sprint savedSprint = sprints.get(0);
-//        assertEquals("Sprint 1", savedSprint.getName());
-//        assertEquals(Status.OPEN, savedSprint.getStatus());
-//        assertNotNull(savedSprint.getStart());
-//        assertNotNull(savedSprint.getEnd());
-//
-//        printTables();
-//    }
-
-
 }

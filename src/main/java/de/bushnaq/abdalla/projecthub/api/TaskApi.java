@@ -40,6 +40,8 @@ public class TaskApi extends AbstractApi {
         this.restTemplate = restTemplate;
     }
 
+    //TODO missing deleteById restapi
+
     public List<Task> getAll() {
 
         ResponseEntity<Task[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(baseUrl + "/task", Task[].class));
@@ -53,5 +55,7 @@ public class TaskApi extends AbstractApi {
     public Task persist(Task task) {
         return executeWithErrorHandling(() -> restTemplate.postForObject(baseUrl + "/task", task, Task.class));
     }
+
+    //TODO missing update restapi
 
 }

@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.dao;
 
+import de.bushnaq.abdalla.projecthub.dto.Project;
 import de.bushnaq.abdalla.projecthub.util.AbstractEntityGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,6 +27,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ServerErrorException;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 @ExtendWith(SpringExtension.class)
@@ -33,6 +40,8 @@ import org.springframework.transaction.annotation.Transactional;
 @AutoConfigureMockMvc
 @Transactional
 public class ProjectTest extends AbstractEntityGenerator {
+    private static final long   FAKE_ID     = 999999L;
+    private static final String SECOND_NAME = "SECOND_NAME";
     Logger logger = LoggerFactory.getLogger(ProjectTest.class);
 
     @Test
@@ -45,7 +54,6 @@ public class ProjectTest extends AbstractEntityGenerator {
 
     @Test
     public void delete() throws Exception {
-
         //create the users
         addRandomProducts(2);
         removeProject(expectedProjects.getFirst().getId());
@@ -58,20 +66,90 @@ public class ProjectTest extends AbstractEntityGenerator {
         printTables();
     }
 
-//    @Test
-//    public void getAll() throws Exception {
-//        List<Project> allProjects = productApi.getAllProjects();
-//        printTables();
-//    }
-//
-//    @Test
-//    public void getById() throws Exception {
-//        Project project        = createProject();
-//        Project createdProject = productApi.persist(project);
-//
-//        Project retrievedProject = productApi.getProject(createdProject.getId());
-//        asserEqual(createdProject, retrievedProject);
-//        printTables();
-//    }
+    @Test
+    public void deleteUsingFakeId() throws Exception {
+        addRandomProducts(2);
+        try {
+            removeProject(FAKE_ID);
+        } catch (ServerErrorException e) {
+            //expected
+        }
 
+        testProducts();
+        printTables();
+    }
+
+    @Test
+    public void getAll() throws Exception {
+        addRandomProducts(3);
+        List<Project> allProjects = projectApi.getAll();
+        assertEquals(3, allProjects.size());
+
+        testProducts();
+        printTables();
+    }
+
+    @Test
+    public void getAllEmpty() throws Exception {
+        List<Project> allProjects = projectApi.getAll();
+
+        testProducts();
+        printTables();
+    }
+
+    @Test
+    public void getByFakeId() throws Exception {
+        addRandomProducts(1);
+        try {
+            projectApi.getById(FAKE_ID);
+            fail("Project should not exist");
+        } catch (ServerErrorException e) {
+            //expected
+        }
+
+        testProducts();
+        printTables();
+    }
+
+    @Test
+    public void getById() throws Exception {
+        addRandomProducts(1);
+        Project project = projectApi.getById(expectedProjects.getFirst().getId());
+        assertProjectEquals(expectedProjects.getFirst(), project, true); //shallow test
+
+        testProducts();
+        printTables();
+    }
+
+    @Test
+    public void update() throws Exception {
+        addRandomProducts(2);
+        Project project = expectedProjects.getFirst();
+        project.setName(SECOND_NAME);
+        updateProject(project, project.getVersionId());
+
+        testProducts();
+        printTables();
+    }
+
+    @Test
+    public void updateUsingFakeId() throws Exception {
+        addRandomProducts(2);
+        Project project = expectedProjects.getFirst();
+        Long    id      = project.getId();
+        String  name    = project.getName();
+        project.setId(FAKE_ID);
+        project.setName(SECOND_NAME);
+        try {
+            updateProject(project, project.getVersionId());
+            fail("should not be able to update");
+        } catch (ServerErrorException e) {
+            //expected
+            project.setId(id);
+            project.setName(name);
+        }
+
+        testProducts();
+        printTables();
+    }
 }
