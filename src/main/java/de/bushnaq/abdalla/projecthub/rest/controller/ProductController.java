@@ -19,7 +19,6 @@ package de.bushnaq.abdalla.projecthub.rest.controller;
 
 import de.bushnaq.abdalla.projecthub.dao.ProductDAO;
 import de.bushnaq.abdalla.projecthub.repository.ProductRepository;
-import de.bushnaq.abdalla.projecthub.repository.VersionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,9 +31,6 @@ public class ProductController {
 
     @Autowired
     private ProductRepository productRepository;
-
-    @Autowired
-    private VersionRepository versionRepository;
 
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {

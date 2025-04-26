@@ -40,13 +40,13 @@ public class TaskApi extends AbstractApi {
         this.restTemplate = restTemplate;
     }
 
-    public List<Task> getAllTasks() {
+    public List<Task> getAll() {
 
         ResponseEntity<Task[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(baseUrl + "/task", Task[].class));
         return Arrays.asList(response.getBody());
     }
 
-    public Task getTask(Long id) {
+    public Task getById(Long id) {
         return executeWithErrorHandling(() -> restTemplate.getForObject(baseUrl + "/task/{id}", Task.class, id));
     }
 

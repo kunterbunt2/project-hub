@@ -15,7 +15,7 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.dao;
+package de.bushnaq.abdalla.projecthub;
 
 import de.bushnaq.abdalla.projecthub.report.dao.BurnDownGraphicsTheme;
 import de.bushnaq.abdalla.projecthub.report.dao.GraphicsLightTheme;

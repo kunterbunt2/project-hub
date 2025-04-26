@@ -20,5 +20,8 @@ package de.bushnaq.abdalla.projecthub.repository;
 import de.bushnaq.abdalla.projecthub.dao.VersionDAO;
 import org.springframework.data.repository.ListCrudRepository;
 
+import java.util.List;
+
 public interface VersionRepository extends ListCrudRepository<VersionDAO, Long> {
+    List<VersionDAO> findByProductId(Long productId);
 }

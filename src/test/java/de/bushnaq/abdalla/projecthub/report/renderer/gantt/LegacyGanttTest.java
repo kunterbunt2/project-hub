@@ -17,7 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.report.renderer.gantt;
 
-import de.bushnaq.abdalla.projecthub.dao.ParameterOptions;
+import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.Task;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.util.AbstractLegacyGanttTestUtil;

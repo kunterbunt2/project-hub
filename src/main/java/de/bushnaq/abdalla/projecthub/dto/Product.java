@@ -25,6 +25,7 @@ import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -57,7 +58,7 @@ public class Product extends AbstractTimeAware implements Comparable<Product> {
 
     public void initialize(GanttContext gc) {
         gc.allVersions.forEach(version -> {
-            if (version.getProductId() == id) {
+            if (Objects.equals(version.getProductId(), id)) {
                 addVersion(version);
             }
         });

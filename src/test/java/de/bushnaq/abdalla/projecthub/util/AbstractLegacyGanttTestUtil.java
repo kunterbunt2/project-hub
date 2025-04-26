@@ -91,11 +91,11 @@ public class AbstractLegacyGanttTestUtil extends AbstractGanttTestUtil {
     protected void initialize() throws Exception {
         GanttContext gc = new GanttContext();
         gc.allUsers    = userApi.getAllUsers();
-        gc.allProducts = productApi.getAllProducts();
-        gc.allVersions = versionApi.getAllVersions();
-        gc.allProjects = projectApi.getAllProjects();
-        gc.allSprints  = sprintApi.getAllSprints();
-        gc.allTasks    = taskApi.getAllTasks();
+        gc.allProducts = productApi.getAll();
+        gc.allVersions = versionApi.getAll();
+        gc.allProjects = projectApi.getAll();
+        gc.allSprints  = sprintApi.getAll();
+        gc.allTasks    = taskApi.getAll();
         gc.initialize();
 
         taskMap.clear();

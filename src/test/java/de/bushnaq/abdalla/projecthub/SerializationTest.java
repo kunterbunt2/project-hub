@@ -22,7 +22,6 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -33,7 +32,6 @@ import java.time.temporal.ChronoUnit;
 @AutoConfigureMockMvc
 @Transactional
 @TestMethodOrder(MethodOrderer.MethodName.class)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class SerializationTest {
     @Autowired
     ObjectMapper objectMapper;

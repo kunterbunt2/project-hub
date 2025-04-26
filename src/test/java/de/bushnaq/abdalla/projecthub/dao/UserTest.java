@@ -80,12 +80,13 @@ public class UserTest extends AbstractEntityGenerator {
 
         //get user by id
         {
-            User user = userApi.getUser(expectedUsers.first().getId());
+            User user = userApi.getById(expectedUsers.first().getId());
+            assertUserEquals(expectedUsers.first(), user);
         }
         //get by unknown id
         {
             try {
-                User user = userApi.getUser(9999999L);
+                User user = userApi.getById(9999999L);
                 fail("User should not exist");
             } catch (ServerErrorException e) {
                 //expected
@@ -104,7 +105,7 @@ public class UserTest extends AbstractEntityGenerator {
         //get by unknown id
         {
             try {
-                User user = userApi.getUser(9999999L);
+                User user = userApi.getById(9999999L);
                 fail("User should not exist");
             } catch (ServerErrorException e) {
                 //expected
@@ -126,7 +127,7 @@ public class UserTest extends AbstractEntityGenerator {
 
         //test if the location was persisted correctly
         {
-            User user = userApi.getUser(id);
+            User user = userApi.getById(id);
             assertEquals(LocalDate.parse(FIRST_START_DATE), user.getLocations().getFirst().getStart());
         }
 
@@ -134,7 +135,7 @@ public class UserTest extends AbstractEntityGenerator {
 
         //user leaves the company
         {
-            User user = userApi.getUser(id);
+            User user = userApi.getById(id);
             user.setLastWorkingDay(LocalDate.parse(SECOND_START_DATE));
             updateUser(user);
         }

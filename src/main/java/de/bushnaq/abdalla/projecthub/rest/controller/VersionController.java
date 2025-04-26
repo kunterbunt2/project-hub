@@ -46,6 +46,11 @@ public class VersionController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/product/{productId}")
+    public List<VersionDAO> getAll(@PathVariable Long productId) {
+        return versionRepository.findByProductId(productId);
+    }
+
     @GetMapping
     public List<VersionDAO> getAll() {
         return versionRepository.findAll();

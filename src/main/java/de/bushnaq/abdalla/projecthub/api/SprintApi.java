@@ -40,7 +40,7 @@ public class SprintApi extends AbstractApi {
         this.restTemplate = restTemplate;
     }
 
-    public List<Sprint> getAllSprints() {
+    public List<Sprint> getAll() {
 
         ResponseEntity<Sprint[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(
                 baseUrl + "/sprint",
@@ -49,7 +49,7 @@ public class SprintApi extends AbstractApi {
         return Arrays.asList(response.getBody());
     }
 
-    public Sprint getSprint(Long id) {
+    public Sprint getById(Long id) {
         return executeWithErrorHandling(() -> restTemplate.getForObject(
                 baseUrl + "/sprint/{id}",
                 Sprint.class,

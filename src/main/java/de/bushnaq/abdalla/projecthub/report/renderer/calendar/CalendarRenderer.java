@@ -17,7 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.report.renderer.calendar;
 
-import de.bushnaq.abdalla.projecthub.dao.Context;
+import de.bushnaq.abdalla.projecthub.Context;
 import de.bushnaq.abdalla.projecthub.dto.OffDayType;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.report.dao.BurnDownGraphicsTheme;

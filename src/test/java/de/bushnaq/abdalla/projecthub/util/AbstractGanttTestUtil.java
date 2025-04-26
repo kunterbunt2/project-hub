@@ -19,8 +19,8 @@ package de.bushnaq.abdalla.projecthub.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import de.bushnaq.abdalla.projecthub.dao.Context;
-import de.bushnaq.abdalla.projecthub.dao.ParameterOptions;
+import de.bushnaq.abdalla.projecthub.Context;
+import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.report.CalendarChart;
 import de.bushnaq.abdalla.projecthub.report.GanttChart;
@@ -207,11 +207,11 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
     protected void initialize() throws Exception {
         GanttContext gc = new GanttContext();
         gc.allUsers    = userApi.getAllUsers();
-        gc.allProducts = productApi.getAllProducts();
-        gc.allVersions = versionApi.getAllVersions();
-        gc.allProjects = projectApi.getAllProjects();
-        gc.allSprints  = sprintApi.getAllSprints();
-        gc.allTasks    = taskApi.getAllTasks();
+        gc.allProducts = productApi.getAll();
+        gc.allVersions = versionApi.getAll();
+        gc.allProjects = projectApi.getAll();
+        gc.allSprints  = sprintApi.getAll();
+        gc.allTasks    = taskApi.getAll();
         gc.initialize();
 
         for (User user : gc.allUsers) {

@@ -92,6 +92,15 @@ public class UserApi extends AbstractApi {
                 ));
     }
 
+    public User getById(Long id) {
+        return executeWithErrorHandling(() ->
+                restTemplate.getForObject(
+                        baseUrl + "/user/{id}",
+                        User.class,
+                        id
+                ));
+    }
+
     public Location getLocation(Long id) {
         return executeWithErrorHandling(() ->
                 restTemplate.getForObject(
@@ -106,15 +115,6 @@ public class UserApi extends AbstractApi {
                 restTemplate.getForObject(
                         baseUrl + "/offday/{id}",
                         OffDay.class,
-                        id
-                ));
-    }
-
-    public User getUser(Long id) {
-        return executeWithErrorHandling(() ->
-                restTemplate.getForObject(
-                        baseUrl + "/user/{id}",
-                        User.class,
                         id
                 ));
     }

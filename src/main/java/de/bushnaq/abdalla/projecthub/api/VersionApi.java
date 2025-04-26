@@ -47,11 +47,19 @@ public class VersionApi extends AbstractApi {
         ));
     }
 
-    public List<Version> getAllVersions() {
-
+    public List<Version> getAll() {
         ResponseEntity<Version[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(
                 baseUrl + "/version",
                 Version[].class
+        ));
+        return Arrays.asList(response.getBody());
+    }
+
+    public List<Version> getAll(Long productId) {
+        ResponseEntity<Version[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(
+                baseUrl + "/version/product/{productId}",
+                Version[].class,
+                productId
         ));
         return Arrays.asList(response.getBody());
     }

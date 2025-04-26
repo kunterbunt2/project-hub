@@ -29,10 +29,6 @@ import org.hibernate.annotations.Proxy;
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
-//@JsonIdentityInfo(
-//        scope = ProductDAO.class,
-//        generator = ObjectIdGenerators.PropertyGenerator.class,
-//        property = "id")
 public class ProductDAO extends AbstractTimeAwareDAO {
 
     @Id
@@ -43,13 +39,4 @@ public class ProductDAO extends AbstractTimeAwareDAO {
     @Column(nullable = false)
     private String name;
 
-//    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-//    @JoinColumn(name = "product_id", referencedColumnName = "id")
-//    @JsonManagedReference(value = "product-version")
-//    private List<VersionDAO> versions = new ArrayList<>();
-
-//    public void addVersion(VersionDAO comment) {
-//        versions.add(comment);
-//        comment.setProduct(this);
-//    }
 }

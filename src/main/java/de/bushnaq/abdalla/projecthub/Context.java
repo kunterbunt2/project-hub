@@ -15,7 +15,7 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.dao;
+package de.bushnaq.abdalla.projecthub;
 
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;

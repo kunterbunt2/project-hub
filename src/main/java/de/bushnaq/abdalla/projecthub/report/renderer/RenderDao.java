@@ -17,7 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.report.renderer;
 
-import de.bushnaq.abdalla.projecthub.dao.Context;
+import de.bushnaq.abdalla.projecthub.Context;
 import de.bushnaq.abdalla.projecthub.report.dao.BurnDownGraphicsTheme;
 
 import java.time.Duration;

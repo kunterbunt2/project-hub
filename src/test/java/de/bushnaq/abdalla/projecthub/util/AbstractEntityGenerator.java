@@ -18,8 +18,8 @@
 package de.bushnaq.abdalla.projecthub.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.api.*;
-import de.bushnaq.abdalla.projecthub.dao.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.report.renderer.gantt.GanttContext;
 import de.bushnaq.abdalla.util.date.DateUtil;
@@ -634,14 +634,14 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     protected void testProducts() {
         GanttContext gc = new GanttContext();
         gc.allUsers    = userApi.getAllUsers().stream().sorted().toList();
-        gc.allProducts = productApi.getAllProducts().stream().sorted().toList();
-        gc.allVersions = versionApi.getAllVersions().stream().sorted().toList();
-        gc.allProjects = projectApi.getAllProjects().stream().sorted().toList();
-        gc.allSprints  = sprintApi.getAllSprints().stream().sorted().toList();
+        gc.allProducts = productApi.getAll().stream().sorted().toList();
+        gc.allVersions = versionApi.getAll().stream().sorted().toList();
+        gc.allProjects = projectApi.getAll().stream().sorted().toList();
+        gc.allSprints  = sprintApi.getAll().stream().sorted().toList();
         for (Sprint sprint : gc.allSprints) {
-            sprint.setWorklogs(worklogApi.getAllWorklogs(sprint.getId()).stream().sorted().toList());
+            sprint.setWorklogs(worklogApi.getAll(sprint.getId()).stream().sorted().toList());
         }
-        gc.allTasks = taskApi.getAllTasks().stream().sorted().toList();
+        gc.allTasks = taskApi.getAll().stream().sorted().toList();
         gc.initialize();
 
         expectedProducts.sort(Comparator.naturalOrder());

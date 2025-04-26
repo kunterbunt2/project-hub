@@ -47,7 +47,7 @@ public class ProjectApi extends AbstractApi {
         ));
     }
 
-    public List<Project> getAllProjects() {
+    public List<Project> getAll() {
         ResponseEntity<Project[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(
                 baseUrl + "/project",
                 Project[].class
@@ -55,12 +55,13 @@ public class ProjectApi extends AbstractApi {
         return Arrays.asList(response.getBody());
     }
 
-    public Project getProduct(Long id) {
-        return executeWithErrorHandling(() -> restTemplate.getForObject(
-                baseUrl + "/project/{id}",
-                Project.class,
-                id
-        ));
+    public Project getById(Long id) {
+        return executeWithErrorHandling(() ->
+                restTemplate.getForObject(
+                        baseUrl + "/project/{id}",
+                        Project.class,
+                        id
+                ));
     }
 
     public Project persist(Project project, Long versionId) {

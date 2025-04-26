@@ -40,7 +40,7 @@ public class WorklogApi extends AbstractApi {
         this.restTemplate = restTemplate;
     }
 
-    public List<Worklog> getAllWorklogs(Long SpringId) {
+    public List<Worklog> getAll(Long SpringId) {
 
         ResponseEntity<Worklog[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(baseUrl + "/worklog/sprint/{sprintId}", Worklog[].class, SpringId));
         return Arrays.asList(response.getBody());

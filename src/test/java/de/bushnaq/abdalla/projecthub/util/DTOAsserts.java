@@ -63,13 +63,19 @@ public class DTOAsserts {
     }
 
     protected static void assertProductEquals(Product expected, Product actual) {
+        assertProductEquals(expected, actual, false);
+    }
+
+    protected static void assertProductEquals(Product expected, Product actual, boolean shallow) {
         assertEquals(expected.getCreated(), actual.getCreated(), String.format("Product '%s' created date does not match", actual.getName()));
 //        assertEquals(expected.getUpdated(), actual.getUpdated(), String.format("Product '%s' updated date does not match", actual.getName()));
         assertEquals(expected.getId(), actual.getId(), "Product IDs do not match");
         assertEquals(expected.getName(), actual.getName(), "Product names do not match");
-        assertEquals(expected.getVersions().size(), actual.getVersions().size(), "Number of versions in product do not match");
-        for (int i = 0; i < expected.getVersions().size(); i++) {
-            assertVersionEquals(expected.getVersions().get(i), actual.getVersions().get(i));
+        if (!shallow) {
+            assertEquals(expected.getVersions().size(), actual.getVersions().size(), "Number of versions in product do not match");
+            for (int i = 0; i < expected.getVersions().size(); i++) {
+                assertVersionEquals(expected.getVersions().get(i), actual.getVersions().get(i));
+            }
         }
     }
 

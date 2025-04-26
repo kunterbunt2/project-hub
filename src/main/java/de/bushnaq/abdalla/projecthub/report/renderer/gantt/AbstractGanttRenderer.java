@@ -17,7 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.report.renderer.gantt;
 
-import de.bushnaq.abdalla.projecthub.dao.Context;
+import de.bushnaq.abdalla.projecthub.Context;
 import de.bushnaq.abdalla.projecthub.dto.Relation;
 import de.bushnaq.abdalla.projecthub.dto.Task;
 import de.bushnaq.abdalla.projecthub.dto.TaskMode;

@@ -75,7 +75,7 @@ public class ProductTest extends AbstractEntityGenerator {
     @Test
     public void getAll() throws Exception {
         addRandomProducts(3);
-        List<Product> allProducts = productApi.getAllProducts();
+        List<Product> allProducts = productApi.getAll();
 
         testProducts();
         printTables();
@@ -83,7 +83,34 @@ public class ProductTest extends AbstractEntityGenerator {
 
     @Test
     public void getAllEmpty() throws Exception {
-        List<Product> allProducts = productApi.getAllProducts();
+        List<Product> allProducts = productApi.getAll();
+
+        testProducts();
+        printTables();
+    }
+
+    @Test
+    public void getByFakeId() throws Exception {
+
+        addRandomProducts(1);
+        try {
+            productApi.getById(FAKE_ID);
+            fail("Product should not exist");
+        } catch (ServerErrorException e) {
+            //expected
+        }
+
+        testProducts();
+        printTables();
+    }
+
+    @Test
+    public void getById() throws Exception {
+
+        addRandomProducts(1);
+        Product product = productApi.getById(expectedProducts.getFirst().getId());
+        product.setVersions(versionApi.getAll(product.getId()));
+        assertProductEquals(expectedProducts.getFirst(), product, true);//shallow test
 
         testProducts();
         printTables();

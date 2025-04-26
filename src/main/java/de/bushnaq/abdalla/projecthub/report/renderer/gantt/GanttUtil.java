@@ -19,7 +19,7 @@ package de.bushnaq.abdalla.projecthub.report.renderer.gantt;
 
 import de.bushnaq.abdalla.profiler.Profiler;
 import de.bushnaq.abdalla.profiler.SampleType;
-import de.bushnaq.abdalla.projecthub.dao.Context;
+import de.bushnaq.abdalla.projecthub.Context;
 import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.util.GanttErrorHandler;
 import de.bushnaq.abdalla.util.MpxjUtil;
