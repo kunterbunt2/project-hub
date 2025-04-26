@@ -21,14 +21,15 @@ import de.bushnaq.abdalla.projecthub.dto.Product;
 import de.bushnaq.abdalla.projecthub.util.AbstractEntityGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ServerErrorException;
 
 import java.util.List;
+
+import static org.assertj.core.api.Assertions.fail;
 
 
 @ExtendWith(SpringExtension.class)
@@ -36,7 +37,8 @@ import java.util.List;
 @AutoConfigureMockMvc
 @Transactional
 public class ProductTest extends AbstractEntityGenerator {
-    Logger logger = LoggerFactory.getLogger(ProductTest.class);
+    private static final long   FAKE_ID     = 999999L;
+    private static final String SECOND_NAME = "SECOND_NAME";
 
 
     @Test
@@ -52,7 +54,20 @@ public class ProductTest extends AbstractEntityGenerator {
     public void delete() throws Exception {
         addRandomProducts(2);
         removeProduct(expectedProducts.get(0).getId());
-        removeProduct(999999L);
+
+        testProducts();
+        printTables();
+    }
+
+    @Test
+    public void deleteUsingFakeId() throws Exception {
+        addRandomProducts(2);
+        try {
+            removeProduct(FAKE_ID);
+        } catch (ServerErrorException e) {
+            //expected
+        }
+
         testProducts();
         printTables();
     }
@@ -66,4 +81,43 @@ public class ProductTest extends AbstractEntityGenerator {
         printTables();
     }
 
+    @Test
+    public void getAllEmpty() throws Exception {
+        List<Product> allProducts = productApi.getAllProducts();
+
+        testProducts();
+        printTables();
+    }
+
+    @Test
+    public void update() throws Exception {
+        addRandomProducts(2);
+        Product product = expectedProducts.getFirst();
+        product.setName(SECOND_NAME);
+        updateProduct(product);
+
+        testProducts();
+        printTables();
+    }
+
+    @Test
+    public void updateUsingFakeId() throws Exception {
+        addRandomProducts(2);
+        Product product = expectedProducts.getFirst();
+        Long    id      = product.getId();
+        String  name    = product.getName();
+        product.setId(FAKE_ID);
+        product.setName(SECOND_NAME);
+        try {
+            updateProduct(product);
+            fail("should not be able to update");
+        } catch (ServerErrorException e) {
+            //expected
+            product.setId(id);
+            product.setName(name);
+        }
+
+        testProducts();
+        printTables();
+    }
 }

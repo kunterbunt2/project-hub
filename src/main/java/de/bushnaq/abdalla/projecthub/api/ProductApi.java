@@ -129,6 +129,13 @@ public class ProductApi extends AbstractApi {
                 ));
     }
 
+    public void update(Product product) {
+        executeWithErrorHandling(() -> restTemplate.put(
+                baseUrl + "/product",
+                product
+        ));
+    }
+
     // Example usage with Sprint
 //    public Sprint persist(Sprint sprint, Long projectId, String version) {
 //        return restTemplate.postForObject(

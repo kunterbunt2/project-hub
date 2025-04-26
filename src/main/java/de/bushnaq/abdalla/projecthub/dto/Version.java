@@ -30,7 +30,7 @@ import java.util.List;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
-public class Version extends AbstractTimeAware {
+public class Version extends AbstractTimeAware implements Comparable<Version> {
 
     private Long id;
 
@@ -50,6 +50,11 @@ public class Version extends AbstractTimeAware {
         projects.add(project);
         project.setVersion(this);
         return project;
+    }
+
+    @Override
+    public int compareTo(Version other) {
+        return this.id.compareTo(other.id);
     }
 
     String getKey() {

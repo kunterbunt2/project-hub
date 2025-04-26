@@ -24,7 +24,7 @@ import lombok.*;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
-public class Relation {
+public class Relation implements Comparable<Relation> {
 
     Long    id;
     Long    predecessorId;
@@ -33,5 +33,10 @@ public class Relation {
     public Relation(Task dependency, boolean visible) {
         this.visible  = visible;
         predecessorId = dependency.getId();
+    }
+
+    @Override
+    public int compareTo(Relation other) {
+        return this.id.compareTo(other.id);
     }
 }

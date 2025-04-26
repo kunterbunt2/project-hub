@@ -32,15 +32,13 @@ import org.ajbrown.namemachine.NameGeneratorOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.web.server.ServerErrorException;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.TreeSet;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -260,6 +258,13 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         return addSprint(project, String.format("sprint-%d", sprintIndex));
     }
 
+    /**
+     * Adds a random user with a random name and email address and location in de/nw.
+     * The user is initialized with a GanttContext and has a vacation off day.
+     * The user first working day is set to the given date.
+     *
+     * @return the created User object
+     */
     protected User addRandomUser(LocalDate firstDate) {
         String       name  = names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
         String       email = name + "@project-hub.org";
@@ -271,10 +276,17 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         return saved;
     }
 
+    /**
+     * Adds a random user with a random name and email address and location in de/nw.
+     * The user is initialized with a GanttContext and has a vacation off day.
+     * The user first working day is set to ParameterOptions.now.
+     *
+     * @return the created User object
+     */
     protected User addRandomUser() {
         String    name      = names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
         String    email     = name + "@project-hub.org";
-        LocalDate firstDate = LocalDate.now();
+        LocalDate firstDate = ParameterOptions.now.toLocalDate();
 
         User         saved = addUser(name, email, "de", "nw", firstDate, 0.7f, LocalDate.parse(FIRST_OFF_DAY_START_DATE), LocalDate.parse(FIRST_OFF_DAY_FINISH_DATE), OffDayType.VACATION);
         GanttContext gc    = new GanttContext();
@@ -285,6 +297,14 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         return saved;
     }
 
+    /**
+     * Adds index random user with a random name and email address and location in de/nw.
+     * The user is initialized with a GanttContext and has a vacation off day.
+     * The user first working day is set to ParameterOptions.now.
+     * The user availability is set to the given value.
+     *
+     * @return the created User object
+     */
     protected User addRandomUser(int index, float availability) {
         String       name      = names.get(index).getFirstName() + " " + names.get(index).getLastName();
         String       email     = name + "@project-hub.org";
@@ -298,6 +318,13 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         return saved;
     }
 
+    /**
+     * Adds the given number of random users with a random name and email address and location in de/nw.
+     * The users are initialized with a GanttContext and have a vacation off day.
+     * The users first working day is set to ParameterOptions.now.
+     *
+     * @param count the number of users to add
+     */
     protected void addRandomUsers(int count) {
         for (int i = 0; i < count; i++) {
             String       name      = names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
@@ -313,6 +340,12 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         testUsers();
     }
 
+    /**
+     * Adds a random version with the given name to the given product.
+     *
+     * @param product the product to add the version to
+     * @return the created Version object
+     */
     protected Version addRandomVersion(Product product) {
         return addVersion(product, String.format("1.%d.0", versionIndex));
     }
@@ -504,7 +537,6 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         Task oldParent = task.getParentTask();
         newParent.addChildTask(task);
 
-
         taskApi.persist(newParent);
         taskApi.persist(task);
         taskApi.persist(oldParent);
@@ -530,6 +562,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
 
     protected void removeProduct(Long id) {
         Product productToRemove = expectedProducts.stream().filter(product -> product.getId().equals(id)).findFirst().orElse(null);
+        productApi.deleteById(id);
 
         if (productToRemove != null) {
             // Remove all versions and their projects, sprints, and tasks
@@ -548,12 +581,11 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
             }
             expectedProducts.remove(productToRemove);
         }
-
-        productApi.deleteById(id);
     }
 
     protected void removeProject(Long id) {
         Project projectToRemove = expectedProjects.stream().filter(project -> project.getId().equals(id)).findFirst().orElse(null);
+        projectApi.deleteById(id);
         if (projectToRemove != null) {
             // Remove all versions and their projects, sprints, and tasks
             for (Sprint sprint : projectToRemove.getSprints()) {
@@ -576,6 +608,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
 
     protected void removeUser(Long id) {
         User userToRemove = expectedUsers.stream().filter(user -> user.getId().equals(id)).findFirst().orElse(null);
+        userApi.deleteById(id);
 
         if (userToRemove != null) {
             // Remove all availabilities
@@ -588,7 +621,6 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
             expectedUsers.remove(userToRemove);
         }
 
-        userApi.deleteById(id);
     }
 
     protected void testAll() {
@@ -601,16 +633,23 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
      */
     protected void testProducts() {
         GanttContext gc = new GanttContext();
-        gc.allUsers    = userApi.getAllUsers();
-        gc.allProducts = productApi.getAllProducts();
-        gc.allVersions = versionApi.getAllVersions();
-        gc.allProjects = projectApi.getAllProjects();
-        gc.allSprints  = sprintApi.getAllSprints();
+        gc.allUsers    = userApi.getAllUsers().stream().sorted().toList();
+        gc.allProducts = productApi.getAllProducts().stream().sorted().toList();
+        gc.allVersions = versionApi.getAllVersions().stream().sorted().toList();
+        gc.allProjects = projectApi.getAllProjects().stream().sorted().toList();
+        gc.allSprints  = sprintApi.getAllSprints().stream().sorted().toList();
         for (Sprint sprint : gc.allSprints) {
-            sprint.setWorklogs(worklogApi.getAllWorklogs(sprint.getId()));
+            sprint.setWorklogs(worklogApi.getAllWorklogs(sprint.getId()).stream().sorted().toList());
         }
-        gc.allTasks = taskApi.getAllTasks();
+        gc.allTasks = taskApi.getAllTasks().stream().sorted().toList();
         gc.initialize();
+
+        expectedProducts.sort(Comparator.naturalOrder());
+        expectedProjects.sort(Comparator.naturalOrder());
+        expectedSprints.sort(Comparator.naturalOrder());
+        expectedTasks.sort(Comparator.naturalOrder());
+        expectedVersions.sort(Comparator.naturalOrder());
+        expectedWorklogs.sort(Comparator.naturalOrder());
 
         assertEquals(expectedProducts.size(), gc.allProducts.size());
         for (int i = 0; i < expectedProducts.size(); i++) {
@@ -635,19 +674,25 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         expectedAvailabilities.add(availability);
     }
 
-    protected void updateLocation(Location location, User user) {
+    protected void updateLocation(Location location, User user) throws ServerErrorException {
         userApi.update(location, user.getId());
         expectedLocations.remove(location);
         expectedLocations.add(location);
     }
 
-    protected void updateOffDay(OffDay offDay, User user) {
+    protected void updateOffDay(OffDay offDay, User user) throws ServerErrorException {
         userApi.update(offDay, user.getId());
-        expectedOffDays.clear();
+        expectedOffDays.remove(offDay);
         expectedOffDays.add(offDay);
     }
 
-    protected void updateUser(User user) {
+    protected void updateProduct(Product product) throws ServerErrorException {
+        productApi.update(product);
+        expectedProducts.remove(product);
+        expectedProducts.add(product);//replace old products with the updated one
+    }
+
+    protected void updateUser(User user) throws ServerErrorException {
         userApi.update(user);
         expectedUsers.remove(user);
         expectedUsers.add(user);//replace old user with the updated one

@@ -33,10 +33,6 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = false)
-//@JsonIdentityInfo(
-//        scope = Location.class,
-//        generator = ObjectIdGenerators.PropertyGenerator.class,
-//        property = "id")
 public class Location extends AbstractTimeAware implements Comparable<Location> {
 
     private String    country;

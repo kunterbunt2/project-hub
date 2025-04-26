@@ -28,7 +28,7 @@ import java.time.OffsetDateTime;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
-public class Worklog extends AbstractTimeAwareDAO {
+public class Worklog extends AbstractTimeAwareDAO implements Comparable<Worklog> {
 
     private Long           authorId;
     private String         comment;
@@ -39,4 +39,8 @@ public class Worklog extends AbstractTimeAwareDAO {
     private Duration       timeSpent;
     private Long           updateAuthorId;
 
+    @Override
+    public int compareTo(Worklog other) {
+        return this.id.compareTo(other.id);
+    }
 }

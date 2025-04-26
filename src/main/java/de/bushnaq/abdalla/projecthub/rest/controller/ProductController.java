@@ -57,11 +57,8 @@ public class ProductController {
         return productRepository.save(product);
     }
 
-    @PutMapping("/{id}")
-    public ProductDAO update(@PathVariable Long id, @RequestBody ProductDAO product) {
-//        ProjectEntity product = projectRepository.findById(id).orElseThrow();
-//        product.setName(projectDetails.getName());
-//        product.setRequester(projectDetails.getRequester());
-        return productRepository.save(product);
+    @PutMapping()
+    public void update(@RequestBody ProductDAO product) {
+        productRepository.save(product);
     }
 }

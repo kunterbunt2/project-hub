@@ -72,9 +72,9 @@ public class AvailabilityTest extends AbstractEntityGenerator {
 
         //try to delete the first location
         {
-            User user = expectedUsers.getFirst();
+            User         user         = expectedUsers.getFirst();
+            Availability availability = user.getAvailabilities().getFirst();
             try {
-                Availability availability = user.getAvailabilities().getFirst();
                 removeAvailability(availability, user);
                 fail("should not be able to delete the first availability");
             } catch (ServerErrorException e) {
@@ -139,9 +139,9 @@ public class AvailabilityTest extends AbstractEntityGenerator {
                 removeAvailability(availability, user);
                 fail("should not be able to delete");
             } catch (ServerErrorException e) {
+                availability.setId(id);
                 //expected
             }
-            availability.setId(id);
             testUsers();
         }
 
@@ -174,9 +174,9 @@ public class AvailabilityTest extends AbstractEntityGenerator {
                 removeAvailability(availability, user);
                 fail("should not be able to delete");
             } catch (ServerErrorException e) {
+                user.setId(id);
                 //expected
             }
-            user.setId(id);
         }
 
         testUsers();
@@ -215,15 +215,18 @@ public class AvailabilityTest extends AbstractEntityGenerator {
         {
             User         user         = expectedUsers.getFirst();
             Availability availability = user.getAvailabilities().getFirst();
-            Long         id           = availability.getId();
+            float        a            = availability.getAvailability();
+            availability.setAvailability(SECOND_AVAILABILITY);
+            Long id = availability.getId();
             availability.setId(FAKE_ID);
             try {
                 updateAvailability(availability, user);
                 fail("should not be able to update");
             } catch (ServerErrorException e) {
+                availability.setAvailability(a);
+                availability.setId(id);
                 //expected
             }
-            availability.setId(id);
         }
 
         testUsers();
@@ -244,13 +247,16 @@ public class AvailabilityTest extends AbstractEntityGenerator {
             Long id   = user.getId();
             user.setId(FAKE_ID);
             Availability availability = user.getAvailabilities().getFirst();
+            float        a            = availability.getAvailability();
+            availability.setAvailability(SECOND_AVAILABILITY);
             try {
                 updateAvailability(availability, user);
                 fail("should not be able to update");
             } catch (ServerErrorException e) {
                 //expected
+                availability.setAvailability(a);
+                user.setId(id);
             }
-            user.setId(id);
         }
 
         testUsers();

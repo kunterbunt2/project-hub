@@ -37,10 +37,9 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-//@ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class Task {
+public class Task implements Comparable<Task> {
 
     @JsonIgnore
     private List<Task>    childTasks = new ArrayList<>();
@@ -90,6 +89,11 @@ public class Task {
     public void addWorklog(Worklog worklog) {
         worklog.setTaskId(id);
         worklogs.add(worklog);
+    }
+
+    @Override
+    public int compareTo(Task other) {
+        return this.id.compareTo(other.id);
     }
 
     @JsonIgnore

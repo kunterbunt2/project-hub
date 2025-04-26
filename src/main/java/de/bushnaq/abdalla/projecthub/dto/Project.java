@@ -29,22 +29,15 @@ import java.util.List;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
-//@JsonIdentityInfo(
-//        scope = Project.class,
-//        generator = ObjectIdGenerators.PropertyGenerator.class,
-//        property = "id")
-public class Project extends AbstractTimeAware {
+public class Project extends AbstractTimeAware implements Comparable<Project> {
     private Long   id;
     private String name;
     private String requester;
 
-    //    @JsonManagedReference(value = "project-sprint")
     @JsonIgnore
     @ToString.Exclude//help intellij debugger not to go into a loop
     private List<Sprint> sprints = new ArrayList<>();
 
-    //    @JsonBackReference(value = "version-project")
-//    @ToString.Exclude//help intellij debugger not to go into a loop
     @JsonIgnore
     @ToString.Exclude//help intellij debugger not to go into a loop
     private Version version;
@@ -53,6 +46,11 @@ public class Project extends AbstractTimeAware {
 
     public void addSprint(Sprint sprint) {
         sprints.add(sprint);
+    }
+
+    @Override
+    public int compareTo(Project other) {
+        return this.id.compareTo(other.id);
     }
 
     public void initialize(GanttContext gc) {

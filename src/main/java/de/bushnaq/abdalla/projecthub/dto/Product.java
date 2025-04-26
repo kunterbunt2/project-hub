@@ -35,13 +35,12 @@ import java.util.List;
         scope = Product.class,
         generator = ObjectIdGenerators.PropertyGenerator.class,
         property = "id")
-public class Product extends AbstractTimeAware {
+public class Product extends AbstractTimeAware implements Comparable<Product> {
 
     private Long id;
 
     private String name;
 
-    //    @JsonManagedReference(value = "product-version")
     @JsonIgnore
     @ToString.Exclude//help intellij debugger not to go into a loop
     private List<Version> versions = new ArrayList<>();
@@ -49,6 +48,11 @@ public class Product extends AbstractTimeAware {
     public void addVersion(Version version) {
         versions.add(version);
         version.setProduct(this);
+    }
+
+    @Override
+    public int compareTo(Product other) {
+        return this.id.compareTo(other.id);
     }
 
     public void initialize(GanttContext gc) {

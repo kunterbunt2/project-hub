@@ -35,7 +35,7 @@ import java.util.Map;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
-public class Sprint extends AbstractTimeAware {
+public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
 
     @JsonIgnore
     private ProjectCalendar calendar;
@@ -69,6 +69,11 @@ public class Sprint extends AbstractTimeAware {
 
     public void addTask(Task task) {
         tasks.add(task);
+    }
+
+    @Override
+    public int compareTo(Sprint other) {
+        return this.id.compareTo(other.id);
     }
 
     @JsonIgnore
