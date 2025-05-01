@@ -56,17 +56,17 @@ public class VersionController {
         return versionRepository.findAll();
     }
 
-    @PostMapping("/{productId}")
-    public ResponseEntity<VersionDAO> save(@RequestBody VersionDAO version, @PathVariable Long productId) {
-        return productRepository.findById(productId).map(product -> {
+    @PostMapping()
+    public ResponseEntity<VersionDAO> persist(@RequestBody VersionDAO version) {
+        return productRepository.findById(version.getProductId()).map(product -> {
             VersionDAO save = versionRepository.save(version);
             return ResponseEntity.ok(save);
         }).orElse(ResponseEntity.notFound().build());
     }
 
     //TODO fix version update
-    @PutMapping("/{id}")
-    public VersionDAO update(@PathVariable Long id, @RequestBody VersionDAO version) {
-        return versionRepository.save(version);
+    @PutMapping()
+    public void update(@RequestBody VersionDAO version) {
+        versionRepository.save(version);
     }
 }

@@ -172,13 +172,19 @@ public class DTOAsserts {
     }
 
     protected static void assertVersionEquals(Version expected, Version actual) {
+        assertVersionEquals(expected, actual, false);
+    }
+
+    protected static void assertVersionEquals(Version expected, Version actual, boolean shallow) {
         assertEquals(expected.getCreated(), actual.getCreated(), String.format("Version '%s' created date does not match", actual.getName()));
 //        assertEquals(expected.getUpdated(), actual.getUpdated(), String.format("Version '%s' updated date does not match", actual.getName()));
         assertEquals(expected.getId(), actual.getId(), "Version IDs do not match");
         assertEquals(expected.getName(), actual.getName(), "Version names do not match");
-        assertEquals(expected.getProjects().size(), actual.getProjects().size(), "Number of projects in version do not match");
-        for (int i = 0; i < expected.getProjects().size(); i++) {
-            assertProjectEquals(expected.getProjects().get(i), actual.getProjects().get(i));
+        if (!shallow) {
+            assertEquals(expected.getProjects().size(), actual.getProjects().size(), "Number of projects in version do not match");
+            for (int i = 0; i < expected.getProjects().size(); i++) {
+                assertProjectEquals(expected.getProjects().get(i), actual.getProjects().get(i));
+            }
         }
     }
 }

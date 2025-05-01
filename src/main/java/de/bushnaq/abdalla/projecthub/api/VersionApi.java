@@ -73,14 +73,12 @@ public class VersionApi extends AbstractApi {
                 ));
     }
 
-    //TODO version already has productid
-    public Version persist(Version version, Long productId) {
+    public Version persist(Version version) {
         return executeWithErrorHandling(() ->
                 restTemplate.postForObject(
-                        baseUrl + "/version/{productId}",
+                        baseUrl + "/version",
                         version,
-                        Version.class,
-                        productId
+                        Version.class
                 ));
     }
 

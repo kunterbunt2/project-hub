@@ -458,7 +458,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         version.setProductId(product.getId());
         version.setCreated(ParameterOptions.now);
         version.setUpdated(ParameterOptions.now);
-        Version saved = versionApi.persist(version, product.getId());
+        Version saved = versionApi.persist(version);
         product.addVersion(saved);
         expectedVersions.add(saved);
         versionIndex++;
@@ -615,10 +615,10 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     }
 
     private void removeTaskTree(Task task) {
+        expectedTasks.remove(task);
         for (Task childTask : task.getChildTasks()) {
             removeTaskTree(childTask);
         }
-        expectedTasks.remove(task);
     }
 
     protected void removeUser(Long id) {
@@ -636,6 +636,27 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
             expectedUsers.remove(userToRemove);
         }
 
+    }
+
+    protected void removeVersion(Long id) {
+        Version versionToRemove = expectedVersions.stream().filter(version -> version.getId().equals(id)).findFirst().orElse(null);
+        versionApi.deleteById(id);
+
+        if (versionToRemove != null) {
+            //remove this version from its parent product
+            versionToRemove.getProduct().removeVersion(versionToRemove);
+            // Remove all projects, sprints, and tasks
+            for (Project project : versionToRemove.getProjects()) {
+                for (Sprint sprint : project.getSprints()) {
+                    for (Task task : sprint.getTasks()) {
+                        expectedTasks.remove(task);
+                    }
+                    expectedSprints.remove(sprint);
+                }
+                expectedProjects.remove(project);
+            }
+            expectedVersions.remove(versionToRemove);
+        }
     }
 
     protected void testAll() {
@@ -729,6 +750,12 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         userApi.update(user);
         expectedUsers.remove(user);
         expectedUsers.add(user);//replace old user with the updated one
+    }
+
+    protected void updateVersion(Version version) {
+        versionApi.update(version);
+        expectedVersions.remove(version);
+        expectedVersions.add(version);//replace old products with the updated one
     }
 
 }

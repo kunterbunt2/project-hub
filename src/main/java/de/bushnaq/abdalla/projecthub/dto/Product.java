@@ -65,4 +65,8 @@ public class Product extends AbstractTimeAware implements Comparable<Product> {
         });
         versions.forEach(version -> version.initialize(gc));
     }
+
+    public void removeVersion(Version version) {
+        versions.remove(version);
+    }
 }
