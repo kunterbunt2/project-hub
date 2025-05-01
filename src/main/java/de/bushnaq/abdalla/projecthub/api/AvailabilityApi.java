@@ -18,66 +18,58 @@
 package de.bushnaq.abdalla.projecthub.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.bushnaq.abdalla.projecthub.dto.Availability;
 import de.bushnaq.abdalla.projecthub.dto.User;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Arrays;
-import java.util.List;
-
 @Service
-public class UserApi extends AbstractApi {
+public class AvailabilityApi extends AbstractApi {
 
-    public UserApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
+    public AvailabilityApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
         super(restTemplate, objectMapper, baseUrl);
     }
 
-    public UserApi() {
+    public AvailabilityApi() {
     }
 
-    public UserApi(RestTemplate restTemplate) {
+    public AvailabilityApi(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
-    public void deleteById(Long id) {
+    //TODO use ids instead of objects
+    public void deleteById(User user, Availability availability) throws org.springframework.web.client.RestClientException {
         executeWithErrorHandling(() -> restTemplate.delete(
-                baseUrl + "/user/{id}",
-                id
+                baseUrl + "/availability/{userId}/{id}",
+                user.getId(),
+                availability.getId()
         ));
     }
 
-    public List<User> getAllUsers() {
-
-        ResponseEntity<User[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(
-                baseUrl + "/user",
-                User[].class
-        ));
-        return Arrays.asList(response.getBody());
-    }
-
-    public User getById(Long id) {
+    public Availability getById(Long id) {
         return executeWithErrorHandling(() ->
                 restTemplate.getForObject(
-                        baseUrl + "/user/{id}",
-                        User.class,
+                        baseUrl + "/availability/{id}",
+                        Availability.class,
                         id
                 ));
     }
 
-    public User persist(User user) {
+    public Availability persist(Availability availability, Long userId) {
         return executeWithErrorHandling(() ->
                 restTemplate.postForObject(
-                        baseUrl + "/user",
-                        user,
-                        User.class
+                        baseUrl + "/availability/{userId}",
+                        availability,
+                        Availability.class,
+                        userId
                 ));
     }
 
-    public void update(User user) {
+    public void update(Availability availability, Long userId) {
         executeWithErrorHandling(() -> restTemplate.put(
-                baseUrl + "/user",
-                user
+                baseUrl + "/availability/{userId}",
+                availability,
+                userId
         ));
     }
 

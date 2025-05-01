@@ -67,7 +67,7 @@ public class LocationTest extends AbstractEntityGenerator {
             User user = expectedUsers.getFirst();
             //moving to Germany
             addLocation(user, "de", "nw", LocalDate.parse(SECOND_START_DATE));
-            userApi.save(user);//persist the new location
+            userApi.persist(user);//persist the new location
         }
 
         //test the new location
@@ -88,7 +88,7 @@ public class LocationTest extends AbstractEntityGenerator {
         {
             User user = expectedUsers.getFirst();
             try {
-                userApi.delete(user, user.getLocations().getFirst());
+                locationApi.deleteById(user, user.getLocations().getFirst());
                 fail("should not be able to delete the first location");
             } catch (ServerErrorException e) {
                 //expected
@@ -108,7 +108,7 @@ public class LocationTest extends AbstractEntityGenerator {
             User user = expectedUsers.getFirst();
             //moving to Germany
             addLocation(user, "de", "nw", LocalDate.parse(SECOND_START_DATE));
-            userApi.save(user);//persist the new location
+            userApi.persist(user);//persist the new location
         }
 
         //try to delete the second location
@@ -134,7 +134,7 @@ public class LocationTest extends AbstractEntityGenerator {
             User user = expectedUsers.getFirst();
             //moving to Germany
             addLocation(user, "de", "nw", LocalDate.parse(SECOND_START_DATE));
-            userApi.save(user);//persist the new location
+            userApi.persist(user);//persist the new location
         }
 
         //try to delete using fake location id
@@ -144,7 +144,7 @@ public class LocationTest extends AbstractEntityGenerator {
             Long     locationId = location.getId();
             location.setId(FAKE_ID);
             try {
-                userApi.delete(user, user.getLocations().getFirst());
+                locationApi.deleteById(user, user.getLocations().getFirst());
                 fail("should not be able to delete");
             } catch (ServerErrorException e) {
                 //expected
@@ -168,7 +168,7 @@ public class LocationTest extends AbstractEntityGenerator {
             User user = expectedUsers.getFirst();
             //moving to Germany
             addLocation(user, "de", "nw", LocalDate.parse(SECOND_START_DATE));
-            userApi.save(user);//persist the new location
+            userApi.persist(user);//persist the new location
         }
 
         //try to delete using fake user id
@@ -177,7 +177,7 @@ public class LocationTest extends AbstractEntityGenerator {
             Long userId = user.getId();
             user.setId(FAKE_ID);
             try {
-                userApi.delete(user, user.getLocations().getFirst());
+                locationApi.deleteById(user, user.getLocations().getFirst());
                 fail("should not be able to delete");
             } catch (ServerErrorException e) {
                 //expected

@@ -18,66 +18,58 @@
 package de.bushnaq.abdalla.projecthub.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.bushnaq.abdalla.projecthub.dto.OffDay;
 import de.bushnaq.abdalla.projecthub.dto.User;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Arrays;
-import java.util.List;
-
 @Service
-public class UserApi extends AbstractApi {
+public class OffDayApi extends AbstractApi {
 
-    public UserApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
+    public OffDayApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
         super(restTemplate, objectMapper, baseUrl);
     }
 
-    public UserApi() {
+    public OffDayApi() {
     }
 
-    public UserApi(RestTemplate restTemplate) {
+    public OffDayApi(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
-    public void deleteById(Long id) {
+    //TODO use ids instead of objects
+    public void deleteById(User user, OffDay offDay) throws org.springframework.web.client.RestClientException {
         executeWithErrorHandling(() -> restTemplate.delete(
-                baseUrl + "/user/{id}",
-                id
+                baseUrl + "/offday/{userId}/{id}",
+                user.getId(),
+                offDay.getId()
         ));
     }
 
-    public List<User> getAllUsers() {
-
-        ResponseEntity<User[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(
-                baseUrl + "/user",
-                User[].class
-        ));
-        return Arrays.asList(response.getBody());
-    }
-
-    public User getById(Long id) {
+    public OffDay getById(Long id) {
         return executeWithErrorHandling(() ->
                 restTemplate.getForObject(
-                        baseUrl + "/user/{id}",
-                        User.class,
+                        baseUrl + "/offday/{id}",
+                        OffDay.class,
                         id
                 ));
     }
 
-    public User persist(User user) {
+    public OffDay persist(OffDay offDay, Long userId) {
         return executeWithErrorHandling(() ->
                 restTemplate.postForObject(
-                        baseUrl + "/user",
-                        user,
-                        User.class
+                        baseUrl + "/offday/{userId}",
+                        offDay,
+                        OffDay.class,
+                        userId
                 ));
     }
 
-    public void update(User user) {
+    public void update(OffDay offDay, Long userId) {
         executeWithErrorHandling(() -> restTemplate.put(
-                baseUrl + "/user",
-                user
+                baseUrl + "/offday/{userId}",
+                offDay,
+                userId
         ));
     }
 

@@ -46,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class AbstractEntityGenerator extends AbstractTestUtil {
     public static final String                FIRST_OFF_DAY_FINISH_DATE = "2024-04-10";
     public static final String                FIRST_OFF_DAY_START_DATE  = "2024-04-01";
+    protected           AvailabilityApi       availabilityApi;
     protected final     TreeSet<Availability> expectedAvailabilities    = new TreeSet<>();
     protected final     TreeSet<Location>     expectedLocations         = new TreeSet<>();
     protected           TreeSet<OffDay>       expectedOffDays           = new TreeSet<>();
@@ -56,9 +57,11 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     protected           TreeSet<User>         expectedUsers             = new TreeSet<>();
     protected           List<Version>         expectedVersions          = new ArrayList<>();
     protected           List<Worklog>         expectedWorklogs          = new ArrayList<>();
+    protected           LocationApi           locationApi;
     private             List<Name>            names;
     @Autowired
     protected           ObjectMapper          objectMapper;
+    protected           OffDayApi             offDayApi;
     @LocalServerPort
     private             int                   port;
     protected           ProductApi            productApi;
@@ -82,7 +85,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         a.setUser(user);
         a.setCreated(user.getCreated());
         a.setUpdated(user.getUpdated());
-        Availability saved = userApi.save(a, user.getId());
+        Availability saved = availabilityApi.persist(a, user.getId());
         user.addAvailability(saved);
         expectedAvailabilities.add(saved);
     }
@@ -92,7 +95,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         location.setUser(user);
         location.setCreated(user.getCreated());
         location.setUpdated(user.getUpdated());
-        Location saved = userApi.save(location, user.getId());
+        Location saved = locationApi.persist(location, user.getId());
         user.addLocation(saved);
         expectedLocations.add(saved);
     }
@@ -102,7 +105,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         offDay.setUser(user);
         offDay.setCreated(user.getCreated());
         offDay.setUpdated(user.getUpdated());
-        OffDay saved = userApi.save(offDay, user.getId());
+        OffDay saved = offDayApi.persist(offDay, user.getId());
         user.addOffday(saved);
         expectedOffDays.add(saved);
         ProjectCalendarException vacation = user.getCalendar().addCalendarException(offDayStart, offDayFinish);
@@ -423,7 +426,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         user.setFirstWorkingDay(start);
         user.setCreated(DateUtil.localDateToOffsetDateTime(start).plusHours(8));
         user.setUpdated(DateUtil.localDateToOffsetDateTime(start).plusHours(8));
-        User saved = userApi.save(user);
+        User saved = userApi.persist(user);
         addLocation(saved, country, state, start);
         addAvailability(saved, availability, start);
 
@@ -440,7 +443,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         user.setFirstWorkingDay(start);
         user.setCreated(DateUtil.localDateToOffsetDateTime(start).plusHours(8));
         user.setUpdated(DateUtil.localDateToOffsetDateTime(start).plusHours(8));
-        User saved = userApi.save(user);
+        User saved = userApi.persist(user);
         addLocation(saved, country, state, start);
         addAvailability(saved, availability, start);
 
@@ -516,13 +519,16 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         NameGenerator generator = new NameGenerator(options);
         names = generator.generateNames(1000);
         // Set the correct port after injection
-        productApi = new ProductApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-        projectApi = new ProjectApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-        userApi    = new UserApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-        taskApi    = new TaskApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-        versionApi = new VersionApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-        sprintApi  = new SprintApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-        worklogApi = new WorklogApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        productApi      = new ProductApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        projectApi      = new ProjectApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        userApi         = new UserApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        availabilityApi = new AvailabilityApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        locationApi     = new LocationApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        offDayApi       = new OffDayApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        taskApi         = new TaskApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        versionApi      = new VersionApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        sprintApi       = new SprintApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        worklogApi      = new WorklogApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
     }
 
     private boolean isOverlapping(List<OffDay> offDays, LocalDate start, LocalDate end) {
@@ -545,19 +551,19 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     }
 
     protected void removeAvailability(Availability availability, User user) {
-        userApi.delete(user, availability);
+        availabilityApi.deleteById(user, availability);
         user.removeAvailability(availability);
         expectedAvailabilities.remove(availability);
     }
 
     protected void removeLocation(Location location, User user) {
-        userApi.delete(user, location);
+        locationApi.deleteById(user, location);
         user.removeLocation(location);
         expectedLocations.remove(location);
     }
 
     protected void removeOffDay(OffDay offDay, User user) {
-        userApi.delete(user, offDay);
+        offDayApi.deleteById(user, offDay);
         user.removeOffDay(offDay);
         expectedOffDays.remove(offDay);
     }
@@ -711,19 +717,19 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     }
 
     protected void updateAvailability(Availability availability, User user) {
-        userApi.update(availability, user.getId());
+        availabilityApi.update(availability, user.getId());
         expectedAvailabilities.remove(availability);
         expectedAvailabilities.add(availability);
     }
 
     protected void updateLocation(Location location, User user) throws ServerErrorException {
-        userApi.update(location, user.getId());
+        locationApi.update(location, user.getId());
         expectedLocations.remove(location);
         expectedLocations.add(location);
     }
 
     protected void updateOffDay(OffDay offDay, User user) throws ServerErrorException {
-        userApi.update(offDay, user.getId());
+        offDayApi.update(offDay, user.getId());
         expectedOffDays.remove(offDay);
         expectedOffDays.add(offDay);
     }
