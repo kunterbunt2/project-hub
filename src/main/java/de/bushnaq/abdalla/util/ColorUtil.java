@@ -25,13 +25,6 @@ import java.awt.*;
 public class ColorUtil {
     private static final Logger logger = LoggerFactory.getLogger(ColorUtil.class);
 
-    public static Color WindowsToJava(final Color aColor) {
-        final int _red   = aColor.getRed();
-        final int _green = aColor.getGreen();
-        final int _blue  = aColor.getBlue();
-        return new Color(_blue, _green, _red);
-    }
-
     /**
      * Calculate the color blending on a background color taking the color's alpha channel into account
      * So,
@@ -187,6 +180,13 @@ public class ColorUtil {
 
     public static Color setAlpha(Color c1, int alpha) {
         return new Color(c1.getRed(), c1.getGreen(), c1.getBlue(), alpha);
+    }
+
+    public static Color windowsToJava(final Color aColor) {
+        final int _red   = aColor.getRed();
+        final int _green = aColor.getGreen();
+        final int _blue  = aColor.getBlue();
+        return new Color(_blue, _green, _red);
     }
 
 }

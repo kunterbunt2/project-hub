@@ -84,6 +84,19 @@ public class ReportCell implements Comparable<ReportCell> {
         return text.compareTo(other.text);
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof ReportCell) {
+            return text.equals(((ReportCell) obj).text);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return text.hashCode();
+    }
+
     public ReportCell setColspan(int colspan) {
         this.colspan = colspan;
         return this;

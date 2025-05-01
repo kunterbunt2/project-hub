@@ -57,10 +57,10 @@ public class DateUtil {
         if (d1 == null && d2 == null) {
             return null;
         }
-        if (d1 != null && d2 == null) {
+        if (d2 == null) {
             return d1;
         }
-        if (d1 == null && d2 != null) {
+        if (d1 == null) {
             return d2;
         }
         return d1.plus(d2);

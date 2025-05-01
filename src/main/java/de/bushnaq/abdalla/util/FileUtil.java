@@ -73,8 +73,14 @@ public class FileUtil {
         for (File f : FileUtil.getResourceFolderFiles(clazz, sourceDir)) {
             if (f.isFile()) {
                 InputStream stream = clazz.getResourceAsStream(sourceDir + "/" + f.getName());
-                logger.info("Copying ->" + sourceDir + "/" + f.getName() + " to ->" + destinationDir);
-                FileUtil.copyFile(stream, destinationDir + "/" + f.getName());
+                if (stream != null) {
+                    try {
+                        logger.info("Copying ->" + sourceDir + "/" + f.getName() + " to ->" + destinationDir);
+                        FileUtil.copyFile(stream, destinationDir + "/" + f.getName());
+                    } finally {
+                        stream.close();
+                    }
+                }
             }
         }
     }
@@ -82,31 +88,41 @@ public class FileUtil {
     public static void copyFilesFromJar(Class<?> callingClass, String jarName, String sourceDir, String destinationDir) throws IOException {
         logger.info(String.format("Copying files from warFile=%s clazz=%s sourceFolder=%s destinationFolder=%s", jarName, callingClass.getCanonicalName(),
                 sourceDir, destinationDir));
-        JarFile                         jarfile = new JarFile(new File(jarName));
-        java.util.Enumeration<JarEntry> enu     = jarfile.entries();
-        while (enu.hasMoreElements()) {
-            //            String destdir = reportFolder + "/report";     //abc is my destination directory
-            JarEntry je = enu.nextElement();
-            if (je.getName().startsWith(sourceDir)) {
-                //                System.out.println(je.getName());
-                String destinationFileName = je.getName().substring(sourceDir.length());
-                File   fl                  = new File(destinationDir, destinationFileName);
+        JarFile jarfile = new JarFile(new File(jarName));
+        try {
+            java.util.Enumeration<JarEntry> enu = jarfile.entries();
+            while (enu.hasMoreElements()) {
+                //            String destdir = reportFolder + "/report";     //abc is my destination directory
+                JarEntry je = enu.nextElement();
+                if (je.getName().startsWith(sourceDir)) {
+                    //                System.out.println(je.getName());
+                    String destinationFileName = je.getName().substring(sourceDir.length());
+                    File   fl                  = new File(destinationDir, destinationFileName);
 
-                if (!fl.exists()) {
-                    fl.getParentFile().mkdirs();
-                    fl = new File(destinationDir, destinationFileName);
+                    if (!fl.exists()) {
+                        fl.getParentFile().mkdirs();
+                        fl = new File(destinationDir, destinationFileName);
+                    }
+                    if (je.isDirectory()) {
+                        continue;
+                    }
+                    InputStream is = jarfile.getInputStream(je);
+                    try {
+                        java.io.FileOutputStream fo = new java.io.FileOutputStream(fl);
+                        try {
+                            while (is.available() > 0) {
+                                fo.write(is.read());
+                            }
+                        } finally {
+                            fo.close();
+                        }
+                    } finally {
+                        is.close();
+                    }
                 }
-                if (je.isDirectory()) {
-                    continue;
-                }
-                InputStream              is = jarfile.getInputStream(je);
-                java.io.FileOutputStream fo = new java.io.FileOutputStream(fl);
-                while (is.available() > 0) {
-                    fo.write(is.read());
-                }
-                fo.close();
-                is.close();
             }
+        } finally {
+            jarfile.close();
         }
     }
 
@@ -118,7 +134,7 @@ public class FileUtil {
 
     public static String loadFile(final Object aCallingObject, final String fileName) throws IOException {
         if (aCallingObject == null) {
-            String            _command     = "";
+            StringBuilder     _command     = new StringBuilder();
             final InputStream _inputStream = new FileInputStream(new File(fileName));
             //                if (_inputStream == null) {
             //                    throw new IOException(String.format("File '%s' not found", fileName));
@@ -129,11 +145,11 @@ public class FileUtil {
             do {
                 _number = _bufferedInputStream.read(_array, 0, 10000);
                 if (_number > 0) {
-                    _command += new String(_array, 0, _number);
+                    _command.append(new String(_array, 0, _number));
                 }
             } while (_number != -1);
             _bufferedInputStream.close();
-            return _command;
+            return _command.toString();
         } else {
             try {
                 String            _command     = "";

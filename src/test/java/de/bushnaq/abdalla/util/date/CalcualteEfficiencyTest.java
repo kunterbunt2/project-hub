@@ -26,8 +26,8 @@ import java.time.format.DateTimeFormatter;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class CalcualteEfficiencyTest {
-    private static final double EPSILON = 0.001d;
-    static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private static final double            EPSILON   = 0.001d;
+    static               DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     @Test
     public void endOnSaturdayTest() {

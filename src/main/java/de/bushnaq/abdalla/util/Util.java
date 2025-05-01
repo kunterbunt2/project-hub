@@ -55,30 +55,14 @@ public class Util {
     public static Double add(Double value1, Double value2) {
         if (value1 == null && value2 == null) {
             return null;
-        } else if (value1 == null && value2 != null) {
+        } else if (value1 == null) {
             return value2;
-        } else if (value1 != null && value2 == null) {
+        } else if (value2 == null) {
             return value1;
         } else {
             return value1 + value2;
         }
     }
-
-//    public static String buildBurndownChartUrl(String jiraBaseUrl, int rapidViewId, long sprintId) {
-//        return jiraBaseUrl + "/secure/RapidBoard.jspa?rapidView=" + rapidViewId + "&view=reporting&chart=burndownChart&sprint==" + sprintId;
-//    }
-
-//    public static String buildIconUrl(String jiraBaseUrl, String key) {
-//        return jiraBaseUrl + key;
-//    }
-
-//    public static String buildRapidViewUrl(String jiraBaseUrl, Integer rapidViewId, Long sprintId) {
-//        if (sprintId != null) {
-//            return jiraBaseUrl + "/secure/RapidBoard.jspa?rapidView=" + rapidViewId + "&sprint=" + sprintId;
-//        } else {
-//            return null;
-//        }
-//    }
 
     public static String columnIdtoExcelColumnName(int number) {
         final StringBuilder sb = new StringBuilder();
@@ -204,18 +188,18 @@ public class Util {
     }
 
     public static String putCsvList(String[] list) {
-        String result = "";
+        StringBuilder result = new StringBuilder();
         if (list != null) {
             for (int i = 0; i < list.length; i++) {
                 if (i != 0) {
-                    result += "\\|";
+                    result.append("\\|");
                 }
-                result += list[i];
+                result.append(list[i]);
             }
         } else {
-            result += "null";
+            result.append("null");
         }
-        return result;
+        return result.toString();
     }
 
     public static List<String> toList(String[] array) {

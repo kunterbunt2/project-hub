@@ -23,6 +23,7 @@ import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -57,7 +58,7 @@ public class Project extends AbstractTimeAware implements Comparable<Project> {
     public void initialize(GanttContext gc) {
         sprints.clear();
         gc.allSprints.forEach(sprint -> {
-            if (sprint.getProjectId() == id) {
+            if (Objects.equals(sprint.getProjectId(), id)) {
                 addSprint(sprint);
             }
         });

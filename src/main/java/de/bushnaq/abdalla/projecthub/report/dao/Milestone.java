@@ -46,6 +46,18 @@ public class Milestone implements Comparable<Milestone> {
     @Override
     public int compareTo(Milestone o) {
         return time.compareTo(o.time);
-        //        return Long.compare(time, o.time);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Milestone) {
+            return time.equals(((Milestone) obj).time);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return time.hashCode();
     }
 }
