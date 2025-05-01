@@ -50,23 +50,14 @@ public class SprintController {
         return sprintRepository.findAll();
     }
 
-//    @PostMapping(consumes = "application/json", produces = "application/json")
-//    public SprintDAO save(@RequestBody SprintDAO sprintEntity) {
-//        return sprintRepository.save(sprintEntity);
-//    }
-
     @PostMapping()
     public SprintDAO save(@RequestBody SprintDAO sprintDAO) {
-//        ProjectDAO project = projectRepository.getById(sprintDAO.getProjectId());
         SprintDAO save = sprintRepository.save(sprintDAO);
         return save;
     }
 
-//    @PutMapping("/{id}")
-//    public SprintDAO update(@PathVariable Long id, @RequestBody SprintDAO sprintEntity) {
-////        ProjectEntity project = projectRepository.findById(id).orElseThrow();
-////        project.setName(projectDetails.getName());
-////        project.setRequester(projectDetails.getRequester());
-//        return sprintRepository.save(sprintEntity);
-//    }
+    @PutMapping()
+    public SprintDAO update(@RequestBody SprintDAO sprintEntity) {
+        return sprintRepository.save(sprintEntity);
+    }
 }

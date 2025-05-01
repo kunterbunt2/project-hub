@@ -29,6 +29,7 @@ import net.sf.mpxj.ProjectCalendarException;
 import org.ajbrown.namemachine.Name;
 import org.ajbrown.namemachine.NameGenerator;
 import org.ajbrown.namemachine.NameGeneratorOptions;
+import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -409,6 +410,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
             parent.addChildTask(saved);
         }
         if (sprint != null) {
+            saved.setSprint(sprint);
             sprint.addTask(saved);
         }
         return saved;
@@ -569,10 +571,9 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
             for (Version version : productToRemove.getVersions()) {
                 for (Project project : version.getProjects()) {
                     for (Sprint sprint : project.getSprints()) {
-                        //TODO reintroduce tests
-//                        for (Task task : sprint.getTasks()) {
-//                            removeTaskTree(task);
-//                        }
+                        for (Task task : sprint.getTasks()) {
+                            expectedTasks.remove(task);
+                        }
                         expectedSprints.remove(sprint);
                     }
                     expectedProjects.remove(project);
@@ -587,15 +588,29 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         Project projectToRemove = expectedProjects.stream().filter(project -> project.getId().equals(id)).findFirst().orElse(null);
         projectApi.deleteById(id);
         if (projectToRemove != null) {
-            // Remove all versions and their projects, sprints, and tasks
+            //remove this project from its parent version
+            projectToRemove.getVersion().removeProject(projectToRemove);
+            // Remove all sprints and their tasks
             for (Sprint sprint : projectToRemove.getSprints()) {
-                //TODO reintroduce tests
-//                        for (Task task : sprint.getTasks()) {
-//                            removeTaskTree(task);
-//                        }
+                for (Task task : sprint.getTasks()) {
+                    expectedTasks.remove(task);
+                }
                 expectedSprints.remove(sprint);
             }
             expectedProjects.remove(projectToRemove);
+        }
+    }
+
+    protected void removeSprint(Long id) {
+        Sprint sprintToRemove = expectedSprints.stream().filter(sprint -> sprint.getId().equals(id)).findFirst().orElse(null);
+        sprintApi.deleteById(id);
+        if (sprintToRemove != null) {
+            //remove this sprint from its parent project
+            sprintToRemove.getProject().removePrint(sprintToRemove);
+            for (Task task : sprintToRemove.getTasks()) {
+                expectedTasks.remove(task);
+            }
+            expectedSprints.remove(sprintToRemove);
         }
     }
 
@@ -626,6 +641,12 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     protected void testAll() {
         testProducts();
         testUsers();
+    }
+
+    @AfterEach
+    protected void testAllAndPrintTables() {
+        testAll();
+        printTables();
     }
 
     /**
@@ -692,12 +713,17 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         expectedProducts.add(product);//replace old products with the updated one
     }
 
-    protected void updateProject(Project project, Long versionId) {
-        projectApi.update(project, versionId);
+    protected void updateProject(Project project) {
+        projectApi.update(project);
         expectedProjects.remove(project);
         expectedProjects.add(project);//replace old products with the updated one
     }
 
+    protected void updateSprint(Sprint sprint) throws ServerErrorException {
+        sprintApi.update(sprint);
+        expectedSprints.remove(sprint);
+        expectedSprints.add(sprint); // Replace old sprint with the updated one
+    }
 
     protected void updateUser(User user) throws ServerErrorException {
         userApi.update(user);
@@ -706,4 +732,3 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     }
 
 }
-

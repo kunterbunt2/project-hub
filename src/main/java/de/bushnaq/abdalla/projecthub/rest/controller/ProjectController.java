@@ -58,8 +58,8 @@ public class ProjectController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/{id}")
-    public ProjectDAO update(@PathVariable Long id, @RequestBody ProjectDAO project) {
+    @PutMapping()
+    public ProjectDAO update(@RequestBody ProjectDAO project) {
         return projectRepository.save(project);
     }
 }

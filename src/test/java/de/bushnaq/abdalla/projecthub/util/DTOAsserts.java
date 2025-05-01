@@ -90,7 +90,7 @@ public class DTOAsserts {
         assertEquals(expected.getName(), actual.getName(), "Project names do not match");
         assertEquals(expected.getRequester(), actual.getRequester(), "Project requesters do not match");
         if (!shallow) {
-            assertEquals(expected.getSprints().size(), actual.getSprints().size(), "Number of sprints in project do not match");
+            assertEquals(expected.getSprints().size(), actual.getSprints().size(), String.format("Number of sprints in project '%s' do not match", actual.getName()));
             for (int i = 0; i < expected.getSprints().size(); i++) {
                 assertSprintEquals(expected.getSprints().get(i), actual.getSprints().get(i));
             }
@@ -103,6 +103,10 @@ public class DTOAsserts {
     }
 
     protected static void assertSprintEquals(Sprint expected, Sprint actual) {
+        assertSprintEquals(expected, actual, false);
+    }
+
+    protected static void assertSprintEquals(Sprint expected, Sprint actual, boolean shallow) {
         assertEquals(expected.getCreated(), actual.getCreated(), String.format("Sprint '%s' created date does not match", actual.getName()));
 //        assertEquals(expected.getUpdated(), actual.getUpdated(), String.format("Sprint '%s' updated date does not match", actual.getName()));
         assertEquals(expected.getEnd(), actual.getEnd(), "Sprint end dates do not match");
@@ -111,10 +115,11 @@ public class DTOAsserts {
         assertEquals(expected.getStart(), actual.getStart(), "Sprint start dates do not match");
         assertEquals(expected.getStatus(), actual.getStatus(), "Sprint status values do not match");
 
-        //TODO reintroduce tests
-        assertEquals(expected.getTasks().size(), actual.getTasks().size(), "Number of tasks in sprint do not match");
-        for (int i = 0; i < expected.getTasks().size(); i++) {
-            assertTaskEquals(expected.getTasks().get(i), actual.getTasks().get(i));
+        if (!shallow) {
+            assertEquals(expected.getTasks().size(), actual.getTasks().size(), "Number of tasks in sprint do not match");
+            for (int i = 0; i < expected.getTasks().size(); i++) {
+                assertTaskEquals(expected.getTasks().get(i), actual.getTasks().get(i));
+            }
         }
     }
 

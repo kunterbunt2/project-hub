@@ -70,6 +70,7 @@ public class AbstractLegacyGanttTestUtil extends AbstractGanttTestUtil {
         }
         gc.initialize();
 
+//        Sprint sprint = expectedSprints.getFirst();
         logTasks(sprint, gc.allSprints.getFirst());
         for (net.sf.mpxj.Task mpxjTask : projectFile.getTasks()) {
             if (isValidTask(mpxjTask)) {

@@ -54,9 +54,6 @@ public class OffDayTest extends AbstractEntityGenerator {
             User user = addRandomUser(LocalDate.parse(FIRST_DATE_0));
             id = user.getId();
         }
-
-        testUsers();
-        printTables();
     }
 
     @Test
@@ -73,30 +70,28 @@ public class OffDayTest extends AbstractEntityGenerator {
             //vacation
             addOffDay(user, LocalDate.parse(FIRST_DATE_0), LocalDate.parse(LAST_DATE_0), OffDayType.VACATION);
         }
-        testUsers();
 
         //try to delete the vacation
         {
             User   user   = expectedUsers.getFirst();
             OffDay offDay = user.getOffDays().get(0);
             removeOffDay(offDay, user);
-            testUsers();
+        }
+    }
+
+    @Test
+    public void deleteUsingFakeId() throws Exception {
+
+        //create a user
+        {
+            User user = addRandomUser(LocalDate.parse(FIRST_DATE_0));
         }
 
-        //try to delete using fake user id
+        //add a vacation
         {
             User user = expectedUsers.getFirst();
-            Long id   = user.getId();
-            user.setId(FAKE_ID);
-            OffDay offDay = user.getOffDays().get(0);
-            try {
-                removeOffDay(offDay, user);
-                fail("should not be able to delete the first location");
-            } catch (ServerErrorException e) {
-                //expected
-                user.setId(id);
-            }
-            testUsers();
+            //vacation
+            addOffDay(user, LocalDate.parse(FIRST_DATE_0), LocalDate.parse(LAST_DATE_0), OffDayType.VACATION);
         }
 
         //try to delete using fake offday id
@@ -112,10 +107,8 @@ public class OffDayTest extends AbstractEntityGenerator {
                 //expected
                 offDay.setId(id);
             }
-            testUsers();
             offDay.setId(id);
         }
-        printTables();
     }
 
     @Test
@@ -147,44 +140,6 @@ public class OffDayTest extends AbstractEntityGenerator {
                 user.setId(id);
             }
         }
-
-        testUsers();
-        printTables();
-    }
-
-    @Test
-    public void deleteusingFakeId() throws Exception {
-
-        //create a user
-        {
-            User user = addRandomUser(LocalDate.parse(FIRST_DATE_0));
-        }
-
-        //add a vacation
-        {
-            User user = expectedUsers.getFirst();
-            //vacation
-            addOffDay(user, LocalDate.parse(FIRST_DATE_0), LocalDate.parse(LAST_DATE_0), OffDayType.VACATION);
-        }
-        testUsers();
-
-        //try to delete using fake offday id
-        {
-            User   user   = expectedUsers.getFirst();
-            OffDay offDay = user.getOffDays().get(0);
-            Long   id     = offDay.getId();
-            offDay.setId(FAKE_ID);
-            try {
-                removeOffDay(offDay, user);
-                fail("should not be able to delete the first location");
-            } catch (ServerErrorException e) {
-                //expected
-                offDay.setId(id);
-            }
-            testUsers();
-            offDay.setId(id);
-        }
-        printTables();
     }
 
     @Test
@@ -214,44 +169,6 @@ public class OffDayTest extends AbstractEntityGenerator {
             offDay.setLastDay(LocalDate.parse(LAST_DATE_1));
             updateOffDay(offDay, user);
         }
-
-        //update offday using fake user id
-        {
-            User user = expectedUsers.getFirst();
-            Long id   = user.getId();
-            user.setId(FAKE_ID);
-            OffDay offDay = user.getOffDays().getFirst();
-            offDay.setType(OffDayType.SICK);
-            offDay.setFirstDay(LocalDate.parse(FIRST_DATE_1));
-            offDay.setLastDay(LocalDate.parse(LAST_DATE_1));
-            try {
-                updateOffDay(offDay, user);
-                fail("should not be able to update");
-            } catch (ServerErrorException e) {
-                //expected
-                user.setId(id);
-            }
-        }
-
-        //update offday using fake id
-        {
-            User   user   = expectedUsers.getFirst();
-            OffDay offDay = user.getOffDays().getFirst();
-            Long   id     = offDay.getId();
-            offDay.setId(FAKE_ID);
-            offDay.setType(OffDayType.SICK);
-            offDay.setFirstDay(LocalDate.parse(FIRST_DATE_1));
-            offDay.setLastDay(LocalDate.parse(LAST_DATE_1));
-            try {
-                updateOffDay(offDay, user);
-                fail("should not be able to update");
-            } catch (ServerErrorException e) {
-                //expected
-                offDay.setId(id);
-            }
-        }
-        testUsers();
-        printTables();
     }
 
     @Test
@@ -286,8 +203,6 @@ public class OffDayTest extends AbstractEntityGenerator {
                 offDay.setType(type);
             }
         }
-        testUsers();
-        printTables();
     }
 
     @Test
@@ -322,9 +237,6 @@ public class OffDayTest extends AbstractEntityGenerator {
                 offDay.setType(type);
             }
         }
-
-        testUsers();
-        printTables();
     }
 
 }

@@ -52,7 +52,7 @@ public class TaskTest extends AbstractEntityGenerator {
         }
 
         printTables();
-        testAll();
+        testAllAndPrintTables();
     }
 
 
@@ -70,7 +70,7 @@ public class TaskTest extends AbstractEntityGenerator {
             Task    task3   = addTask(sprint, task1, "Implementation", LocalDateTime.now().plusDays(4), Duration.ofDays(6), user1, task1);
         }
 
-        testAll();
+        testAllAndPrintTables();
 
         //update
         {
@@ -78,7 +78,7 @@ public class TaskTest extends AbstractEntityGenerator {
         }
 
         printTables();
-        testAll();
+        testAllAndPrintTables();
 
     }
 

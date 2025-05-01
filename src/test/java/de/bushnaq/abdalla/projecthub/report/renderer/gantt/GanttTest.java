@@ -17,7 +17,9 @@
 
 package de.bushnaq.abdalla.projecthub.report.renderer.gantt;
 
+import de.bushnaq.abdalla.projecthub.dto.Sprint;
 import de.bushnaq.abdalla.projecthub.dto.Task;
+import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.util.AbstractGanttTestUtil;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -40,9 +42,13 @@ public class GanttTest extends AbstractGanttTestUtil {
         initialize();
 
         //create tasks
-        Task task1 = addParentTask("[1] Parent Task", sprint, null, null);
-        Task task2 = addTask("[2] Child Task", "5d", resource1, sprint, task1, null);
-        Task task3 = addTask("[3] Child Task", "5d", resource2, sprint, task1, task2);
+        Sprint sprint    = expectedSprints.getFirst();
+        User   resource1 = expectedUsers.stream().toList().getFirst();
+        User   resource2 = expectedUsers.stream().toList().get(1);
+        Task   task1     = addParentTask("[1] Parent Task", sprint, null, null);
+        Task   task2     = addTask("[2] Child Task", "5d", resource1, sprint, task1, null);
+        Task   task3     = addTask("[3] Child Task", "5d", resource2, sprint, task1, task2);
+
         generateGanttChart(testInfo);
     }
 
@@ -54,9 +60,12 @@ public class GanttTest extends AbstractGanttTestUtil {
         initialize();
 
         //create tasks
-        Task task1 = addParentTask("[1] Parent Task", sprint, null, null);
-        Task task2 = addTask("[2] Child Task ", "5d", resource1, sprint, task1, null);
-        Task task3 = addTask("[3] Child Task ", "5d", resource2, sprint, task1, task2);
+        Sprint sprint    = expectedSprints.getFirst();
+        User   resource1 = expectedUsers.stream().toList().getFirst();
+        User   resource2 = expectedUsers.stream().toList().get(1);
+        Task   task1     = addParentTask("[1] Parent Task", sprint, null, null);
+        Task   task2     = addTask("[2] Child Task ", "5d", resource1, sprint, task1, null);
+        Task   task3     = addTask("[3] Child Task ", "5d", resource2, sprint, task1, task2);
 
         Task task4 = addParentTask("[4] Parent Task", sprint, null, task1);
         Task task5 = addTask("[5] Child Task ", "5d", resource1, sprint, task4, null);
@@ -73,9 +82,12 @@ public class GanttTest extends AbstractGanttTestUtil {
         initialize();
 
         //create tasks
-        Task task1 = addParentTask("[1] Parent Task", sprint, null, null);
-        Task task2 = addTask("[2] Child Task ", "5d", resource1, sprint, task1, null);
-        Task task3 = addTask("[3] Child Task ", "5d", resource2, sprint, task1, task2);
+        Sprint sprint    = expectedSprints.getFirst();
+        User   resource1 = expectedUsers.stream().toList().getFirst();
+        User   resource2 = expectedUsers.stream().toList().get(1);
+        Task   task1     = addParentTask("[1] Parent Task", sprint, null, null);
+        Task   task2     = addTask("[2] Child Task ", "5d", resource1, sprint, task1, null);
+        Task   task3     = addTask("[3] Child Task ", "5d", resource2, sprint, task1, task2);
 
         Task task4 = addParentTask("[4] Parent Task", sprint, null, task1);
         Task task5 = addTask("[5] Child Task ", "5d", resource1, sprint, task4, null);

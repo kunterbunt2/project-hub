@@ -99,7 +99,7 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
                     }
                 }
             }
-
+//            Sprint sprint = expectedSprints.getFirst();
             //populate taskMap
             for (net.sf.mpxj.Task mpxjTask : projectFile.getTasks()) {
                 if (isValidTask(mpxjTask)) {

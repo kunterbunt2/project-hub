@@ -45,6 +45,7 @@ public class Project extends AbstractTimeAware implements Comparable<Project> {
     private Long versionId;
 
     public void addSprint(Sprint sprint) {
+        sprint.setProject(this);
         sprints.add(sprint);
     }
 
@@ -54,11 +55,16 @@ public class Project extends AbstractTimeAware implements Comparable<Project> {
     }
 
     public void initialize(GanttContext gc) {
+        sprints.clear();
         gc.allSprints.forEach(sprint -> {
             if (sprint.getProjectId() == id) {
                 addSprint(sprint);
             }
         });
         sprints.forEach(sprint -> sprint.initialize(gc));
+    }
+
+    public void removePrint(Sprint sprint) {
+        sprints.remove(sprint);
     }
 }

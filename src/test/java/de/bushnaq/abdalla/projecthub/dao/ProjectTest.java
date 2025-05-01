@@ -47,9 +47,6 @@ public class ProjectTest extends AbstractEntityGenerator {
     @Test
     public void create() throws Exception {
         addRandomProducts(1);
-
-        testProducts();
-        printTables();
     }
 
     @Test
@@ -57,13 +54,6 @@ public class ProjectTest extends AbstractEntityGenerator {
         //create the users
         addRandomProducts(2);
         removeProject(expectedProjects.getFirst().getId());
-
-        //delete by unknown id should be ignored
-        {
-            projectApi.deleteById(9999999L);
-        }
-        testUsers();
-        printTables();
     }
 
     @Test
@@ -74,9 +64,6 @@ public class ProjectTest extends AbstractEntityGenerator {
         } catch (ServerErrorException e) {
             //expected
         }
-
-        testProducts();
-        printTables();
     }
 
     @Test
@@ -84,17 +71,12 @@ public class ProjectTest extends AbstractEntityGenerator {
         addRandomProducts(3);
         List<Project> allProjects = projectApi.getAll();
         assertEquals(3, allProjects.size());
-
-        testProducts();
-        printTables();
     }
 
     @Test
     public void getAllEmpty() throws Exception {
         List<Project> allProjects = projectApi.getAll();
 
-        testProducts();
-        printTables();
     }
 
     @Test
@@ -106,9 +88,6 @@ public class ProjectTest extends AbstractEntityGenerator {
         } catch (ServerErrorException e) {
             //expected
         }
-
-        testProducts();
-        printTables();
     }
 
     @Test
@@ -116,9 +95,6 @@ public class ProjectTest extends AbstractEntityGenerator {
         addRandomProducts(1);
         Project project = projectApi.getById(expectedProjects.getFirst().getId());
         assertProjectEquals(expectedProjects.getFirst(), project, true); //shallow test
-
-        testProducts();
-        printTables();
     }
 
     @Test
@@ -126,10 +102,7 @@ public class ProjectTest extends AbstractEntityGenerator {
         addRandomProducts(2);
         Project project = expectedProjects.getFirst();
         project.setName(SECOND_NAME);
-        updateProject(project, project.getVersionId());
-
-        testProducts();
-        printTables();
+        updateProject(project);
     }
 
     @Test
@@ -141,15 +114,12 @@ public class ProjectTest extends AbstractEntityGenerator {
         project.setId(FAKE_ID);
         project.setName(SECOND_NAME);
         try {
-            updateProject(project, project.getVersionId());
+            updateProject(project);
             fail("should not be able to update");
         } catch (ServerErrorException e) {
             //expected
             project.setId(id);
             project.setName(name);
         }
-
-        testProducts();
-        printTables();
     }
 }

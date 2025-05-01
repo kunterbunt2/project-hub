@@ -75,9 +75,6 @@ public class LocationTest extends AbstractEntityGenerator {
             User user = expectedUsers.getFirst();
             assertEquals(LocalDate.parse(SECOND_START_DATE), user.getLocations().get(1).getStart());
         }
-
-        testUsers();
-        printTables();
     }
 
     @Test
@@ -97,9 +94,6 @@ public class LocationTest extends AbstractEntityGenerator {
                 //expected
             }
         }
-
-        testUsers();
-        printTables();
     }
 
     @Test
@@ -123,9 +117,6 @@ public class LocationTest extends AbstractEntityGenerator {
             Location location = user.getLocations().get(1);
             removeLocation(location, user);
         }
-
-        testUsers();
-        printTables();
     }
 
     @Test
@@ -160,9 +151,6 @@ public class LocationTest extends AbstractEntityGenerator {
                 location.setId(locationId);
             }
         }
-
-        testUsers();
-        printTables();
     }
 
     @Test
@@ -196,9 +184,6 @@ public class LocationTest extends AbstractEntityGenerator {
                 user.setId(userId);
             }
         }
-
-        testUsers();
-        printTables();
     }
 
     @Test
@@ -225,9 +210,6 @@ public class LocationTest extends AbstractEntityGenerator {
             location.setStart(LocalDate.parse(SECOND_START_DATE));
             updateLocation(location, user);
         }
-
-        testUsers();
-        printTables();
     }
 
     @Test
@@ -261,9 +243,6 @@ public class LocationTest extends AbstractEntityGenerator {
                 location.setId(locationId);
             }
         }
-
-        testUsers();
-        printTables();
     }
 
     @Test
@@ -298,8 +277,5 @@ public class LocationTest extends AbstractEntityGenerator {
                 user.setId(userId);
             }
         }
-
-        testUsers();
-        printTables();
     }
 }

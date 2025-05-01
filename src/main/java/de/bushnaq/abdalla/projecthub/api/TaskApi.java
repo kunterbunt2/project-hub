@@ -56,6 +56,11 @@ public class TaskApi extends AbstractApi {
         return executeWithErrorHandling(() -> restTemplate.postForObject(baseUrl + "/task", task, Task.class));
     }
 
-    //TODO missing update restapi
+    public void update(Task task) {
+        executeWithErrorHandling(() -> restTemplate.put(
+                baseUrl + "/task",
+                task
+        ));
+    }
 
 }

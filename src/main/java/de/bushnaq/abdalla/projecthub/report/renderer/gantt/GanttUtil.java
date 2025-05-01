@@ -153,6 +153,9 @@ public class GanttUtil {
                         if (overlap(task1, task2)) {
                             if (!hasDependency(task1, task2)) {
                                 //move second one after first one
+//                                Relation r     = new Relation(task1, false);
+//                                Relation saved = relationApi.persist(r);
+//                                task2.addPredecessor(saved);
                                 task2.addPredecessor(task1, false);
                                 anythingChanged = true;
                                 return true;
@@ -196,9 +199,9 @@ public class GanttUtil {
     }
 
     public static ProjectCalendar getCalendar(Task task) {
-        if (task.getAssignedUser() != null) {
-            return task.getAssignedUser().getCalendar();
-        }
+//        if (task.getAssignedUser() != null) {
+//            return task.getAssignedUser().getCalendar();
+//        }
 //        for (ResourceAssignment ra : task.getResourceAssignments()) {
 //            Resource resource = ra.getResource();
 //            if (resource != null) {

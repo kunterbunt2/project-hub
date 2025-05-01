@@ -352,4 +352,9 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         store(testReferenceResultFolder, false);
     }
 
+    @Override
+    protected void testAllAndPrintTables() {
+        //we do nto want to test gantt charts same way as the other tests
+    }
+
 }

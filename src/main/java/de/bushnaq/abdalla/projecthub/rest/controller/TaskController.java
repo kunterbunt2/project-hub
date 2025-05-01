@@ -31,9 +31,6 @@ import java.util.Optional;
 @RequestMapping("/task")
 public class TaskController {
 
-//    @Autowired
-//    DebugUtil debugUtil;
-
     @Autowired
     private SprintRepository sprintRepository;
     @Autowired
@@ -60,24 +57,8 @@ public class TaskController {
         return taskRepository.save(task);
     }
 
-//    @PostMapping("/{sprintId}/{parentId}")
-//    public TaskDAO save(@RequestBody TaskDAO task, @PathVariable Long sprintId, @PathVariable Long parentId) {
-//        SprintDAO sprint = sprintRepository.getById(sprintId);
-//        TaskDAO   parent = taskRepository.getById(parentId);
-////        task.setParentTask(parent);
-//        task.setSprint(sprint);
-//        TaskDAO save = taskRepository.save(task);
-//        return save;
-//    }
-
-//    @PutMapping()
-//    public void update(@RequestBody TaskDAO user) {
-//        TaskDAO e = taskRepository.findById(user.getId()).orElseThrow();
-//        e.setLastWorkingDay(user.getLastWorkingDay());
-//        e.setFirstWorkingDay(user.getFirstWorkingDay());
-//        e.setEmail(user.getEmail());
-//        e.setLastWorkingDay(user.getLastWorkingDay());
-//        e.setName(user.getName());
-//        taskRepository.save(e);
-//    }
+    @PutMapping()
+    public void update(@RequestBody TaskDAO task) {
+        taskRepository.save(task);
+    }
 }

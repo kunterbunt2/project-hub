@@ -57,6 +57,7 @@ public class Product extends AbstractTimeAware implements Comparable<Product> {
     }
 
     public void initialize(GanttContext gc) {
+        versions.clear();
         gc.allVersions.forEach(version -> {
             if (Objects.equals(version.getProductId(), id)) {
                 addVersion(version);

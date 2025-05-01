@@ -56,7 +56,6 @@ public class AvailabilityTest extends AbstractEntityGenerator {
             User user = expectedUsers.getFirst();
             //moving to Germany
             addAvailability(user, SECOND_AVAILABILITY, LocalDate.parse(SECOND_START_DATE));
-            testUsers();
         }
 
         printTables();
@@ -82,8 +81,6 @@ public class AvailabilityTest extends AbstractEntityGenerator {
             }
         }
 
-        testUsers();
-        printTables();
     }
 
     @Test
@@ -99,7 +96,6 @@ public class AvailabilityTest extends AbstractEntityGenerator {
             User user = expectedUsers.getFirst();
             //moving to Germany
             addAvailability(user, SECOND_AVAILABILITY, LocalDate.parse(SECOND_START_DATE));
-            testUsers();
         }
 
         //try to delete the second availability
@@ -109,8 +105,6 @@ public class AvailabilityTest extends AbstractEntityGenerator {
             removeAvailability(availability, user);
         }
 
-        testUsers();
-        printTables();
     }
 
     @Test
@@ -126,7 +120,6 @@ public class AvailabilityTest extends AbstractEntityGenerator {
             User user = expectedUsers.getFirst();
             //moving to Germany
             addAvailability(user, SECOND_AVAILABILITY, LocalDate.parse(SECOND_START_DATE));
-            testUsers();
         }
 
         //try to delete the second availability with fake availability id
@@ -142,10 +135,7 @@ public class AvailabilityTest extends AbstractEntityGenerator {
                 availability.setId(id);
                 //expected
             }
-            testUsers();
         }
-
-        printTables();
     }
 
     @Test
@@ -161,7 +151,6 @@ public class AvailabilityTest extends AbstractEntityGenerator {
             User user = expectedUsers.getFirst();
             //moving to Germany
             addAvailability(user, SECOND_AVAILABILITY, LocalDate.parse(SECOND_START_DATE));
-            testUsers();
         }
 
         //try to delete the second availability with fake user id
@@ -178,9 +167,6 @@ public class AvailabilityTest extends AbstractEntityGenerator {
                 //expected
             }
         }
-
-        testUsers();
-        printTables();
     }
 
     @Test
@@ -198,9 +184,6 @@ public class AvailabilityTest extends AbstractEntityGenerator {
             availability.setAvailability(SECOND_AVAILABILITY);
             updateAvailability(availability, user);
         }
-
-        testUsers();
-        printTables();
     }
 
     @Test
@@ -228,9 +211,6 @@ public class AvailabilityTest extends AbstractEntityGenerator {
                 //expected
             }
         }
-
-        testUsers();
-        printTables();
     }
 
     @Test
@@ -258,8 +238,5 @@ public class AvailabilityTest extends AbstractEntityGenerator {
                 user.setId(id);
             }
         }
-
-        testUsers();
-        printTables();
     }
 }

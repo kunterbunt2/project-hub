@@ -39,6 +39,7 @@ import java.util.List;
 @NoArgsConstructor
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
+@ToString(callSuper = true)
 public class Task implements Comparable<Task> {
 
     @JsonIgnore

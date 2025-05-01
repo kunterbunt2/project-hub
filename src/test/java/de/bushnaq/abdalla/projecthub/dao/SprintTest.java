@@ -17,42 +17,110 @@
 
 package de.bushnaq.abdalla.projecthub.dao;
 
-import de.bushnaq.abdalla.projecthub.dto.*;
+import de.bushnaq.abdalla.projecthub.dto.Sprint;
 import de.bushnaq.abdalla.projecthub.util.AbstractEntityGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ServerErrorException;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Transactional
 public class SprintTest extends AbstractEntityGenerator {
+    private static final long   FAKE_ID     = 999999L;
+    private static final String SECOND_NAME = "SECOND_NAME";
+    Logger logger = LoggerFactory.getLogger(SprintTest.class);
 
     @Test
-    public void case01() throws Exception {
-        User user1 = addRandomUser();
-        User user2 = addRandomUser();
+    public void create() throws Exception {
+        addRandomProducts(1);
 
-        for (int i = 0; i < 1; i++) {
-            Product product = addProduct("Product " + i);
-            Version version = addVersion(product, String.format("1.%d.0", i));
-            Project project = addRandomProject(version);
-            Sprint  sprint  = addRandomSprint(project);
-
-            LocalDateTime start = LocalDateTime.now();
-            Task          task1 = addTask(sprint, null, "[1] Parent Task", start, Duration.ofDays(0), null, null);
-            Task          task2 = addTask(sprint, task1, "[2] Child Task", start, Duration.ofDays(1), user1, null);
-            Task          task3 = addTask(sprint, task1, "[3] Child Task", start, Duration.ofDays(1), user2, task2);
-        }
-        printTables();
-        testAll();
     }
 
+    @Test
+    public void delete() throws Exception {
+        // Create products with sprints
+        addRandomProducts(2);
+        // Delete the first sprint
+        removeSprint(expectedSprints.getFirst().getId());
+    }
+
+    @Test
+    public void deleteUsingFakeId() throws Exception {
+        addRandomProducts(2);
+        try {
+            removeSprint(FAKE_ID);
+        } catch (ServerErrorException e) {
+            // Expected exception
+        }
+    }
+
+    @Test
+    public void getAll() throws Exception {
+        addRandomProducts(3);
+        List<Sprint> allSprints = sprintApi.getAll();
+        assertEquals(3, allSprints.size());
+    }
+
+    @Test
+    public void getAllEmpty() throws Exception {
+        List<Sprint> allSprints = sprintApi.getAll();
+        assertEquals(0, allSprints.size());
+    }
+
+    @Test
+    public void getByFakeId() throws Exception {
+        addRandomProducts(1);
+        try {
+            sprintApi.getById(FAKE_ID);
+            fail("Sprint should not exist");
+        } catch (ServerErrorException e) {
+            // Expected exception
+        }
+    }
+
+    @Test
+    public void getById() throws Exception {
+        addRandomProducts(1);
+        Sprint sprint = sprintApi.getById(expectedSprints.getFirst().getId());
+        assertSprintEquals(expectedSprints.getFirst(), sprint, true);
+    }
+
+    @Test
+    public void update() throws Exception {
+        addRandomProducts(2);
+        Sprint sprint = expectedSprints.getFirst();
+        sprint.setName(SECOND_NAME);
+        updateSprint(sprint);
+    }
+
+    @Test
+    public void updateUsingFakeId() throws Exception {
+        addRandomProducts(2);
+        Sprint sprint = expectedSprints.getFirst();
+        Long   id     = sprint.getId();
+        String name   = sprint.getName();
+        sprint.setId(FAKE_ID);
+        sprint.setName(SECOND_NAME);
+        try {
+            updateSprint(sprint);
+            fail("should not be able to update");
+        } catch (ServerErrorException e) {
+            // Expected exception
+            sprint.setId(id);
+            sprint.setName(name);
+        }
+    }
 }

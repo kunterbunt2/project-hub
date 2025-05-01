@@ -43,9 +43,10 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
     private OffsetDateTime end;
     private Long           id;
     private String         name;
+
     @JsonIgnore
     @ToString.Exclude//help intellij debugger not to go into a loop
-    private Project        project;
+    private Project project;
 
     private Long projectId;
 
@@ -124,6 +125,8 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
     }
 
     public void initialize(GanttContext gc) {
+        tasks.clear();
+        taskMap.clear();
         //map users to their ids
         gc.allUsers.forEach(user -> userMap.put(user.getId(), user));
         //populate tasks list

@@ -44,20 +44,13 @@ public class ProductTest extends AbstractEntityGenerator {
 
     @Test
     public void create() throws Exception {
-
         addRandomProducts(1);
-
-        testProducts();
-        printTables();
     }
 
     @Test
     public void delete() throws Exception {
         addRandomProducts(2);
         removeProduct(expectedProducts.get(0).getId());
-
-        testProducts();
-        printTables();
     }
 
     @Test
@@ -68,9 +61,6 @@ public class ProductTest extends AbstractEntityGenerator {
         } catch (ServerErrorException e) {
             //expected
         }
-
-        testProducts();
-        printTables();
     }
 
     @Test
@@ -78,17 +68,11 @@ public class ProductTest extends AbstractEntityGenerator {
         addRandomProducts(3);
         List<Product> allProducts = productApi.getAll();
         assertEquals(3, allProducts.size());
-
-        testProducts();
-        printTables();
     }
 
     @Test
     public void getAllEmpty() throws Exception {
         List<Product> allProducts = productApi.getAll();
-
-        testProducts();
-        printTables();
     }
 
     @Test
@@ -101,9 +85,6 @@ public class ProductTest extends AbstractEntityGenerator {
         } catch (ServerErrorException e) {
             //expected
         }
-
-        testProducts();
-        printTables();
     }
 
     @Test
@@ -111,11 +92,7 @@ public class ProductTest extends AbstractEntityGenerator {
 
         addRandomProducts(1);
         Product product = productApi.getById(expectedProducts.getFirst().getId());
-//        product.setVersions(versionApi.getAll(product.getId()));
         assertProductEquals(expectedProducts.getFirst(), product, true);//shallow test
-
-        testProducts();
-        printTables();
     }
 
     @Test
@@ -124,9 +101,6 @@ public class ProductTest extends AbstractEntityGenerator {
         Product product = expectedProducts.getFirst();
         product.setName(SECOND_NAME);
         updateProduct(product);
-
-        testProducts();
-        printTables();
     }
 
     @Test
@@ -145,8 +119,5 @@ public class ProductTest extends AbstractEntityGenerator {
             product.setId(id);
             product.setName(name);
         }
-
-        testProducts();
-        printTables();
     }
 }

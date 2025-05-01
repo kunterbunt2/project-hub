@@ -62,7 +62,7 @@ public class WorklogTest extends AbstractEntityGenerator {
         }
 
         printTables();
-        testAll();
+        testAllAndPrintTables();
     }
 
     @Test
@@ -83,7 +83,7 @@ public class WorklogTest extends AbstractEntityGenerator {
             Worklog worklog4 = addWorklog(task3, user1, OffsetDateTime.now(), Duration.ofHours(1), "Implementation 2");
         }
 
-        testAll();
+        testAllAndPrintTables();
 
         //update
         {
@@ -94,7 +94,7 @@ public class WorklogTest extends AbstractEntityGenerator {
         }
 
         printTables();
-        testAll();
+        testAllAndPrintTables();
 
     }
 
