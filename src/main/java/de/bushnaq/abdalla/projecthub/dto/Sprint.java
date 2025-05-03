@@ -80,9 +80,12 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
         tasks.add(task);
     }
 
-    public void addWorklogRemaining(Long sprintId, Task task) {
+    public void addWorklogRemaining(Task task) {
         Duration timeSpentMinutes         = task.getTimeSpent();
         Duration remainingEstimateMinutes = task.getRemainingEstimate();
+        if (timeSpentMinutes.equals(Duration.ZERO) && remainingEstimateMinutes.equals(Duration.ZERO)) {
+            return;
+        }
         if (timeSpentMinutes == null && remainingEstimateMinutes == null) {
             return;
         }
@@ -93,10 +96,10 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
             remainingEstimateMinutes = Duration.ZERO;
         }
         if (task.getResourceId() != null) {
-            WorklogRemaining w = new WorklogRemaining(sprintId, task.getId(), task.getKey(), task.getAssignedUser().getName(), timeSpentMinutes, remainingEstimateMinutes);
+            WorklogRemaining w = new WorklogRemaining(getId(), task.getId(), task.getKey(), task.getAssignedUser().getName(), timeSpentMinutes, remainingEstimateMinutes);
             worklogRemaining.add(w);
         } else {
-            WorklogRemaining w = new WorklogRemaining(sprintId, task.getId(), task.getKey(), "unknown", timeSpentMinutes, remainingEstimateMinutes);
+            WorklogRemaining w = new WorklogRemaining(getId(), task.getId(), task.getKey(), "unknown", timeSpentMinutes, remainingEstimateMinutes);
             worklogRemaining.add(w);
         }
     }
@@ -186,7 +189,7 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
             }
             task.setSprint(this);
             task.initialize();
-            addWorklogRemaining(getId(), task);
+            addWorklogRemaining(task);
         });
         if (userId == null) calendar = gc.getProjectFile().getDefaultCalendar();
         else {

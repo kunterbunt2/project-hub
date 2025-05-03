@@ -15,7 +15,7 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.dao;
+package de.bushnaq.abdalla.projecthub.renderer.burndown;
 
 import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.rest.debug.DebugUtil;
@@ -41,9 +41,9 @@ import java.time.LocalDateTime;
 @Transactional
 public class BurndownTest extends AbstractGanttTestUtil {
     private static final int MAX_DURATION_DAYS      = 10;
-    private static final int MAX_NUMBER_OF_FEATURES = 5;
-    private static final int MAX_NUMBER_OF_USERS    = 5;
-    private static final int MAX_NUMBER_OF_WORK     = 5;
+    private static final int MAX_NUMBER_OF_FEATURES = 3;
+    private static final int MAX_NUMBER_OF_USERS    = 2;
+    private static final int MAX_NUMBER_OF_WORK     = 3;
     @Autowired
     DebugUtil debugUtil;
 
@@ -66,12 +66,10 @@ public class BurndownTest extends AbstractGanttTestUtil {
         }
 
         Task startMilestone = addTask(sprint, null, "Start", LocalDateTime.parse("2024-12-15T08:00:00"), Duration.ZERO, null, null, TaskMode.MANUALLY_SCHEDULED, true);
-//        List<Task> features = new ArrayList<>();
         for (int f = 0; f < numberOfFeatures; f++) {
-            String featureName = generateFeatureName(f);
-            Task   feature     = addParentTask(featureName, sprint, null, startMilestone);
-//            features.add(feature);
-            int numberOfTasks = random.nextInt(MAX_NUMBER_OF_WORK) + 1;
+            String featureName   = generateFeatureName(f);
+            Task   feature       = addParentTask(featureName, sprint, null, startMilestone);
+            int    numberOfTasks = random.nextInt(MAX_NUMBER_OF_WORK) + 1;
             for (int t = 0; t < numberOfTasks; t++) {
                 User   user     = expectedUsers.stream().toList().get(random.nextInt(numberOfUsers));
                 String duration = String.format("%dd", random.nextInt(MAX_DURATION_DAYS) + 1);
@@ -90,49 +88,54 @@ public class BurndownTest extends AbstractGanttTestUtil {
         final long SECONDS_PER_WORKING_DAY = 75 * 6 * 60;
         final long SECONDS_PER_HOUR        = 60 * 60;
         long       oneDay                  = 75 * SECONDS_PER_HOUR / 10;
-        for (LocalDate day = sprint.getStart().toLocalDate(); day.isBefore(sprint.getEnd().toLocalDate().plusDays(1)); day = day.plusDays(1)) {
+        Duration   rest                    = Duration.ofSeconds(1);
+//        for (LocalDate day = sprint.getStart().toLocalDate(); day.isBefore(sprint.getEnd().toLocalDate().plusDays(1)); day = day.plusDays(1)) {
+        for (LocalDate day = sprint.getStart().toLocalDate(); !rest.equals(Duration.ZERO); day = day.plusDays(1)) {
+            LocalDateTime startOfDay     = day.atStartOfDay().plusHours(8);
+            LocalDateTime endOfDay       = day.atStartOfDay().plusHours(16).plusMinutes(30);
+            LocalDateTime lunchStartTime = DateUtil.calculateLunchStartTime(day.atStartOfDay());
+            LocalDateTime lunchStopTime  = DateUtil.calculateLunchStopTime(day.atStartOfDay());
+            rest = Duration.ZERO;
             for (Task task : sprint.getTasks()) {
                 if (task.getChildTasks().isEmpty() && task.getOriginalEstimate() != null && !task.getOriginalEstimate().isZero()) {
                     Number availability = task.getAssignedUser().getAvailabilities().getLast().getAvailability();
                     if (task.getChildTasks().isEmpty()) {
-                        if (!day.isBefore(task.getStart().toLocalDate()) && !day.isAfter(task.getFinish().toLocalDate())) {
+                        if (!day.isBefore(task.getStart().toLocalDate()) /*&& !day.isAfter(task.getFinish().toLocalDate())*/) {
                             // Day is within task start/finish date range
-                            LocalDateTime startOfDay     = day.atStartOfDay().plusHours(8);
-                            LocalDateTime endOfDay       = day.atStartOfDay().plusHours(16).plusMinutes(30);
-                            LocalDateTime lunchStartTime = DateUtil.calculateLunchStartTime(day.atStartOfDay());
-                            LocalDateTime lunchStopTime  = DateUtil.calculateLunchStopTime(day.atStartOfDay());
 
                             if (task.getEffectiveCalendar().isWorkingDate(day)) {
                                 if (task.getStart().isBefore(startOfDay) || task.getStart().isEqual(startOfDay)) {
-                                    if (task.getFinish().isAfter(endOfDay) || task.getFinish().isEqual(endOfDay)) {
-                                        // we have the whole day
-                                        double   fraction = (double) Duration.between(startOfDay, endOfDay).getSeconds() / oneDay;
-                                        Duration maxWork  = Duration.ofSeconds((long) ((availability.doubleValue() * SECONDS_PER_WORKING_DAY)));
-                                        Duration w        = maxWork;
-                                        Worklog  worklog  = addWorklog(task, task.getAssignedUser(), DateUtil.localDateTimeToOffsetDateTime(day.atStartOfDay()), w, task.getName());
+//                                    if (task.getFinish().isAfter(endOfDay) || task.getFinish().isEqual(endOfDay))
+                                    {
+                                        if (!task.getRemainingEstimate().isZero()) {
+                                            // we have the whole day
+//                                        double fraction = (double) Duration.between(startOfDay, endOfDay).getSeconds() / oneDay;
+                                            double   fraction = 0.8f + random.nextFloat() / 5;
+                                            Duration maxWork  = Duration.ofSeconds((long) ((fraction * availability.doubleValue() * SECONDS_PER_WORKING_DAY)));
+                                            Duration w        = maxWork;
+                                            Duration delta    = task.getRemainingEstimate().minus(w);
+                                            if (delta.isZero() || delta.isPositive()) {
+                                            } else {
+                                                w = task.getRemainingEstimate();
+                                            }
+                                            Worklog worklog = addWorklog(task, task.getAssignedUser(), DateUtil.localDateTimeToOffsetDateTime(day.atStartOfDay()), w, task.getName());
+                                            task.addTimeSpent(w);
+                                            task.removeRemainingEstimate(w);
 //                                    task.setProgress(task.getProgress().intValue() + 1);
+                                        }
                                     }
-//                                Worklog worklog = addWorklog(task, task.getAssignedUser(), startOfDay, Duration.ofHours(1), task.getName());
-//                                task.setProgress(task.getProgress().intValue() + 1);
                                 }
                             }
-
-//                        if (task.getOriginalEstimate() != null) {
-//                            long days = task.getOriginalEstimate().toDaysPart();
-//                            if (days > 0) {
-//
-//                                Worklog worklog = addWorklog(task, task.getAssignedUser(), DateUtil.localDateTimeToOffsetDateTime(day.atStartOfDay().plusHours(8)), Duration.ofHours(1), task.getName());
-//                                task.setOriginalEstimate(task.getOriginalEstimate().minusDays(1));
-//                                Worklog worklog3 = addWorklog(task, task.getAssignedUser(), OffsetDateTime.now(), Duration.ofHours(1), "Implementation 1");
-//
-////                            task.setProgress(task.getProgress().intValue() + 1);
-//                            }
-//                        }
                         }
                     }
                 }
+                rest = rest.plus(task.getRemainingEstimate());//accumulate the rest
             }
         }
+        sprint.getTasks().forEach(task -> {
+            taskApi.update(task);
+        });
+        sprintApi.update(sprint);
     }
 
     @Test
@@ -141,7 +144,6 @@ public class BurndownTest extends AbstractGanttTestUtil {
         int numberOfUsers    = random.nextInt(MAX_NUMBER_OF_USERS) + 2;
         int numberOfFeatures = random.nextInt(MAX_NUMBER_OF_FEATURES) + 1;
         generateTasks(numberOfUsers, numberOfFeatures);
-//        ParameterOptions.now = OffsetDateTime.parse("2025-03-01T08:00:00+01:00");
         generateGanttChart(testInfo);
         generateWorklogs();
         generateBurndownChart(testInfo);

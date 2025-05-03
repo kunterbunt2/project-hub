@@ -384,6 +384,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         task.setStart(start);
         if (work != null) {
             task.setOriginalEstimate(work);
+            task.setRemainingEstimate(work);
         }
 //        if (work == null || work.equals(Duration.ZERO)) {
 //            task.setFinish(start);

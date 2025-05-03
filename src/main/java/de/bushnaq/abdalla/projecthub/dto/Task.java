@@ -93,6 +93,12 @@ public class Task implements Comparable<Task> {
         predecessors.add(new Relation(dependency, isVisible));
     }
 
+    public void addTimeSpent(Duration w) {
+        if (w != null) {
+            timeSpent = timeSpent.plus(w);
+        }
+    }
+
     public void addWorklog(Worklog worklog) {
         worklog.setTaskId(id);
         worklogs.add(worklog);
@@ -130,5 +136,11 @@ public class Task implements Comparable<Task> {
         childTasks.remove(childTask);
         childTask.setParentTask(null);
         childTask.setParentTaskId(null);
+    }
+
+    public void removeRemainingEstimate(Duration w) {
+        if (w != null) {
+            remainingEstimate = remainingEstimate.minus(w);
+        }
     }
 }
