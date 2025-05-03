@@ -17,14 +17,19 @@
 
 package de.bushnaq.abdalla.projecthub.dao;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import de.bushnaq.abdalla.projecthub.dto.Status;
+import de.bushnaq.abdalla.util.DurationDeserializer;
+import de.bushnaq.abdalla.util.DurationSerializer;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Proxy;
 
-import java.time.OffsetDateTime;
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "sprints")
@@ -38,7 +43,7 @@ import java.time.OffsetDateTime;
 @Schema(hidden = true)
 public class SprintDAO extends AbstractTimeAwareDAO {
     @Column(name = "end_date", nullable = true)  // renamed from 'end' as it is reserved in H2 databases
-    private OffsetDateTime end;
+    private LocalDateTime end;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -50,14 +55,19 @@ public class SprintDAO extends AbstractTimeAwareDAO {
 
     @Column(nullable = false)
     private Long projectId;
-
+    @JsonSerialize(using = DurationSerializer.class)
+    @JsonDeserialize(using = DurationDeserializer.class)
+    @Column(nullable = true)
+    private Duration remaining = Duration.ZERO;
     @Column(name = "start_date", nullable = true)  // renamed from 'start'
-    private OffsetDateTime start;
-
+    private LocalDateTime start;
     @Column(nullable = false)
     private Status status;
-
     @Column(nullable = true)
-    private Long userId;
+    private Long     userId;
+    @JsonSerialize(using = DurationSerializer.class)
+    @JsonDeserialize(using = DurationDeserializer.class)
+    @Column(nullable = true)
+    private Duration worked    = Duration.ZERO;
 
 }

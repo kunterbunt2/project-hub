@@ -44,6 +44,11 @@ public class WorklogController {
         return task;
     }
 
+    @GetMapping()
+    public List<WorklogDAO> getAll() {
+        return worklogRepository.findAll();
+    }
+
     @GetMapping("/sprint/{sprintId}")
     public List<WorklogDAO> getBySprintId(@PathVariable Long sprintId) {
         return worklogRepository.findBySprintId(sprintId);

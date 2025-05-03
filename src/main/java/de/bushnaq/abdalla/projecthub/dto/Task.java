@@ -39,40 +39,46 @@ import java.util.List;
 @NoArgsConstructor
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@ToString(callSuper = true)
+@ToString(callSuper = false)
 public class Task implements Comparable<Task> {
 
     @JsonIgnore
-    private List<Task>    childTasks = new ArrayList<>();
-    private boolean       critical   = false;
+    private List<Task>     childTasks        = new ArrayList<>();
+    private boolean        critical          = false;
     @JsonSerialize(using = DurationSerializer.class)
     @JsonDeserialize(using = DurationDeserializer.class)
-    private Duration      duration;
-    private LocalDateTime finish;
-    private Long          id;
-    private boolean       milestone;
-    private String        name;
+    private Duration       duration;
+    private LocalDateTime  finish;
+    private Long           id;
+    private boolean        impactOnCost      = true;
+    private boolean        milestone;
+    private String         name;
     @JsonIgnore
-    private String        notes;
+    private String         notes;
+    @JsonSerialize(using = DurationSerializer.class)
+    @JsonDeserialize(using = DurationDeserializer.class)
+    private Duration       originalEstimate  = Duration.ZERO;
     @JsonIgnore
     @ToString.Exclude//help intellij debugger not to go into a loop
-    private Task          parentTask;
-
+    private Task           parentTask;
     private Long           parentTaskId;
-    private List<Relation> predecessors = new ArrayList<>();
-    private Number         progress     = 0;
+    private List<Relation> predecessors      = new ArrayList<>();
+    private Number         progress          = 0;
+    @JsonSerialize(using = DurationSerializer.class)
+    @JsonDeserialize(using = DurationDeserializer.class)
+    private Duration       remainingEstimate = Duration.ZERO;
     private Long           resourceId;
     @JsonIgnore
     @ToString.Exclude//help intellij debugger not to go into a loop
     private Sprint         sprint;
     private Long           sprintId;
     private LocalDateTime  start;
-    private TaskMode       taskMode     = TaskMode.AUTO_SCHEDULED;
+    private TaskMode       taskMode          = TaskMode.AUTO_SCHEDULED;
     @JsonSerialize(using = DurationSerializer.class)
     @JsonDeserialize(using = DurationDeserializer.class)
-    private Duration       work         = Duration.ZERO;
+    private Duration       timeSpent         = Duration.ZERO;
     @JsonIgnore
-    private List<Worklog>  worklogs     = new ArrayList<>();
+    private List<Worklog>  worklogs          = new ArrayList<>();
 
     public void addChildTask(Task childTask) {
         if (childTask.getParentTask() != null) {

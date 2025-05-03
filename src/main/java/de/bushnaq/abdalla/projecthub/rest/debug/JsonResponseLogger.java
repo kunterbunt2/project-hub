@@ -46,13 +46,17 @@ public class JsonResponseLogger implements ResponseBodyAdvice<Object> {
             int status = ((ServletServerHttpResponse) response).getServletResponse().getStatus();
             if (status != 200) {
                 if (body instanceof ErrorResponse errorResponse) {
-                    System.out.format("Error Response: %s\n", errorResponse.getMessage());
+                    if (DebugUtil.DEBUG)
+                        System.out.format("Error Response: %s\n", errorResponse.getMessage());
                 } else {
-                    System.out.format("Error Response: %d\n", status);
+                    if (DebugUtil.DEBUG)
+                        System.out.format("Error Response: %d\n", status);
                 }
             } else {
-                String jsonString = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(body);
-                System.out.format("Response JSON: %s\n", jsonString);
+                if (DebugUtil.DEBUG) {
+                    String jsonString = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(body);
+                    System.out.format("Response JSON: %s\n", jsonString);
+                }
             }
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);

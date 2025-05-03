@@ -18,37 +18,42 @@
 package de.bushnaq.abdalla.projecthub.report.renderer;
 
 import de.bushnaq.abdalla.projecthub.Context;
+import de.bushnaq.abdalla.projecthub.dto.Sprint;
+import de.bushnaq.abdalla.projecthub.dto.Worklog;
 import de.bushnaq.abdalla.projecthub.report.dao.BurnDownGraphicsTheme;
+import de.bushnaq.abdalla.projecthub.report.dao.WorklogRemaining;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class RenderDao {
-    public int                   chartHeight;
-    public int                   chartWidth;//if 0, day width is set to MAX_DAY_WIDTH and cartWidth is calculated from maxDays and dayWidth.
-    public String                column;
-    public boolean               completed;
-    public Context               context;
-    public String                cssClass;
-    public LocalDateTime         end;
-    public Duration              estimatedBestWork;
-    public Duration              estimatedWorstWork;
-    public LocalDateTime         firstWorklog;
-    public BurnDownGraphicsTheme graphicsTheme;
-    public LocalDateTime         lastWorklog;
-    public String                link;
-    public Duration              maxWorked;
-    public LocalDateTime         now;
-    public int                   postRun;
-    public int                   preRun;
+    public int                    chartHeight;
+    public int                    chartWidth;//if 0, day width is set to MAX_DAY_WIDTH and cartWidth is calculated from maxDays and dayWidth.
+    public String                 column;
+    //    public boolean                    completed;
+    public Context                context;
+    public String                 cssClass;
+    public LocalDateTime          end;
+    public Duration               estimatedBestWork;
+    public Duration               estimatedWorstWork;
+    public LocalDateTime          firstWorklog;
+    public BurnDownGraphicsTheme  graphicsTheme;
+    public LocalDateTime          lastWorklog;
+    public String                 link;
+    public Duration               maxWorked;
+    public LocalDateTime          now;
+    public int                    postRun;
+    public int                    preRun;
     //    public TimeTrackerProject racProject;
-    public LocalDateTime         release;
-    public Duration              remaining;
+    public LocalDateTime          release;
+    public Duration               remaining;
+    public Sprint                 sprint;
     //    public AbstractDevelopmentRequest request;
-    public int                   sprintClosed;
-    public String                sprintName;
-    public LocalDateTime         start;
-//    public List<JiraWorklog> worklog;
-//    public List<JiraWorklogRemaining> worklogRemaining;
+//    public int                    sprintClosed;
+    public String                 sprintName;
+    public LocalDateTime          start;
+    public List<Worklog>          worklog;
+    public List<WorklogRemaining> worklogRemaining;
 
 }

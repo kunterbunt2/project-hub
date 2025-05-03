@@ -68,7 +68,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     private static      int                   productIndex              = 0;
     protected           ProjectApi            projectApi;
     private static      int                   projectIndex              = 0;
-    private final       Random                random                    = new Random();
+    protected final     Random                random                    = new Random();
     protected           SprintApi             sprintApi;
     private static      int                   sprintIndex               = 0;
     protected           TaskApi               taskApi;
@@ -243,7 +243,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         User user1 = addRandomUser();
 
         for (int i = 0; i < count; i++) {
-            Product product = addProduct("Product " + i);
+            Product product = addProduct(generateProductName(i));
             Version version = addVersion(product, String.format("1.%d.0", i));
             Project project = addRandomProject(version);
             Sprint  sprint  = addRandomSprint(project);
@@ -255,7 +255,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     }
 
     protected Project addRandomProject(Version version) {
-        return addProject(version, String.format("Project-%d", projectIndex), String.format("Requester-%d", projectIndex));
+        return addProject(version, generateProjectName(projectIndex), String.format("Requester-%d", projectIndex));
     }
 
     protected Sprint addRandomSprint(Project project) {
@@ -270,7 +270,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
      * @return the created User object
      */
     protected User addRandomUser(LocalDate firstDate) {
-        String       name  = names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
+        String       name  = generateUserName(userIndex);
         String       email = name + "@project-hub.org";
         User         saved = addUser(name, email, "de", "nw", firstDate, 0.7f);
         GanttContext gc    = new GanttContext();
@@ -288,7 +288,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
      * @return the created User object
      */
     protected User addRandomUser() {
-        String    name      = names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
+        String    name      = generateUserName(userIndex);
         String    email     = name + "@project-hub.org";
         LocalDate firstDate = ParameterOptions.now.toLocalDate();
 
@@ -310,7 +310,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
      * @return the created User object
      */
     protected User addRandomUser(int index, float availability) {
-        String       name      = names.get(index).getFirstName() + " " + names.get(index).getLastName();
+        String       name      = generateUserName(index);
         String       email     = name + "@project-hub.org";
         LocalDate    firstDate = ParameterOptions.now.toLocalDate().minusYears(1);
         User         saved     = addUser(name, email, "de", "nw", firstDate, availability);
@@ -331,7 +331,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
      */
     protected void addRandomUsers(int count) {
         for (int i = 0; i < count; i++) {
-            String       name      = names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
+            String       name      = generateUserName(userIndex);
             String       email     = name + "@project-hub.org";
             LocalDate    firstDate = ParameterOptions.now.toLocalDate().minusYears(1);
             User         saved     = addUser(name, email, "de", "nw", firstDate, 0.5f);
@@ -351,13 +351,13 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
      * @return the created Version object
      */
     protected Version addRandomVersion(Product product) {
-        return addVersion(product, String.format("1.%d.0", versionIndex));
+        return addVersion(product, generateVersionName());
     }
 
     protected Sprint addSprint(Project project, String sprintName) {
         Sprint sprint = new Sprint();
         sprint.setName(sprintName);
-        sprint.setStatus(Status.OPEN);
+        sprint.setStatus(Status.STARTED);
         sprint.setProject(project);
         sprint.setProjectId(project.getId());
         sprint.setCreated(ParameterOptions.now);
@@ -383,7 +383,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         task.setName(name);
         task.setStart(start);
         if (work != null) {
-            task.setWork(work);
+            task.setOriginalEstimate(work);
         }
 //        if (work == null || work.equals(Duration.ZERO)) {
 //            task.setFinish(start);
@@ -416,6 +416,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
             saved.setSprint(sprint);
             sprint.addTask(saved);
         }
+        System.out.printf("Adding %s%n", saved.toString());
         return saved;
     }
 
@@ -482,6 +483,14 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         return saved;
     }
 
+    protected static String generateProductName(int index) {
+        return String.format("Product-%d", index);
+    }
+
+    private static String generateProjectName(int index) {
+        return String.format("Project-%d", index);
+    }
+
     private void generateRandomOffDays(User saved, LocalDate employmentDate) {
         int employmentYear = employmentDate.getYear();
         for (int yearIndex = 0; yearIndex < 2; yearIndex++) {
@@ -493,8 +502,16 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         }
     }
 
+    private String generateUserName(int userIndex) {
+        return names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
+    }
+
     private static int generateUserYearSeed(User saved, int year) {
         return (saved.getName() + year).hashCode();
+    }
+
+    private static String generateVersionName() {
+        return String.format("1.%d.0", versionIndex);
     }
 
     private LocalDate getNextWorkingDay(ProjectCalendar calendar, LocalDate start, int workingDays) {
@@ -512,7 +529,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     }
 
     @PostConstruct
-    private void init() {
+    protected void init() {
         NameGeneratorOptions options = new NameGeneratorOptions();
         ParameterOptions.now = OffsetDateTime.parse("2025-01-01T08:00:00+01:00");
         options.setRandomSeed(123L);//Get deterministic results by setting a random seed.

@@ -19,12 +19,17 @@ package de.bushnaq.abdalla.projecthub.dto;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import de.bushnaq.abdalla.projecthub.report.dao.WorklogRemaining;
 import de.bushnaq.abdalla.projecthub.report.renderer.gantt.GanttContext;
+import de.bushnaq.abdalla.util.DurationDeserializer;
+import de.bushnaq.abdalla.util.DurationSerializer;
 import lombok.*;
 import net.sf.mpxj.ProjectCalendar;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,36 +45,60 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
     @JsonIgnore
     private ProjectCalendar calendar;
 
-    private OffsetDateTime end;
-    private Long           id;
-    private String         name;
-
+    private   LocalDateTime   end;
+    @JsonIgnore
+    public    List<Throwable> exceptions = new ArrayList<>();
+    private   Long            id;
+    private   String          name;
     @JsonIgnore
     @ToString.Exclude//help intellij debugger not to go into a loop
-    private Project project;
-
-    private Long projectId;
-
-    private OffsetDateTime start;
-
-    private Status status;
-
+    private   Project         project;
+    private   Long            projectId;
     @JsonIgnore
-    transient Map<Long, Task> taskMap = new HashMap<>();
-
+    private   LocalDateTime   releaseDate;//calculated from the task work, worklogs and remaining work
+    @JsonSerialize(using = DurationSerializer.class)
+    @JsonDeserialize(using = DurationDeserializer.class)
+    private   Duration        remaining;
+    private   LocalDateTime   start;
+    private   Status          status;
     @JsonIgnore
-    private List<Task> tasks = new ArrayList<>();
-
-    private Long userId;
-
+    transient Map<Long, Task> taskMap    = new HashMap<>();
     @JsonIgnore
-    transient Map<Long, User> userMap = new HashMap<>();
-
+    private   List<Task>      tasks      = new ArrayList<>();
+    private   Long            userId;
+    @JsonIgnore
+    transient Map<Long, User> userMap    = new HashMap<>();
+    @JsonSerialize(using = DurationSerializer.class)
+    @JsonDeserialize(using = DurationDeserializer.class)
+    private   Duration        worked;
+    @JsonIgnore
+    List<WorklogRemaining> worklogRemaining = new ArrayList<>();
     @JsonIgnore
     private List<Worklog> worklogs = new ArrayList<>();
 
     public void addTask(Task task) {
         tasks.add(task);
+    }
+
+    public void addWorklogRemaining(Long sprintId, Task task) {
+        Duration timeSpentMinutes         = task.getTimeSpent();
+        Duration remainingEstimateMinutes = task.getRemainingEstimate();
+        if (timeSpentMinutes == null && remainingEstimateMinutes == null) {
+            return;
+        }
+        if (timeSpentMinutes == null) {
+            timeSpentMinutes = Duration.ZERO;
+        }
+        if (remainingEstimateMinutes == null) {
+            remainingEstimateMinutes = Duration.ZERO;
+        }
+        if (task.getResourceId() != null) {
+            WorklogRemaining w = new WorklogRemaining(sprintId, task.getId(), task.getKey(), task.getAssignedUser().getName(), timeSpentMinutes, remainingEstimateMinutes);
+            worklogRemaining.add(w);
+        } else {
+            WorklogRemaining w = new WorklogRemaining(sprintId, task.getId(), task.getKey(), "unknown", timeSpentMinutes, remainingEstimateMinutes);
+            worklogRemaining.add(w);
+        }
     }
 
     @Override
@@ -127,12 +156,18 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
     public void initialize(GanttContext gc) {
         tasks.clear();
         taskMap.clear();
+        worklogRemaining.clear();
         //map users to their ids
         gc.allUsers.forEach(user -> userMap.put(user.getId(), user));
         //populate tasks list
         gc.allTasks.forEach(task -> {
             if (task.getSprintId().equals(id)) {
                 addTask(task);
+            }
+        });
+        gc.allWorklogs.forEach(worklog -> {
+            if (worklog.getSprintId().equals(id)) {
+                worklogs.add(worklog);
             }
         });
         //map tasks to their ids
@@ -145,16 +180,24 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
                 task.getParentTask().addChildTask(task);
             }
             for (Worklog worklog : worklogs) {
-                task.addWorklog(worklog);
+                if (worklog.getTaskId().equals(task.getId())) {
+                    task.addWorklog(worklog);
+                }
             }
             task.setSprint(this);
             task.initialize();
+            addWorklogRemaining(getId(), task);
         });
-        if (userId == null)
-            calendar = gc.getProjectFile().getDefaultCalendar();
+        if (userId == null) calendar = gc.getProjectFile().getDefaultCalendar();
         else {
             calendar = getUser().getCalendar();
         }
 
     }
+
+    @JsonIgnore
+    public boolean isClosed() {
+        return getStatus().equals(Status.CLOSED);
+    }
+
 }

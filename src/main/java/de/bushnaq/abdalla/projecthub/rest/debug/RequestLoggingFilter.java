@@ -49,9 +49,10 @@ public class RequestLoggingFilter implements Filter {
             CachedBodyHttpServletRequest cachedRequest = new CachedBodyHttpServletRequest(httpRequest);
             String                       body          = cachedRequest.getRequestBody();
             String                       requestURL    = httpRequest.getRequestURL().toString();
-            System.out.format("Received JSON request: %s %s\n", requestURL, body);
+            if (DebugUtil.DEBUG) {
+                System.out.format("Received JSON request: %s %s\n", requestURL, body);
+            }
             chain.doFilter(cachedRequest, response);
-
         } else {
             chain.doFilter(request, response);
         }

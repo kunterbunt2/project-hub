@@ -266,7 +266,7 @@ public class GanttUtil {
             User resourceAssignment = task.getAssignedUser();
             availability = resourceAssignment.getAvailabilities().getLast().getAvailability();
         }
-        Duration work = task.getWork();
+        Duration work = task.getOriginalEstimate();
         if (work != null) {
             {
                 double inverseAvailability = 1 / availability;
@@ -431,8 +431,7 @@ public class GanttUtil {
         return true;
     }
 
-    public void levelResources(GanttErrorHandler eh, Sprint sprint, String projectRequestKey, LocalDateTime currentStartTime/*, String xlsxFile*/)
-            throws Exception {
+    public void levelResources(GanttErrorHandler eh, Sprint sprint, String projectRequestKey, LocalDateTime currentStartTime) {
 
         long checks     = 0;
         int  iterations = 0;
@@ -626,6 +625,8 @@ public class GanttUtil {
 //        String ganttFileName = FileUtil.removeExtension(xlsxFile);
         checks = testRelationsAreHonored(eh, sprint, checks, "");
         markCriticalPath(/*eh,*/ sprint, currentStartTime);
+        sprint.setStart(sprint.getEarliestStartDate());
+        sprint.setEnd(sprint.getLatestFinishDate());
         logger.trace(String.format("executed %d checks.", checks));
     }
 

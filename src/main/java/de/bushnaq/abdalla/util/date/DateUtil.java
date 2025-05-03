@@ -866,5 +866,11 @@ public class DateUtil {
         return date.truncatedTo(ChronoUnit.DAYS);
     }
 
+    public static LocalDateTime toDayPrecision(OffsetDateTime date) {
+        if (date == null) {
+            return null;
+        }
+        return DateUtil.offsetDateTimeToLocalDateTime(date).truncatedTo(ChronoUnit.DAYS);
+    }
 }
 

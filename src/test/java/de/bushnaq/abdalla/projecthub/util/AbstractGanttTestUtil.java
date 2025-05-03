@@ -22,13 +22,16 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import de.bushnaq.abdalla.projecthub.Context;
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
+import de.bushnaq.abdalla.projecthub.report.BurnDownChart;
 import de.bushnaq.abdalla.projecthub.report.CalendarChart;
 import de.bushnaq.abdalla.projecthub.report.GanttChart;
+import de.bushnaq.abdalla.projecthub.report.renderer.RenderDao;
 import de.bushnaq.abdalla.projecthub.report.renderer.gantt.GanttContext;
 import de.bushnaq.abdalla.projecthub.report.renderer.gantt.GanttUtil;
 import de.bushnaq.abdalla.util.GanttErrorHandler;
 import de.bushnaq.abdalla.util.Util;
 import de.bushnaq.abdalla.util.date.DateUtil;
+import jakarta.annotation.PostConstruct;
 import net.sf.mpxj.ProjectCalendar;
 import net.sf.mpxj.ProjectFile;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,6 +50,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -161,9 +165,41 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
     protected void createProductAndUser(TestInfo testInfo) throws Exception {
 //        ParameterOptions.now = OffsetDateTime.parse("1996-03-05T08:00:00");
         ParameterOptions.now = OffsetDateTime.parse("2025-01-01T08:00:00+01:00");
-        new File(testResultFolder).mkdirs();
-        new File(testReferenceResultFolder).mkdirs();
         addOneProduct(sanitise(testInfo.getDisplayName()));
+    }
+
+    private RenderDao createRenderDao(Context context, Sprint sprint, String column, LocalDateTime now, int chartWidth, int chartHeight, String link) {
+        RenderDao dao = new RenderDao();
+        dao.context    = context;
+        dao.column     = column;
+        dao.sprintName = column + "-" + sprint.getId();
+        dao.link       = link;
+        dao.start      = sprint.getStart();
+        dao.now        = now;
+        dao.end        = sprint.getEnd();
+        dao.release    = sprint.getReleaseDate();
+//        dao.completed          = sprint.isClosed();
+        dao.chartWidth         = chartWidth;
+        dao.chartHeight        = chartHeight;
+        dao.sprint             = sprint;
+        dao.estimatedBestWork  = DateUtil.add(sprint.getWorked(), sprint.getRemaining());
+        dao.estimatedWorstWork = null;
+        dao.maxWorked          = DateUtil.add(sprint.getWorked(), sprint.getRemaining());
+        dao.remaining          = sprint.getRemaining();
+        dao.worklog            = sprint.getWorklogs();
+        dao.worklogRemaining   = sprint.getWorklogRemaining();
+//        dao.sprintClosed       = getClosed();
+        dao.cssClass      = "scheduleWithMargin";
+        dao.graphicsTheme = context.parameters.graphicsTheme;
+        return dao;
+    }
+
+    protected void generateBurndownChart(TestInfo testInfo) throws Exception {
+        initialize();
+        RenderDao     dao         = createRenderDao(context, sprint, "burn-down-small", ParameterOptions.getLocalNow(), 0, 36 * 20,  /*urlPrefix +*/ "sprint-" + sprint.getId() + "/sprint.html");
+        BurnDownChart chart       = new BurnDownChart("/", dao);
+        String        description = testInfo.getDisplayName().replace("_", "-");
+        chart.generateImage(Util.generateCopyrightString(ParameterOptions.getLocalNow()), description, testResultFolder);
     }
 
     protected void generateGanttChart(TestInfo testInfo) throws Exception {
@@ -178,8 +214,9 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
 
         //save back to the database
         sprint.getTasks().forEach(task -> {
-            taskApi.persist(task);
+            taskApi.update(task);
         });
+        sprintApi.update(sprint);
         printTables();
         initialize();
         if (projectFile == null) {
@@ -188,9 +225,9 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         }
 
 
-        GanttChart ganttChart  = new GanttChart(context, "", "/", "Gantt Chart", sprint.getName(), exceptions, ParameterOptions.getLocalNow(), false, sprint/*, 1887, 1000*/, "scheduleWithMargin", context.parameters.graphicsTheme);
+        GanttChart chart       = new GanttChart(context, "", "/", "Gantt Chart", sprint.getName(), exceptions, ParameterOptions.getLocalNow(), false, sprint/*, 1887, 1000*/, "scheduleWithMargin", context.parameters.graphicsTheme);
         String     description = testInfo.getDisplayName().replace("_", "-");
-        ganttChart.generateImage(Util.generateCopyrightString(ParameterOptions.getLocalNow()), description, testResultFolder);
+        chart.generateImage(Util.generateCopyrightString(ParameterOptions.getLocalNow()), description, testResultFolder);
         compareResults(projectFile);
     }
 
@@ -204,6 +241,13 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         return maxNameLength;
     }
 
+    @PostConstruct
+    protected void init() {
+        super.init();
+        new File(testResultFolder).mkdirs();
+        new File(testReferenceResultFolder).mkdirs();
+    }
+
     protected void initialize() throws Exception {
         GanttContext gc = new GanttContext();
         gc.allUsers    = userApi.getAllUsers();
@@ -212,6 +256,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         gc.allProjects = projectApi.getAll();
         gc.allSprints  = sprintApi.getAll();
         gc.allTasks    = taskApi.getAll();
+        gc.allWorklogs = worklogApi.getAll();
         gc.initialize();
 
         for (User user : gc.allUsers) {
@@ -354,7 +399,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
 
     @Override
     protected void testAllAndPrintTables() {
-        //we do nto want to test gantt charts same way as the other tests
+        //we do not want to test gantt charts same way as the other tests
     }
 
 }

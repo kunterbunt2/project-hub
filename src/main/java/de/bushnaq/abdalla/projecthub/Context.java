@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub;
 
+import de.bushnaq.abdalla.util.Debug;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -29,13 +30,13 @@ public class Context {
 //    public Map<LocalDate, String> bankHolidays;
 //    public List<AbstractDevelopmentRequest> closedList = null;
 //    public List<AbstractDevelopmentRequest> closingList = null;
-//    public Debug debug = new Debug();
-//    public GanttInformationList ganttInformationList = new GanttInformationList();
+    public Debug            debug      = new Debug();
+    //    public GanttInformationList ganttInformationList = new GanttInformationList();
 //    public Index index = new Index();
 //    private JiraClientFactory jiraClientFactory;
 //    public Logs logs = new Logs();
 //    public ArrayList<JiraSprint> orphanSprintList = new ArrayList<>();
-    public ParameterOptions parameters = new ProjectsDashboardParameterOptions();
+    public ParameterOptions parameters = new ProjectHubParameterOptions();
 
     //    public ResourceUtilization resourceUtilization = new ResourceUtilization();
 //    public List<SfpsTicket> spfsList;

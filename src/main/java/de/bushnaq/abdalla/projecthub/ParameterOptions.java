@@ -51,7 +51,7 @@ public abstract class ParameterOptions {
     public                 boolean               captureOutOfOfficeFromRam                   = false;//get out of office information from RAM db
     public                 boolean               closedRequests                              = true;
     public                 boolean               closingRequests                             = true;
-    public                 boolean               detailed                                    = false;//should always be true, otherwise resources will not be shown in burn down chart
+    public                 boolean               detailed                                    = true;//should always be true, otherwise resources will not be shown in burn down chart
     //    public String domainName = "DOMAIN";
     public                 List<Throwable>       exceptions                                  = new ArrayList<>();
     public                 String[]              files                                       = {};

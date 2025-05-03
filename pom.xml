@@ -88,12 +88,14 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <!-- <scope>test</scope> -->
         </dependency>
+        <!--
         <dependency>
             <groupId>com.github.gavlyukovskiy</groupId>
             <artifactId>datasource-proxy-spring-boot-starter</artifactId>
             <version>1.10.0</version>
             <scope>test</scope>
         </dependency>
+        -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>

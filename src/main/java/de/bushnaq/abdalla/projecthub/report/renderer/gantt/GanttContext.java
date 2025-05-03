@@ -35,6 +35,7 @@ public class GanttContext {
     public        List<Task>      allTasks    = new ArrayList<>();
     public        List<User>      allUsers    = new ArrayList<>();
     public        List<Version>   allVersions = new ArrayList<>();
+    public        List<Worklog>   allWorklogs = new ArrayList<>();
     private       ProjectCalendar calendar;
     private final ProjectFile     projectFile = new ProjectFile();
 

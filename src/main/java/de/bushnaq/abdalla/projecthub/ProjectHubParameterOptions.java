@@ -24,7 +24,7 @@ import org.apache.commons.cli.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class ProjectsDashboardParameterOptions extends ParameterOptions {
+public class ProjectHubParameterOptions extends ParameterOptions {
 
     @Override
     public void start(String[] args) throws Exception {
