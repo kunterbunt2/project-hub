@@ -243,7 +243,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         User user1 = addRandomUser();
 
         for (int i = 0; i < count; i++) {
-            Product product = addProduct(generateProductName(i));
+            Product product = addProduct(generateProductName(productIndex));
             Version version = addVersion(product, String.format("1.%d.0", i));
             Project project = addRandomProject(version);
             Sprint  sprint  = addRandomSprint(project);

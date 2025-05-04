@@ -24,7 +24,6 @@ import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.report.burndown.BurnDownChart;
 import de.bushnaq.abdalla.projecthub.report.burndown.RenderDao;
-import de.bushnaq.abdalla.projecthub.report.calendar.CalendarChart;
 import de.bushnaq.abdalla.projecthub.report.gantt.GanttChart;
 import de.bushnaq.abdalla.projecthub.report.gantt.GanttContext;
 import de.bushnaq.abdalla.projecthub.report.gantt.GanttUtil;
@@ -165,7 +164,9 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
     protected void createProductAndUser(TestInfo testInfo) throws Exception {
 //        ParameterOptions.now = OffsetDateTime.parse("1996-03-05T08:00:00");
         ParameterOptions.now = OffsetDateTime.parse("2025-01-01T08:00:00+01:00");
-        addOneProduct(sanitise(testInfo.getDisplayName()));
+//        addOneProduct(sanitise(testInfo.getDisplayName()));
+//        addOneProduct(testInfo.getTestMethod().get().getName());
+        addOneProduct(generateTestCaseName(testInfo));
     }
 
     private RenderDao createRenderDao(Context context, Sprint sprint, String column, LocalDateTime now, int chartWidth, int chartHeight, String link) {
@@ -225,10 +226,33 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         }
 
 
-        GanttChart chart       = new GanttChart(context, "", "/", "Gantt Chart", sprint.getName(), exceptions, ParameterOptions.getLocalNow(), false, sprint/*, 1887, 1000*/, "scheduleWithMargin", context.parameters.graphicsTheme);
-        String     description = testInfo.getDisplayName().replace("_", "-");
+        GanttChart chart = new GanttChart(context, "", "/", "Gantt Chart", sprint.getName(), exceptions, ParameterOptions.getLocalNow(), false, sprint/*, 1887, 1000*/, "scheduleWithMargin", context.parameters.graphicsTheme);
+//        String     description = testInfo.getDisplayName().replace("_", "-");
+        String description = testInfo.getTestMethod().get().getName();
         chart.generateImage(Util.generateCopyrightString(ParameterOptions.getLocalNow()), description, testResultFolder);
         compareResults(projectFile);
+    }
+
+    private String generateTestCaseName(TestInfo testInfo) {
+        String displayName = testInfo.getDisplayName();
+        String methodName  = testInfo.getTestMethod().get().getName();
+        if (displayName.startsWith("[")) {
+            //parametrized test case
+            //[1] mppFileName=references\CREQ11793 Siemens OMS 2.0 Ph2 SMIME-rcp.mpp
+            String bullet = displayName.substring(0, displayName.indexOf(' '));
+            if (displayName.contains("mppFileName=")) {
+                String mppFileName = displayName.substring(displayName.indexOf('\\') + 1, displayName.lastIndexOf("-rcp."));
+                if (mppFileName.length() > 10) {
+                    mppFileName = mppFileName.substring(0, 7) + "...";
+                }
+                return bullet + " " + methodName + " (" + mppFileName + ")";
+            } else {
+                return bullet + methodName;
+            }
+        } else {
+            return methodName;
+        }
+//        return displayName.replace("_", "-").replace("\\", "-").replace("/", "-").replace(":", "-");
     }
 
     private int getMaxTaskNameLength(List<Task> taskList) {
@@ -258,12 +282,6 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         gc.allTasks    = taskApi.getAll();
         gc.allWorklogs = worklogApi.getAll();
         gc.initialize();
-
-        for (User user : gc.allUsers) {
-            CalendarChart chart = new CalendarChart(context, ParameterOptions.getLocalNow(), user, "scheduleWithMargin", context.parameters.graphicsTheme);
-            chart.generateImage(Util.generateCopyrightString(ParameterOptions.getLocalNow()), "", testResultFolder);
-        }
-
 
         sprint    = gc.allProducts.getFirst().getVersions().getFirst().getProjects().getFirst().getSprints().getFirst();
         resource1 = gc.allUsers.getFirst();
@@ -370,10 +388,6 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
             return Files.readAllLines(filePath, StandardCharsets.UTF_8);
         }
         return new ArrayList<>();
-    }
-
-    private String sanitise(String displayName) {
-        return displayName.replace("_", "-").replace("\\", "-").replace("/", "-").replace(":", "-");
     }
 
     private void store(String directory, boolean overwrite) throws IOException {

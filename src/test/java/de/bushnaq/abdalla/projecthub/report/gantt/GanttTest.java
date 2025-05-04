@@ -21,7 +21,10 @@ import de.bushnaq.abdalla.projecthub.dto.Sprint;
 import de.bushnaq.abdalla.projecthub.dto.Task;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.util.AbstractGanttTestUtil;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
@@ -34,7 +37,9 @@ import org.springframework.transaction.annotation.Transactional;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class GanttTest extends AbstractGanttTestUtil {
 
-    @DisplayName("01-dependency between two tasks")
+    /**
+     * test dependency between two tasks
+     */
     @Test
     public void gantt_01(TestInfo testInfo) throws Exception {
         addRandomUser(0, 0.3f);
@@ -52,7 +57,9 @@ public class GanttTest extends AbstractGanttTestUtil {
         generateGanttChart(testInfo);
     }
 
-    @DisplayName("02-dependency between two parent tasks")
+    /**
+     * dependency between two parent tasks
+     */
     @Test
     public void gantt_02(TestInfo testInfo) throws Exception {
         addRandomUser(2, 0.5f);
@@ -74,9 +81,12 @@ public class GanttTest extends AbstractGanttTestUtil {
         generateGanttChart(testInfo);
     }
 
-    @DisplayName("03-two tasks with different resources and no dependency")
+    /**
+     * two tasks with different resources and no dependency
+     */
     @Test
     public void gantt_03(TestInfo testInfo) throws Exception {
+
         addRandomUser(0, 0.5f);
         addRandomUser(4, 0.7f);
         initialize();
@@ -99,6 +109,5 @@ public class GanttTest extends AbstractGanttTestUtil {
 
         generateGanttChart(testInfo);
     }
-
 
 }
