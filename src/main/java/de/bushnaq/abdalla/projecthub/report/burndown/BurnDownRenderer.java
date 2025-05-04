@@ -1,15 +1,30 @@
-package de.bushnaq.abdalla.projecthub.report.renderer.burndown;
+/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.report.burndown;
 
 import de.bushnaq.abdalla.projecthub.Context;
 import de.bushnaq.abdalla.projecthub.dao.WarnException;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
 import de.bushnaq.abdalla.projecthub.dto.Task;
 import de.bushnaq.abdalla.projecthub.dto.Worklog;
+import de.bushnaq.abdalla.projecthub.report.AbstractRenderer;
 import de.bushnaq.abdalla.projecthub.report.dao.*;
-import de.bushnaq.abdalla.projecthub.report.renderer.AbstractRenderer;
-import de.bushnaq.abdalla.projecthub.report.renderer.DayWork;
-import de.bushnaq.abdalla.projecthub.report.renderer.RenderDao;
-import de.bushnaq.abdalla.projecthub.report.renderer.gantt.GanttUtil;
+import de.bushnaq.abdalla.projecthub.report.gantt.GanttUtil;
 import de.bushnaq.abdalla.svg.util.ExtendedGraphics2D;
 import de.bushnaq.abdalla.svg.util.ExtendedPolygon;
 import de.bushnaq.abdalla.util.ColorUtil;

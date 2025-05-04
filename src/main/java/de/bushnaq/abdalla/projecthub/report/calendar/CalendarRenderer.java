@@ -15,13 +15,13 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.report.renderer.calendar;
+package de.bushnaq.abdalla.projecthub.report.calendar;
 
 import de.bushnaq.abdalla.projecthub.Context;
 import de.bushnaq.abdalla.projecthub.dto.OffDayType;
 import de.bushnaq.abdalla.projecthub.dto.User;
+import de.bushnaq.abdalla.projecthub.report.AbstractRenderer;
 import de.bushnaq.abdalla.projecthub.report.dao.BurnDownGraphicsTheme;
-import de.bushnaq.abdalla.projecthub.report.renderer.AbstractRenderer;
 import de.bushnaq.abdalla.svg.util.ExtendedGraphics2D;
 import net.sf.mpxj.ProjectCalendar;
 import net.sf.mpxj.ProjectCalendarException;

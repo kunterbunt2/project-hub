@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.api.*;
 import de.bushnaq.abdalla.projecthub.dto.*;
-import de.bushnaq.abdalla.projecthub.report.renderer.gantt.GanttContext;
+import de.bushnaq.abdalla.projecthub.report.gantt.GanttContext;
 import de.bushnaq.abdalla.util.date.DateUtil;
 import jakarta.annotation.PostConstruct;
 import net.sf.mpxj.ProjectCalendar;

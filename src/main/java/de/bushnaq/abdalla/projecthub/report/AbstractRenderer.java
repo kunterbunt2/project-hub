@@ -15,8 +15,9 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.report.renderer;
+package de.bushnaq.abdalla.projecthub.report;
 
+import de.bushnaq.abdalla.projecthub.report.burndown.RenderDao;
 import de.bushnaq.abdalla.projecthub.report.dao.*;
 import de.bushnaq.abdalla.svg.util.ExtendedGraphics2D;
 import de.bushnaq.abdalla.util.date.DateUtil;

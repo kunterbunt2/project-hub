@@ -18,7 +18,7 @@
 package de.bushnaq.abdalla.projecthub.report.dao;
 
 import de.bushnaq.abdalla.projecthub.report.AbstractCanvas;
-import de.bushnaq.abdalla.projecthub.report.renderer.AbstractRenderer;
+import de.bushnaq.abdalla.projecthub.report.AbstractRenderer;
 import de.bushnaq.abdalla.util.Util;
 import de.bushnaq.abdalla.util.date.DateUtil;
 import org.slf4j.Logger;

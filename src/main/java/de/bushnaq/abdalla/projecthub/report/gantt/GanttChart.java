@@ -15,12 +15,12 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.report;
+package de.bushnaq.abdalla.projecthub.report.gantt;
 
 import de.bushnaq.abdalla.projecthub.Context;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
+import de.bushnaq.abdalla.projecthub.report.AbstractChart;
 import de.bushnaq.abdalla.projecthub.report.dao.BurnDownGraphicsTheme;
-import de.bushnaq.abdalla.projecthub.report.renderer.gantt.GanttRenderer;
 
 import java.time.LocalDateTime;
 import java.util.List;

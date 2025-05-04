@@ -20,7 +20,6 @@ package de.bushnaq.abdalla.projecthub.report;
 import de.bushnaq.abdalla.projecthub.report.dao.CaptionElement;
 import de.bushnaq.abdalla.projecthub.report.dao.FooterElement;
 import de.bushnaq.abdalla.projecthub.report.dao.GraphicsTheme;
-import de.bushnaq.abdalla.projecthub.report.renderer.AbstractRenderer;
 import de.bushnaq.abdalla.svg.util.ExtendedGraphics2D;
 import de.bushnaq.abdalla.util.Util;
 

@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import de.bushnaq.abdalla.projecthub.report.dao.WorklogRemaining;
-import de.bushnaq.abdalla.projecthub.report.renderer.gantt.GanttContext;
+import de.bushnaq.abdalla.projecthub.report.gantt.GanttContext;
 import de.bushnaq.abdalla.util.DurationDeserializer;
 import de.bushnaq.abdalla.util.DurationSerializer;
 import lombok.*;

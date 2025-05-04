@@ -15,7 +15,7 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.report.renderer.gantt;
+package de.bushnaq.abdalla.projecthub.report.gantt;
 
 import de.bushnaq.abdalla.profiler.Profiler;
 import de.bushnaq.abdalla.profiler.SampleType;

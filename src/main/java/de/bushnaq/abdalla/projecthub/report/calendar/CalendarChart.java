@@ -15,12 +15,12 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.report;
+package de.bushnaq.abdalla.projecthub.report.calendar;
 
 import de.bushnaq.abdalla.projecthub.Context;
 import de.bushnaq.abdalla.projecthub.dto.User;
+import de.bushnaq.abdalla.projecthub.report.AbstractChart;
 import de.bushnaq.abdalla.projecthub.report.dao.BurnDownGraphicsTheme;
-import de.bushnaq.abdalla.projecthub.report.renderer.calendar.CalendarRenderer;
 
 import java.time.LocalDateTime;
 

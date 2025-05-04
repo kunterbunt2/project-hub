@@ -15,7 +15,7 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.report.renderer.gantt;
+package de.bushnaq.abdalla.projecthub.report.gantt;
 
 import de.bushnaq.abdalla.projecthub.Context;
 import de.bushnaq.abdalla.projecthub.dto.Relation;
@@ -23,8 +23,8 @@ import de.bushnaq.abdalla.projecthub.dto.Task;
 import de.bushnaq.abdalla.projecthub.dto.TaskMode;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.report.AbstractCanvas;
+import de.bushnaq.abdalla.projecthub.report.AbstractRenderer;
 import de.bushnaq.abdalla.projecthub.report.dao.*;
-import de.bushnaq.abdalla.projecthub.report.renderer.AbstractRenderer;
 import de.bushnaq.abdalla.svg.util.ExtendedRectangle;
 import de.bushnaq.abdalla.svg.util.RectangleWithToolTip;
 import de.bushnaq.abdalla.util.ColorUtil;

@@ -20,7 +20,7 @@ package de.bushnaq.abdalla.projecthub.dto;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-import de.bushnaq.abdalla.projecthub.report.renderer.gantt.GanttContext;
+import de.bushnaq.abdalla.projecthub.report.gantt.GanttContext;
 import lombok.*;
 
 import java.util.ArrayList;

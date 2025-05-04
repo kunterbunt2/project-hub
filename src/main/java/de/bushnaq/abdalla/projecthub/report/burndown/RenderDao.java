@@ -15,7 +15,7 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.report.renderer;
+package de.bushnaq.abdalla.projecthub.report.burndown;
 
 import de.bushnaq.abdalla.projecthub.Context;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
