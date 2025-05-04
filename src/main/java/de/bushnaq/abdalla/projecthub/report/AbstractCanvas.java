@@ -27,8 +27,6 @@ import de.bushnaq.abdalla.util.FileUtil;
 import org.apache.batik.anim.dom.SVGDOMImplementation;
 import org.apache.batik.dom.GenericDOMImplementation;
 import org.apache.batik.svggen.SVGGraphics2D;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 
@@ -49,12 +47,12 @@ public abstract class AbstractCanvas extends ReportLink {
     protected            ExtendedGraphics2D graphics2D;
     protected            GraphicsTheme      graphicsTheme;
     protected            String             imageName;
-    private final        Logger             logger                 = LoggerFactory.getLogger(this.getClass());
+    //    private final        Logger             logger                 = LoggerFactory.getLogger(this.getClass());
     protected            SVGGraphics2D      svgGenerator;
 
-    public AbstractCanvas(String column, String imageName, String mapName, String link/*, int chartWidth, int chartHeight*/, String cssClass, GraphicsTheme graphicsTheme)
+    public AbstractCanvas(String column, String imageName/*, String mapName*/, String link, String cssClass, GraphicsTheme graphicsTheme)
             throws IOException {
-        super(column, generateCellText(cssClass, mapName, imageName), link);
+        super(column, generateCellText(cssClass/*, mapName*/, imageName), link);
         this.imageName     = imageName;
         this.graphicsTheme = graphicsTheme;
     }
@@ -76,9 +74,10 @@ public abstract class AbstractCanvas extends ReportLink {
 
     protected abstract void drawFooter(ExtendedGraphics2D graphics2d2);
 
-    private static String generateCellText(String cssClass, String mapName, String imageName) {
+    private static String generateCellText(String cssClass/*, String mapName*/, String imageName) {
         String extension = "svg";
-        return String.format("<img class=\"%s\" usemap=\"#%s\" border=\"0\" src=\"%s.%s\">", cssClass, mapName, imageName, extension);
+//        return String.format("<img class=\"%s\" usemap=\"#%s\" border=\"0\" src=\"%s.%s\">", cssClass, mapName, imageName, extension);
+        return String.format("<img class=\"%s\" border=\"0\" src=\"%s.%s\">", cssClass, imageName, extension);
     }
 
     public void generateImage(String copyright, String description, String path) throws Exception {

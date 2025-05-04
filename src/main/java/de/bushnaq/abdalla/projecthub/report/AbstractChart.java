@@ -31,16 +31,14 @@ import java.util.List;
 public abstract class AbstractChart extends AbstractCanvas {
     public        CaptionElement         captionElement;
     public        FooterElement          footerElement;
-    private final String                 mapName;
+    //    private final String                 mapName;
     private final List<AbstractRenderer> renderers = new ArrayList<>();
 
-    public AbstractChart(String caption, String projectRequestKey, String relateCssPath, String column, String imageName, String mapName, String link/*, int chartWidth,
-                 int chartHeight*/, String cssClass, GraphicsTheme graphicsTheme) throws IOException {
-        super(column, imageName, mapName, link/*, chartWidth, chartHeight*/, cssClass, graphicsTheme);
-        captionElement = new CaptionElement(caption, relateCssPath/*, chartWidth, chartHeight*/);
-        footerElement  = new FooterElement(Util.generateCopyrightString(LocalDateTime.now()), projectRequestKey/*, chartWidth,
-                chartHeight + captionElement.height*/);
-        this.mapName   = mapName;
+    public AbstractChart(String caption, String projectRequestKey, String relateCssPath, String column, String imageName/*, String mapName*/, String link, String cssClass, GraphicsTheme graphicsTheme) throws IOException {
+        super(column, imageName/*, mapName*/, link, cssClass, graphicsTheme);
+        captionElement = new CaptionElement(caption, relateCssPath);
+        footerElement  = new FooterElement(Util.generateCopyrightString(LocalDateTime.now()), projectRequestKey);
+//        this.mapName   = mapName;
     }
 
     @Override

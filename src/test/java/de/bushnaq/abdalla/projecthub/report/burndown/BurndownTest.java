@@ -21,9 +21,10 @@ import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.rest.debug.DebugUtil;
 import de.bushnaq.abdalla.projecthub.util.AbstractGanttTestUtil;
 import de.bushnaq.abdalla.util.date.DateUtil;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -33,6 +34,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 
 
 @ExtendWith(SpringExtension.class)
@@ -40,10 +43,6 @@ import java.time.LocalDateTime;
 @AutoConfigureMockMvc
 @Transactional
 public class BurndownTest extends AbstractGanttTestUtil {
-    private static final int MAX_DURATION_DAYS      = 10;
-    private static final int MAX_NUMBER_OF_FEATURES = 3;
-    private static final int MAX_NUMBER_OF_USERS    = 2;
-    private static final int MAX_NUMBER_OF_WORK     = 3;
     @Autowired
     DebugUtil debugUtil;
 
@@ -56,7 +55,11 @@ public class BurndownTest extends AbstractGanttTestUtil {
         return String.format("Feature-%d", t);
     }
 
-    private void generateTasks(int numberOfUsers, int numberOfFeatures) {
+    private void generateTasks(RandomCase randomCase) {
+        random.setSeed(1);
+        int numberOfUsers    = random.nextInt(randomCase.maxNumberOfUsers) + 2;
+        int numberOfFeatures = random.nextInt(randomCase.maxNumberOfFeatures) + 1;
+        int numberOfTasks    = random.nextInt(randomCase.maxNumberOfWork) + 1;
         {
             addRandomUsers(numberOfUsers);
             Product product = addProduct("Product-" + 1);
@@ -67,12 +70,11 @@ public class BurndownTest extends AbstractGanttTestUtil {
 
         Task startMilestone = addTask(sprint, null, "Start", LocalDateTime.parse("2024-12-15T08:00:00"), Duration.ZERO, null, null, TaskMode.MANUALLY_SCHEDULED, true);
         for (int f = 0; f < numberOfFeatures; f++) {
-            String featureName   = generateFeatureName(f);
-            Task   feature       = addParentTask(featureName, sprint, null, startMilestone);
-            int    numberOfTasks = random.nextInt(MAX_NUMBER_OF_WORK) + 1;
+            String featureName = generateFeatureName(f);
+            Task   feature     = addParentTask(featureName, sprint, null, startMilestone);
             for (int t = 0; t < numberOfTasks; t++) {
                 User   user     = expectedUsers.stream().toList().get(random.nextInt(numberOfUsers));
-                String duration = String.format("%dd", random.nextInt(MAX_DURATION_DAYS) + 1);
+                String duration = String.format("%dd", random.nextInt(randomCase.maxDurationDays) + 1);
                 String workName = generateWorkName(featureName, t);
                 addTask(workName, duration, user, sprint, feature, null);
             }
@@ -138,12 +140,18 @@ public class BurndownTest extends AbstractGanttTestUtil {
         sprintApi.update(sprint);
     }
 
-    @Test
-    public void sprint_01(TestInfo testInfo) throws Exception {
-        random.setSeed(1);
-        int numberOfUsers    = random.nextInt(MAX_NUMBER_OF_USERS) + 2;
-        int numberOfFeatures = random.nextInt(MAX_NUMBER_OF_FEATURES) + 1;
-        generateTasks(numberOfUsers, numberOfFeatures);
+    private static List<RandomCase> listRandomCases() {
+        RandomCase[] randomCases = new RandomCase[]{//
+                new RandomCase(10, 2, 1, 2),//
+                new RandomCase(10, 3, 2, 3)//
+        };
+        return Arrays.stream(randomCases).toList();
+    }
+
+    @ParameterizedTest
+    @MethodSource("listRandomCases")
+    public void sprint_01(RandomCase randomCase, TestInfo testInfo) throws Exception {
+        generateTasks(randomCase);
         generateGanttChart(testInfo);
         generateWorklogs();
         generateBurndownChart(testInfo);

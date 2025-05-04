@@ -197,7 +197,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
 
     protected void generateBurndownChart(TestInfo testInfo) throws Exception {
         initialize();
-        RenderDao     dao         = createRenderDao(context, sprint, "burn-down-small", ParameterOptions.getLocalNow(), 0, 36 * 20,  /*urlPrefix +*/ "sprint-" + sprint.getId() + "/sprint.html");
+        RenderDao     dao         = createRenderDao(context, sprint, testInfo.getTestMethod().get().getName() + "-burn-down", ParameterOptions.getLocalNow(), 0, 36 * 20,  /*urlPrefix +*/ "sprint-" + sprint.getId() + "/sprint.html");
         BurnDownChart chart       = new BurnDownChart("/", dao);
         String        description = testInfo.getDisplayName().replace("_", "-");
         chart.generateImage(Util.generateCopyrightString(ParameterOptions.getLocalNow()), description, testResultFolder);

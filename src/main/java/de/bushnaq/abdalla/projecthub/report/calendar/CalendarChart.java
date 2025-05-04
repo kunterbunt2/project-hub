@@ -29,7 +29,7 @@ public class CalendarChart extends AbstractChart {
 
     public CalendarChart(Context context, LocalDateTime now, User user, String cssClass,
                          BurnDownGraphicsTheme graphicsTheme) throws Exception {
-        super(createCaption(user), "", "", "", user.getName() + "." + user.getLocations().getLast().getCountry() + "." + user.getLocations().getLast().getState(), "gantt_map", null/*, 100, 100*/, cssClass, graphicsTheme);
+        super(createCaption(user), "", "", "", user.getName() + "." + user.getLocations().getLast().getCountry() + "." + user.getLocations().getLast().getState(), null, cssClass, graphicsTheme);
         getRenderers().add(new CalendarRenderer(context, user, now, cssClass, graphicsTheme));
         this.setChartWidth(getRenderers().get(0).chartWidth);
         this.setChartHeight(getRenderers().get(0).chartHeight + captionElement.height + footerElement.height - 1);
