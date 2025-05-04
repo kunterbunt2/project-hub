@@ -15,9 +15,9 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.dao;
+package de.bushnaq.abdalla.projecthub.api;
 
-import de.bushnaq.abdalla.projecthub.dto.Project;
+import de.bushnaq.abdalla.projecthub.dto.Sprint;
 import de.bushnaq.abdalla.projecthub.util.AbstractEntityGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,92 +34,93 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Transactional
-public class ProjectTest extends AbstractEntityGenerator {
+public class SprintTest extends AbstractEntityGenerator {
     private static final long   FAKE_ID     = 999999L;
     private static final String SECOND_NAME = "SECOND_NAME";
-    Logger logger = LoggerFactory.getLogger(ProjectTest.class);
+    Logger logger = LoggerFactory.getLogger(SprintTest.class);
 
     @Test
     public void create() throws Exception {
         addRandomProducts(1);
+
     }
 
     @Test
     public void delete() throws Exception {
-        //create the users
+        // Create products with sprints
         addRandomProducts(2);
-        removeProject(expectedProjects.getFirst().getId());
+        // Delete the first sprint
+        removeSprint(expectedSprints.getFirst().getId());
     }
 
     @Test
     public void deleteUsingFakeId() throws Exception {
         addRandomProducts(2);
         try {
-            removeProject(FAKE_ID);
+            removeSprint(FAKE_ID);
         } catch (ServerErrorException e) {
-            //expected
+            // Expected exception
         }
     }
 
     @Test
     public void getAll() throws Exception {
         addRandomProducts(3);
-        List<Project> allProjects = projectApi.getAll();
-        assertEquals(3, allProjects.size());
+        List<Sprint> allSprints = sprintApi.getAll();
+        assertEquals(3, allSprints.size());
     }
 
     @Test
     public void getAllEmpty() throws Exception {
-        List<Project> allProjects = projectApi.getAll();
-
+        List<Sprint> allSprints = sprintApi.getAll();
+        assertEquals(0, allSprints.size());
     }
 
     @Test
     public void getByFakeId() throws Exception {
         addRandomProducts(1);
         try {
-            projectApi.getById(FAKE_ID);
-            fail("Project should not exist");
+            sprintApi.getById(FAKE_ID);
+            fail("Sprint should not exist");
         } catch (ServerErrorException e) {
-            //expected
+            // Expected exception
         }
     }
 
     @Test
     public void getById() throws Exception {
         addRandomProducts(1);
-        Project project = projectApi.getById(expectedProjects.getFirst().getId());
-        assertProjectEquals(expectedProjects.getFirst(), project, true); //shallow test
+        Sprint sprint = sprintApi.getById(expectedSprints.getFirst().getId());
+        assertSprintEquals(expectedSprints.getFirst(), sprint, true);
     }
 
     @Test
     public void update() throws Exception {
         addRandomProducts(2);
-        Project project = expectedProjects.getFirst();
-        project.setName(SECOND_NAME);
-        updateProject(project);
+        Sprint sprint = expectedSprints.getFirst();
+        sprint.setName(SECOND_NAME);
+        updateSprint(sprint);
     }
 
     @Test
     public void updateUsingFakeId() throws Exception {
         addRandomProducts(2);
-        Project project = expectedProjects.getFirst();
-        Long    id      = project.getId();
-        String  name    = project.getName();
-        project.setId(FAKE_ID);
-        project.setName(SECOND_NAME);
+        Sprint sprint = expectedSprints.getFirst();
+        Long   id     = sprint.getId();
+        String name   = sprint.getName();
+        sprint.setId(FAKE_ID);
+        sprint.setName(SECOND_NAME);
         try {
-            updateProject(project);
+            updateSprint(sprint);
             fail("should not be able to update");
         } catch (ServerErrorException e) {
-            //expected
-            project.setId(id);
-            project.setName(name);
+            // Expected exception
+            sprint.setId(id);
+            sprint.setName(name);
         }
     }
 }

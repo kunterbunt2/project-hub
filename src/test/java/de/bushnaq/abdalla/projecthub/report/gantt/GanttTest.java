@@ -15,7 +15,7 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.report.renderer.gantt;
+package de.bushnaq.abdalla.projecthub.report.gantt;
 
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
 import de.bushnaq.abdalla.projecthub.dto.Task;

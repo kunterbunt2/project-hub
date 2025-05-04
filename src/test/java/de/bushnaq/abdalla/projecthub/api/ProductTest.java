@@ -15,9 +15,9 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.dao;
+package de.bushnaq.abdalla.projecthub.api;
 
-import de.bushnaq.abdalla.projecthub.dto.Version;
+import de.bushnaq.abdalla.projecthub.dto.Product;
 import de.bushnaq.abdalla.projecthub.util.AbstractEntityGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,9 +37,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Transactional
-public class VersionTest extends AbstractEntityGenerator {
+public class ProductTest extends AbstractEntityGenerator {
     private static final long   FAKE_ID     = 999999L;
     private static final String SECOND_NAME = "SECOND_NAME";
+
 
     @Test
     public void create() throws Exception {
@@ -48,16 +49,15 @@ public class VersionTest extends AbstractEntityGenerator {
 
     @Test
     public void delete() throws Exception {
-        //create the users
         addRandomProducts(2);
-        removeVersion(expectedVersions.getFirst().getId());
+        removeProduct(expectedProducts.get(0).getId());
     }
 
     @Test
     public void deleteUsingFakeId() throws Exception {
         addRandomProducts(2);
         try {
-            removeVersion(FAKE_ID);
+            removeProduct(FAKE_ID);
         } catch (ServerErrorException e) {
             //expected
         }
@@ -66,22 +66,22 @@ public class VersionTest extends AbstractEntityGenerator {
     @Test
     public void getAll() throws Exception {
         addRandomProducts(3);
-        List<Version> allVersions = versionApi.getAll();
-        assertEquals(3, allVersions.size());
+        List<Product> allProducts = productApi.getAll();
+        assertEquals(3, allProducts.size());
     }
 
     @Test
     public void getAllEmpty() throws Exception {
-        List<Version> allVersions = versionApi.getAll();
-
+        List<Product> allProducts = productApi.getAll();
     }
 
     @Test
     public void getByFakeId() throws Exception {
+
         addRandomProducts(1);
         try {
-            versionApi.getById(FAKE_ID);
-            fail("Version should not exist");
+            productApi.getById(FAKE_ID);
+            fail("Product should not exist");
         } catch (ServerErrorException e) {
             //expected
         }
@@ -89,34 +89,35 @@ public class VersionTest extends AbstractEntityGenerator {
 
     @Test
     public void getById() throws Exception {
+
         addRandomProducts(1);
-        Version version = versionApi.getById(expectedVersions.getFirst().getId());
-        assertVersionEquals(expectedVersions.getFirst(), version, true); //shallow test
+        Product product = productApi.getById(expectedProducts.getFirst().getId());
+        assertProductEquals(expectedProducts.getFirst(), product, true);//shallow test
     }
 
     @Test
     public void update() throws Exception {
         addRandomProducts(2);
-        Version version = expectedVersions.getFirst();
-        version.setName(SECOND_NAME);
-        updateVersion(version);
+        Product product = expectedProducts.getFirst();
+        product.setName(SECOND_NAME);
+        updateProduct(product);
     }
 
     @Test
     public void updateUsingFakeId() throws Exception {
         addRandomProducts(2);
-        Version version = expectedVersions.getFirst();
-        Long    id      = version.getId();
-        String  name    = version.getName();
-        version.setId(FAKE_ID);
-        version.setName(SECOND_NAME);
+        Product product = expectedProducts.getFirst();
+        Long    id      = product.getId();
+        String  name    = product.getName();
+        product.setId(FAKE_ID);
+        product.setName(SECOND_NAME);
         try {
-            updateVersion(version);
+            updateProduct(product);
             fail("should not be able to update");
         } catch (ServerErrorException e) {
             //expected
-            version.setId(id);
-            version.setName(name);
+            product.setId(id);
+            product.setName(name);
         }
     }
 }
