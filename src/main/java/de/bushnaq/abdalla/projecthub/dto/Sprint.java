@@ -96,10 +96,10 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
             remainingEstimateMinutes = Duration.ZERO;
         }
         if (task.getResourceId() != null) {
-            WorklogRemaining w = new WorklogRemaining(getId(), task.getId(), task.getKey(), task.getAssignedUser().getName(), timeSpentMinutes, remainingEstimateMinutes);
+            WorklogRemaining w = new WorklogRemaining(getId(), task.getId(), task.getKey(), task.getAssignedUser(), timeSpentMinutes, remainingEstimateMinutes);
             worklogRemaining.add(w);
         } else {
-            WorklogRemaining w = new WorklogRemaining(getId(), task.getId(), task.getKey(), "unknown", timeSpentMinutes, remainingEstimateMinutes);
+            WorklogRemaining w = new WorklogRemaining(getId(), task.getId(), task.getKey(), null, timeSpentMinutes, remainingEstimateMinutes);
             worklogRemaining.add(w);
         }
     }

@@ -24,6 +24,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.awt.*;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
@@ -35,6 +36,20 @@ import java.time.temporal.ChronoUnit;
 public class SerializationTest {
     @Autowired
     ObjectMapper objectMapper;
+
+    @Test
+    public void deserializeColorBlack(TestInfo testInfo) throws Exception {
+        String json  = "\"#FF000000\"";
+        Color  color = objectMapper.readValue(json, Color.class);
+        Assertions.assertEquals(new Color(0, 0, 0), color);
+    }
+
+    @Test
+    public void deserializeColorWhite(TestInfo testInfo) throws Exception {
+        String json  = "\"#FFFFFFFF\"";
+        Color  color = objectMapper.readValue(json, Color.class);
+        Assertions.assertEquals(new Color(255, 255, 255), color);
+    }
 
     @Test
     public void deserializeLocalDateTime(TestInfo testInfo) throws Exception {

@@ -25,9 +25,9 @@ import java.util.Comparator;
 import static java.util.Comparator.comparing;
 
 @Getter
-public class Author {
+public class Author1 {
     public        Color              color      = null;
-    public static Comparator<Author> comparator = comparing(Author::getName).reversed();
+    public static Comparator<Author1> comparator = comparing(Author1::getName).reversed();
     public        String             name       = null;
 
 }

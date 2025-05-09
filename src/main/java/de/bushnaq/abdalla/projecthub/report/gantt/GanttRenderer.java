@@ -20,6 +20,7 @@ package de.bushnaq.abdalla.projecthub.report.gantt;
 import de.bushnaq.abdalla.projecthub.Context;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
 import de.bushnaq.abdalla.projecthub.dto.Task;
+import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.report.dao.*;
 import de.bushnaq.abdalla.svg.util.ExtendedGraphics2D;
 import de.bushnaq.abdalla.util.ErrorException;
@@ -162,26 +163,26 @@ public class GanttRenderer extends AbstractGanttRenderer {
         initSize(0, 0, false);
         for (Task task : sprint.getTasks()) {
             if (GanttUtil.isValidTask(task)) {
-                if (task.getAssignedUser() != null && task.getAssignedUser().getName() != null) {
-                    String primaryResourceName = task.getAssignedUser().getName();
-                    if (primaryResourceName == null) {
-                        primaryResourceName = task.getAssignedUser().getName();
-                    }
-                    AuthorContribution ew = authorsContribution.get(primaryResourceName);
+                if (task.getAssignedUser() != null) {
+//                    String primaryResourceName = task.getAssignedUser().getName();
+//                    if (primaryResourceName == null) {
+//                        primaryResourceName = task.getAssignedUser().getName();
+//                    }
+                    AuthorContribution ew = authorsContribution.get(task.getAssignedUser());
                     if (ew == null) {
                         ew = new AuthorContribution();
-                        authorsContribution.put(primaryResourceName, ew);
+                        authorsContribution.put(task.getAssignedUser(), ew);
                     }
                 }
             }
         }
-        for (String authorName : authorsContribution.getSortedKeyList()) {
-            if (authorName != null) {
-                authors.add(authorName);
+        for (User user : authorsContribution.getSortedKeyList()) {
+            if (user != null) {
+                authors.add(user);
             }
         }
-        authors.calculateColors(graphicsTheme, true);
-        authors.sort();
+//        authors.calculateColors(graphicsTheme, true);
+//        authors.sort();
         GanttUtil gu = new GanttUtil(context);
         //we only generate resource dependencies if it is not a genuin Gantt chart exported from MS Project online
         if (ganttFileName.toLowerCase().endsWith(".xml")) {

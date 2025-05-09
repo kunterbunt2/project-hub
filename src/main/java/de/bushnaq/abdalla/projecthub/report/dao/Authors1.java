@@ -17,18 +17,20 @@
 
 package de.bushnaq.abdalla.projecthub.report.dao;
 
+import de.bushnaq.abdalla.projecthub.dto.User;
+
 import java.util.*;
 
-public class Authors {
-    private final List<Author>        list = new ArrayList<>();
-    private final Map<String, Author> map  = new HashMap<>();//map author name to author
-    public static Users               team = new Users();
+public class Authors1 {
+    private final List<Author1>        list = new ArrayList<>();
+    private final Map<String, Author1> map  = new HashMap<>();//map author name to author
+    public static Users                team = new Users();
 
-    public Author add(String name) {
-        Author author = get(name);
+    public Author1 add(String name) {
+        Author1 author = get(name);
 
         if (author == null) {
-            author      = new Author();
+            author      = new Author1();
             author.name = name;
             list.add(author);
             map.put(name.toLowerCase(), author);
@@ -42,9 +44,10 @@ public class Authors {
         //distribute fixed resource colors
         int i = 0;
         if (authorsArePeople) {
-            for (User user : team) {
-                for (String login : user) {
-                    Author author = get(login);
+            for (User user : team.getList()) {
+//                for (String login : user)
+                {
+                    Author1 author = get(user.getEmail());
                     if (author != null && author.color == null) {
                         author.color = graphicsTheme.getAuthorColor(i);
                         break;
@@ -54,14 +57,14 @@ public class Authors {
             }
         }
 
-        List<Author> sortedList = new ArrayList<>(list);
-        Collections.sort(sortedList, Author.comparator);
-        int start = team.size();
+        List<Author1> sortedList = new ArrayList<>(list);
+        Collections.sort(sortedList, Author1.comparator);
+        int start = team.getList().size();
         if (authorsArePeople) {
             start = 0;
         }
         int index = 0;
-        for (Author author : sortedList) {
+        for (Author1 author : sortedList) {
             if (author.color == null) {
                 author.color = graphicsTheme.getAuthorColor(start + index);
                 index++;
@@ -69,21 +72,21 @@ public class Authors {
         }
     }
 
-    public Author get(String resourceName) {
+    public Author1 get(String resourceName) {
         return map.get(resourceName.toLowerCase());
     }
 
-    public List<Author> getList() {
+    public List<Author1> getList() {
         return list;
     }
 
-    public void remove(Author author) {
+    public void remove(Author1 author) {
         list.remove(author);
         map.remove(author.name.toLowerCase());
     }
 
     public void sort() {
-        Collections.sort(list, Author.comparator);
+        Collections.sort(list, Author1.comparator);
     }
 
 }

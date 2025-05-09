@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.report;
 
+import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.report.burndown.RenderDao;
 import de.bushnaq.abdalla.projecthub.report.dao.*;
 import de.bushnaq.abdalla.svg.util.ExtendedGraphics2D;
@@ -40,7 +41,7 @@ public abstract class AbstractRenderer {
     public static final    int                   MAX_DAY_WIDTH              = 20;
     protected static final float                 STANDARD_LINE_STROKE_WIDTH = 3.1f;
     protected final        Font                  authorFont                 = new Font(Font.SANS_SERIF, Font.BOLD, 12);
-    protected              Authors               authors                    = new Authors();
+    protected              Users                 authors                    = new Users();
     protected              Font                  bankHolidayFont            = null;
     //    private                Map<LocalDate, String> bankHolidays;
     private                boolean               calendarAtBottom;
@@ -141,23 +142,23 @@ public abstract class AbstractRenderer {
 
     protected void drawAuthorLegend(int x, int y) {
         int authorLegendWidth = 20;
-        for (Author author : authors.getList()) {
+        for (User author : authors.getList()) {
 //            String primaryAuthorName = Authors.mapToPrimaryLoginName(author.name);
 //            if (primaryAuthorName == null) {
 //                primaryAuthorName = author.name;
 //            }
             FontMetrics metrics = graphics2D.getFontMetrics(calendarXAxes.milestone.font);
-            int         adv     = metrics.stringWidth(author.name);
+            int         adv     = metrics.stringWidth(author.getName());
             authorLegendWidth = Math.max(authorLegendWidth, adv);
         }
         int lineHeight = 14;
         int ay         = y + lineHeight * authors.getList().size();
-        for (Author author : authors.getList()) {
+        for (User author : authors.getList()) {
 //            String primaryAuthorName = Authors.mapToPrimaryLoginName(author.name);
 //            if (primaryAuthorName == null) {
 //                primaryAuthorName = author.name;
 //            }
-            drawAuthor(x, ay, authorLegendWidth, author.color, author.name, graphicsTheme.tickTextColor, calendarXAxes.milestone.font);
+            drawAuthor(x, ay, authorLegendWidth, author.getColor(), author.getName(), graphicsTheme.tickTextColor, calendarXAxes.milestone.font);
             ay -= lineHeight;
         }
     }
@@ -177,13 +178,13 @@ public abstract class AbstractRenderer {
         int   x     = calculateDayX(currentDay);
         graphics2D.setColor(color);
         //day vertical bar
-        graphics2D.fillRect(x - (calendarXAxes.dayOfWeek.getWidth() / 2 - 1), diagram.y, calendarXAxes.dayOfWeek.getWidth() - 1, diagram.height);
+        graphics2D.fillRect(x - (calendarXAxes.dayOfWeek.getWidth() / 2 - 1), diagram.y, calendarXAxes.dayOfWeek.getWidth() - 1, diagram.height);//left |
         //draw vertical lines
         graphics2D.setColor(graphicsTheme.ganttGridColor);
         //        graphics2D.setStroke(new BasicStroke(RELATION_LINE_STROKE_WIDTH));
         //        graphics2D.drawLine(x - (calendarXAxses.dayOfWeek.getWidth() / 2 - 1) + (calendarXAxses.dayOfWeek.getWidth() - 1), diagram.y,x - (calendarXAxses.dayOfWeek.getWidth() / 2 - 1) + (calendarXAxses.dayOfWeek.getWidth() - 1), diagram.y + diagram.height);
         //        graphics2D.draw(new Line2D.Double(x - (calendarXAxses.dayOfWeek.getWidth() / 2 - 1) + (calendarXAxses.dayOfWeek.getWidth() - 1), diagram.y,x - (calendarXAxses.dayOfWeek.getWidth() / 2 - 1) + (calendarXAxses.dayOfWeek.getWidth() - 1), diagram.y + diagram.height));
-        graphics2D.fillRect(x - (calendarXAxes.dayOfWeek.getWidth() / 2 - 1) + (calendarXAxes.dayOfWeek.getWidth() - 1), diagram.y, 1, diagram.height);
+        graphics2D.fillRect(x - (calendarXAxes.dayOfWeek.getWidth() / 2 - 1) + (calendarXAxes.dayOfWeek.getWidth() - 1), diagram.y, 1, diagram.height);//right |
         //TODO: draw bank holiday
 //        if (bankHolidays.get(currentDay) != null) {
 //            x += calendarXAxses.dayOfWeek.getWidth() / 2;

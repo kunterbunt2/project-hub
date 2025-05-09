@@ -21,15 +21,16 @@ import de.bushnaq.abdalla.projecthub.Context;
 import de.bushnaq.abdalla.projecthub.dao.WarnException;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
 import de.bushnaq.abdalla.projecthub.dto.Task;
+import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.dto.Worklog;
 import de.bushnaq.abdalla.projecthub.report.AbstractRenderer;
 import de.bushnaq.abdalla.projecthub.report.dao.*;
 import de.bushnaq.abdalla.projecthub.report.gantt.GanttUtil;
 import de.bushnaq.abdalla.svg.util.ExtendedGraphics2D;
 import de.bushnaq.abdalla.svg.util.ExtendedPolygon;
-import de.bushnaq.abdalla.util.ColorUtil;
 import de.bushnaq.abdalla.util.ErrorException;
 import de.bushnaq.abdalla.util.date.DateUtil;
+import org.apache.xmlgraphics.java2d.color.ColorUtil;
 
 import java.awt.*;
 import java.io.IOException;
@@ -71,7 +72,7 @@ public class BurnDownRenderer extends AbstractRenderer {
     private final        Sprint                 request;
     private              boolean                sprintClosed;
     protected            AuthorsContribution    usersTotalContribution                                    = new AuthorsContribution();
-    private final        Map<String, DayWork[]> usersWorkPerDayAccumulated                                = new HashMap<>();// work per author and day, were every day has the amount of work done at all previous days, first day has 0 work done
+    private final        Map<User, DayWork[]>   usersWorkPerDayAccumulated                                = new HashMap<>();// work per author and day, were every day has the amount of work done at all previous days, first day has 0 work done
     private              List<Worklog>          worklog;
     private              List<WorklogRemaining> worklogRemaining;
     private              GraphSquare            yAxis;
@@ -107,10 +108,10 @@ public class BurnDownRenderer extends AbstractRenderer {
         }
         if (worklogList != null) {
             for (Worklog work : worklogList) {
-                AuthorContribution ac = authorsContribution.get(request.getuser(work.getAuthorId()).getName());
+                AuthorContribution ac = authorsContribution.get(request.getuser(work.getAuthorId()));
                 if (ac == null) {
                     ac = new AuthorContribution();
-                    authorsContribution.put(request.getuser(work.getAuthorId()).getName(), ac);
+                    authorsContribution.put(request.getuser(work.getAuthorId()), ac);
                 }
                 ac.addWorked(work.getTimeSpent());
             }
@@ -125,7 +126,7 @@ public class BurnDownRenderer extends AbstractRenderer {
     @Override
     protected int calculateChartWidth() {
         //        logger.info(String.format("DEBUG chartType=%s, dayWidth=%d, days=%d, chartWidth=%d", getClass().getSimpleName(), calendarXAxses.dayOfWeek.getWidth(), days, calendarXAxses.dayOfWeek.getWidth() * days));
-        return Y_AXIS_WIDTH + calendarXAxes.dayOfWeek.getWidth() * days/* + calendarXAxses.getPriRun() + calendarXAxses.getPostRun()*/;
+        return Y_AXIS_WIDTH + calendarXAxes.dayOfWeek.getWidth() * days + calendarXAxes.getPriRun() + calendarXAxes.getPostRun();
     }
 
     @Override
@@ -352,11 +353,11 @@ public class BurnDownRenderer extends AbstractRenderer {
 
     protected void drawAuthorLegend() {
         int authorLegendWidth = 20;
-        for (Author author : authors.getList()) {
+        for (User author : authors.getList()) {
             FontMetrics metrics = graphics2D.getFontMetrics(calendarXAxes.milestone.font);
             // get the advance of my text in this font
             // and render context
-            int adv = metrics.stringWidth(author.name);
+            int adv = metrics.stringWidth(author.getName());
             authorLegendWidth = Math.max(authorLegendWidth, adv);
         }
         drawAuthorLegend(chartWidth - 130 - authorLegendWidth - 5, diagram.y);
@@ -380,8 +381,8 @@ public class BurnDownRenderer extends AbstractRenderer {
             }
             int authorIndex = 0;
             // int sum = 0;
-            for (String authorName : usersTotalContribution.getSortedKeyList()) {
-                AuthorContribution ac                  = usersTotalContribution.get(authorName);
+            for (User user : usersTotalContribution.getSortedKeyList()) {
+                AuthorContribution ac                  = usersTotalContribution.get(user);
                 Duration           authorEstimatedWork = ac.worked.plus(ac.remaining);
                 if (!authorEstimatedWork.isZero()) {
                     // (worked + remaining));
@@ -395,28 +396,28 @@ public class BurnDownRenderer extends AbstractRenderer {
                     int y           = 0;
                     int nowDayIndex = (DateUtil.calculateDays(milestones.firstMilestone, DateUtil.min(milestones.lastMilestone, milestones.get("N").time)));
                     {
-                        int maxDayIndex = nowDayIndex;// Math.max(authorWorkPerDay.get(authorName).length, nowDayIndex);
+                        int maxDayIndex = nowDayIndex;// Math.max(authorWorkPerDay.get(user).length, nowDayIndex);
                         // logger.info(DateUtil.createDateString(calculateDayFromIndex(maxDayIndex), sdfMMMdd));
                         for (int dayIndex = 0; dayIndex <= maxDayIndex + 2; dayIndex++) {
                             x = firstDayX + dayIndex * calendarXAxes.dayOfWeek.getWidth();
                             int                currentDayAuthorGraphHeight = 0;
                             List<List<String>> transactions                = null;
                             if (dayIndex <= maxDayIndex + 2) {
-                                currentDayAuthorGraphHeight = calculateAuthorGraphHight(usersWorkPerDayAccumulated.get(authorName)[dayIndex].duration,
+                                currentDayAuthorGraphHeight = calculateAuthorGraphHight(usersWorkPerDayAccumulated.get(user)[dayIndex].duration,
                                         authorEstimatedWork, maxWorked);
                                 y                           = diagram.y + diagram.height - graphHeight[dayIndex] - currentDayAuthorGraphHeight;
                                 if (dayIndex > 0) {
-                                    transactions = usersWorkPerDayAccumulated.get(authorName)[dayIndex - 1].transactions;
+                                    transactions = usersWorkPerDayAccumulated.get(user)[dayIndex - 1].transactions;
                                 }
                             }
                             if (x != lastX) {
                                 // ---a new day started, so we can draw the polygon of last day
                                 if (yesterdayX != 0 && lastX != 0) {
-                                    Author    author               = authors.get(authorName);
+//                                    User      author               = authors.getIdMap().get(user.getId());
                                     LocalDate calendarFromDayIndex = calendarFromDayIndex(dayIndex - 2);
                                     drawPolygon(yesterdayX, yesterdayY, yesterdayY2, lastX, lastY, lastY2,
                                             authorIndex == usersTotalContribution.getSortedKeyList().size() - 1, DateUtil.isWorkDay(calendarFromDayIndex),
-                                            graphicsTheme.burnDownBorderColor, author.color, transactions, authorName);
+                                            graphicsTheme.burnDownBorderColor, generateBurnDownColor(user.getColor()), transactions, user.getName());
                                 }
                                 yesterdayX  = lastX;
                                 yesterdayY  = lastY;
@@ -553,7 +554,7 @@ public class BurnDownRenderer extends AbstractRenderer {
         {
             ExtendedPolygon p = new ExtendedPolygon();
             p.setToolTip(DayWork.transactionsToTooltips(transactions, authorName));
-            p.addPoint(x1 - calendarXAxes.dayOfWeek.getWidth() / 2 + 1, y1);
+            p.addPoint(x1 - calendarXAxes.dayOfWeek.getWidth() / 2, y1);
             if (calendarXAxes.dayOfWeek.getWidth() > 3) {
                 p.addPoint(x2 - calendarXAxes.dayOfWeek.getWidth() / 2 + 1 - 1, y2);
                 p.addPoint(x2 - calendarXAxes.dayOfWeek.getWidth() / 2 + 1 - 1, y4);
@@ -561,7 +562,7 @@ public class BurnDownRenderer extends AbstractRenderer {
                 p.addPoint(x2 - calendarXAxes.dayOfWeek.getWidth() / 2 + 1, y2);
                 p.addPoint(x2 - calendarXAxes.dayOfWeek.getWidth() / 2 + 1, y4);
             }
-            p.addPoint(x1 - calendarXAxes.dayOfWeek.getWidth() / 2 + 1, y3);
+            p.addPoint(x1 - calendarXAxes.dayOfWeek.getWidth() / 2, y3);
             graphics2D.setColor(color);
             //            graphics2D.fillPolygon(p);
             graphics2D.fill(p);
@@ -594,15 +595,15 @@ public class BurnDownRenderer extends AbstractRenderer {
                 mark     = Duration.ofSeconds(SECONDS_PER_WORKING_DAY);
                 markUnit = "pd";
             }
-            int   lastMarkY  = 99999;
-            Color hLineColor = ColorUtil.setAlpha(graphicsTheme.ticksColor, 32);
+            int lastMarkY = 99999;
+//            Color hLineColor = ColorUtil.setAlpha(graphicsTheme.ganttGridColor, 32);
             for (Duration timeMark = Duration.ZERO; timeMark.getSeconds() < estimatedWork.getSeconds(); timeMark = timeMark.plus(mark)) {
                 int markY = diagram.y + diagram.height - 1 - calculateGraphHight(timeMark);
                 if (lastMarkY - markY > 12) {
                     graphics2D.setColor(graphicsTheme.ticksColor);
                     graphics2D.fillRect(startX - 4 - calendarXAxes.dayOfWeek.getWidth() / 2, markY, 4, 1);
-                    graphics2D.setColor(hLineColor);
-                    graphics2D.fillRect(startX - 1, markY, diagram.width - startX, 1);
+                    graphics2D.setColor(graphicsTheme.ganttGridColor);
+                    graphics2D.fillRect(startX - 1, markY, diagram.width - startX, 1);//grid --
 
                     drawGraphText(yAxis.x + yAxis.width - 5, markY, timeMark.getSeconds() / mark.getSeconds() + markUnit, graphicsTheme.tickTextColor,
                             yAxis.lableFont, TextAlignment.right);
@@ -610,6 +611,12 @@ public class BurnDownRenderer extends AbstractRenderer {
                 }
             }
         }
+    }
+
+    private Color generateBurnDownColor(Color color) {
+//        return new Color(color.getRed(), color.getGreen(), color.getBlue(), 128);
+        color = ColorUtil.lightenColor(color, 0.75f);
+        return new Color(color.getRed(), color.getGreen(), color.getBlue(), 128);
     }
 
     public void init() throws IOException {
@@ -622,26 +629,26 @@ public class BurnDownRenderer extends AbstractRenderer {
 
         calculateAuthorContribution(worklog, worklogRemaining, usersTotalContribution);
 
-        Map<String, Duration> authorWorkSum = new HashMap<>();// total work done by any author
-        for (String author : usersTotalContribution.getSortedKeyList()) {
-            if (authorWorkSum.get(author) == null) {
-                authorWorkSum.put(author, Duration.ZERO);
+        Map<User, Duration> authorWorkSum = new HashMap<>();// total work done by any author
+        for (User user : usersTotalContribution.getSortedKeyList()) {
+            if (authorWorkSum.get(user) == null) {
+                authorWorkSum.put(user, Duration.ZERO);
             }
         }
         int days = DateUtil.calculateDays(milestones.firstMilestone, milestones.lastMilestone) + 1;
         if (worklog != null) {
             int lastDayIndexWithValue = 0;// the last day any author has data
             for (Worklog work : worklog) {
-                Duration  aws     = authorWorkSum.get(request.getuser(work.getAuthorId()).getName());
-                DayWork[] dayWork = usersWorkPerDayAccumulated.get(request.getuser(work.getAuthorId()).getName());
+                Duration  aws     = authorWorkSum.get(request.getuser(work.getAuthorId()));
+                DayWork[] dayWork = usersWorkPerDayAccumulated.get(request.getuser(work.getAuthorId()));
                 if (dayWork == null) {
                     // create a list of work per day for authors that have worked
                     dayWork    = new DayWork[days + 3];// first value is 0
                     dayWork[0] = new DayWork();
-                    usersWorkPerDayAccumulated.put(request.getuser(work.getAuthorId()).getName(), dayWork);
+                    usersWorkPerDayAccumulated.put(request.getuser(work.getAuthorId()), dayWork);
                 }
                 aws = aws.plus(work.getTimeSpent());
-                authorWorkSum.put(request.getuser(work.getAuthorId()).getName(), aws);
+                authorWorkSum.put(request.getuser(work.getAuthorId()), aws);
                 int day = (DateUtil.calculateDays(milestones.firstMilestone, DateUtil.toDayPrecision(work.getStart())));
                 if (day < 0) {
                     // ignore any data before first day of sprint
@@ -670,40 +677,40 @@ public class BurnDownRenderer extends AbstractRenderer {
         }
         milestones.calculate();
         int nowDayIndex = (DateUtil.calculateDays(milestones.firstMilestone, DateUtil.min(milestones.lastMilestone, milestones.get("N").time)));
-        for (String author : usersTotalContribution.getSortedKeyList()) {
+        for (User user : usersTotalContribution.getSortedKeyList()) {
             Duration  last = Duration.ZERO;
-            DayWork[] aw   = usersWorkPerDayAccumulated.get(author);
+            DayWork[] aw   = usersWorkPerDayAccumulated.get(user);
             if (aw == null) {
                 // create a list of work per day for authors that have no work done yet and thus
                 // where missed in the above use case involving worklog
                 aw    = new DayWork[days + 3];
                 aw[0] = new DayWork();
-                usersWorkPerDayAccumulated.put(author, aw);
+                usersWorkPerDayAccumulated.put(user, aw);
             }
             // fill in empty parts of the days list
-            for (int i = 1; i < usersWorkPerDayAccumulated.get(author).length; i++) {
+            for (int i = 1; i < usersWorkPerDayAccumulated.get(user).length; i++) {
                 if (i <= nowDayIndex + 2) {
-                    if (usersWorkPerDayAccumulated.get(author)[i] == null
-                            || last.toSeconds() > usersWorkPerDayAccumulated.get(author)[i].duration.toSeconds()) {
-                        usersWorkPerDayAccumulated.get(author)[i] = new DayWork(last);
+                    if (usersWorkPerDayAccumulated.get(user)[i] == null
+                            || last.toSeconds() > usersWorkPerDayAccumulated.get(user)[i].duration.toSeconds()) {
+                        usersWorkPerDayAccumulated.get(user)[i] = new DayWork(last);
                     }
-                    last = usersWorkPerDayAccumulated.get(author)[i].duration;
+                    last = usersWorkPerDayAccumulated.get(user)[i].duration;
                 } else {
                     // ignore anything after today (only makes sense in a test scenario, where we
                     // simulate a now time in the past)
-                    if (usersWorkPerDayAccumulated.get(author)[i] == null) {
-                        usersWorkPerDayAccumulated.get(author)[i] = new DayWork(Duration.ZERO);
+                    if (usersWorkPerDayAccumulated.get(user)[i] == null) {
+                        usersWorkPerDayAccumulated.get(user)[i] = new DayWork(Duration.ZERO);
                     }
                 }
             }
         }
 
         if (usersTotalContribution.size() != 0) {
-            for (String authorName : usersTotalContribution.getSortedKeyList()) {
-                authors.add(authorName);
+            for (User user : usersTotalContribution.getSortedKeyList()) {
+                authors.add(user);
             }
         }
-        authors.calculateColors(graphicsTheme, true);
+//        authors.calculateColors(graphicsTheme, true);
     }
 
     /**

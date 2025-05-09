@@ -474,6 +474,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                 resourceName        = task.getAssignedUser().getName();
                 units               = task.getAssignedUser().getAvailabilities().getLast().getAvailability() * 100;
                 resourceUtilization = String.format("%.0f%%", units);
+                fillColor           = task.getAssignedUser().getColor();
             }
         }
         if (task.isMilestone() && task.getChildTasks().size() == 0) {
@@ -487,10 +488,11 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         } else if (resourceName != null && units != null) {
             //task
             textColor = graphicsTheme.ganttTaskTextColor;
-            int authorIndex = authorsContribution.getSortedKeyList().indexOf(resourceName);
-            if (authorIndex != -1) {
-                fillColor = authors.get(resourceName).color;
-            }
+//            int authorIndex = authorsContribution.getSortedKeyList().indexOf(resourceName);
+//            if (authorIndex != -1) {
+//                fillColor = authors.getNameMap().get(resourceName).getColor();
+//            }
+            fillColor = task.getAssignedUser().getColor();
         }
         if (task.isMilestone() && task.getChildTasks().isEmpty()) {
             // milestone

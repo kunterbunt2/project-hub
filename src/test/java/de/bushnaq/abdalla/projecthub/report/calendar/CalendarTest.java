@@ -15,11 +15,11 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.report.gantt;
+package de.bushnaq.abdalla.projecthub.report.calendar;
 
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.User;
-import de.bushnaq.abdalla.projecthub.report.calendar.CalendarChart;
+import de.bushnaq.abdalla.projecthub.report.gantt.GanttContext;
 import de.bushnaq.abdalla.projecthub.util.AbstractGanttTestUtil;
 import de.bushnaq.abdalla.util.Util;
 import org.junit.jupiter.api.MethodOrderer;

@@ -23,6 +23,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Proxy;
 
+import java.awt.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +42,9 @@ public class UserDAO extends AbstractTimeAwareDAO {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JsonManagedReference
     private List<AvailabilityDAO> availabilities = new ArrayList<>();
+
+    @Column(nullable = false)
+    private Color color;
 
     @Column(nullable = false)
     private String email;

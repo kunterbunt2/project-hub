@@ -91,7 +91,7 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
                                 if (emailAddress == null) {
                                     emailAddress = resourceName.replaceAll(" ", "_") + "@example.com";
                                 }
-                                User user = addUser(resourceName, emailAddress, "de", "nw", date.toLocalDate(), (float) availability);
+                                User user = addUser(resourceName, emailAddress, "de", "nw", date.toLocalDate(), generateUserColor(userIndex), (float) availability);
 
                                 userMap.put(resourceName, user);//store users
                             }

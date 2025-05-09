@@ -30,6 +30,7 @@ import lombok.*;
 import net.sf.mpxj.ProjectCalendar;
 import net.sf.mpxj.ProjectCalendarException;
 
+import java.awt.*;
 import java.net.URL;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -52,6 +53,7 @@ public class User extends AbstractTimeAware implements Comparable<User> {
 
     @JsonIgnore
     private ProjectCalendar calendar;
+    private Color           color;
     private String          email;
     private LocalDate       firstWorkingDay;
     private Long            id;

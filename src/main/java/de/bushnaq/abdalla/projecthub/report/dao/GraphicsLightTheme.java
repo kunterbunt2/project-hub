@@ -20,7 +20,7 @@ package de.bushnaq.abdalla.projecthub.report.dao;
 import java.awt.*;
 
 public class GraphicsLightTheme extends BurnDownGraphicsTheme {
-    private static final Color[] KELLY_COLORS = {
+    public static final Color[] KELLY_COLORS = {
             //                        Color.decode("0xFFB300"),    // Vivid Yellow
             //                        Color.decode("0x803E75"),    // Strong Purple
             //                        Color.decode("0xA6BDD7"),    // Very Light Blue
@@ -60,7 +60,7 @@ public class GraphicsLightTheme extends BurnDownGraphicsTheme {
     };
 
     public GraphicsLightTheme() {
-        ganttGridColor = new Color(0x7fe4e8f3, true);
+        ganttGridColor = new Color(0xcce6ff, false);
 
         // gray
         Color basicTextColor       = Color.WHITE;

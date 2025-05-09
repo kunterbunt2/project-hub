@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.api.*;
 import de.bushnaq.abdalla.projecthub.dto.*;
+import de.bushnaq.abdalla.projecthub.report.dao.GraphicsLightTheme;
 import de.bushnaq.abdalla.projecthub.report.gantt.GanttContext;
 import de.bushnaq.abdalla.util.date.DateUtil;
 import jakarta.annotation.PostConstruct;
@@ -35,11 +36,13 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.web.server.ServerErrorException;
 
+import java.awt.*;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -272,7 +275,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     protected User addRandomUser(LocalDate firstDate) {
         String       name  = generateUserName(userIndex);
         String       email = name + "@project-hub.org";
-        User         saved = addUser(name, email, "de", "nw", firstDate, 0.7f);
+        User         saved = addUser(name, email, "de", "nw", firstDate, generateUserColor(userIndex), 0.7f);
         GanttContext gc    = new GanttContext();
         gc.initialize();
         saved.initialize(gc);
@@ -292,7 +295,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         String    email     = name + "@project-hub.org";
         LocalDate firstDate = ParameterOptions.now.toLocalDate();
 
-        User         saved = addUser(name, email, "de", "nw", firstDate, 0.7f, LocalDate.parse(FIRST_OFF_DAY_START_DATE), LocalDate.parse(FIRST_OFF_DAY_FINISH_DATE), OffDayType.VACATION);
+        User         saved = addUser(name, email, "de", "nw", firstDate, generateUserColor(userIndex), 0.7f, LocalDate.parse(FIRST_OFF_DAY_START_DATE), LocalDate.parse(FIRST_OFF_DAY_FINISH_DATE), OffDayType.VACATION);
         GanttContext gc    = new GanttContext();
         gc.initialize();
         saved.initialize(gc);
@@ -313,7 +316,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         String       name      = generateUserName(index);
         String       email     = name + "@project-hub.org";
         LocalDate    firstDate = ParameterOptions.now.toLocalDate().minusYears(1);
-        User         saved     = addUser(name, email, "de", "nw", firstDate, availability);
+        User         saved     = addUser(name, email, "de", "nw", firstDate, generateUserColor(userIndex), availability);
         GanttContext gc        = new GanttContext();
         gc.initialize();
         saved.initialize(gc);
@@ -334,7 +337,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
             String       name      = generateUserName(userIndex);
             String       email     = name + "@project-hub.org";
             LocalDate    firstDate = ParameterOptions.now.toLocalDate().minusYears(1);
-            User         saved     = addUser(name, email, "de", "nw", firstDate, 0.5f);
+            User         saved     = addUser(name, email, "de", "nw", firstDate, generateUserColor(userIndex), 0.5f);
             GanttContext gc        = new GanttContext();
             gc.initialize();
             saved.initialize(gc);
@@ -421,11 +424,12 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         return saved;
     }
 
-    protected User addUser(String name, String email, String country, String state, LocalDate start, float availability) {
+    protected User addUser(String name, String email, String country, String state, LocalDate start, Color color, float availability) {
         User user = new User();
         user.setName(name);
         user.setEmail(email);
         user.setFirstWorkingDay(start);
+        user.setColor(color);
         user.setCreated(DateUtil.localDateToOffsetDateTime(start).plusHours(8));
         user.setUpdated(DateUtil.localDateToOffsetDateTime(start).plusHours(8));
         User saved = userApi.persist(user);
@@ -438,11 +442,12 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
 
     }
 
-    protected User addUser(String name, String email, String country, String state, LocalDate start, float availability, LocalDate offDayStart, LocalDate offDayFinish, OffDayType offDayType) {
+    protected User addUser(String name, String email, String country, String state, LocalDate start, Color color, float availability, LocalDate offDayStart, LocalDate offDayFinish, OffDayType offDayType) {
         User user = new User();
         user.setName(name);
         user.setEmail(email);
         user.setFirstWorkingDay(start);
+        user.setColor(color);
         user.setCreated(DateUtil.localDateToOffsetDateTime(start).plusHours(8));
         user.setUpdated(DateUtil.localDateToOffsetDateTime(start).plusHours(8));
         User saved = userApi.persist(user);
@@ -501,6 +506,11 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
             addOffDays(saved, employmentDate, random.nextInt(20), year, OffDayType.SICK, 1, 5);
             addOffDays(saved, employmentDate, random.nextInt(5), year, OffDayType.TRIP, 1, 5);
         }
+    }
+
+    protected Color generateUserColor(int userIndex) {
+        int index = userIndex % GraphicsLightTheme.KELLY_COLORS.length;
+        return GraphicsLightTheme.KELLY_COLORS[index];
     }
 
     private String generateUserName(int userIndex) {

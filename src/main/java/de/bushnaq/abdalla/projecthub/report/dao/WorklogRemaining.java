@@ -1,5 +1,6 @@
 package de.bushnaq.abdalla.projecthub.report.dao;
 
+import de.bushnaq.abdalla.projecthub.dto.User;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -9,7 +10,7 @@ import java.time.Duration;
 @Getter
 @ToString(callSuper = false)
 public class WorklogRemaining {
-    private final String   author;
+    private final User     author;
     private final Long     issueId;
     private final String   key;
     //    private final Logger   logger = LoggerFactory.getLogger(this.getClass());
@@ -17,7 +18,7 @@ public class WorklogRemaining {
     private final Long     sprintId;
     private final Duration timeworked;
 
-    public WorklogRemaining(Long sprintId, Long issueId, String key, String author, Duration timeworked, Duration remaining) {
+    public WorklogRemaining(Long sprintId, Long issueId, String key, User author, Duration timeworked, Duration remaining) {
         this.sprintId   = sprintId;
         this.issueId    = issueId;
         this.key        = key;

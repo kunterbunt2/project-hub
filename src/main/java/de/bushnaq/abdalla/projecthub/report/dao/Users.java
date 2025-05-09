@@ -17,25 +17,37 @@
 
 package de.bushnaq.abdalla.projecthub.report.dao;
 
-import java.util.*;
+import de.bushnaq.abdalla.projecthub.dto.User;
+import lombok.Getter;
 
-public class Users implements Iterable<User> {
-    List<User>        list = new ArrayList<>();
-    Map<String, User> map  = new HashMap<>();
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Getter
+public class Users /*implements Iterable<User>*/ {
+    protected Map<String, User> emailMap = new HashMap<>();
+    protected Map<Long, User>   idMap    = new HashMap<>();
+    protected List<User>        list     = new ArrayList<>();
+    protected Map<String, User> nameMap  = new HashMap<>();
 
     public void add(User user) {
         list.add(user);
-        for (String login : user) {
-            map.put(login, user);
-        }
+        emailMap.put(user.getEmail(), user);
+        nameMap.put(user.getName(), user);
+        idMap.put(user.getId(), user);
+//        for (User user : list) {
+//            map.put(login, user);
+//        }
     }
 
-    @Override
-    public Iterator<User> iterator() {
-        return list.iterator();
-    }
+//    @Override
+//    public Iterator<User> iterator() {
+//        return list.iterator();
+//    }
 
-    public int size() {
-        return list.size();
-    }
+//    public int size() {
+//        return list.size();
+//    }
 }

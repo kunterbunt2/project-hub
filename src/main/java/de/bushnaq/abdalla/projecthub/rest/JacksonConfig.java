@@ -34,6 +34,7 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.awt.*;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -63,6 +64,12 @@ public class JacksonConfig {
         javaTimeModule.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(formatter));
         objectMapper.registerModule(javaTimeModule);
         objectMapper.registerModule(new Jdk8Module());
+        // Register Color serializer/deserializer
+        SimpleModule colorModule = new SimpleModule();
+        colorModule.addSerializer(Color.class, new ColorSerializer());
+        colorModule.addDeserializer(Color.class, new ColorDeserializer());
+        objectMapper.registerModule(colorModule);
+
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         return objectMapper;
     }

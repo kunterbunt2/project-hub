@@ -21,11 +21,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class User implements Iterable<String> {
+public class User1 implements Iterable<String> {
     private final String       email;
     private final List<String> loginList = new ArrayList<>();
 
-    public User(String email) {
+    public User1(String email) {
         this.email = email.toLowerCase();
         loginList.add(this.email);
     }
