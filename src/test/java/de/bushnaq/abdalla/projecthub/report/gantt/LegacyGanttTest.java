@@ -20,6 +20,7 @@ package de.bushnaq.abdalla.projecthub.report.gantt;
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.Task;
 import de.bushnaq.abdalla.projecthub.dto.User;
+import de.bushnaq.abdalla.projecthub.report.burndown.TestInfoUtil;
 import de.bushnaq.abdalla.projecthub.util.AbstractLegacyGanttTestUtil;
 import de.bushnaq.abdalla.util.MpxjUtil;
 import de.bushnaq.abdalla.util.date.DateUtil;
@@ -50,6 +51,7 @@ import java.util.stream.Stream;
 @TestMethodOrder(MethodOrderer.MethodName.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
+    private int testCaseIndex = 1;
 
     /**
      * Test method to read MPP files, clone all tasks, users and relations and then compare both after leveling the resources.
@@ -62,6 +64,12 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
     @MethodSource("listFilesByExtension")
     @ParameterizedTest
     public void legacyTest(Path mppFileName, TestInfo testInfo) throws Exception {
+        TestInfoUtil.setTestCaseIndex(testInfo, testCaseIndex);
+        TestInfoUtil.setTestMethod(testInfo, generateTestCaseName(testInfo));
+        setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName());
+        generateOneProduct(testInfo);
+        testCaseIndex++;
+
         File file = new File(String.valueOf(mppFileName.toAbsolutePath()));
         try (InputStream inputStream = new BufferedInputStream(new FileInputStream(file))) {
             UniversalProjectReader reader      = new UniversalProjectReader();

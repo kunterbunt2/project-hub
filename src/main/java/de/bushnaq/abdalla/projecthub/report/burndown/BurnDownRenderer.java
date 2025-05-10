@@ -118,7 +118,7 @@ public class BurnDownRenderer extends AbstractRenderer {
         }
     }
 
-    protected int calculateAuthorGraphHight(Duration authorDelta, Duration authorEstimated, Duration sumEstimated) {
+    protected int calculateAuthorGraphHeight(Duration authorDelta, Duration authorEstimated, Duration sumEstimated) {
         long maxAuthorGraphHeight = (diagram.height * authorEstimated.getSeconds()) / sumEstimated.getSeconds();
         return (int) ((authorEstimated.minus(authorDelta).getSeconds() * maxAuthorGraphHeight) / (authorEstimated.getSeconds()));
     }
@@ -294,11 +294,11 @@ public class BurnDownRenderer extends AbstractRenderer {
                 drawPlannedBurnDownGuide(firstDayX, ganttWorkWithBufferPerDayAccumulated);
             } else {
                 // ---liniar guide
-                drawOptimaleBurnDownGuide(firstDayX, eBestWork);
+                drawOptimalBurnDownGuide(firstDayX, eBestWork);
             }
 
             if (eWorstWork != null) {
-                drawOptimaleBurnDownGuide(firstDayX, eWorstWork);
+                drawOptimalBurnDownGuide(firstDayX, eWorstWork);
             }
 
             // release extrapolation (Velocity)
@@ -403,7 +403,7 @@ public class BurnDownRenderer extends AbstractRenderer {
                             int                currentDayAuthorGraphHeight = 0;
                             List<List<String>> transactions                = null;
                             if (dayIndex <= maxDayIndex + 2) {
-                                currentDayAuthorGraphHeight = calculateAuthorGraphHight(usersWorkPerDayAccumulated.get(user)[dayIndex].duration,
+                                currentDayAuthorGraphHeight = calculateAuthorGraphHeight(usersWorkPerDayAccumulated.get(user)[dayIndex].duration,
                                         authorEstimatedWork, maxWorked);
                                 y                           = diagram.y + diagram.height - graphHeight[dayIndex] - currentDayAuthorGraphHeight;
                                 if (dayIndex > 0) {
@@ -479,7 +479,7 @@ public class BurnDownRenderer extends AbstractRenderer {
         drawLegend(chartWidth - 130, diagram.y, extrapolationColor);
     }
 
-    protected void drawOptimaleBurnDownGuide(int firstDayX, Duration estimatedWork) {
+    protected void drawOptimalBurnDownGuide(int firstDayX, Duration estimatedWork) {
         LocalDate firstDay          = milestones.get("S").time;
         LocalDate lastDay           = milestones.get("E").time;
         int       workingDays       = DateUtil.calculateWorkingDaysIncluding(firstDay, lastDay);

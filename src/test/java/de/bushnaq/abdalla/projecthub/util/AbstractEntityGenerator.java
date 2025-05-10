@@ -31,6 +31,7 @@ import org.ajbrown.namemachine.Name;
 import org.ajbrown.namemachine.NameGenerator;
 import org.ajbrown.namemachine.NameGeneratorOptions;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -489,6 +490,16 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         return saved;
     }
 
+    @BeforeEach
+    protected void beforeEach() {
+        super.beforeEach();
+        productIndex = 0;
+        projectIndex = 0;
+        sprintIndex  = 0;
+        userIndex    = 0;
+        versionIndex = 0;
+    }
+
     protected static String generateProductName(int index) {
         return String.format("Product-%d", index);
     }
@@ -539,26 +550,6 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         return current;
     }
 
-    @PostConstruct
-    protected void init() {
-        NameGeneratorOptions options = new NameGeneratorOptions();
-        ParameterOptions.now = OffsetDateTime.parse("2025-01-01T08:00:00+01:00");
-        options.setRandomSeed(123L);//Get deterministic results by setting a random seed.
-        NameGenerator generator = new NameGenerator(options);
-        names = generator.generateNames(1000);
-        // Set the correct port after injection
-        productApi      = new ProductApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-        projectApi      = new ProjectApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-        userApi         = new UserApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-        availabilityApi = new AvailabilityApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-        locationApi     = new LocationApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-        offDayApi       = new OffDayApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-        taskApi         = new TaskApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-        versionApi      = new VersionApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-        sprintApi       = new SprintApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-        worklogApi      = new WorklogApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-    }
-
     private boolean isOverlapping(List<OffDay> offDays, LocalDate start, LocalDate end) {
         return offDays.stream().anyMatch(offDay -> !(end.isBefore(offDay.getFirstDay()) || start.isAfter(offDay.getLastDay())));
     }
@@ -576,6 +567,26 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         taskApi.persist(newParent);
         taskApi.persist(task);
         taskApi.persist(oldParent);
+    }
+
+    @PostConstruct
+    protected void postConstruct() {
+        NameGeneratorOptions options = new NameGeneratorOptions();
+        ParameterOptions.now = OffsetDateTime.parse("2025-01-01T08:00:00+01:00");
+        options.setRandomSeed(123L);//Get deterministic results by setting a random seed.
+        NameGenerator generator = new NameGenerator(options);
+        names = generator.generateNames(1000);
+        // Set the correct port after injection
+        productApi      = new ProductApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        projectApi      = new ProjectApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        userApi         = new UserApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        availabilityApi = new AvailabilityApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        locationApi     = new LocationApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        offDayApi       = new OffDayApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        taskApi         = new TaskApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        versionApi      = new VersionApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        sprintApi       = new SprintApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        worklogApi      = new WorklogApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
     }
 
     protected void removeAvailability(Availability availability, User user) {

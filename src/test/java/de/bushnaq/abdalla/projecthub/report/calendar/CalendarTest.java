@@ -19,6 +19,7 @@ package de.bushnaq.abdalla.projecthub.report.calendar;
 
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.User;
+import de.bushnaq.abdalla.projecthub.report.burndown.TestInfoUtil;
 import de.bushnaq.abdalla.projecthub.report.gantt.GanttContext;
 import de.bushnaq.abdalla.projecthub.util.AbstractGanttTestUtil;
 import de.bushnaq.abdalla.util.Util;
@@ -44,6 +45,11 @@ public class CalendarTest extends AbstractGanttTestUtil {
      */
     @Test
     public void calendar_01(TestInfo testInfo) throws Exception {
+        int testCaseIndex = 1;
+        TestInfoUtil.setTestCaseIndex(testInfo, testCaseIndex);
+        TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + testCaseIndex);
+        setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + testCaseIndex);
+        generateOneProduct(testInfo);
         addRandomUser();
         addRandomUser();
         addRandomUser();

@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.report.burndown;
 
+import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.rest.debug.DebugUtil;
 import de.bushnaq.abdalla.projecthub.util.AbstractGanttTestUtil;
@@ -28,6 +29,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,24 +44,38 @@ import java.util.List;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Transactional
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class BurndownTest extends AbstractGanttTestUtil {
     @Autowired
     DebugUtil debugUtil;
 
-    @Override
-    protected void createProductAndUser(TestInfo testInfo) throws Exception {
-        //no need to create default product and user
+    @ParameterizedTest
+    @MethodSource("listRandomCases")
+    public void burnDown(RandomCase randomCase, TestInfo testInfo) throws Exception {
+        TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
+        TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
+        setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
+        generateOneProduct(testInfo);
+        generateTasks(randomCase);
+        generateGanttChart(testInfo, null);
+        generateWorklogs();
+        generateBurndownChart(testInfo);
     }
 
     private static String generateFeatureName(int t) {
         return String.format("Feature-%d", t);
     }
 
+    @Override
+    protected void generateOneProduct(TestInfo testInfo) throws Exception {
+        //no need to create default product and user
+    }
+
     private void generateTasks(RandomCase randomCase) {
-        random.setSeed(1);
-        int numberOfUsers    = random.nextInt(randomCase.maxNumberOfUsers) + 2;
-        int numberOfFeatures = random.nextInt(randomCase.maxNumberOfFeatures) + 1;
-        int numberOfTasks    = random.nextInt(randomCase.maxNumberOfWork) + 1;
+        random.setSeed(randomCase.getSeed());
+        int numberOfUsers    = random.nextInt(randomCase.getMaxNumberOfUsers()) + 2;
+        int numberOfFeatures = random.nextInt(randomCase.getMaxNumberOfFeatures()) + 1;
+        int numberOfTasks    = random.nextInt(randomCase.getMaxNumberOfWork()) + 1;
         {
             addRandomUsers(numberOfUsers);
             Product product = addProduct("Product-" + 1);
@@ -74,7 +90,7 @@ public class BurndownTest extends AbstractGanttTestUtil {
             Task   feature     = addParentTask(featureName, sprint, null, startMilestone);
             for (int t = 0; t < numberOfTasks; t++) {
                 User   user     = expectedUsers.stream().toList().get(random.nextInt(numberOfUsers));
-                String duration = String.format("%dd", random.nextInt(randomCase.maxDurationDays) + 1);
+                String duration = String.format("%dd", random.nextInt(randomCase.getMaxDurationDays()) + 1);
                 String workName = generateWorkName(featureName, t);
                 addTask(workName, duration, user, sprint, feature, null);
             }
@@ -134,6 +150,7 @@ public class BurndownTest extends AbstractGanttTestUtil {
                 rest = rest.plus(task.getRemainingEstimate());//accumulate the rest
             }
         }
+        sprint.recalculate(ParameterOptions.getLocalNow());
         sprint.getTasks().forEach(task -> {
             taskApi.update(task);
         });
@@ -142,19 +159,11 @@ public class BurndownTest extends AbstractGanttTestUtil {
 
     private static List<RandomCase> listRandomCases() {
         RandomCase[] randomCases = new RandomCase[]{//
-                new RandomCase(10, 2, 1, 2),//
-                new RandomCase(10, 3, 2, 3)//
+                new RandomCase(1, 10, 2, 1, 2, 1),//
+                new RandomCase(2, 10, 3, 2, 3, 1)//
         };
         return Arrays.stream(randomCases).toList();
     }
 
-    @ParameterizedTest
-    @MethodSource("listRandomCases")
-    public void sprint_01(RandomCase randomCase, TestInfo testInfo) throws Exception {
-        generateTasks(randomCase);
-        generateGanttChart(testInfo);
-        generateWorklogs();
-        generateBurndownChart(testInfo);
-    }
 
 }

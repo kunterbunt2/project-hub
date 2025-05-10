@@ -25,6 +25,8 @@ import de.bushnaq.abdalla.projecthub.report.dao.WorklogRemaining;
 import de.bushnaq.abdalla.projecthub.report.gantt.GanttContext;
 import de.bushnaq.abdalla.util.DurationDeserializer;
 import de.bushnaq.abdalla.util.DurationSerializer;
+import de.bushnaq.abdalla.util.date.DateUtil;
+import de.bushnaq.abdalla.util.date.ReportUtil;
 import lombok.*;
 import net.sf.mpxj.ProjectCalendar;
 
@@ -50,11 +52,13 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
     public    List<Throwable> exceptions = new ArrayList<>();
     private   Long            id;
     private   String          name;
+    @JsonSerialize(using = DurationSerializer.class)
+    @JsonDeserialize(using = DurationDeserializer.class)
+    private   Duration        originalEstimation;
     @JsonIgnore
     @ToString.Exclude//help intellij debugger not to go into a loop
     private   Project         project;
     private   Long            projectId;
-    @JsonIgnore
     private   LocalDateTime   releaseDate;//calculated from the task work, worklogs and remaining work
     @JsonSerialize(using = DurationSerializer.class)
     @JsonDeserialize(using = DurationDeserializer.class)
@@ -201,6 +205,31 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
     @JsonIgnore
     public boolean isClosed() {
         return getStatus().equals(Status.CLOSED);
+    }
+
+    public void propagateTimetracking() {
+        worked             = Duration.ZERO;
+        originalEstimation = Duration.ZERO;
+        remaining          = Duration.ZERO;
+        for (Task story : getTasks()) {
+            worked             = worked.plus(story.getTimeSpent());
+            originalEstimation = originalEstimation.plus(story.getOriginalEstimate());
+            remaining          = remaining.plus(story.getRemainingEstimate());
+//            for (JiraSubtask subtask : story.subtaskList) {
+//                worked             = worked.plus(subtask.getWorked());
+//                originalEstimation = originalEstimation.plus(subtask.getOriginalEstimation());
+//                remaining          = remaining.plus(subtask.getRemaining());
+//            }
+        }
+
+    }
+
+    public void recalculate(LocalDateTime now) {
+        propagateTimetracking();
+        releaseDate = ReportUtil.calcualteReleaseDate(getStart(), now, getWorked(), DateUtil.add(getWorked(), getRemaining()));
+        if (getRemaining() != null && getRemaining().isZero() && worklogs != null && !worklogs.isEmpty()) {
+            releaseDate = DateUtil.offsetDateTimeToLocalDateTime(worklogs.getLast().getUpdated());
+        }
     }
 
 }

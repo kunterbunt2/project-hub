@@ -28,7 +28,7 @@ public class AbstractTestUtil extends DTOAsserts {
     protected EntityManager entityManager;
 
     @BeforeEach
-    protected void clearDatabase() {
+    protected void beforeEach() {
         List<String> tableNames = getAllTableNames();
         entityManager.createNativeQuery("SET REFERENTIAL_INTEGRITY FALSE").executeUpdate();
         for (String tableName : tableNames) {

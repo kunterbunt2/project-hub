@@ -20,6 +20,7 @@ package de.bushnaq.abdalla.projecthub.report.gantt;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
 import de.bushnaq.abdalla.projecthub.dto.Task;
 import de.bushnaq.abdalla.projecthub.dto.User;
+import de.bushnaq.abdalla.projecthub.report.burndown.TestInfoUtil;
 import de.bushnaq.abdalla.projecthub.util.AbstractGanttTestUtil;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
@@ -42,9 +43,14 @@ public class GanttTest extends AbstractGanttTestUtil {
      */
     @Test
     public void gantt_01(TestInfo testInfo) throws Exception {
+        int testCaseIndex = 1;
+        TestInfoUtil.setTestCaseIndex(testInfo, testCaseIndex);
+        TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + testCaseIndex);
+        setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + testCaseIndex);
+        generateOneProduct(testInfo);
         addRandomUser(0, 0.3f);
         addRandomUser(1, 0.7f);
-        initialize();
+        initializeInstances();
 
         //create tasks
         Sprint sprint    = expectedSprints.getFirst();
@@ -53,8 +59,8 @@ public class GanttTest extends AbstractGanttTestUtil {
         Task   task1     = addParentTask("[1] Parent Task", sprint, null, null);
         Task   task2     = addTask("[2] Child Task", "5d", resource1, sprint, task1, null);
         Task   task3     = addTask("[3] Child Task", "5d", resource2, sprint, task1, task2);
-
-        generateGanttChart(testInfo);
+        TestInfoUtil.setTestCaseIndex(testInfo, 1);
+        generateGanttChart(testInfo, null);
     }
 
     /**
@@ -62,9 +68,14 @@ public class GanttTest extends AbstractGanttTestUtil {
      */
     @Test
     public void gantt_02(TestInfo testInfo) throws Exception {
+        int testCaseIndex = 2;
+        TestInfoUtil.setTestCaseIndex(testInfo, testCaseIndex);
+        TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + testCaseIndex);
+        setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + testCaseIndex);
+        generateOneProduct(testInfo);
         addRandomUser(2, 0.5f);
         addRandomUser(3, 0.7f);
-        initialize();
+        initializeInstances();
 
         //create tasks
         Sprint sprint    = expectedSprints.getFirst();
@@ -78,7 +89,8 @@ public class GanttTest extends AbstractGanttTestUtil {
         Task task5 = addTask("[5] Child Task ", "5d", resource1, sprint, task4, null);
         Task task6 = addTask("[6] Child Task ", "5d", resource2, sprint, task4, task5);
 
-        generateGanttChart(testInfo);
+        TestInfoUtil.setTestCaseIndex(testInfo, 2);
+        generateGanttChart(testInfo, null);
     }
 
     /**
@@ -86,10 +98,15 @@ public class GanttTest extends AbstractGanttTestUtil {
      */
     @Test
     public void gantt_03(TestInfo testInfo) throws Exception {
+        int testCaseIndex = 3;
+        TestInfoUtil.setTestCaseIndex(testInfo, testCaseIndex);
+        TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + testCaseIndex);
+        setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + testCaseIndex);
+        generateOneProduct(testInfo);
 
         addRandomUser(0, 0.5f);
         addRandomUser(4, 0.7f);
-        initialize();
+        initializeInstances();
 
         //create tasks
         Sprint sprint    = expectedSprints.getFirst();
@@ -107,7 +124,8 @@ public class GanttTest extends AbstractGanttTestUtil {
         Task task8 = addTask("[8] Child Task ", "5d", resource1, sprint, task7, null);
         Task task9 = addTask("[9] Child Task ", "5d", resource2, sprint, task7, null);
 
-        generateGanttChart(testInfo);
+        TestInfoUtil.setTestCaseIndex(testInfo, 3);
+        generateGanttChart(testInfo, null);
     }
 
 }

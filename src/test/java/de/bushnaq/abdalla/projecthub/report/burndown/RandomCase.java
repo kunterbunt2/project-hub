@@ -17,20 +17,26 @@
 
 package de.bushnaq.abdalla.projecthub.report.burndown;
 
+import lombok.Getter;
 import lombok.ToString;
 
+@Getter
 @ToString(callSuper = false)
 public class RandomCase {
-    int maxDurationDays     = 10;
-    int maxNumberOfFeatures = 3;
-    int maxNumberOfUsers    = 2;
-    int maxNumberOfWork     = 3;
+    private final int  maxDurationDays;
+    private final int  maxNumberOfFeatures;
+    private final int  maxNumberOfUsers;
+    private final int  maxNumberOfWork;
+    private final long seed;
+    private final int  testCaseIndex;
 
-    public RandomCase(int maxDurationDays, int maxNumberOfFeatures, int maxNumberOfUsers, int maxNumberOfWork) {
+    public RandomCase(int testCaseIndex, int maxDurationDays, int maxNumberOfFeatures, int maxNumberOfUsers, int maxNumberOfWork, int seed) {
+        this.testCaseIndex       = testCaseIndex;
         this.maxDurationDays     = maxDurationDays;
         this.maxNumberOfFeatures = maxNumberOfFeatures;
         this.maxNumberOfUsers    = maxNumberOfUsers;
         this.maxNumberOfWork     = maxNumberOfWork;
+        this.seed                = seed;
     }
 
 }

@@ -51,23 +51,27 @@ public class SprintDAO extends AbstractTimeAwareDAO {
     private Long id;
 
     @Column(nullable = false)
-    private String name;
-
-    @Column(nullable = false)
-    private Long projectId;
+    private String        name;
     @JsonSerialize(using = DurationSerializer.class)
     @JsonDeserialize(using = DurationDeserializer.class)
     @Column(nullable = true)
-    private Duration remaining = Duration.ZERO;
+    private Duration      originalEstimation = Duration.ZERO;
+    @Column(nullable = false)
+    private Long          projectId;
+    private LocalDateTime releaseDate;//calculated from the task work, worklogs and remaining work
+    @JsonSerialize(using = DurationSerializer.class)
+    @JsonDeserialize(using = DurationDeserializer.class)
+    @Column(nullable = true)
+    private Duration      remaining          = Duration.ZERO;
     @Column(name = "start_date", nullable = true)  // renamed from 'start'
     private LocalDateTime start;
     @Column(nullable = false)
-    private Status status;
+    private Status        status;
     @Column(nullable = true)
-    private Long     userId;
+    private Long          userId;
     @JsonSerialize(using = DurationSerializer.class)
     @JsonDeserialize(using = DurationDeserializer.class)
     @Column(nullable = true)
-    private Duration worked    = Duration.ZERO;
+    private Duration      worked             = Duration.ZERO;
 
 }

@@ -26,6 +26,7 @@ import de.bushnaq.abdalla.util.MpxjUtil;
 import net.sf.mpxj.ProjectCalendar;
 import net.sf.mpxj.ProjectFile;
 import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -49,7 +50,7 @@ public class AbstractLegacyGanttTestUtil extends AbstractGanttTestUtil {
     protected Map<String, User>                 userMap     = new HashMap<>();
 
     @Override
-    protected void compareResults(ProjectFile projectFile) throws IOException {
+    protected void compareResults(ProjectFile projectFile, TestInfo testInfo) throws IOException {
         GanttContext gc              = new GanttContext();
         Sprint       referenceSprint = new Sprint();//fake sprint
         referenceSprint.setId(1L);//fake sprint id
@@ -89,7 +90,7 @@ public class AbstractLegacyGanttTestUtil extends AbstractGanttTestUtil {
     }
 
     @Override
-    protected void initialize() throws Exception {
+    protected void initializeInstances() throws Exception {
         GanttContext gc = new GanttContext();
         gc.allUsers    = userApi.getAllUsers();
         gc.allProducts = productApi.getAll();

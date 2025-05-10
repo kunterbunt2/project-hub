@@ -24,6 +24,7 @@ import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.report.burndown.BurnDownChart;
 import de.bushnaq.abdalla.projecthub.report.burndown.RenderDao;
+import de.bushnaq.abdalla.projecthub.report.burndown.TestInfoUtil;
 import de.bushnaq.abdalla.projecthub.report.gantt.GanttChart;
 import de.bushnaq.abdalla.projecthub.report.gantt.GanttContext;
 import de.bushnaq.abdalla.projecthub.report.gantt.GanttUtil;
@@ -33,7 +34,6 @@ import de.bushnaq.abdalla.util.date.DateUtil;
 import jakarta.annotation.PostConstruct;
 import net.sf.mpxj.ProjectCalendar;
 import net.sf.mpxj.ProjectFile;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -76,8 +76,9 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
     protected            User              resource1;
     protected            User              resource2;
     protected            Sprint            sprint;
-    protected final      String            testReferenceResultFolder = "test-reference-results";
-    protected final      String            testResultFolder          = "test-results";
+    private              String            testCaseName;
+    protected            String            testReferenceResultFolder = "test-reference-results";
+    protected            String            testResultFolder          = "test-results";
 
     protected void addOneProduct(String sprintName) {
         int count = 1;
@@ -91,9 +92,9 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         testProducts();
     }
 
-    private void compareResults() throws IOException {
-        String expectedJson = Files.readString(Paths.get(testReferenceResultFolder, sprint.getName() + ".json"));
-        String actualJson   = Files.readString(Paths.get(testResultFolder, sprint.getName() + ".json"));
+    private void compareResults(TestInfo testInfo) throws IOException {
+        String expectedJson = Files.readString(Paths.get(testReferenceResultFolder, TestInfoUtil.getTestMethodName(testInfo) + ".json"));
+        String actualJson   = Files.readString(Paths.get(testResultFolder, TestInfoUtil.getTestMethodName(testInfo) + ".json"));
 
         try {
             TypeReference<Map<String, Object>> typeRef = new TypeReference<>() {
@@ -141,7 +142,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
                 gc.initialize();
             }
 
-            logProjectTasks(testResultFolder + "/" + this.sprint.getName() + ".json", sprint, testReferenceResultFolder + "/" + this.sprint.getName() + ".json", referenceSprint);
+            logProjectTasks(testResultFolder + "/" + TestInfoUtil.getTestMethodName(testInfo) + ".json", sprint, testReferenceResultFolder + "/" + TestInfoUtil.getTestMethodName(testInfo) + ".json", referenceSprint);
             compareTasks(tasks, referenceTasks);
         } catch (JsonProcessingException e) {
             fail("Failed to parse JSON: " + e.getMessage());
@@ -149,8 +150,8 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
 
     }
 
-    protected void compareResults(ProjectFile projectFile) throws IOException {
-        compareResults();
+    protected void compareResults(ProjectFile projectFile, TestInfo testInfo) throws IOException {
+        compareResults(testInfo);
     }
 
     private static void compareTasks(List<Task> tasks, List<Task> referenceTasks) {
@@ -160,20 +161,11 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         }
     }
 
-    @BeforeEach
-    protected void createProductAndUser(TestInfo testInfo) throws Exception {
-//        ParameterOptions.now = OffsetDateTime.parse("1996-03-05T08:00:00");
-        ParameterOptions.now = OffsetDateTime.parse("2025-01-01T08:00:00+01:00");
-//        addOneProduct(sanitise(testInfo.getDisplayName()));
-//        addOneProduct(testInfo.getTestMethod().get().getName());
-        addOneProduct(generateTestCaseName(testInfo));
-    }
-
     private RenderDao createRenderDao(Context context, Sprint sprint, String column, LocalDateTime now, int chartWidth, int chartHeight, String link) {
         RenderDao dao = new RenderDao();
         dao.context    = context;
         dao.column     = column;
-        dao.sprintName = column + "-" + sprint.getId();
+        dao.sprintName = column;
         dao.link       = link;
         dao.start      = sprint.getStart();
         dao.now        = now;
@@ -196,19 +188,19 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
     }
 
     protected void generateBurndownChart(TestInfo testInfo) throws Exception {
-        initialize();
-        RenderDao     dao         = createRenderDao(context, sprint, testInfo.getTestMethod().get().getName() + "-burn-down", ParameterOptions.getLocalNow(), 0, 36 * 20,  /*urlPrefix +*/ "sprint-" + sprint.getId() + "/sprint.html");
+        initializeInstances();
+        RenderDao     dao         = createRenderDao(context, sprint, TestInfoUtil.getTestMethodName(testInfo), ParameterOptions.getLocalNow(), 0, 36 * 20,  /*urlPrefix +*/ "sprint-" + sprint.getId() + "/sprint.html");
         BurnDownChart chart       = new BurnDownChart("/", dao);
         String        description = testInfo.getDisplayName().replace("_", "-");
         chart.generateImage(Util.generateCopyrightString(ParameterOptions.getLocalNow()), description, testResultFolder);
     }
 
-    protected void generateGanttChart(TestInfo testInfo) throws Exception {
-        generateGanttChart(testInfo, null);
+    protected void generateGanttChart(TestInfo testCaseInfo, Object projectFile) throws Exception {
+        generateGanttChart(testCaseInfo, null);
     }
 
     protected void generateGanttChart(TestInfo testInfo, ProjectFile projectFile) throws Exception {
-        initialize();
+        initializeInstances();
         GanttUtil         ganttUtil = new GanttUtil(context);
         GanttErrorHandler eh        = new GanttErrorHandler();
         ganttUtil.levelResources(eh, sprint, "", ParameterOptions.getLocalNow());
@@ -219,23 +211,31 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         });
         sprintApi.update(sprint);
         printTables();
-        initialize();
+        initializeInstances();
         if (projectFile == null) {
-            storeExpectedResult();
-            storeResult();
+            storeExpectedResult(testInfo);
+            storeResult(testInfo);
         }
 
 
-        GanttChart chart = new GanttChart(context, "", "/", "Gantt Chart", sprint.getName(), exceptions, ParameterOptions.getLocalNow(), false, sprint/*, 1887, 1000*/, "scheduleWithMargin", context.parameters.graphicsTheme);
-//        String     description = testInfo.getDisplayName().replace("_", "-");
-        String description = testInfo.getTestMethod().get().getName();
+        GanttChart chart = new GanttChart(context, "", "/", "Gantt Chart", TestInfoUtil.getTestMethodName(testInfo) + "-gant-chart", exceptions, ParameterOptions.getLocalNow(), false, sprint/*, 1887, 1000*/, "scheduleWithMargin", context.parameters.graphicsTheme);
+//        String     description = testCaseInfo.getDisplayName().replace("_", "-");
+        String description = TestInfoUtil.getTestMethodName(testInfo);
         chart.generateImage(Util.generateCopyrightString(ParameterOptions.getLocalNow()), description, testResultFolder);
-        compareResults(projectFile);
+        compareResults(projectFile, testInfo);
     }
 
-    private String generateTestCaseName(TestInfo testInfo) {
+    protected void generateOneProduct(TestInfo testInfo) throws Exception {
+//        ParameterOptions.now = OffsetDateTime.parse("1996-03-05T08:00:00");
+        ParameterOptions.now = OffsetDateTime.parse("2025-01-01T08:00:00+01:00");
+//        addOneProduct(sanitise(testInfo.getDisplayName()));
+//        addOneProduct(testInfo.getTestMethod().get().getName());
+        addOneProduct(generateTestCaseName(testInfo));
+    }
+
+    protected String generateTestCaseName(TestInfo testInfo) {
         String displayName = testInfo.getDisplayName();
-        String methodName  = testInfo.getTestMethod().get().getName();
+        String methodName  = TestInfoUtil.getTestMethodName(testInfo);
         if (displayName.startsWith("[")) {
             //parametrized test case
             //[1] mppFileName=references\CREQ11793 Siemens OMS 2.0 Ph2 SMIME-rcp.mpp
@@ -265,14 +265,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         return maxNameLength;
     }
 
-    @PostConstruct
-    protected void init() {
-        super.init();
-        new File(testResultFolder).mkdirs();
-        new File(testReferenceResultFolder).mkdirs();
-    }
-
-    protected void initialize() throws Exception {
+    protected void initializeInstances() throws Exception {
         GanttContext gc = new GanttContext();
         gc.allUsers    = userApi.getAllUsers();
         gc.allProducts = productApi.getAll();
@@ -382,6 +375,13 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         }
     }
 
+    @PostConstruct
+    protected void postConstruct() {
+        super.postConstruct();
+//        new File(testResultFolder).mkdirs();
+//        new File(testReferenceResultFolder).mkdirs();
+    }
+
     private List<String> readStoredData(String directory, String sprintName) throws IOException {
         Path filePath = Paths.get(directory, sprintName + ".json");
         if (Files.exists(filePath)) {
@@ -390,8 +390,15 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         return new ArrayList<>();
     }
 
-    private void store(String directory, boolean overwrite) throws IOException {
-        Path filePath = Paths.get(directory, sprint.getName() + ".json");
+    protected void setTestCaseName(String testClassName, String testMethodName) {
+        testResultFolder = testResultFolder + "/" + testClassName;
+        new File(testResultFolder).mkdirs();
+        testReferenceResultFolder = testReferenceResultFolder + "/" + testClassName;
+        new File(testReferenceResultFolder).mkdirs();
+    }
+
+    private void store(String directory, TestInfo testInfo, boolean overwrite) throws IOException {
+        Path filePath = Paths.get(directory, TestInfoUtil.getTestMethodName(testInfo) + ".json");
         if (overwrite || !Files.exists(filePath)) {
             Map<String, Object> container = new LinkedHashMap<>();
             container.put("users", sprint.getUserMap());
@@ -403,12 +410,12 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         }
     }
 
-    private void storeExpectedResult() throws IOException {
-        store(testResultFolder, true);
+    private void storeExpectedResult(TestInfo testCaseInfo) throws IOException {
+        store(testResultFolder, testCaseInfo, true);
     }
 
-    private void storeResult() throws IOException {
-        store(testReferenceResultFolder, false);
+    private void storeResult(TestInfo testCaseInfo) throws IOException {
+        store(testReferenceResultFolder, testCaseInfo, false);
     }
 
     @Override
