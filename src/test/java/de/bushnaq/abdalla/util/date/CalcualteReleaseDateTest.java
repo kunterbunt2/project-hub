@@ -38,7 +38,7 @@ public class CalcualteReleaseDateTest {
         //100% efficency
         Duration      worked         = Duration.ofMinutes(2 * ReportUtil.ONE_WORKING_DAY_MINUTES);
         Duration      remaining      = Duration.ofMinutes(8 * ReportUtil.ONE_WORKING_DAY_MINUTES);
-        LocalDateTime release        = ReportUtil.calcualteReleaseDate(start, now, worked, worked.plus(remaining));
+        LocalDateTime release        = ReportUtil.calculateReleaseDate(start, now, worked, worked.plus(remaining));
         LocalDateTime expectedResult = LocalDateTime.parse("2018-04-13 08:00", formatter);
         //        Calendar expectedResult = new GregorianCalendar(2018, Calendar.APRIL, 13, 8, 0);
         assertEquals(expectedResult.format(formatter), release.format(formatter));
@@ -56,7 +56,7 @@ public class CalcualteReleaseDateTest {
 
         //        Long worked = new Long(7 * Util.ONE_WORKING_DAY_MILLIS + (5 * 60 + 39) * 60 * 1000);
         //        long remaining = 16 * Util.ONE_WORKING_DAY_MILLIS + (2 * 60 + 31) * 60 * 1000;
-        LocalDateTime release = ReportUtil.calcualteReleaseDate(start, now, worked, worked.plus(remaining));
+        LocalDateTime release = ReportUtil.calculateReleaseDate(start, now, worked, worked.plus(remaining));
         //        logger.trace(String.format("release=%s", DateUtil.createDateString(release, dateUtil.sdfymdhm)));
         LocalDateTime expectedResult = LocalDateTime.parse("2018-10-23 11:17", formatter);
         //        Calendar expectedResult = new GregorianCalendar(2018, Calendar.OCTOBER, 23, 11, 17);
@@ -74,7 +74,7 @@ public class CalcualteReleaseDateTest {
         Duration remaining = Duration.ofMinutes(0L);
         //        Long worked = new Long(10 * Util.ONE_WORKING_DAY_MILLIS);
         //        long remaining = 0 * Util.ONE_WORKING_DAY_MILLIS;
-        LocalDateTime release        = ReportUtil.calcualteReleaseDate(start, now, worked, worked.plus(remaining));
+        LocalDateTime release        = ReportUtil.calculateReleaseDate(start, now, worked, worked.plus(remaining));
         LocalDateTime expectedResult = LocalDateTime.parse("2018-03-16 08:00", formatter);
         //        Calendar expectedResult = new GregorianCalendar(2018, Calendar.MARCH, 16, 8, 0);
         assertEquals(expectedResult.format(formatter), release.format(formatter));
@@ -91,7 +91,7 @@ public class CalcualteReleaseDateTest {
         Duration remaining = Duration.ofMinutes(5 * ReportUtil.ONE_WORKING_DAY_MINUTES);
         //        Long worked = new Long(5 * Util.ONE_WORKING_DAY_MILLIS);
         //        long remaining = 5 * Util.ONE_WORKING_DAY_MILLIS;
-        LocalDateTime release        = ReportUtil.calcualteReleaseDate(start, now, worked, worked.plus(remaining));
+        LocalDateTime release        = ReportUtil.calculateReleaseDate(start, now, worked, worked.plus(remaining));
         LocalDateTime expectedResult = LocalDateTime.parse("2018-03-23 08:00", formatter);
         //        Calendar expectedResult = new GregorianCalendar(2018, Calendar.MARCH, 23, 8, 0);
         assertEquals(expectedResult.format(formatter), release.format(formatter));
@@ -108,7 +108,7 @@ public class CalcualteReleaseDateTest {
         Duration remaining = Duration.ofMinutes(6 * ReportUtil.ONE_WORKING_DAY_MINUTES);
         //        Long worked = new Long(4 * Util.ONE_WORKING_DAY_MILLIS);
         //        long remaining = 6 * Util.ONE_WORKING_DAY_MILLIS;
-        LocalDateTime release        = ReportUtil.calcualteReleaseDate(start, now, worked, worked.plus(remaining));
+        LocalDateTime release        = ReportUtil.calculateReleaseDate(start, now, worked, worked.plus(remaining));
         LocalDateTime expectedResult = LocalDateTime.parse("2018-03-28 08:00", formatter);
         //        Calendar expectedResult = new GregorianCalendar(2018, Calendar.MARCH, 28, 8, 0);
         assertEquals(expectedResult.format(formatter), release.format(formatter));

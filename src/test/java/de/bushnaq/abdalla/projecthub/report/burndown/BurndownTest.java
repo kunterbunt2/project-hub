@@ -17,7 +17,6 @@
 
 package de.bushnaq.abdalla.projecthub.report.burndown;
 
-import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.rest.debug.DebugUtil;
 import de.bushnaq.abdalla.projecthub.util.AbstractGanttTestUtil;
@@ -150,7 +149,6 @@ public class BurndownTest extends AbstractGanttTestUtil {
                 rest = rest.plus(task.getRemainingEstimate());//accumulate the rest
             }
         }
-        sprint.recalculate(ParameterOptions.getLocalNow());
         sprint.getTasks().forEach(task -> {
             taskApi.update(task);
         });

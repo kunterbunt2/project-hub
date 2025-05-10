@@ -165,33 +165,6 @@ public class ReportUtil {
         return (double) worked.getSeconds() / (double) (estimated.getSeconds());
     }
 
-    /**
-     * Hardened
-     *
-     * @param start
-     * @param now
-     * @param worked
-     * @param estimated
-     * @return
-     */
-    public static LocalDateTime calcualteReleaseDate(LocalDateTime start, LocalDateTime now, Duration worked, Duration estimated) {
-        //        logger.trace(String.format("start=%s now=%s end=%s worked=%s remaining=%s", Util.createDateString(start, sdtf), Util.createDateString(now, sdtf), Util.createDateString(end, sdtf), Util.createDurationString(worked, false, true, true), Util.createDurationString(remaining, false, true, true)));
-        if ((worked == null) || worked.isZero()) {
-            return null;
-        }
-        LocalDateTime releaseDate = LocalDateTime.parse("1900-01-01T08:00:00");
-        if (worked != null && estimated != null && !worked.isZero()) {
-            long workingDaysSpent = DateUtil.calculateWorkingDaysIncluding(start.toLocalDate(), now.toLocalDate());
-            //You spent workingDaysSpent to get worked done. Now how many days will you need to get remaining done?
-            long expectedTotalWorkingDaysToSpend = (long) Math.ceil((((double) estimated.getSeconds()) * (workingDaysSpent)) / (worked.getSeconds()));
-            //            logger.trace(String.format("total expected working days=%d", expectedTotalWorkingDaysToSpend));
-            releaseDate = DateUtil.addNoneWorkingDays(start, expectedTotalWorkingDaysToSpend);
-        } else {
-        }
-        return releaseDate;
-
-    }
-
     public static Duration calcualteTestCaseDelay(LocalDateTime start, LocalDateTime now, LocalDateTime end, Duration worked, Duration remaining) {
         long totalSprintWorkingDays = DateUtil.calculateWorkingDaysIncluding(start.toLocalDate(), end.toLocalDate());
         //        long duration = end - start;
@@ -249,7 +222,7 @@ public class ReportUtil {
                                                                     Duration estimated) {
         Duration duration = Duration.between(start, end);
         if (!duration.isZero() && estimated != null) {
-            LocalDateTime releaseDate = calcualteReleaseDate(start, now, worked, estimated);
+            LocalDateTime releaseDate = calculateReleaseDate(start, now, worked, estimated);
             //            String debug1 = DateUtil.createDateString(releaseDate);
             if (releaseDate == null) {
                 return null;
@@ -265,7 +238,7 @@ public class ReportUtil {
                                                                   Duration estimated) {
         Duration duration = Duration.between(start, end);
         if (!duration.isZero() && estimated != null) {
-            LocalDateTime releaseDate = calcualteReleaseDate(start, now, worked, estimated);
+            LocalDateTime releaseDate = calculateReleaseDate(start, now, worked, estimated);
             if (releaseDate == null) {
                 return null;
             }
@@ -284,6 +257,33 @@ public class ReportUtil {
         //        long extrapolcatedTimeSpent = (end - start) * spent / (now - start);
         //        String debug1 = DateUtil.createDurationString(extrapolcatedTimeSpent, false, true, true);
         return extrapolcatedTimeSpent;
+    }
+
+    /**
+     * Hardened
+     *
+     * @param start
+     * @param now
+     * @param worked
+     * @param estimated
+     * @return
+     */
+    public static LocalDateTime calculateReleaseDate(LocalDateTime start, LocalDateTime now, Duration worked, Duration estimated) {
+        //        logger.trace(String.format("start=%s now=%s end=%s worked=%s remaining=%s", Util.createDateString(start, sdtf), Util.createDateString(now, sdtf), Util.createDateString(end, sdtf), Util.createDurationString(worked, false, true, true), Util.createDurationString(remaining, false, true, true)));
+        if ((worked == null) || worked.isZero()) {
+            return null;
+        }
+        LocalDateTime releaseDate = LocalDateTime.parse("1900-01-01T08:00:00");
+        if (worked != null && estimated != null && !worked.isZero()) {
+            long workingDaysSpent = DateUtil.calculateWorkingDaysIncluding(start.toLocalDate(), now.toLocalDate());
+            //You spent workingDaysSpent to get worked done. Now how many days will you need to get remaining done?
+            long expectedTotalWorkingDaysToSpend = (long) Math.ceil((((double) estimated.getSeconds()) * (workingDaysSpent)) / (worked.getSeconds()));
+            //            logger.trace(String.format("total expected working days=%d", expectedTotalWorkingDaysToSpend));
+            releaseDate = DateUtil.addNoneWorkingDays(start, expectedTotalWorkingDaysToSpend);
+        } else {
+        }
+        return releaseDate;
+
     }
 
     public static String createPersonDayEfficiencyString(Double efficiency) {

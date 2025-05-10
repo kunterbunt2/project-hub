@@ -207,7 +207,7 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
         return getStatus().equals(Status.CLOSED);
     }
 
-    public void propagateTimetracking() {
+    public void propagateTimeTracking() {
         worked             = Duration.ZERO;
         originalEstimation = Duration.ZERO;
         remaining          = Duration.ZERO;
@@ -225,10 +225,10 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
     }
 
     public void recalculate(LocalDateTime now) {
-        propagateTimetracking();
-        releaseDate = ReportUtil.calcualteReleaseDate(getStart(), now, getWorked(), DateUtil.add(getWorked(), getRemaining()));
+        propagateTimeTracking();
+        releaseDate = ReportUtil.calculateReleaseDate(getStart(), now, getWorked(), DateUtil.add(getWorked(), getRemaining()));
         if (getRemaining() != null && getRemaining().isZero() && worklogs != null && !worklogs.isEmpty()) {
-            releaseDate = DateUtil.offsetDateTimeToLocalDateTime(worklogs.getLast().getUpdated());
+            releaseDate = DateUtil.offsetDateTimeToLocalDateTime(worklogs.getLast().getStart());
         }
     }
 

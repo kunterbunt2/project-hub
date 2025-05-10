@@ -276,7 +276,8 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         gc.allWorklogs = worklogApi.getAll();
         gc.initialize();
 
-        sprint    = gc.allProducts.getFirst().getVersions().getFirst().getProjects().getFirst().getSprints().getFirst();
+        sprint = gc.allProducts.getFirst().getVersions().getFirst().getProjects().getFirst().getSprints().getFirst();
+        sprint.recalculate(ParameterOptions.getLocalNow());
         resource1 = gc.allUsers.getFirst();
         resource2 = gc.allUsers.get(1);
     }
