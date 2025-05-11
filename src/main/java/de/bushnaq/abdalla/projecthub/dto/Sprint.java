@@ -211,25 +211,21 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
         worked             = Duration.ZERO;
         originalEstimation = Duration.ZERO;
         remaining          = Duration.ZERO;
-        for (Task story : getTasks()) {
-            worked             = worked.plus(story.getTimeSpent());
-            originalEstimation = originalEstimation.plus(story.getOriginalEstimate());
-            remaining          = remaining.plus(story.getRemainingEstimate());
-//            for (JiraSubtask subtask : story.subtaskList) {
-//                worked             = worked.plus(subtask.getWorked());
-//                originalEstimation = originalEstimation.plus(subtask.getOriginalEstimation());
-//                remaining          = remaining.plus(subtask.getRemaining());
-//            }
+        for (Task task : getTasks()) {
+            worked             = worked.plus(task.getTimeSpent());
+            originalEstimation = originalEstimation.plus(task.getOriginalEstimate());
+            remaining          = remaining.plus(task.getRemainingEstimate());
         }
-
     }
 
     public void recalculate(LocalDateTime now) {
         propagateTimeTracking();
-        releaseDate = ReportUtil.calculateReleaseDate(getStart(), now, getWorked(), DateUtil.add(getWorked(), getRemaining()));
         if (getRemaining() != null && getRemaining().isZero() && worklogs != null && !worklogs.isEmpty()) {
+            //if all work has been done, set the release date to the last worklog date
             releaseDate = DateUtil.offsetDateTimeToLocalDateTime(worklogs.getLast().getStart());
+        } else {
+            //calculate the release date based on the work done and the remaining work
+            releaseDate = ReportUtil.calculateReleaseDate(getStart(), now, getWorked(), DateUtil.add(getWorked(), getRemaining()));
         }
     }
-
 }

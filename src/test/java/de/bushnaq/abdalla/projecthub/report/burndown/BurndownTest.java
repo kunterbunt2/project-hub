@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.report.burndown;
 
+import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.rest.debug.DebugUtil;
 import de.bushnaq.abdalla.projecthub.util.AbstractGanttTestUtil;
@@ -57,7 +58,7 @@ public class BurndownTest extends AbstractGanttTestUtil {
         generateOneProduct(testInfo);
         generateTasks(randomCase);
         generateGanttChart(testInfo, null);
-        generateWorklogs();
+        generateWorklogs(ParameterOptions.getLocalNow());
         generateBurndownChart(testInfo);
     }
 
@@ -101,13 +102,13 @@ public class BurndownTest extends AbstractGanttTestUtil {
         return String.format("%s-%s", featureName, workNames[t]);
     }
 
-    private void generateWorklogs() {
+    private void generateWorklogs(LocalDateTime now) {
         final long SECONDS_PER_WORKING_DAY = 75 * 6 * 60;
         final long SECONDS_PER_HOUR        = 60 * 60;
         long       oneDay                  = 75 * SECONDS_PER_HOUR / 10;
         Duration   rest                    = Duration.ofSeconds(1);
 //        for (LocalDate day = sprint.getStart().toLocalDate(); day.isBefore(sprint.getEnd().toLocalDate().plusDays(1)); day = day.plusDays(1)) {
-        for (LocalDate day = sprint.getStart().toLocalDate(); !rest.equals(Duration.ZERO); day = day.plusDays(1)) {
+        for (LocalDate day = sprint.getStart().toLocalDate(); !rest.equals(Duration.ZERO) && now.toLocalDate().isAfter(day); day = day.plusDays(1)) {
             LocalDateTime startOfDay     = day.atStartOfDay().plusHours(8);
             LocalDateTime endOfDay       = day.atStartOfDay().plusHours(16).plusMinutes(30);
             LocalDateTime lunchStartTime = DateUtil.calculateLunchStartTime(day.atStartOfDay());
