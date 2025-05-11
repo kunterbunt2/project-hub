@@ -492,7 +492,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
 //            if (authorIndex != -1) {
 //                fillColor = authors.getNameMap().get(resourceName).getColor();
 //            }
-            fillColor = task.getAssignedUser().getColor();
+            fillColor = generateGanttColor(task.getAssignedUser().getColor());
         }
         if (task.isMilestone() && task.getChildTasks().isEmpty()) {
             // milestone
@@ -644,15 +644,17 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                     }
                     graphics2D.fill(s);
                 }
-            }
 
-            if (progress > 0.0 && numberOfLinesPerTask == 1) {
-                graphics2D.fillRect(x1, y - getTaskHeight() / 2 + 2 + 2 - 1, (int) ((x2 - x1) * progress - 1), getTaskHeight() - 4 - 4 + 2);
-                if (progress < 1.0) {
-                    graphics2D.setColor(Color.black);
-                    graphics2D.fillRect(x1 + (int) ((x2 - x1) * progress - 1), y - getTaskHeight() / 2 + 2, 1, getTaskHeight() - 4);
+                //progress
+                if (progress > 0.0 && numberOfLinesPerTask == 1) {
+                    graphics2D.fillRect(x1 + 1, y1 + 4, (int) ((x2 - x1) * progress - 1), h - 8);
+                    if (progress < 1.0) {
+                        graphics2D.setColor(Color.black);
+                        graphics2D.fillRect(x1 + (int) ((x2 - x1) * progress - 1), y - getTaskHeight() / 2 + 2, 1, getTaskHeight() - 4);
+                    }
                 }
             }
+
         } else {
             int   y1   = y - getTaskHeight() / 2 + 1;
             int   y2   = y1 + getTaskHeight() - 1;
@@ -695,6 +697,11 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                 break;
         }
         graphics2D.drawString(timeString, testX, y - getTaskHeight() / 2 + TASK_BODY_BORDER - 2);
+    }
+
+    private Color generateGanttColor(Color color) {
+        color = org.apache.xmlgraphics.java2d.color.ColorUtil.lightenColor(color, 0.5f);
+        return new Color(color.getRed(), color.getGreen(), color.getBlue(), 128);
     }
 
     private String generateToolTip(Task task, int x1, int x2, int y, String marker, String resourceName, String resourceUtelization) throws Exception {

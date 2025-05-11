@@ -171,6 +171,7 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
             }
             sprint.setUserId(userMap.values().stream().findFirst().get().getId());
             sprintApi.persist(sprint);
+            levelResources(testInfo, projectFile);
             generateGanttChart(testInfo, projectFile);
         }
     }

@@ -614,7 +614,6 @@ public class BurnDownRenderer extends AbstractRenderer {
     }
 
     private Color generateBurnDownColor(Color color) {
-//        return new Color(color.getRed(), color.getGreen(), color.getBlue(), 128);
         color = ColorUtil.lightenColor(color, 0.75f);
         return new Color(color.getRed(), color.getGreen(), color.getBlue(), 128);
     }

@@ -195,9 +195,9 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         chart.generateImage(Util.generateCopyrightString(ParameterOptions.getLocalNow()), description, testResultFolder);
     }
 
-    protected void generateGanttChart(TestInfo testCaseInfo, Object projectFile) throws Exception {
-        generateGanttChart(testCaseInfo, null);
-    }
+//    protected void generateGanttChart(TestInfo testCaseInfo, Object projectFile) throws Exception {
+//        generateGanttChart(testCaseInfo, null);
+//    }
 
     protected void generateGanttChart(TestInfo testInfo, ProjectFile projectFile) throws Exception {
         GanttChart chart = new GanttChart(context, "", "/", "Gantt Chart", TestInfoUtil.getTestMethodName(testInfo) + "-gant-chart", exceptions, ParameterOptions.getLocalNow(), false, sprint/*, 1887, 1000*/, "scheduleWithMargin", context.parameters.graphicsTheme);

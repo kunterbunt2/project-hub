@@ -61,17 +61,17 @@
 | projecthub.dto             | Product.java                              | src      |       11 |        0 |       16 |       45 |       72 |
 | projecthub.dto             | Project.java                              | src      |       11 |        0 |       16 |       44 |       71 |
 | projecthub.dto             | Relation.java                             | src      |        6 |        0 |       16 |       20 |       42 |
-| projecthub.dto             | Sprint.java                               | src      |       23 |        0 |       28 |      184 |      235 |
+| projecthub.dto             | Sprint.java                               | src      |       21 |        0 |       25 |      185 |      231 |
 | projecthub.dto             | Status.java                               | src      |        2 |        0 |       16 |        6 |       24 |
-| projecthub.dto             | Task.java                                 | src      |       16 |        3 |       16 |      111 |      146 |
+| projecthub.dto             | Task.java                                 | src      |       17 |        3 |       16 |      115 |      151 |
 | projecthub.dto             | TaskMode.java                             | src      |        5 |        0 |       16 |       12 |       33 |
 | projecthub.dto             | User.java                                 | src      |       17 |        0 |       17 |      111 |      145 |
 | projecthub.dto             | Version.java                              | src      |       15 |        0 |       16 |       46 |       77 |
 | projecthub.dto             | Worklog.java                              | src      |        6 |        0 |       16 |       24 |       46 |
 +----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.report.burndown | BurnDownChart.java                        | src      |        7 |        0 |       16 |       16 |       39 |
-| projecthub.report.burndown | BurnDownRenderer.java                     | src      |       52 |       34 |       99 |      621 |      806 |
-| projecthub.report.burndown | BurndownTest.java                         | src      |       16 |        0 |       23 |      130 |      169 |
+| projecthub.report.burndown | BurnDownRenderer.java                     | src      |       52 |       34 |       98 |      621 |      805 |
+| projecthub.report.burndown | BurndownTest.java                         | src      |       16 |        0 |       22 |      131 |      169 |
 | projecthub.report.burndown | DayWork.java                              | src      |       11 |        0 |       18 |       39 |       68 |
 | projecthub.report.burndown | RandomCase.java                           | src      |        5 |        0 |       16 |       21 |       42 |
 | projecthub.report.burndown | RenderDao.java                            | src      |        5 |        0 |       20 |       34 |       59 |
@@ -81,9 +81,7 @@
 | projecthub.report.calendar | CalendarRenderer.java                     | src      |       60 |        6 |       57 |      269 |      392 |
 | projecthub.report.calendar | CalendarTest.java                         | src      |        7 |        4 |       16 |       49 |       76 |
 +----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
-| projecthub.report.dao      | Author1.java                              | src      |        6 |        0 |       16 |       11 |       33 |
 | projecthub.report.dao      | AuthorContribution.java                   | src      |       11 |        0 |       16 |       32 |       59 |
-| projecthub.report.dao      | Authors1.java                             | src      |       14 |        0 |       18 |       60 |       92 |
 | projecthub.report.dao      | AuthorsContribution.java                  | src      |       13 |        0 |       22 |       35 |       70 |
 | projecthub.report.dao      | BurnDownGraphicsTheme.java                | src      |        6 |        0 |       16 |       30 |       52 |
 | projecthub.report.dao      | BurnDownGuide.java                        | src      |       16 |        6 |       10 |       65 |       97 |
@@ -107,17 +105,16 @@
 | projecthub.report.dao      | ResourcesUtilization.java                 | src      |        6 |        0 |       16 |       13 |       35 |
 | projecthub.report.dao      | ScheduleGraphicsTheme.java                | src      |        4 |        0 |       17 |       62 |       83 |
 | projecthub.report.dao      | TextAlignment.java                        | src      |        2 |        0 |       16 |        5 |       23 |
-| projecthub.report.dao      | User1.java                                | src      |        5 |        0 |       16 |       16 |       37 |
 | projecthub.report.dao      | Users.java                                | src      |        7 |        0 |       26 |       20 |       53 |
 | projecthub.report.dao      | WorklogRemaining.java                     | src      |        7 |        0 |       35 |       23 |       65 |
 +----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
-| projecthub.report.gantt    | AbstractGanttRenderer.java                | src      |       39 |       12 |      229 |      521 |      801 |
+| projecthub.report.gantt    | AbstractGanttRenderer.java                | src      |       41 |       12 |      230 |      525 |      808 |
 | projecthub.report.gantt    | GanttChart.java                           | src      |        8 |        0 |       16 |       23 |       47 |
 | projecthub.report.gantt    | GanttContext.java                         | src      |       13 |        0 |       43 |       80 |      136 |
 | projecthub.report.gantt    | GanttRenderer.java                        | src      |       20 |        6 |       39 |      164 |      229 |
-| projecthub.report.gantt    | GanttTest.java                            | src      |       16 |        9 |       19 |       87 |      131 |
+| projecthub.report.gantt    | GanttTest.java                            | src      |       16 |        9 |       19 |       90 |      134 |
 | projecthub.report.gantt    | GanttUtil.java                            | src      |       76 |       17 |      526 |      632 |     1251 |
-| projecthub.report.gantt    | LegacyGanttTest.java                      | src      |        9 |       16 |       26 |      148 |      199 |
+| projecthub.report.gantt    | LegacyGanttTest.java                      | src      |        9 |       16 |       26 |      149 |      200 |
 +----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.report.html.dao | ReportCell.java                           | src      |       22 |        0 |       16 |      111 |      149 |
 | projecthub.report.html.dao | ReportLink.java                           | src      |        8 |        0 |       16 |       20 |       44 |
@@ -164,7 +161,7 @@
 | projecthub.rest            | RestClientConfig.java                     | src      |        4 |        0 |       16 |       22 |       42 |
 +----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.util            | AbstractEntityGenerator.java              | src      |       98 |       48 |       43 |      617 |      806 |
-| projecthub.util            | AbstractGanttTestUtil.java                | src      |       44 |        0 |       40 |      342 |      426 |
+| projecthub.util            | AbstractGanttTestUtil.java                | src      |       43 |        0 |       43 |      342 |      428 |
 | projecthub.util            | AbstractLegacyGanttTestUtil.java          | src      |       10 |        0 |       18 |       86 |      114 |
 | projecthub.util            | AbstractTestUtil.java                     | src      |       19 |        0 |       27 |       81 |      127 |
 | projecthub.util            | DTOAsserts.java                           | src      |       29 |        0 |       25 |      136 |      190 |
@@ -219,5 +216,5 @@
 | util                       | TaskUtil.java                             | src      |        8 |        0 |       31 |       15 |       54 |
 | util                       | Util.java                                 | src      |       21 |        0 |       30 |      162 |      213 |
 +----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
-| 20 package(s)              | 198 file(s)                               | java     |     2617 |      491 |     5117 |    13743 |    21968 |
+| 20 package(s)              | 195 file(s)                               | java     |     2592 |      491 |     5066 |    13670 |    21819 |
 +----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
