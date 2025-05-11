@@ -57,8 +57,9 @@ public class BurndownTest extends AbstractGanttTestUtil {
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         generateOneProduct(testInfo);
         generateTasks(randomCase);
-        generateGanttChart(testInfo, null);
+        levelResources(testInfo, null);
         generateWorklogs(ParameterOptions.getLocalNow());
+        generateGanttChart(testInfo, null);
         generateBurndownChart(testInfo);
     }
 
@@ -139,7 +140,7 @@ public class BurndownTest extends AbstractGanttTestUtil {
                                             Worklog worklog = addWorklog(task, task.getAssignedUser(), DateUtil.localDateTimeToOffsetDateTime(day.atStartOfDay()), w, task.getName());
                                             task.addTimeSpent(w);
                                             task.removeRemainingEstimate(w);
-//                                    task.setProgress(task.getProgress().intValue() + 1);
+                                            task.recalculate();
                                         }
                                     }
                                 }

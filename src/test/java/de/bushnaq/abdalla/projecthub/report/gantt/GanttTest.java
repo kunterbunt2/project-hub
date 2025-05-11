@@ -60,6 +60,7 @@ public class GanttTest extends AbstractGanttTestUtil {
         Task   task2     = addTask("[2] Child Task", "5d", resource1, sprint, task1, null);
         Task   task3     = addTask("[3] Child Task", "5d", resource2, sprint, task1, task2);
         TestInfoUtil.setTestCaseIndex(testInfo, 1);
+        levelResources(testInfo, null);
         generateGanttChart(testInfo, null);
     }
 
@@ -90,6 +91,7 @@ public class GanttTest extends AbstractGanttTestUtil {
         Task task6 = addTask("[6] Child Task ", "5d", resource2, sprint, task4, task5);
 
         TestInfoUtil.setTestCaseIndex(testInfo, 2);
+        levelResources(testInfo, null);
         generateGanttChart(testInfo, null);
     }
 
@@ -125,6 +127,7 @@ public class GanttTest extends AbstractGanttTestUtil {
         Task task9 = addTask("[9] Child Task ", "5d", resource2, sprint, task7, null);
 
         TestInfoUtil.setTestCaseIndex(testInfo, 3);
+        levelResources(testInfo, null);
         generateGanttChart(testInfo, null);
     }
 

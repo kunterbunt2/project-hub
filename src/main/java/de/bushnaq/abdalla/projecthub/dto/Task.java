@@ -132,6 +132,11 @@ public class Task implements Comparable<Task> {
     public void initialize() {
     }
 
+    public void recalculate() {
+        double fraction = ((double) getTimeSpent().toSeconds()) / getTimeSpent().plus(getRemainingEstimate()).toSeconds();
+        setProgress(fraction);
+    }
+
     public void removeChildTask(Task childTask) {
         childTasks.remove(childTask);
         childTask.setParentTask(null);

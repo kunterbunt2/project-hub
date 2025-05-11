@@ -200,24 +200,6 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
     }
 
     protected void generateGanttChart(TestInfo testInfo, ProjectFile projectFile) throws Exception {
-        initializeInstances();
-        GanttUtil         ganttUtil = new GanttUtil(context);
-        GanttErrorHandler eh        = new GanttErrorHandler();
-        ganttUtil.levelResources(eh, sprint, "", ParameterOptions.getLocalNow());
-
-        //save back to the database
-        sprint.getTasks().forEach(task -> {
-            taskApi.update(task);
-        });
-        sprintApi.update(sprint);
-        printTables();
-        initializeInstances();
-        if (projectFile == null) {
-            storeExpectedResult(testInfo);
-            storeResult(testInfo);
-        }
-
-
         GanttChart chart = new GanttChart(context, "", "/", "Gantt Chart", TestInfoUtil.getTestMethodName(testInfo) + "-gant-chart", exceptions, ParameterOptions.getLocalNow(), false, sprint/*, 1887, 1000*/, "scheduleWithMargin", context.parameters.graphicsTheme);
 //        String     description = testCaseInfo.getDisplayName().replace("_", "-");
         String description = TestInfoUtil.getTestMethodName(testInfo);
@@ -287,6 +269,25 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         //ignore tasks that have no name
         //ignore tasks that do not have a start date or finish date
         return task.getID() != 0 && task.getUniqueID() != null && task.getName() != null && task.getStart() != null && task.getFinish() != null && (task.getID() != 1);
+    }
+
+    protected void levelResources(TestInfo testInfo, ProjectFile projectFile) throws Exception {
+        initializeInstances();
+        GanttUtil         ganttUtil = new GanttUtil(context);
+        GanttErrorHandler eh        = new GanttErrorHandler();
+        ganttUtil.levelResources(eh, sprint, "", ParameterOptions.getLocalNow());
+
+        //save back to the database
+        sprint.getTasks().forEach(task -> {
+            taskApi.update(task);
+        });
+        sprintApi.update(sprint);
+        printTables();
+        initializeInstances();
+        if (projectFile == null) {
+            storeExpectedResult(testInfo);
+            storeResult(testInfo);
+        }
     }
 
     private void logProjectTasks(String fileName, Sprint sprint, String referenceFileName, Sprint referenceSprint) {
