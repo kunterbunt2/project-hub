@@ -21,8 +21,18 @@ import org.junit.jupiter.api.TestInfo;
 
 public class TestInfoUtil {
 
+    public static final String DAYS_AFTER_START = "daysAfterStart";
     public static final String TEST_CASE_INDEX  = "testCaseIndex";
     public static final String TEST_METHOD_NAME = "testMethodName";
+    public static final String TEST_START       = "testStart";
+
+    public static int getDaysAfterStart(TestInfo testInfo) {
+        return testInfo.getTags().stream()
+                .filter(tag -> tag.startsWith(DAYS_AFTER_START + "="))
+                .map(tag -> Integer.parseInt(tag.substring(DAYS_AFTER_START.length() + 1)))
+                .findFirst()
+                .orElse(null);
+    }
 
     public static Integer getTestCaseIndex(TestInfo testInfo) {
         return testInfo.getTags().stream()
@@ -41,11 +51,27 @@ public class TestInfoUtil {
                 .orElse(null);
     }
 
+    public static String getTestStart(TestInfo testInfo) {
+        return testInfo.getTags().stream()
+                .filter(tag -> tag.startsWith(TEST_START + "="))
+                .map(tag -> tag.substring(TEST_START.length() + 1))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public static void setDaysAfterStart(TestInfo testInfo, int days) {
+        testInfo.getTags().add(String.format("%s=%d", DAYS_AFTER_START, days));
+    }
+
     public static void setTestCaseIndex(TestInfo testInfo, int testCaseIndex) {
         testInfo.getTags().add(String.format("%s=%s", TEST_CASE_INDEX, testCaseIndex));
     }
 
     public static void setTestMethod(TestInfo testInfo, String testMethodName) {
         testInfo.getTags().add(String.format("%s=%s", TEST_METHOD_NAME, testMethodName));
+    }
+
+    public static void setTestStart(TestInfo testInfo, String localDateTime) {
+        testInfo.getTags().add(String.format("%s=%s", TEST_START, localDateTime));
     }
 }

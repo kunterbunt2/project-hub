@@ -49,6 +49,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -73,10 +74,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
     protected            Context           context;
     public final         DateTimeFormatter dtfymdhmss                = DateTimeFormatter.ofPattern("yyyy.MMM.dd HH:mm:ss.SSS");
     protected final      List<Throwable>   exceptions                = new ArrayList<>();
-    protected            User              resource1;
-    protected            User              resource2;
     protected            Sprint            sprint;
-    private              String            testCaseName;
     protected            String            testReferenceResultFolder = "test-reference-results";
     protected            String            testResultFolder          = "test-results";
 
@@ -163,15 +161,14 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
 
     private RenderDao createRenderDao(Context context, Sprint sprint, String column, LocalDateTime now, int chartWidth, int chartHeight, String link) {
         RenderDao dao = new RenderDao();
-        dao.context    = context;
-        dao.column     = column;
-        dao.sprintName = column;
-        dao.link       = link;
-        dao.start      = sprint.getStart();
-        dao.now        = now;
-        dao.end        = sprint.getEnd();
-        dao.release    = sprint.getReleaseDate();
-//        dao.completed          = sprint.isClosed();
+        dao.context            = context;
+        dao.column             = column;
+        dao.sprintName         = column;
+        dao.link               = link;
+        dao.start              = sprint.getStart();
+        dao.now                = now;
+        dao.end                = sprint.getEnd();
+        dao.release            = sprint.getReleaseDate();
         dao.chartWidth         = chartWidth;
         dao.chartHeight        = chartHeight;
         dao.sprint             = sprint;
@@ -181,9 +178,8 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         dao.remaining          = sprint.getRemaining();
         dao.worklog            = sprint.getWorklogs();
         dao.worklogRemaining   = sprint.getWorklogRemaining();
-//        dao.sprintClosed       = getClosed();
-        dao.cssClass      = "scheduleWithMargin";
-        dao.graphicsTheme = context.parameters.graphicsTheme;
+        dao.cssClass           = "scheduleWithMargin";
+        dao.graphicsTheme      = context.parameters.graphicsTheme;
         return dao;
     }
 
@@ -195,10 +191,6 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         chart.generateImage(Util.generateCopyrightString(ParameterOptions.getLocalNow()), description, testResultFolder);
     }
 
-//    protected void generateGanttChart(TestInfo testCaseInfo, Object projectFile) throws Exception {
-//        generateGanttChart(testCaseInfo, null);
-//    }
-
     protected void generateGanttChart(TestInfo testInfo, ProjectFile projectFile) throws Exception {
         GanttChart chart = new GanttChart(context, "", "/", "Gantt Chart", TestInfoUtil.getTestMethodName(testInfo) + "-gant-chart", exceptions, ParameterOptions.getLocalNow(), false, sprint/*, 1887, 1000*/, "scheduleWithMargin", context.parameters.graphicsTheme);
 //        String     description = testCaseInfo.getDisplayName().replace("_", "-");
@@ -208,10 +200,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
     }
 
     protected void generateOneProduct(TestInfo testInfo) throws Exception {
-//        ParameterOptions.now = OffsetDateTime.parse("1996-03-05T08:00:00");
         ParameterOptions.now = OffsetDateTime.parse("2025-01-01T08:00:00+01:00");
-//        addOneProduct(sanitise(testInfo.getDisplayName()));
-//        addOneProduct(testInfo.getTestMethod().get().getName());
         addOneProduct(generateTestCaseName(testInfo));
     }
 
@@ -234,7 +223,55 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         } else {
             return methodName;
         }
-//        return displayName.replace("_", "-").replace("\\", "-").replace("/", "-").replace(":", "-");
+    }
+
+    protected void generateWorklogs(LocalDateTime now) {
+        final long SECONDS_PER_WORKING_DAY = 75 * 6 * 60;
+        final long SECONDS_PER_HOUR        = 60 * 60;
+        long       oneDay                  = 75 * SECONDS_PER_HOUR / 10;
+        Duration   rest                    = Duration.ofSeconds(1);
+        for (LocalDate day = sprint.getStart().toLocalDate(); !rest.equals(Duration.ZERO) && now.toLocalDate().isAfter(day); day = day.plusDays(1)) {
+            LocalDateTime startOfDay     = day.atStartOfDay().plusHours(8);
+            LocalDateTime endOfDay       = day.atStartOfDay().plusHours(16).plusMinutes(30);
+            LocalDateTime lunchStartTime = DateUtil.calculateLunchStartTime(day.atStartOfDay());
+            LocalDateTime lunchStopTime  = DateUtil.calculateLunchStopTime(day.atStartOfDay());
+            rest = Duration.ZERO;
+            for (Task task : sprint.getTasks()) {
+                if (task.getChildTasks().isEmpty() && task.getOriginalEstimate() != null && !task.getOriginalEstimate().isZero()) {
+                    Number availability = task.getAssignedUser().getAvailabilities().getLast().getAvailability();
+                    if (task.getChildTasks().isEmpty()) {
+                        if (!day.isBefore(task.getStart().toLocalDate()) /*&& !day.isAfter(task.getFinish().toLocalDate())*/) {
+                            // Day is within task start/finish date range
+
+                            if (task.getEffectiveCalendar().isWorkingDate(day)) {
+                                if (task.getStart().isBefore(startOfDay) || task.getStart().isEqual(startOfDay)) {
+                                    if (!task.getRemainingEstimate().isZero()) {
+                                        // we have the whole day
+                                        double   fraction = 0.8f + random.nextFloat() / 5;
+                                        Duration maxWork  = Duration.ofSeconds((long) ((fraction * availability.doubleValue() * SECONDS_PER_WORKING_DAY)));
+                                        Duration w        = maxWork;
+                                        Duration delta    = task.getRemainingEstimate().minus(w);
+                                        if (delta.isZero() || delta.isPositive()) {
+                                        } else {
+                                            w = task.getRemainingEstimate();
+                                        }
+                                        Worklog worklog = addWorklog(task, task.getAssignedUser(), DateUtil.localDateTimeToOffsetDateTime(day.atStartOfDay()), w, task.getName());
+                                        task.addTimeSpent(w);
+                                        task.removeRemainingEstimate(w);
+                                        task.recalculate();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                rest = rest.plus(task.getRemainingEstimate());//accumulate the rest
+            }
+        }
+        sprint.getTasks().forEach(task -> {
+            taskApi.update(task);
+        });
+        sprintApi.update(sprint);
     }
 
     private int getMaxTaskNameLength(List<Task> taskList) {
@@ -247,7 +284,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         return maxNameLength;
     }
 
-    protected void initializeInstances() throws Exception {
+    protected GanttContext initializeInstances() throws Exception {
         GanttContext gc = new GanttContext();
         gc.allUsers    = userApi.getAllUsers();
         gc.allProducts = productApi.getAll();
@@ -260,8 +297,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
 
         sprint = gc.allProducts.getFirst().getVersions().getFirst().getProjects().getFirst().getSprints().getFirst();
         sprint.recalculate(ParameterOptions.getLocalNow());
-        resource1 = gc.allUsers.getFirst();
-        resource2 = gc.allUsers.get(1);
+        return gc;
     }
 
     public static boolean isValidTask(net.sf.mpxj.Task task) {

@@ -17,8 +17,10 @@
 
 package de.bushnaq.abdalla.projecthub.report.gantt;
 
+import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
 import de.bushnaq.abdalla.projecthub.dto.Task;
+import de.bushnaq.abdalla.projecthub.dto.TaskMode;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.report.burndown.TestInfoUtil;
 import de.bushnaq.abdalla.projecthub.util.AbstractGanttTestUtil;
@@ -30,6 +32,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
@@ -46,6 +51,7 @@ public class GanttTest extends AbstractGanttTestUtil {
         int testCaseIndex = 1;
         TestInfoUtil.setTestCaseIndex(testInfo, testCaseIndex);
         TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + testCaseIndex);
+        TestInfoUtil.setTestStart(testInfo, "2024-12-15T08:00:00");
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + testCaseIndex);
         generateOneProduct(testInfo);
         addRandomUser(0, 0.3f);
@@ -53,14 +59,16 @@ public class GanttTest extends AbstractGanttTestUtil {
         initializeInstances();
 
         //create tasks
-        Sprint sprint    = expectedSprints.getFirst();
-        User   resource1 = expectedUsers.stream().toList().getFirst();
-        User   resource2 = expectedUsers.stream().toList().get(1);
-        Task   task1     = addParentTask("[1] Parent Task", sprint, null, null);
-        Task   task2     = addTask("[2] Child Task", "5d", resource1, sprint, task1, null);
-        Task   task3     = addTask("[3] Child Task", "5d", resource2, sprint, task1, task2);
+        Sprint sprint         = expectedSprints.getFirst();
+        User   resource1      = expectedUsers.stream().toList().getFirst();
+        User   resource2      = expectedUsers.stream().toList().get(1);
+        Task   startMilestone = addTask(sprint, null, "Start", LocalDateTime.parse(TestInfoUtil.getTestStart(testInfo)), Duration.ZERO, null, null, TaskMode.MANUALLY_SCHEDULED, true);
+        Task   task1          = addParentTask("[1] Parent Task", sprint, null, startMilestone);
+        Task   task2          = addTask("[2] Child Task", "5d", resource1, sprint, task1, null);
+        Task   task3          = addTask("[3] Child Task", "5d", resource2, sprint, task1, task2);
         TestInfoUtil.setTestCaseIndex(testInfo, 1);
         levelResources(testInfo, null);
+        generateWorklogs(ParameterOptions.getLocalNow());
         generateGanttChart(testInfo, null);
     }
 
@@ -72,6 +80,7 @@ public class GanttTest extends AbstractGanttTestUtil {
         int testCaseIndex = 2;
         TestInfoUtil.setTestCaseIndex(testInfo, testCaseIndex);
         TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + testCaseIndex);
+        TestInfoUtil.setTestStart(testInfo, "2024-12-15T08:00:00");
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + testCaseIndex);
         generateOneProduct(testInfo);
         addRandomUser(2, 0.5f);
@@ -79,12 +88,13 @@ public class GanttTest extends AbstractGanttTestUtil {
         initializeInstances();
 
         //create tasks
-        Sprint sprint    = expectedSprints.getFirst();
-        User   resource1 = expectedUsers.stream().toList().getFirst();
-        User   resource2 = expectedUsers.stream().toList().get(1);
-        Task   task1     = addParentTask("[1] Parent Task", sprint, null, null);
-        Task   task2     = addTask("[2] Child Task ", "5d", resource1, sprint, task1, null);
-        Task   task3     = addTask("[3] Child Task ", "5d", resource2, sprint, task1, task2);
+        Sprint sprint         = expectedSprints.getFirst();
+        User   resource1      = expectedUsers.stream().toList().getFirst();
+        User   resource2      = expectedUsers.stream().toList().get(1);
+        Task   startMilestone = addTask(sprint, null, "Start", LocalDateTime.parse(TestInfoUtil.getTestStart(testInfo)), Duration.ZERO, null, null, TaskMode.MANUALLY_SCHEDULED, true);
+        Task   task1          = addParentTask("[1] Parent Task", sprint, null, startMilestone);
+        Task   task2          = addTask("[2] Child Task ", "5d", resource1, sprint, task1, null);
+        Task   task3          = addTask("[3] Child Task ", "5d", resource2, sprint, task1, task2);
 
         Task task4 = addParentTask("[4] Parent Task", sprint, null, task1);
         Task task5 = addTask("[5] Child Task ", "5d", resource1, sprint, task4, null);
@@ -92,7 +102,9 @@ public class GanttTest extends AbstractGanttTestUtil {
 
         TestInfoUtil.setTestCaseIndex(testInfo, 2);
         levelResources(testInfo, null);
+        generateWorklogs(ParameterOptions.getLocalNow());
         generateGanttChart(testInfo, null);
+        generateBurndownChart(testInfo);
     }
 
     /**
@@ -103,6 +115,7 @@ public class GanttTest extends AbstractGanttTestUtil {
         int testCaseIndex = 3;
         TestInfoUtil.setTestCaseIndex(testInfo, testCaseIndex);
         TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + testCaseIndex);
+        TestInfoUtil.setTestStart(testInfo, "2024-12-15T08:00:00");
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + testCaseIndex);
         generateOneProduct(testInfo);
 
@@ -111,12 +124,13 @@ public class GanttTest extends AbstractGanttTestUtil {
         initializeInstances();
 
         //create tasks
-        Sprint sprint    = expectedSprints.getFirst();
-        User   resource1 = expectedUsers.stream().toList().getFirst();
-        User   resource2 = expectedUsers.stream().toList().get(1);
-        Task   task1     = addParentTask("[1] Parent Task", sprint, null, null);
-        Task   task2     = addTask("[2] Child Task ", "5d", resource1, sprint, task1, null);
-        Task   task3     = addTask("[3] Child Task ", "5d", resource2, sprint, task1, task2);
+        Sprint sprint         = expectedSprints.getFirst();
+        User   resource1      = expectedUsers.stream().toList().getFirst();
+        User   resource2      = expectedUsers.stream().toList().get(1);
+        Task   startMilestone = addTask(sprint, null, "Start", LocalDateTime.parse(TestInfoUtil.getTestStart(testInfo)), Duration.ZERO, null, null, TaskMode.MANUALLY_SCHEDULED, true);
+        Task   task1          = addParentTask("[1] Parent Task", sprint, null, startMilestone);
+        Task   task2          = addTask("[2] Child Task ", "5d", resource1, sprint, task1, null);
+        Task   task3          = addTask("[3] Child Task ", "5d", resource2, sprint, task1, task2);
 
         Task task4 = addParentTask("[4] Parent Task", sprint, null, task1);
         Task task5 = addTask("[5] Child Task ", "5d", resource1, sprint, task4, null);
@@ -128,7 +142,9 @@ public class GanttTest extends AbstractGanttTestUtil {
 
         TestInfoUtil.setTestCaseIndex(testInfo, 3);
         levelResources(testInfo, null);
+        generateWorklogs(ParameterOptions.getLocalNow());
         generateGanttChart(testInfo, null);
+        generateBurndownChart(testInfo);
     }
 
 }

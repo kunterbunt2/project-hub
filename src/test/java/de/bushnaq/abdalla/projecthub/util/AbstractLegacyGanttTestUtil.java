@@ -71,7 +71,6 @@ public class AbstractLegacyGanttTestUtil extends AbstractGanttTestUtil {
         }
         gc.initialize();
 
-//        Sprint sprint = expectedSprints.getFirst();
         logTasks(sprint, gc.allSprints.getFirst());
         for (net.sf.mpxj.Task mpxjTask : projectFile.getTasks()) {
             if (isValidTask(mpxjTask)) {
@@ -90,15 +89,8 @@ public class AbstractLegacyGanttTestUtil extends AbstractGanttTestUtil {
     }
 
     @Override
-    protected void initializeInstances() throws Exception {
-        GanttContext gc = new GanttContext();
-        gc.allUsers    = userApi.getAllUsers();
-        gc.allProducts = productApi.getAll();
-        gc.allVersions = versionApi.getAll();
-        gc.allProjects = projectApi.getAll();
-        gc.allSprints  = sprintApi.getAll();
-        gc.allTasks    = taskApi.getAll();
-        gc.initialize();
+    protected GanttContext initializeInstances() throws Exception {
+        GanttContext gc = super.initializeInstances();
 
         taskMap.clear();
         for (Task allTask : gc.allTasks) {
@@ -109,6 +101,7 @@ public class AbstractLegacyGanttTestUtil extends AbstractGanttTestUtil {
             userMap.put(allUser.getName(), allUser);
         }
         sprint = gc.allSprints.getFirst();
+        return gc;
     }
 
 }

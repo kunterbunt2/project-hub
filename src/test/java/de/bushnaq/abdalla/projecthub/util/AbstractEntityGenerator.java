@@ -50,6 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class AbstractEntityGenerator extends AbstractTestUtil {
     public static final String                FIRST_OFF_DAY_FINISH_DATE = "2024-04-10";
     public static final String                FIRST_OFF_DAY_START_DATE  = "2024-04-01";
+    public static final String PROJECT_HUB_ORG = "@project-hub.org";
     protected           AvailabilityApi       availabilityApi;
     protected final     TreeSet<Availability> expectedAvailabilities    = new TreeSet<>();
     protected final     TreeSet<Location>     expectedLocations         = new TreeSet<>();
@@ -275,7 +276,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
      */
     protected User addRandomUser(LocalDate firstDate) {
         String       name  = generateUserName(userIndex);
-        String       email = name + "@project-hub.org";
+        String       email = name + PROJECT_HUB_ORG;
         User         saved = addUser(name, email, "de", "nw", firstDate, generateUserColor(userIndex), 0.7f);
         GanttContext gc    = new GanttContext();
         gc.initialize();
@@ -293,7 +294,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
      */
     protected User addRandomUser() {
         String    name      = generateUserName(userIndex);
-        String    email     = name + "@project-hub.org";
+        String    email     = name + PROJECT_HUB_ORG;
         LocalDate firstDate = ParameterOptions.now.toLocalDate();
 
         User         saved = addUser(name, email, "de", "nw", firstDate, generateUserColor(userIndex), 0.7f, LocalDate.parse(FIRST_OFF_DAY_START_DATE), LocalDate.parse(FIRST_OFF_DAY_FINISH_DATE), OffDayType.VACATION);
@@ -315,7 +316,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
      */
     protected User addRandomUser(int index, float availability) {
         String       name      = generateUserName(index);
-        String       email     = name + "@project-hub.org";
+        String       email     = name + PROJECT_HUB_ORG;
         LocalDate    firstDate = ParameterOptions.now.toLocalDate().minusYears(1);
         User         saved     = addUser(name, email, "de", "nw", firstDate, generateUserColor(userIndex), availability);
         GanttContext gc        = new GanttContext();
@@ -336,7 +337,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     protected void addRandomUsers(int count) {
         for (int i = 0; i < count; i++) {
             String       name      = generateUserName(userIndex);
-            String       email     = name + "@project-hub.org";
+            String       email     = name + PROJECT_HUB_ORG;
             LocalDate    firstDate = ParameterOptions.now.toLocalDate().minusYears(1);
             User         saved     = addUser(name, email, "de", "nw", firstDate, generateUserColor(userIndex), 0.5f);
             GanttContext gc        = new GanttContext();

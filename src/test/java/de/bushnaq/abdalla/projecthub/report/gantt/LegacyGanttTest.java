@@ -51,7 +51,8 @@ import java.util.stream.Stream;
 @TestMethodOrder(MethodOrderer.MethodName.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
-    private int testCaseIndex = 1;
+    public static final String ANONYMOUS     = "anonymous";
+    private             int    testCaseIndex = 1;
 
     /**
      * Test method to read MPP files, clone all tasks, users and relations and then compare both after leveling the resources.
@@ -66,6 +67,7 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
     public void legacyTest(Path mppFileName, TestInfo testInfo) throws Exception {
         TestInfoUtil.setTestCaseIndex(testInfo, testCaseIndex);
         TestInfoUtil.setTestMethod(testInfo, generateTestCaseName(testInfo));
+        TestInfoUtil.setDaysAfterStart(testInfo, random.nextInt(20) + 2);
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName());
         generateOneProduct(testInfo);
         testCaseIndex++;
@@ -90,12 +92,12 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
                                 resourceMap.put(resourceName, resource);//store resources
                             }
                             if (userMap.get(resourceName) == null) {
-                                Number   units        = resourceAssignment.getUnits();
-                                Duration work         = resourceAssignment.getWork();
-                                TimeUnit units1       = work.getUnits();
-                                double   duration1    = work.getDuration();
-                                double   availability = units.doubleValue() / 100;
-                                String   emailAddress = resource.getEmailAddress();
+                                Number   units = resourceAssignment.getUnits();
+                                Duration work  = resourceAssignment.getWork();
+//                                TimeUnit units1       = work.getUnits();
+//                                double   duration1    = work.getDuration();
+                                double availability = units.doubleValue() / 100;
+                                String emailAddress = resource.getEmailAddress();
                                 if (emailAddress == null) {
                                     emailAddress = resourceName.replaceAll(" ", "_") + "@example.com";
                                 }
@@ -107,7 +109,6 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
                     }
                 }
             }
-//            Sprint sprint = expectedSprints.getFirst();
             //populate taskMap
             for (net.sf.mpxj.Task mpxjTask : projectFile.getTasks()) {
                 if (isValidTask(mpxjTask)) {
@@ -130,8 +131,14 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
                         taskMap.put(task.getName(), task);
                     } else if (!mpxjTask.hasChildTasks()) {
                         //no user assigned to this task
-                        Duration work = mpxjTask.getDuration();
-                        Task     task = addTask(sprint, null, mpxjTask.getName(), start, MpxjUtil.toJavaDuration(work), null, null, taskMode, mpxjTask.getMilestone());//parent task
+                        Duration work         = mpxjTask.getDuration();
+                        String   resourceName = ANONYMOUS;
+                        String   emailAddress = ANONYMOUS + PROJECT_HUB_ORG;
+                        User     user         = userMap.get(resourceName);
+                        if (user == null) {
+                            user = addUser(resourceName, emailAddress, "de", "nw", date.toLocalDate(), generateUserColor(userIndex), (float) 1);
+                        }
+                        Task task = addTask(sprint, null, mpxjTask.getName(), start, MpxjUtil.toJavaDuration(work), user, null, taskMode, mpxjTask.getMilestone());//parent task
                         taskMap.put(task.getName(), task);
                     } else {
                         //story
@@ -172,7 +179,10 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
             sprint.setUserId(userMap.values().stream().findFirst().get().getId());
             sprintApi.persist(sprint);
             levelResources(testInfo, projectFile);
+            ParameterOptions.now = ParameterOptions.now.plusDays(TestInfoUtil.getDaysAfterStart(testInfo));
+            generateWorklogs(ParameterOptions.getLocalNow());
             generateGanttChart(testInfo, projectFile);
+            generateBurndownChart(testInfo);
         }
     }
 

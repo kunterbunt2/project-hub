@@ -21,7 +21,6 @@ import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.rest.debug.DebugUtil;
 import de.bushnaq.abdalla.projecthub.util.AbstractGanttTestUtil;
-import de.bushnaq.abdalla.util.date.DateUtil;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -34,7 +33,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -103,59 +101,6 @@ public class BurndownTest extends AbstractGanttTestUtil {
         return String.format("%s-%s", featureName, workNames[t]);
     }
 
-    private void generateWorklogs(LocalDateTime now) {
-        final long SECONDS_PER_WORKING_DAY = 75 * 6 * 60;
-        final long SECONDS_PER_HOUR        = 60 * 60;
-        long       oneDay                  = 75 * SECONDS_PER_HOUR / 10;
-        Duration   rest                    = Duration.ofSeconds(1);
-//        for (LocalDate day = sprint.getStart().toLocalDate(); day.isBefore(sprint.getEnd().toLocalDate().plusDays(1)); day = day.plusDays(1)) {
-        for (LocalDate day = sprint.getStart().toLocalDate(); !rest.equals(Duration.ZERO) && now.toLocalDate().isAfter(day); day = day.plusDays(1)) {
-            LocalDateTime startOfDay     = day.atStartOfDay().plusHours(8);
-            LocalDateTime endOfDay       = day.atStartOfDay().plusHours(16).plusMinutes(30);
-            LocalDateTime lunchStartTime = DateUtil.calculateLunchStartTime(day.atStartOfDay());
-            LocalDateTime lunchStopTime  = DateUtil.calculateLunchStopTime(day.atStartOfDay());
-            rest = Duration.ZERO;
-            for (Task task : sprint.getTasks()) {
-                if (task.getChildTasks().isEmpty() && task.getOriginalEstimate() != null && !task.getOriginalEstimate().isZero()) {
-                    Number availability = task.getAssignedUser().getAvailabilities().getLast().getAvailability();
-                    if (task.getChildTasks().isEmpty()) {
-                        if (!day.isBefore(task.getStart().toLocalDate()) /*&& !day.isAfter(task.getFinish().toLocalDate())*/) {
-                            // Day is within task start/finish date range
-
-                            if (task.getEffectiveCalendar().isWorkingDate(day)) {
-                                if (task.getStart().isBefore(startOfDay) || task.getStart().isEqual(startOfDay)) {
-//                                    if (task.getFinish().isAfter(endOfDay) || task.getFinish().isEqual(endOfDay))
-                                    {
-                                        if (!task.getRemainingEstimate().isZero()) {
-                                            // we have the whole day
-//                                        double fraction = (double) Duration.between(startOfDay, endOfDay).getSeconds() / oneDay;
-                                            double   fraction = 0.8f + random.nextFloat() / 5;
-                                            Duration maxWork  = Duration.ofSeconds((long) ((fraction * availability.doubleValue() * SECONDS_PER_WORKING_DAY)));
-                                            Duration w        = maxWork;
-                                            Duration delta    = task.getRemainingEstimate().minus(w);
-                                            if (delta.isZero() || delta.isPositive()) {
-                                            } else {
-                                                w = task.getRemainingEstimate();
-                                            }
-                                            Worklog worklog = addWorklog(task, task.getAssignedUser(), DateUtil.localDateTimeToOffsetDateTime(day.atStartOfDay()), w, task.getName());
-                                            task.addTimeSpent(w);
-                                            task.removeRemainingEstimate(w);
-                                            task.recalculate();
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                rest = rest.plus(task.getRemainingEstimate());//accumulate the rest
-            }
-        }
-        sprint.getTasks().forEach(task -> {
-            taskApi.update(task);
-        });
-        sprintApi.update(sprint);
-    }
 
     private static List<RandomCase> listRandomCases() {
         RandomCase[] randomCases = new RandomCase[]{//
