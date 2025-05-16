@@ -163,7 +163,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         RenderDao dao = new RenderDao();
         dao.context            = context;
         dao.column             = column;
-        dao.sprintName         = column;
+        dao.sprintName         = column + "-burn-down";
         dao.link               = link;
         dao.start              = sprint.getStart();
         dao.now                = now;

@@ -70,6 +70,7 @@ public class GanttTest extends AbstractGanttTestUtil {
         levelResources(testInfo, null);
         generateWorklogs(ParameterOptions.getLocalNow());
         generateGanttChart(testInfo, null);
+        generateBurndownChart(testInfo);
     }
 
     /**
