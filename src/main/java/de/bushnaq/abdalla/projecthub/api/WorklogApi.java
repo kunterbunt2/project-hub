@@ -19,6 +19,7 @@ package de.bushnaq.abdalla.projecthub.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.dto.Worklog;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -33,11 +34,13 @@ public class WorklogApi extends AbstractApi {
         super(restTemplate, objectMapper, baseUrl);
     }
 
-    public WorklogApi() {
+    @Autowired
+    public WorklogApi(RestTemplate restTemplate, ObjectMapper objectMapper) {
+        super(restTemplate, objectMapper);
     }
 
-    public WorklogApi(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public WorklogApi() {
+
     }
 
     public List<Worklog> getAll(Long SpringId) {

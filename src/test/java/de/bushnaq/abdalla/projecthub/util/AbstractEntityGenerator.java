@@ -50,7 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class AbstractEntityGenerator extends AbstractTestUtil {
     public static final String                FIRST_OFF_DAY_FINISH_DATE = "2024-04-10";
     public static final String                FIRST_OFF_DAY_START_DATE  = "2024-04-01";
-    public static final String PROJECT_HUB_ORG = "@project-hub.org";
+    public static final String                PROJECT_HUB_ORG           = "@project-hub.org";
     protected           AvailabilityApi       availabilityApi;
     protected final     TreeSet<Availability> expectedAvailabilities    = new TreeSet<>();
     protected final     TreeSet<Location>     expectedLocations         = new TreeSet<>();

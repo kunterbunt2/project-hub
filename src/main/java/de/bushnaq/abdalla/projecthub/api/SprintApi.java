@@ -19,6 +19,7 @@ package de.bushnaq.abdalla.projecthub.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -33,11 +34,13 @@ public class SprintApi extends AbstractApi {
         super(restTemplate, objectMapper, baseUrl);
     }
 
-    public SprintApi() {
+    @Autowired
+    public SprintApi(RestTemplate restTemplate, ObjectMapper objectMapper) {
+        super(restTemplate, objectMapper);
     }
 
-    public SprintApi(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public SprintApi() {
+
     }
 
     public void deleteById(long id) {

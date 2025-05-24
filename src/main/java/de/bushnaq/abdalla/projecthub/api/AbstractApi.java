@@ -21,7 +21,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.rest.util.ErrorResponse;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.stereotype.Service;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -30,7 +29,7 @@ import org.springframework.web.server.ServerErrorException;
 /**
  * Allows us to handle exceptions from server.
  */
-@Service
+//@Service
 public class AbstractApi {
     protected String       baseUrl = "http://localhost:8080"; // Configure as needed
     protected ObjectMapper objectMapper;
@@ -56,7 +55,13 @@ public class AbstractApi {
         restTemplate.getMessageConverters().add(messageConverter);
     }
 
+    protected AbstractApi(RestTemplate restTemplate, ObjectMapper objectMapper) {
+        this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
+    }
+
     protected AbstractApi() {
+
     }
 
     protected void executeWithErrorHandling(RestOperation operation) {

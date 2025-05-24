@@ -20,6 +20,7 @@ package de.bushnaq.abdalla.projecthub.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.dto.OffDay;
 import de.bushnaq.abdalla.projecthub.dto.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -30,11 +31,13 @@ public class OffDayApi extends AbstractApi {
         super(restTemplate, objectMapper, baseUrl);
     }
 
-    public OffDayApi() {
+    @Autowired
+    public OffDayApi(RestTemplate restTemplate, ObjectMapper objectMapper) {
+        super(restTemplate, objectMapper);
     }
 
-    public OffDayApi(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public OffDayApi() {
+
     }
 
     //TODO use ids instead of objects

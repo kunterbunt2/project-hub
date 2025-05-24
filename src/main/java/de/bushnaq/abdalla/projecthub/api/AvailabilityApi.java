@@ -20,6 +20,7 @@ package de.bushnaq.abdalla.projecthub.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.dto.Availability;
 import de.bushnaq.abdalla.projecthub.dto.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -30,11 +31,12 @@ public class AvailabilityApi extends AbstractApi {
         super(restTemplate, objectMapper, baseUrl);
     }
 
-    public AvailabilityApi() {
+    @Autowired
+    public AvailabilityApi(RestTemplate restTemplate, ObjectMapper objectMapper) {
+        super(restTemplate, objectMapper);
     }
 
-    public AvailabilityApi(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public AvailabilityApi() {
     }
 
     //TODO use ids instead of objects

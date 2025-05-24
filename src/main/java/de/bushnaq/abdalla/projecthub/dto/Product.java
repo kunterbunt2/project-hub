@@ -56,6 +56,11 @@ public class Product extends AbstractTimeAware implements Comparable<Product> {
         return this.id.compareTo(other.id);
     }
 
+    @JsonIgnore
+    public String getKey() {
+        return "P-" + id;
+    }
+
     public void initialize(GanttContext gc) {
         versions.clear();
         gc.allVersions.forEach(version -> {

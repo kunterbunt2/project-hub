@@ -30,6 +30,7 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -44,6 +45,8 @@ import java.util.List;
 public class JacksonConfig {
 
     @Bean
+    @Primary
+    // Add this annotation to make this the primary ObjectMapper, otherwise we get conflict with hillaEndpointObjectMapper
     public ObjectMapper objectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setFilterProvider(new SimpleFilterProvider().setFailOnUnknownId(false));

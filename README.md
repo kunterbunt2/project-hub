@@ -30,7 +30,7 @@ minimalistic project effort estimation and progress tracking and release date in
 
 1. handle users leaving.
 2. add user availability & vacations.
-3. introduce sprint, story and task as a preliminary structure to allow unit tests.
+3. introduce sprint, story and task1 as a preliminary structure to allow unit tests.
 4. add unit tests that generate project progress data.
 
 # Design Philosophy

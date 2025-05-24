@@ -19,6 +19,7 @@ package de.bushnaq.abdalla.projecthub.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.dto.Version;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -33,11 +34,13 @@ public class VersionApi extends AbstractApi {
         super(restTemplate, objectMapper, baseUrl);
     }
 
-    public VersionApi() {
+    @Autowired
+    public VersionApi(RestTemplate restTemplate, ObjectMapper objectMapper) {
+        super(restTemplate, objectMapper);
     }
 
-    public VersionApi(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public VersionApi() {
+
     }
 
     public void deleteById(Long id) {
