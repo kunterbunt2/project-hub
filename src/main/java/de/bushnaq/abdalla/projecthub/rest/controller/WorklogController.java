@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/worklog")
+@RequestMapping("/api/worklog")
 public class WorklogController {
 
     @Autowired

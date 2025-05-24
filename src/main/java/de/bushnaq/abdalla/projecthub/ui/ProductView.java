@@ -33,13 +33,13 @@ import java.time.Clock;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 
-@Route("product1")
+@Route("product")
 @PageTitle("Product Page")
 @Menu(order = 1, icon = "vaadin:factory", title = "product List")
 @PermitAll // When security is enabled, allow all authenticated users
 public class ProductView extends Main {
-    public static final String ROUTE = "product1";
-    final Grid<Product> grid;
+    public static final String        ROUTE = "product";
+    final               Grid<Product> grid;
     ProductApi productApi;
 
     public ProductView(ProductApi productApi, Clock clock) {

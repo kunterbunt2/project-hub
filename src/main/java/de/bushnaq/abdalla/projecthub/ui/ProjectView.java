@@ -15,7 +15,7 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.ui.view;
+package de.bushnaq.abdalla.projecthub.ui;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
@@ -34,13 +34,13 @@ import java.time.Clock;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 
-@Route("product1")
+@Route("product")
 @PageTitle("Project Page")
 //@Menu(order = 1, icon = "vaadin:factory", title = "project List")
 @PermitAll // When security is enabled, allow all authenticated users
 public class ProjectView extends Main implements HasUrlParameter<Long> {
-    public static final String        ROUTE = "product1";
-    final               Grid<Project> grid;
+    //    public static final String        ROUTE = "product1";
+    final Grid<Project> grid;
     H2         pageTitle;
     ProjectApi projectApi;
     private Long versionId;

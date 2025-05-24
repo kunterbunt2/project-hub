@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/version")
+@RequestMapping("/api/version")
 public class VersionController {
 
     @Autowired

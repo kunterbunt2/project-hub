@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Objects;
 
 @RestController
-@RequestMapping("/availability")
+@RequestMapping("/api/availability")
 public class AvailabilityController {
 
     @Autowired

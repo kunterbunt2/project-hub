@@ -28,20 +28,19 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.api.VersionApi;
 import de.bushnaq.abdalla.projecthub.dto.Version;
-import de.bushnaq.abdalla.projecthub.ui.view.ProjectView;
 import jakarta.annotation.security.PermitAll;
 
 import java.time.Clock;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 
-@Route("version1")
+@Route("version")
 @PageTitle("Version Page")
 //@Menu(order = 1, icon = "vaadin:factory", title = "version List")
 @PermitAll // When security is enabled, allow all authenticated users
 public class VersionView extends Main implements HasUrlParameter<Long> {
-    public static final String        ROUTE = "version1";
-    final               Grid<Version> grid;
+    //    public static final String        ROUTE = "version";
+    final Grid<Version> grid;
     H2 pageTitle;
     private Long productId;
     VersionApi versionApi;

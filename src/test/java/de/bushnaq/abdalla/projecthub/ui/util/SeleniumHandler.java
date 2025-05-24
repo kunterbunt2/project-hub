@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * handles vaadin ui tests using selenium
  */
 public class SeleniumHandler {
-    private final WebDriver     driver;
+    private       WebDriver     driver;
     private final Duration      implicitWaitDuration;
     private final WebDriverWait wait;
     private       Duration      waitDuration;
@@ -80,6 +80,7 @@ public class SeleniumHandler {
             ScreenShotCreator.takeScreenShot(driver, testInfo.getDisplayName(), testInfo.getTestMethod().get().getName());
             driver.close();//closing the browser
             driver.quit();//quit the driver
+            driver = null;
         }
     }
 
@@ -350,4 +351,46 @@ public class SeleniumHandler {
         wait.until(condition);
     }
 
+    /**
+     * Waits until the browser window is closed either manually by the user
+     * or by another process.
+     *
+     * @param timeoutMillis Maximum time to wait in milliseconds, or 0 for infinite wait
+     * @return true if browser was closed, false if timeout occurred
+     */
+    public boolean waitUntilBrowserClosed(long timeoutMillis) {
+        long startTime = System.currentTimeMillis();
+
+        while (true) {
+            try {
+                // Try to execute a simple script or get window handles to verify browser is open
+                driver.getWindowHandles();
+                // Short sleep to prevent high CPU usage
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    driver.quit();//quit the driver
+                    driver = null;
+                    return false;
+                }
+
+                // Check for timeout if specified
+                if (timeoutMillis > 0 && System.currentTimeMillis() - startTime > timeoutMillis) {
+                    driver.quit();//quit the driver
+                    driver = null;
+                    return false;
+                }
+            } catch (WebDriverException e) {
+                if (e instanceof NoSuchSessionException) {
+                    // Browser has been closed if we get a NoSuchSessionException
+                } else {
+                    throw e;
+                }
+                driver.quit();//quit the driver
+                driver = null;
+                return true;
+            }
+        }
+    }
 }

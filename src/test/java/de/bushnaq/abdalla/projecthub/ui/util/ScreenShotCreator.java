@@ -18,6 +18,7 @@
 package de.bushnaq.abdalla.projecthub.ui.util;
 
 import org.apache.commons.io.FileUtils;
+import org.openqa.selenium.NoSuchSessionException;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
@@ -41,7 +42,7 @@ public class ScreenShotCreator {
         try {
             File screenshotFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
             FileUtils.copyFile(screenshotFile, new File(fileNameGenerator(displayName, testmethod)));
-        } catch (IOException e) {
+        } catch (IOException | NoSuchSessionException e) {
             throw new RuntimeException("Could not make a screenshot", e);
         }
     }

@@ -31,7 +31,7 @@ import org.springframework.web.server.ServerErrorException;
  */
 //@Service
 public class AbstractApi {
-    protected String       baseUrl = "http://localhost:8080"; // Configure as needed
+    protected String       baseUrl = "http://localhost:8080/api"; // Configure as needed
     protected ObjectMapper objectMapper;
     protected RestTemplate restTemplate;
 

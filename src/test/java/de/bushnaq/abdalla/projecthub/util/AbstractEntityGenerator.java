@@ -578,16 +578,17 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         NameGenerator generator = new NameGenerator(options);
         names = generator.generateNames(1000);
         // Set the correct port after injection
-        productApi      = new ProductApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-        projectApi      = new ProjectApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-        userApi         = new UserApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-        availabilityApi = new AvailabilityApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-        locationApi     = new LocationApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-        offDayApi       = new OffDayApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-        taskApi         = new TaskApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-        versionApi      = new VersionApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-        sprintApi       = new SprintApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
-        worklogApi      = new WorklogApi(testRestTemplate.getRestTemplate(), objectMapper, "http://localhost:" + port);
+        String baseUrl = "http://localhost:" + port + "/api";
+        productApi      = new ProductApi(testRestTemplate.getRestTemplate(), objectMapper, baseUrl);
+        projectApi      = new ProjectApi(testRestTemplate.getRestTemplate(), objectMapper, baseUrl);
+        userApi         = new UserApi(testRestTemplate.getRestTemplate(), objectMapper, baseUrl);
+        availabilityApi = new AvailabilityApi(testRestTemplate.getRestTemplate(), objectMapper, baseUrl);
+        locationApi     = new LocationApi(testRestTemplate.getRestTemplate(), objectMapper, baseUrl);
+        offDayApi       = new OffDayApi(testRestTemplate.getRestTemplate(), objectMapper, baseUrl);
+        taskApi         = new TaskApi(testRestTemplate.getRestTemplate(), objectMapper, baseUrl);
+        versionApi      = new VersionApi(testRestTemplate.getRestTemplate(), objectMapper, baseUrl);
+        sprintApi       = new SprintApi(testRestTemplate.getRestTemplate(), objectMapper, baseUrl);
+        worklogApi      = new WorklogApi(testRestTemplate.getRestTemplate(), objectMapper, baseUrl);
     }
 
     protected void removeAvailability(Availability availability, User user) {

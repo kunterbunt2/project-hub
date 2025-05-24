@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/sprint")
+@RequestMapping("/api/sprint")
 public class SprintController {
 
     @Autowired
