@@ -21,7 +21,6 @@ import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.report.burndown.RandomCase;
 import de.bushnaq.abdalla.projecthub.report.burndown.TestInfoUtil;
-import de.bushnaq.abdalla.projecthub.ui.products.ProductView;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;

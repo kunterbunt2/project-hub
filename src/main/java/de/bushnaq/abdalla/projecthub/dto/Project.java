@@ -55,6 +55,11 @@ public class Project extends AbstractTimeAware implements Comparable<Project> {
         return this.id.compareTo(other.id);
     }
 
+    @JsonIgnore
+    public String getKey() {
+        return "F-" + id;
+    }
+
     public void initialize(GanttContext gc) {
         sprints.clear();
         gc.allSprints.forEach(sprint -> {

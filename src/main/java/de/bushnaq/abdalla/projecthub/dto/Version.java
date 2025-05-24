@@ -57,7 +57,8 @@ public class Version extends AbstractTimeAware implements Comparable<Version> {
         return this.id.compareTo(other.id);
     }
 
-    String getKey() {
+    @JsonIgnore
+    public String getKey() {
         return "V-" + id;
     }
 

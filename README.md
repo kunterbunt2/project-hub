@@ -53,6 +53,7 @@ minimalistic project effort estimation and progress tracking and release date in
 
 # Issues
 
+1. api url should start with api to separate it from the web interface.
 2. gantt calendar too light.
 3. gantt calendar should be using sprint calendar.
 

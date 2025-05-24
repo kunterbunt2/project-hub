@@ -58,6 +58,15 @@ public class ProjectApi extends AbstractApi {
         return Arrays.asList(response.getBody());
     }
 
+    public List<Project> getAll(Long versionId) {
+        ResponseEntity<Project[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(
+                baseUrl + "/project/{versionId}",
+                Project[].class,
+                versionId
+        ));
+        return Arrays.asList(response.getBody());
+    }
+
     public Project getById(Long id) {
         return executeWithErrorHandling(() ->
                 restTemplate.getForObject(
