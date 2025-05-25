@@ -15,7 +15,7 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.ui.util;
+package de.bushnaq.abdalla.projecthub.ui.util.selenium;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.junit.jupiter.api.Assertions;

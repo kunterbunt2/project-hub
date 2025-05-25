@@ -15,7 +15,7 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.ui.util;
+package de.bushnaq.abdalla.projecthub.ui.util.selenium;
 
 import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.NoSuchSessionException;

@@ -19,6 +19,7 @@ package de.bushnaq.abdalla.projecthub.ui;
 
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
+import de.bushnaq.abdalla.projecthub.ui.util.UiTestBase;
 import de.bushnaq.abdalla.projecthub.util.RandomCase;
 import de.bushnaq.abdalla.projecthub.util.TestInfoUtil;
 import org.junit.jupiter.api.TestInfo;
