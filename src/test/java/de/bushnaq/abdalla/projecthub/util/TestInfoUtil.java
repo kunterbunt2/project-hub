@@ -15,7 +15,7 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.report.burndown;
+package de.bushnaq.abdalla.projecthub.util;
 
 import org.junit.jupiter.api.TestInfo;
 

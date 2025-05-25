@@ -24,7 +24,6 @@ import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.report.burndown.BurnDownChart;
 import de.bushnaq.abdalla.projecthub.report.burndown.RenderDao;
-import de.bushnaq.abdalla.projecthub.report.burndown.TestInfoUtil;
 import de.bushnaq.abdalla.projecthub.report.gantt.GanttChart;
 import de.bushnaq.abdalla.projecthub.report.gantt.GanttContext;
 import de.bushnaq.abdalla.projecthub.report.gantt.GanttUtil;
