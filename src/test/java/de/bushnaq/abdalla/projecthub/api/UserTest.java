@@ -69,7 +69,7 @@ public class UserTest extends AbstractEntityGenerator {
     @Test
     public void getAllEmpty() throws Exception {
         //get empty list
-        userApi.getAllUsers();
+        userApi.getAll();
     }
 
     @Test

@@ -107,7 +107,7 @@ public class LoginTest extends UiTestBase {
         generateGanttChart(testInfo, null);
         generateBurndownChart(testInfo);
         seleniumHandler.get("http://localhost:" + port + "/" + ProductView.ROUTE);
-        seleniumHandler.waitUntilBrowserClosed(50000);
+        seleniumHandler.waitUntilBrowserClosed(0);
     }
 
 }

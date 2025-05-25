@@ -18,7 +18,15 @@
 package de.bushnaq.abdalla.projecthub.repository;
 
 import de.bushnaq.abdalla.projecthub.dao.UserDAO;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.ListCrudRepository;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
 
 public interface UserRepository extends ListCrudRepository<UserDAO, Long> {
+
+    @Query("SELECT DISTINCT u FROM UserDAO u WHERE u.id IN " +
+            "(SELECT t.resourceId FROM TaskDAO t WHERE t.sprintId = :sprintId AND t.resourceId IS NOT NULL)")
+    List<UserDAO> findBySprintId(@Param("sprintId") Long sprintId);
 }

@@ -57,6 +57,11 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/sprint/{sprintId}")
+    public List<UserDAO> getAll(@PathVariable Long sprintId) throws JsonProcessingException {
+        return userRepository.findBySprintId(sprintId);
+    }
+
     @GetMapping
     public List<UserDAO> getAll() {
         return userRepository.findAll();

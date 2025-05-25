@@ -722,7 +722,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
      */
     protected void testProducts() {
         GanttContext gc = new GanttContext();
-        gc.allUsers    = userApi.getAllUsers().stream().sorted().toList();
+        gc.allUsers    = userApi.getAll().stream().sorted().toList();
         gc.allProducts = productApi.getAll().stream().sorted().toList();
         gc.allVersions = versionApi.getAll().stream().sorted().toList();
         gc.allProjects = projectApi.getAll().stream().sorted().toList();
@@ -748,7 +748,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
 
     protected void testUsers() {
         entityManager.clear();//clear the cache to get the latest data from the database
-        List<User> actual = userApi.getAllUsers();
+        List<User> actual = userApi.getAll();
 
         assertEquals(expectedUsers.size(), actual.size());
         int i = 0;

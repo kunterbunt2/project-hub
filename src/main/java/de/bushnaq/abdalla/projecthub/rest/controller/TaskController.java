@@ -47,6 +47,11 @@ public class TaskController {
         return task;
     }
 
+    @GetMapping("/sprint/{sprintId}")
+    public List<TaskDAO> getAll(@PathVariable Long sprintId) {
+        return taskRepository.findBySprintId(sprintId);
+    }
+
     @GetMapping
     public List<TaskDAO> getAll() {
         return taskRepository.findAll();

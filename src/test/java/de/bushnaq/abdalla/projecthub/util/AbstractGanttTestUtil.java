@@ -286,7 +286,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
 
     protected GanttContext initializeInstances() throws Exception {
         GanttContext gc = new GanttContext();
-        gc.allUsers    = userApi.getAllUsers();
+        gc.allUsers    = userApi.getAll();
         gc.allProducts = productApi.getAll();
         gc.allVersions = versionApi.getAll();
         gc.allProjects = projectApi.getAll();

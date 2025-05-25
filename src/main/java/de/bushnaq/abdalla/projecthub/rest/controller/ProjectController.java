@@ -45,6 +45,11 @@ public class ProjectController {
         return projectRepository.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/version/{versionId}")
+    public List<ProjectDAO> getAll(@PathVariable Long versionId) {
+        return projectRepository.findByVersionId(versionId);
+    }
+
     @GetMapping
     public List<ProjectDAO> getAll() {
         return projectRepository.findAll();

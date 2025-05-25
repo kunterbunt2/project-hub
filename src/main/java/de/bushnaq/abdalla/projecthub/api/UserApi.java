@@ -50,11 +50,19 @@ public class UserApi extends AbstractApi {
         ));
     }
 
-    public List<User> getAllUsers() {
-
+    public List<User> getAll() {
         ResponseEntity<User[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(
                 baseUrl + "/user",
                 User[].class
+        ));
+        return Arrays.asList(response.getBody());
+    }
+
+    public List<User> getAll(Long sprintId) {
+        ResponseEntity<User[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(
+                baseUrl + "/user/sprint/{sprintId}",
+                User[].class,
+                sprintId
         ));
         return Arrays.asList(response.getBody());
     }

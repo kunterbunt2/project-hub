@@ -20,5 +20,8 @@ package de.bushnaq.abdalla.projecthub.repository;
 import de.bushnaq.abdalla.projecthub.dao.TaskDAO;
 import org.springframework.data.repository.ListCrudRepository;
 
+import java.util.List;
+
 public interface TaskRepository extends ListCrudRepository<TaskDAO, Long> {
+    List<TaskDAO> findBySprintId(Long sprintId);
 }

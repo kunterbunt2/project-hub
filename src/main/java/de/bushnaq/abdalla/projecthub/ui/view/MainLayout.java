@@ -21,19 +21,23 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.avatar.AvatarVariant;
-import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
-import com.vaadin.flow.component.orderedlayout.Scroller;
-import com.vaadin.flow.component.sidenav.SideNav;
-import com.vaadin.flow.component.sidenav.SideNavItem;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.tabs.Tab;
+import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.Layout;
 import com.vaadin.flow.server.menu.MenuConfiguration;
 import com.vaadin.flow.server.menu.MenuEntry;
 import jakarta.annotation.security.PermitAll;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.vaadin.flow.theme.lumo.LumoUtility.*;
 
@@ -41,36 +45,81 @@ import static com.vaadin.flow.theme.lumo.LumoUtility.*;
 @PermitAll // When security is enabled, allow all authenticated users
 public final class MainLayout extends AppLayout {
 
+    private final Map<Tab, String> tabToPathMap = new HashMap<>();
+    private final Tabs             tabs         = new Tabs();
+
     MainLayout() {
-        setPrimarySection(Section.DRAWER);
-        addToDrawer(createHeader(), new Scroller(createSideNav()), createUserMenu());
+        setPrimarySection(Section.NAVBAR);
+
+        // Create main navigation bar components
+        HorizontalLayout navbarLayout = new HorizontalLayout();
+        navbarLayout.setWidthFull();
+        navbarLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+        navbarLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+
+        // Add logo and app name to the left
+        HorizontalLayout logoLayout = createHeader();
+
+        // Add navigation tabs to the center
+        createNavTabs();
+        tabs.addClassNames(Margin.Horizontal.MEDIUM);
+
+        // Add user menu to the right
+        Component userMenu = createUserMenu();
+
+        navbarLayout.add(logoLayout, tabs, userMenu);
+        navbarLayout.expand(tabs);
+
+        addToNavbar(true, navbarLayout);
     }
 
-    private Div createHeader() {
-        // TODO Replace with real application logo and name
+    private HorizontalLayout createHeader() {
+        // App logo
         var appLogo = VaadinIcon.CUBES.create();
-        appLogo.addClassNames(TextColor.PRIMARY, IconSize.LARGE);
+        appLogo.addClassNames(TextColor.PRIMARY, IconSize.MEDIUM);
 
-        var appName = new Span("Project Hub");
-        appName.addClassNames(FontWeight.SEMIBOLD, FontSize.LARGE);
+        // App name
+        var appName = new H1("Project Hub");
+        appName.addClassNames(FontWeight.SEMIBOLD, FontSize.MEDIUM, Margin.NONE);
 
-        var header = new Div(appLogo, appName);
-        header.addClassNames(Display.FLEX, Padding.MEDIUM, Gap.MEDIUM, AlignItems.CENTER);
-        return header;
+        // Combine in a layout
+        var logoLayout = new HorizontalLayout(appLogo, appName);
+        logoLayout.addClassNames(Padding.SMALL, Gap.SMALL, AlignItems.CENTER);
+
+        return logoLayout;
     }
 
-    private SideNav createSideNav() {
-        var nav = new SideNav();
-        nav.addClassNames(Margin.Horizontal.MEDIUM);
-        MenuConfiguration.getMenuEntries().forEach(entry -> nav.addItem(createSideNavItem(entry)));
-        return nav;
+    private void createNavTabs() {
+        tabs.setOrientation(Tabs.Orientation.HORIZONTAL);
+
+        MenuConfiguration.getMenuEntries().forEach(entry -> {
+            Tab tab = createTab(entry);
+            tabToPathMap.put(tab, entry.path());
+            tabs.add(tab);
+        });
+
+        tabs.addSelectedChangeListener(event -> {
+            Tab    selectedTab = event.getSelectedTab();
+            String targetPath  = tabToPathMap.get(selectedTab);
+            if (targetPath != null && !targetPath.isEmpty()) {
+                getUI().ifPresent(ui -> ui.navigate(targetPath));
+            }
+        });
     }
 
-    private SideNavItem createSideNavItem(MenuEntry menuEntry) {
+    private Tab createTab(MenuEntry menuEntry) {
+        Icon icon = null;
         if (menuEntry.icon() != null) {
-            return new SideNavItem(menuEntry.title(), menuEntry.path(), new Icon(menuEntry.icon()));
+            icon = new Icon(menuEntry.icon());
+            icon.addClassNames(Margin.Right.XSMALL);
+        }
+
+        Span text = new Span(menuEntry.title());
+
+        if (icon != null) {
+            return new Tab(new HorizontalLayout(icon, text));
         } else {
-            return new SideNavItem(menuEntry.title(), menuEntry.path());
+            return new Tab(text);
         }
     }
 
@@ -83,7 +132,7 @@ public final class MainLayout extends AppLayout {
 
         var userMenu = new MenuBar();
         userMenu.addThemeVariants(MenuBarVariant.LUMO_TERTIARY_INLINE);
-        userMenu.addClassNames(Margin.MEDIUM);
+        userMenu.addClassNames(Margin.Right.MEDIUM);
 
         var userMenuItem = userMenu.addItem(avatar);
         userMenuItem.add("John Smith");
@@ -93,5 +142,4 @@ public final class MainLayout extends AppLayout {
 
         return userMenu;
     }
-
 }

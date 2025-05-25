@@ -20,5 +20,8 @@ package de.bushnaq.abdalla.projecthub.repository;
 import de.bushnaq.abdalla.projecthub.dao.SprintDAO;
 import org.springframework.data.repository.ListCrudRepository;
 
+import java.util.List;
+
 public interface SprintRepository extends ListCrudRepository<SprintDAO, Long> {
+    List<SprintDAO> findByProjectId(Long projectId);
 }

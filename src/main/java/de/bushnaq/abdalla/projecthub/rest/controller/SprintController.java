@@ -50,6 +50,11 @@ public class SprintController {
         return sprintRepository.findAll();
     }
 
+    @GetMapping("/project/{projectId}")
+    public List<SprintDAO> getAll(@PathVariable Long projectId) {
+        return sprintRepository.findByProjectId(projectId);
+    }
+
     @PostMapping()
     public SprintDAO save(@RequestBody SprintDAO sprintDAO) {
         SprintDAO save = sprintRepository.save(sprintDAO);

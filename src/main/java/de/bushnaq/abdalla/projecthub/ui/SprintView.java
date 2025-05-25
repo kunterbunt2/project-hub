@@ -26,27 +26,27 @@ import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-import de.bushnaq.abdalla.projecthub.api.ProjectApi;
-import de.bushnaq.abdalla.projecthub.dto.Project;
+import de.bushnaq.abdalla.projecthub.api.SprintApi;
+import de.bushnaq.abdalla.projecthub.dto.Sprint;
+import de.bushnaq.abdalla.util.date.DateUtil;
 import jakarta.annotation.security.PermitAll;
 
 import java.time.Clock;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 
-@Route("product")
-@PageTitle("Project Page")
+@Route("sprint")
+@PageTitle("Sprint Page")
 //@Menu(order = 1, icon = "vaadin:factory", title = "project List")
 @PermitAll // When security is enabled, allow all authenticated users
-public class ProjectView extends Main implements HasUrlParameter<Long> {
-    //    public static final String        ROUTE = "product1";
-    final Grid<Project> grid;
-    H2         pageTitle;
-    ProjectApi projectApi;
-    private Long versionId;
+public class SprintView extends Main implements HasUrlParameter<Long> {
+    final Grid<Sprint> grid;
+    H2 pageTitle;
+    private Long projectId;
+    SprintApi sprintApi;
 
-    public ProjectView(ProjectApi projectApi, Clock clock) {
-        this.projectApi = projectApi;
+    public SprintView(SprintApi sprintApi, Clock clock) {
+        this.sprintApi = sprintApi;
 
         pageTitle = new H2("Projects");
         pageTitle.addClassNames(
@@ -56,21 +56,27 @@ public class ProjectView extends Main implements HasUrlParameter<Long> {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
         grid = new Grid<>();
-        // Only show versions for the selected product
-        if (versionId != null) {
-            grid.setItems(projectApi.getAll(versionId));
+        // Only show sprints for the selected project
+        if (projectId != null) {
+            grid.setItems(sprintApi.getAll(projectId));
         } else {
-            grid.setItems(projectApi.getAll());
+            grid.setItems(sprintApi.getAll());
         }
-        grid.addColumn(Project::getKey).setHeader("Key");
-        grid.addColumn(Project::getName).setHeader("Name");
-        grid.addColumn(version -> dateTimeFormatter.format(version.getCreated())).setHeader("Created");
-        grid.addColumn(version -> dateTimeFormatter.format(version.getUpdated())).setHeader("Updated");
+        grid.addColumn(Sprint::getKey).setHeader("Key");
+        grid.addColumn(Sprint::getName).setHeader("Name");
+//        grid.addColumn(version -> dateTimeFormatter.format(version.getCreated())).setHeader("Created");
+//        grid.addColumn(version -> dateTimeFormatter.format(version.getUpdated())).setHeader("Updated");
+        grid.addColumn(sprint -> dateTimeFormatter.format(sprint.getStart())).setHeader("Start");
+        grid.addColumn(sprint -> dateTimeFormatter.format(sprint.getEnd())).setHeader("End");
+        grid.addColumn(sprint -> sprint.getStatus().name()).setHeader("Status");
+        grid.addColumn(sprint -> DateUtil.createDurationString(sprint.getOriginalEstimation(), false, true, true)).setHeader("Original Estimation");
+        grid.addColumn(sprint -> DateUtil.createDurationString(sprint.getWorked(), false, true, true)).setHeader("Worked");
+        grid.addColumn(sprint -> DateUtil.createDurationString(sprint.getRemaining(), false, true, true)).setHeader("Remaining");
         grid.setSizeFull();
         // Add click listener to navigate to ProjectView with the selected version ID
         grid.addItemClickListener(event -> {
-            Project selectedProject = event.getItem();
-            UI.getCurrent().navigate(SprintView.class, selectedProject.getId());
+            Sprint selectedSprint = event.getItem();
+            UI.getCurrent().navigate(TaskView.class, selectedSprint.getId());
         });
 
         setSizeFull();
@@ -80,9 +86,9 @@ public class ProjectView extends Main implements HasUrlParameter<Long> {
     }
 
     @Override
-    public void setParameter(BeforeEvent beforeEvent, Long versionId) {
-        this.versionId = versionId;
-        pageTitle.setText("Projects of Version ID: " + versionId);
+    public void setParameter(BeforeEvent beforeEvent, Long projectId) {
+        this.projectId = projectId;
+        pageTitle.setText("Sprints of Project ID: " + projectId);
 
     }
 }

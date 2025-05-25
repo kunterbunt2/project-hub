@@ -58,7 +58,7 @@ public class CalendarTest extends AbstractGanttTestUtil {
         addRandomUser();
 
         GanttContext gc = new GanttContext();
-        gc.allUsers    = userApi.getAllUsers();
+        gc.allUsers    = userApi.getAll();
         gc.allProducts = productApi.getAll();
         gc.allVersions = versionApi.getAll();
         gc.allProjects = projectApi.getAll();

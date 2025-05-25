@@ -128,7 +128,8 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
         return earliestDate;
     }
 
-    String getKey() {
+    @JsonIgnore
+    public String getKey() {
         return "S-" + id;
     }
 
@@ -158,6 +159,37 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
 
     public User getuser(Long resourceId) {
         return userMap.get(resourceId);
+    }
+
+    public void initTaskMap(List<Task> tasks) {
+        taskMap.clear();
+        for (Task task : tasks) {
+            taskMap.put(task.getId(), task);
+        }
+        tasks.forEach(task -> {
+            //set the parent task
+            if (task.getParentTaskId() != null) {
+                task.setParentTask(taskMap.get(task.getParentTaskId()));
+                //add the task to the parent task
+                task.getParentTask().addChildTask(task);
+            }
+//            for (Worklog worklog : worklogs) {
+//                if (worklog.getTaskId().equals(task.getId())) {
+//                    task.addWorklog(worklog);
+//                }
+//            }
+            task.setSprint(this);
+            task.initialize();
+//            addWorklogRemaining(task);
+        });
+        this.tasks = tasks;
+    }
+
+    public void initUserMap(List<User> users) {
+        userMap.clear();
+        for (User user : users) {
+            userMap.put(user.getId(), user);
+        }
     }
 
     public void initialize(GanttContext gc) {

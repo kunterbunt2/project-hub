@@ -52,6 +52,15 @@ public class TaskApi extends AbstractApi {
         return Arrays.asList(response.getBody());
     }
 
+    public List<Task> getAll(Long sprintId) {
+        ResponseEntity<Task[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(
+                baseUrl + "/task/sprint/{sprintId}",
+                Task[].class,
+                sprintId
+        ));
+        return Arrays.asList(response.getBody());
+    }
+
     public Task getById(Long id) {
         return executeWithErrorHandling(() -> restTemplate.getForObject(baseUrl + "/task/{id}", Task.class, id));
     }

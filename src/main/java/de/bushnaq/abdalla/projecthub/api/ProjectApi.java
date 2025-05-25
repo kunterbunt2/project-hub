@@ -60,7 +60,7 @@ public class ProjectApi extends AbstractApi {
 
     public List<Project> getAll(Long versionId) {
         ResponseEntity<Project[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(
-                baseUrl + "/project/{versionId}",
+                baseUrl + "/project/version/{versionId}",
                 Project[].class,
                 versionId
         ));

@@ -20,5 +20,8 @@ package de.bushnaq.abdalla.projecthub.repository;
 import de.bushnaq.abdalla.projecthub.dao.ProjectDAO;
 import org.springframework.data.repository.ListCrudRepository;
 
+import java.util.List;
+
 public interface ProjectRepository extends ListCrudRepository<ProjectDAO, Long> {
+    List<ProjectDAO> findByVersionId(Long versionId);
 }
