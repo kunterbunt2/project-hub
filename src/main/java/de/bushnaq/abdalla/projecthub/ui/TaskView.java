@@ -22,10 +22,7 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Main;
-import com.vaadin.flow.router.BeforeEvent;
-import com.vaadin.flow.router.HasUrlParameter;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.api.SprintApi;
 import de.bushnaq.abdalla.projecthub.api.TaskApi;
@@ -33,6 +30,7 @@ import de.bushnaq.abdalla.projecthub.api.UserApi;
 import de.bushnaq.abdalla.projecthub.dto.Relation;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
 import de.bushnaq.abdalla.projecthub.dto.Task;
+import de.bushnaq.abdalla.projecthub.ui.view.MainLayout;
 import de.bushnaq.abdalla.util.date.DateUtil;
 import jakarta.annotation.security.PermitAll;
 
@@ -40,22 +38,27 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Route("task")
 @PageTitle("Task Page")
 @CssImport("./styles/grid-styles.css")
 @PermitAll // When security is enabled, allow all authenticated users
-public class TaskView extends Main implements HasUrlParameter<Long> {
+public class TaskView extends Main implements AfterNavigationObserver {
     private final Clock      clock;
-    final         Grid<Task> grid;
-    H2 pageTitle;
-    private Sprint sprint;
-    SprintApi sprintApi;
-    private Long sprintId;
-    TaskApi taskApi;
-    UserApi userApi;
+    private final Grid<Task> grid;
+    private final H2         pageTitle;
+    private       Long       productId;
+    private       Long       projectId;
+    private       Sprint     sprint;
+    private final SprintApi  sprintApi;
+    private       Long       sprintId;
+    private final TaskApi    taskApi;
+    private final UserApi    userApi;
+    private       Long       versionId;
 
     public TaskView(TaskApi taskApi, SprintApi sprintApi, UserApi userApi, Clock clock) {
         this.taskApi   = taskApi;
@@ -93,13 +96,63 @@ public class TaskView extends Main implements HasUrlParameter<Long> {
     }
 
     @Override
-    public void setParameter(BeforeEvent beforeEvent, Long sprintId) {
-        this.sprintId = sprintId;
-        sprint        = sprintApi.getById(sprintId);
+    public void afterNavigation(AfterNavigationEvent event) {
+        //- Get productId from query parameters
+        Location        location        = event.getLocation();
+        QueryParameters queryParameters = location.getQueryParameters();
+        if (queryParameters.getParameters().containsKey("product")) {
+            this.productId = Long.parseLong(queryParameters.getParameters().get("product").getFirst());
+        }
+        if (queryParameters.getParameters().containsKey("version")) {
+            this.versionId = Long.parseLong(queryParameters.getParameters().get("version").getFirst());
+        }
+        if (queryParameters.getParameters().containsKey("project")) {
+            this.projectId = Long.parseLong(queryParameters.getParameters().get("project").getFirst());
+        }
+        if (queryParameters.getParameters().containsKey("sprint")) {
+            this.sprintId = Long.parseLong(queryParameters.getParameters().get("sprint").getFirst());
+            pageTitle.setText("Task of Sprint ID: " + sprintId);
+        }
+        //- populate grid with tasks of the sprint
+        sprint = sprintApi.getById(sprintId);
         sprint.initUserMap(userApi.getAll(sprintId));
         sprint.initTaskMap(taskApi.getAll(sprintId));
         pageTitle.setText("Task of Sprint ID: " + sprintId);
         grid.setItems(sprint.getTasks());
+        //- Update breadcrumbs
+        getElement().getParent().getComponent()
+                .ifPresent(component -> {
+                    if (component instanceof MainLayout mainLayout) {
+                        mainLayout.getBreadcrumbs().clear();
+                        mainLayout.getBreadcrumbs().addItem("Products", ProductView.class);
+                        {
+                            Map<String, String> params = new HashMap<>();
+                            params.put("product", String.valueOf(productId));
+                            mainLayout.getBreadcrumbs().addItem("Versions", VersionView.class, params);
+                        }
+                        {
+                            Map<String, String> params = new HashMap<>();
+                            params.put("product", String.valueOf(productId));
+                            params.put("version", String.valueOf(versionId));
+                            mainLayout.getBreadcrumbs().addItem("Projects", ProjectView.class, params);
+                        }
+                        {
+                            Map<String, String> params = new HashMap<>();
+                            params.put("product", String.valueOf(productId));
+                            params.put("version", String.valueOf(versionId));
+                            params.put("project", String.valueOf(projectId));
+                            mainLayout.getBreadcrumbs().addItem("Sprints", SprintView.class, params);
+                        }
+                        {
+                            Map<String, String> params = new HashMap<>();
+                            params.put("product", String.valueOf(productId));
+                            params.put("version", String.valueOf(versionId));
+                            params.put("project", String.valueOf(projectId));
+                            params.put("sprint", String.valueOf(sprintId));
+                            mainLayout.getBreadcrumbs().addItem("Tasks", TaskView.class, params);
+                        }
+                    }
+                });
     }
 
     private void setupGridColumns() {
@@ -144,4 +197,5 @@ public class TaskView extends Main implements HasUrlParameter<Long> {
 //        );
 //        "min-height: var(--lumo-size-s)"
     }
+
 }

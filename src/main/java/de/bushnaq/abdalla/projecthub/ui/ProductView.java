@@ -21,26 +21,27 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Main;
-import com.vaadin.flow.router.Menu;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.api.ProductApi;
 import de.bushnaq.abdalla.projecthub.dto.Product;
+import de.bushnaq.abdalla.projecthub.ui.view.MainLayout;
 import jakarta.annotation.security.PermitAll;
 
 import java.time.Clock;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.HashMap;
+import java.util.Map;
 
 @Route("product")
 @PageTitle("Product Page")
 @Menu(order = 1, icon = "vaadin:factory", title = "product List")
 @PermitAll // When security is enabled, allow all authenticated users
-public class ProductView extends Main {
+public class ProductView extends Main implements AfterNavigationObserver {
     public static final String        ROUTE = "product";
-    final               Grid<Product> grid;
-    ProductApi productApi;
+    private final       Grid<Product> grid;
+    private final       ProductApi    productApi;
 
     public ProductView(ProductApi productApi, Clock clock) {
         this.productApi = productApi;
@@ -64,13 +65,31 @@ public class ProductView extends Main {
         // Add click listener to navigate to VersionView with the selected product ID
         grid.addItemClickListener(event -> {
             Product selectedProduct = event.getItem();
-            UI.getCurrent().navigate(VersionView.class, selectedProduct.getId());
+            // Create parameters map
+            Map<String, String> params = new HashMap<>();
+            params.put("product", String.valueOf(selectedProduct.getId()));
+            // Navigate with query parameters
+            UI.getCurrent().navigate(
+                    VersionView.class,
+                    QueryParameters.simple(params)
+            );
         });
 
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
         add(pageTitle, grid);
+    }
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+        getElement().getParent().getComponent()
+                .ifPresent(component -> {
+                    if (component instanceof MainLayout mainLayout) {
+                        mainLayout.getBreadcrumbs().clear();
+                        mainLayout.getBreadcrumbs().addItem("Products", ProductView.class);
+                    }
+                });
     }
 
 }

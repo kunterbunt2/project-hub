@@ -21,29 +21,29 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Main;
-import com.vaadin.flow.router.BeforeEvent;
-import com.vaadin.flow.router.HasUrlParameter;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.api.ProjectApi;
 import de.bushnaq.abdalla.projecthub.dto.Project;
+import de.bushnaq.abdalla.projecthub.ui.view.MainLayout;
 import jakarta.annotation.security.PermitAll;
 
 import java.time.Clock;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.HashMap;
+import java.util.Map;
 
-@Route("product")
+@Route("project")
 @PageTitle("Project Page")
 //@Menu(order = 1, icon = "vaadin:factory", title = "project List")
 @PermitAll // When security is enabled, allow all authenticated users
-public class ProjectView extends Main implements HasUrlParameter<Long> {
-    //    public static final String        ROUTE = "product1";
-    final Grid<Project> grid;
-    H2         pageTitle;
-    ProjectApi projectApi;
-    private Long versionId;
+public class ProjectView extends Main implements AfterNavigationObserver {
+    private final Grid<Project> grid;
+    private final H2            pageTitle;
+    private       Long          productId;
+    private final ProjectApi    projectApi;
+    private       Long          versionId;
 
     public ProjectView(ProjectApi projectApi, Clock clock) {
         this.projectApi = projectApi;
@@ -56,7 +56,7 @@ public class ProjectView extends Main implements HasUrlParameter<Long> {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
         grid = new Grid<>();
-        // Only show versions for the selected product
+        //- Only show versions for the selected product
         if (versionId != null) {
             grid.setItems(projectApi.getAll(versionId));
         } else {
@@ -67,10 +67,19 @@ public class ProjectView extends Main implements HasUrlParameter<Long> {
         grid.addColumn(version -> dateTimeFormatter.format(version.getCreated())).setHeader("Created");
         grid.addColumn(version -> dateTimeFormatter.format(version.getUpdated())).setHeader("Updated");
         grid.setSizeFull();
-        // Add click listener to navigate to ProjectView with the selected version ID
+        //- Add click listener to navigate to SprintView with the selected version ID
         grid.addItemClickListener(event -> {
             Project selectedProject = event.getItem();
-            UI.getCurrent().navigate(SprintView.class, selectedProject.getId());
+            //- Create parameters map
+            Map<String, String> params = new HashMap<>();
+            params.put("product", String.valueOf(productId));
+            params.put("version", String.valueOf(versionId));
+            params.put("project", String.valueOf(selectedProject.getId()));
+            //- Navigate with query parameters
+            UI.getCurrent().navigate(
+                    SprintView.class,
+                    QueryParameters.simple(params)
+            );
         });
 
         setSizeFull();
@@ -80,9 +89,36 @@ public class ProjectView extends Main implements HasUrlParameter<Long> {
     }
 
     @Override
-    public void setParameter(BeforeEvent beforeEvent, Long versionId) {
-        this.versionId = versionId;
-        pageTitle.setText("Projects of Version ID: " + versionId);
-
+    public void afterNavigation(AfterNavigationEvent event) {
+        //- Get productId from query parameters
+        Location        location        = event.getLocation();
+        QueryParameters queryParameters = location.getQueryParameters();
+        // Check if productId is present in the query parameters
+        if (queryParameters.getParameters().containsKey("product")) {
+            this.productId = Long.parseLong(queryParameters.getParameters().get("product").getFirst());
+        }
+        if (queryParameters.getParameters().containsKey("version")) {
+            this.versionId = Long.parseLong(queryParameters.getParameters().get("version").getFirst());
+            pageTitle.setText("Projects of Version " + versionId);
+        }
+        //- Only now the component is attached to the DOM
+        getElement().getParent().getComponent()
+                .ifPresent(component -> {
+                    if (component instanceof MainLayout mainLayout) {
+                        mainLayout.getBreadcrumbs().clear();
+                        mainLayout.getBreadcrumbs().addItem("Products", ProductView.class);
+                        {
+                            Map<String, String> params = new HashMap<>();
+                            params.put("product", String.valueOf(productId));
+                            mainLayout.getBreadcrumbs().addItem("Versions", VersionView.class, params);
+                        }
+                        {
+                            Map<String, String> params = new HashMap<>();
+                            params.put("product", String.valueOf(productId));
+                            params.put("version", String.valueOf(versionId));
+                            mainLayout.getBreadcrumbs().addItem("Projects", ProjectView.class, params);
+                        }
+                    }
+                });
     }
 }

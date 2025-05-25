@@ -21,29 +21,31 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Main;
-import com.vaadin.flow.router.BeforeEvent;
-import com.vaadin.flow.router.HasUrlParameter;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.api.SprintApi;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
+import de.bushnaq.abdalla.projecthub.ui.view.MainLayout;
 import de.bushnaq.abdalla.util.date.DateUtil;
 import jakarta.annotation.security.PermitAll;
 
 import java.time.Clock;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.HashMap;
+import java.util.Map;
 
 @Route("sprint")
 @PageTitle("Sprint Page")
 //@Menu(order = 1, icon = "vaadin:factory", title = "project List")
 @PermitAll // When security is enabled, allow all authenticated users
-public class SprintView extends Main implements HasUrlParameter<Long> {
-    final Grid<Sprint> grid;
-    H2 pageTitle;
-    private Long projectId;
-    SprintApi sprintApi;
+public class SprintView extends Main implements AfterNavigationObserver {
+    private final Grid<Sprint> grid;
+    private final H2           pageTitle;
+    private       Long         productId;
+    private       Long         projectId;
+    private final SprintApi    sprintApi;
+    private       Long         versionId;
 
     public SprintView(SprintApi sprintApi, Clock clock) {
         this.sprintApi = sprintApi;
@@ -73,10 +75,20 @@ public class SprintView extends Main implements HasUrlParameter<Long> {
         grid.addColumn(sprint -> DateUtil.createDurationString(sprint.getWorked(), false, true, true)).setHeader("Worked");
         grid.addColumn(sprint -> DateUtil.createDurationString(sprint.getRemaining(), false, true, true)).setHeader("Remaining");
         grid.setSizeFull();
-        // Add click listener to navigate to ProjectView with the selected version ID
+        //- Add click listener to navigate to TaskView with the selected version ID
         grid.addItemClickListener(event -> {
             Sprint selectedSprint = event.getItem();
-            UI.getCurrent().navigate(TaskView.class, selectedSprint.getId());
+            //- Create parameters map
+            Map<String, String> params = new HashMap<>();
+            params.put("product", String.valueOf(productId));
+            params.put("version", String.valueOf(versionId));
+            params.put("project", String.valueOf(projectId));
+            params.put("sprint", String.valueOf(selectedSprint.getId()));
+            //- Navigate with query parameters
+            UI.getCurrent().navigate(
+                    TaskView.class,
+                    QueryParameters.simple(params)
+            );
         });
 
         setSizeFull();
@@ -86,9 +98,47 @@ public class SprintView extends Main implements HasUrlParameter<Long> {
     }
 
     @Override
-    public void setParameter(BeforeEvent beforeEvent, Long projectId) {
-        this.projectId = projectId;
-        pageTitle.setText("Sprints of Project ID: " + projectId);
-
+    public void afterNavigation(AfterNavigationEvent event) {
+        //- Get productId from query parameters
+        Location        location        = event.getLocation();
+        QueryParameters queryParameters = location.getQueryParameters();
+        // Check if productId is present in the query parameters
+        if (queryParameters.getParameters().containsKey("product")) {
+            this.productId = Long.parseLong(queryParameters.getParameters().get("product").getFirst());
+        }
+        if (queryParameters.getParameters().containsKey("version")) {
+            this.versionId = Long.parseLong(queryParameters.getParameters().get("version").getFirst());
+        }
+        if (queryParameters.getParameters().containsKey("project")) {
+            this.projectId = Long.parseLong(queryParameters.getParameters().get("project").getFirst());
+            pageTitle.setText("Sprints of Project ID: " + projectId);
+        }
+        //- Only now the component is attached to the DOM
+        getElement().getParent().getComponent()
+                .ifPresent(component -> {
+                    if (component instanceof MainLayout mainLayout) {
+                        mainLayout.getBreadcrumbs().clear();
+                        mainLayout.getBreadcrumbs().addItem("Products", ProductView.class);
+                        {
+                            Map<String, String> params = new HashMap<>();
+                            params.put("product", String.valueOf(productId));
+                            mainLayout.getBreadcrumbs().addItem("Versions", VersionView.class, params);
+                        }
+                        {
+                            Map<String, String> params = new HashMap<>();
+                            params.put("product", String.valueOf(productId));
+                            params.put("version", String.valueOf(versionId));
+                            mainLayout.getBreadcrumbs().addItem("Projects", ProjectView.class, params);
+                        }
+                        {
+                            Map<String, String> params = new HashMap<>();
+                            params.put("product", String.valueOf(productId));
+                            params.put("version", String.valueOf(versionId));
+                            params.put("project", String.valueOf(projectId));
+                            mainLayout.getBreadcrumbs().addItem("Sprints", SprintView.class, params);
+                        }
+                    }
+                });
     }
+
 }

@@ -21,6 +21,7 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.avatar.AvatarVariant;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
@@ -34,6 +35,7 @@ import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.Layout;
 import com.vaadin.flow.server.menu.MenuConfiguration;
 import com.vaadin.flow.server.menu.MenuEntry;
+import de.bushnaq.abdalla.projecthub.ui.component.Breadcrumbs;
 import jakarta.annotation.security.PermitAll;
 
 import java.util.HashMap;
@@ -45,6 +47,7 @@ import static com.vaadin.flow.theme.lumo.LumoUtility.*;
 @PermitAll // When security is enabled, allow all authenticated users
 public final class MainLayout extends AppLayout {
 
+    private final Breadcrumbs      breadcrumbs  = new Breadcrumbs();
     private final Map<Tab, String> tabToPathMap = new HashMap<>();
     private final Tabs             tabs         = new Tabs();
 
@@ -71,6 +74,24 @@ public final class MainLayout extends AppLayout {
         navbarLayout.expand(tabs);
 
         addToNavbar(true, navbarLayout);
+
+        // Add breadcrumbs below the navbar
+//        Div breadcrumbContainer = new Div(breadcrumbs);
+//        breadcrumbContainer.addClassNames(
+//                Padding.Horizontal.MEDIUM,
+//                Padding.Bottom.SMALL,
+//                Width.FULL
+//        );
+//        addToNavbar(breadcrumbContainer);
+        Div breadcrumbContainer = new Div(breadcrumbs);
+        breadcrumbContainer.addClassNames(
+                Padding.Horizontal.MEDIUM,
+                Padding.Vertical.XSMALL,
+                Width.FULL,
+                Background.CONTRAST_5
+        );
+        // Add as first component before any content
+        getElement().insertChild(0, breadcrumbContainer.getElement());
     }
 
     private HorizontalLayout createHeader() {
@@ -141,5 +162,10 @@ public final class MainLayout extends AppLayout {
         userMenuItem.getSubMenu().addItem("Logout").setEnabled(false);
 
         return userMenu;
+    }
+
+    // Method to get the breadcrumbs component (to be used by views)
+    public Breadcrumbs getBreadcrumbs() {
+        return breadcrumbs;
     }
 }

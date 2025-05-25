@@ -21,29 +21,28 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Main;
-import com.vaadin.flow.router.BeforeEvent;
-import com.vaadin.flow.router.HasUrlParameter;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.api.VersionApi;
 import de.bushnaq.abdalla.projecthub.dto.Version;
+import de.bushnaq.abdalla.projecthub.ui.view.MainLayout;
 import jakarta.annotation.security.PermitAll;
 
 import java.time.Clock;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.HashMap;
+import java.util.Map;
 
 @Route("version")
 @PageTitle("Version Page")
 //@Menu(order = 1, icon = "vaadin:factory", title = "version List")
 @PermitAll // When security is enabled, allow all authenticated users
-public class VersionView extends Main implements HasUrlParameter<Long> {
-    //    public static final String        ROUTE = "version";
-    final Grid<Version> grid;
-    H2 pageTitle;
-    private Long productId;
-    VersionApi versionApi;
+public class VersionView extends Main implements AfterNavigationObserver {
+    private final Grid<Version> grid;
+    private final H2            pageTitle;
+    private       Long          productId;
+    private final VersionApi    versionApi;
 
     public VersionView(VersionApi versionApi, Clock clock) {
         this.versionApi = versionApi;
@@ -67,10 +66,18 @@ public class VersionView extends Main implements HasUrlParameter<Long> {
         grid.addColumn(version -> dateTimeFormatter.format(version.getCreated())).setHeader("Created");
         grid.addColumn(version -> dateTimeFormatter.format(version.getUpdated())).setHeader("Updated");
         grid.setSizeFull();
-        // Add click listener to navigate to ProjectView with the selected version ID
+        //- Add click listener to navigate to ProjectView with the selected version ID
         grid.addItemClickListener(event -> {
             Version selectedVersion = event.getItem();
-            UI.getCurrent().navigate(ProjectView.class, selectedVersion.getId());
+            //- Create parameters map
+            Map<String, String> params = new HashMap<>();
+            params.put("product", String.valueOf(productId));
+            params.put("version", String.valueOf(selectedVersion.getId()));
+            //- Navigate with query parameters
+            UI.getCurrent().navigate(
+                    ProjectView.class,
+                    QueryParameters.simple(params)
+            );
         });
 
         setSizeFull();
@@ -80,9 +87,26 @@ public class VersionView extends Main implements HasUrlParameter<Long> {
     }
 
     @Override
-    public void setParameter(BeforeEvent beforeEvent, Long productId) {
-        this.productId = productId;
-        pageTitle.setText("Versions of Product ID: " + productId);
-
+    public void afterNavigation(AfterNavigationEvent event) {
+        // Get productId from query parameters
+        Location        location        = event.getLocation();
+        QueryParameters queryParameters = location.getQueryParameters();
+        // Check if productId is present in the query parameters
+        if (queryParameters.getParameters().containsKey("product")) {
+            this.productId = Long.parseLong(queryParameters.getParameters().get("product").getFirst());
+            pageTitle.setText("Versions of Product ID: " + productId);
+        }
+        // Only now the component is attached to the DOM
+        getElement().getParent().getComponent()
+                .ifPresent(component -> {
+                    if (component instanceof MainLayout mainLayout) {
+                        mainLayout.getBreadcrumbs().clear();
+                        mainLayout.getBreadcrumbs().addItem("Products", ProductView.class);
+                        Map<String, String> params = new HashMap<>();
+                        params.put("product", String.valueOf(productId));
+                        mainLayout.getBreadcrumbs().addItem("Versions", VersionView.class, params);
+                    }
+                });
     }
+
 }
