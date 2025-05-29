@@ -20,8 +20,7 @@ package de.bushnaq.abdalla.projecthub.ui;
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.ui.util.UiTestBase;
-import de.bushnaq.abdalla.projecthub.util.RandomCase;
-import de.bushnaq.abdalla.projecthub.util.TestInfoUtil;
+import de.bushnaq.abdalla.projecthub.util.*;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -43,7 +42,7 @@ import java.util.List;
 @AutoConfigureMockMvc
 @Transactional
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-public class LoginTest extends UiTestBase {
+public class Demo extends UiTestBase {
     @LocalServerPort
     private int port;
 
@@ -108,6 +107,14 @@ public class LoginTest extends UiTestBase {
         generateGanttChart(testInfo, null);
         generateBurndownChart(testInfo);
         seleniumHandler.get("http://localhost:" + port + "/" + ProductView.ROUTE);
+        ProductViewTester productViewTester = new ProductViewTester(seleniumHandler);
+        productViewTester.selectProduct("Product-1");
+        VersionViewTester versionViewTester = new VersionViewTester(seleniumHandler);
+        versionViewTester.selectVersion("1.0.0");
+        ProjectViewTester projectViewTester = new ProjectViewTester(seleniumHandler);
+        projectViewTester.selectProject("Project-0");
+        SprintViewTester sprintViewTester = new SprintViewTester(seleniumHandler);
+        sprintViewTester.selectSprint("sprint-0");
         seleniumHandler.waitUntilBrowserClosed(0);
     }
 

@@ -20,8 +20,10 @@ package de.bushnaq.abdalla.projecthub.ui;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.api.SprintApi;
@@ -48,17 +50,18 @@ import java.util.stream.Collectors;
 @CssImport("./styles/grid-styles.css")
 @PermitAll // When security is enabled, allow all authenticated users
 public class TaskView extends Main implements AfterNavigationObserver {
-    private final Clock      clock;
-    private final Grid<Task> grid;
-    private final H2         pageTitle;
-    private       Long       productId;
-    private       Long       projectId;
-    private       Sprint     sprint;
-    private final SprintApi  sprintApi;
-    private       Long       sprintId;
-    private final TaskApi    taskApi;
-    private final UserApi    userApi;
-    private       Long       versionId;
+    public static final String     TASK_GRID_NAME_PREFIX = "task-grid-name-";
+    private final       Clock      clock;
+    private final       Grid<Task> grid;
+    private final       H2         pageTitle;
+    private             Long       productId;
+    private             Long       projectId;
+    private             Sprint     sprint;
+    private final       SprintApi  sprintApi;
+    private             Long       sprintId;
+    private final       TaskApi    taskApi;
+    private final       UserApi    userApi;
+    private             Long       versionId;
 
     public TaskView(TaskApi taskApi, SprintApi sprintApi, UserApi userApi, Clock clock) {
         this.taskApi   = taskApi;
@@ -160,7 +163,21 @@ public class TaskView extends Main implements AfterNavigationObserver {
 
         grid.addColumn(Task::getKey).setHeader("Key").setAutoWidth(true);
         grid.addColumn(task -> task.getParentTask() != null ? task.getParentTask().getKey() : "").setHeader("Parent").setAutoWidth(true);
-        grid.addColumn(Task::getName).setHeader("Name").setAutoWidth(true);
+        grid.addColumn(new ComponentRenderer<>(task -> {
+            Div div    = new Div();
+            Div square = new Div();
+            square.setMinHeight("16px");
+            square.setMaxHeight("16px");
+            square.setMinWidth("16px");
+            square.setMaxWidth("16px");
+//                        square.getStyle().set("background-color", "#" + ColorUtil.colorToHtmlColor(task.getColor()));
+            square.getStyle().set("float", "left");
+            square.getStyle().set("margin", "1px");
+            div.add(square);
+            div.add(task.getName());
+            div.setId(TASK_GRID_NAME_PREFIX + task.getName());
+            return div;
+        })).setHeader("Name").setAutoWidth(true);
         grid.addColumn(task -> task.getResourceId() != null ? sprint.getuser(task.getResourceId()).getName() : "").setHeader("Assigned").setAutoWidth(true);
 //        grid.addColumn(version -> dateTimeFormatter.format(version.getCreated())).setHeader("Created");
 //        grid.addColumn(version -> dateTimeFormatter.format(version.getUpdated())).setHeader("Updated");

@@ -19,8 +19,10 @@ package de.bushnaq.abdalla.projecthub.ui;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.api.SprintApi;
@@ -40,12 +42,13 @@ import java.util.Map;
 //@Menu(order = 1, icon = "vaadin:factory", title = "project List")
 @PermitAll // When security is enabled, allow all authenticated users
 public class SprintView extends Main implements AfterNavigationObserver {
-    private final Grid<Sprint> grid;
-    private final H2           pageTitle;
-    private       Long         productId;
-    private       Long         projectId;
-    private final SprintApi    sprintApi;
-    private       Long         versionId;
+    public static final String       SPRINT_GRID_NAME_PREFIX = "sprint-grid-name-";
+    private final       Grid<Sprint> grid;
+    private final       H2           pageTitle;
+    private             Long         productId;
+    private             Long         projectId;
+    private final       SprintApi    sprintApi;
+    private             Long         versionId;
 
     public SprintView(SprintApi sprintApi, Clock clock) {
         this.sprintApi = sprintApi;
@@ -65,7 +68,21 @@ public class SprintView extends Main implements AfterNavigationObserver {
             grid.setItems(sprintApi.getAll());
         }
         grid.addColumn(Sprint::getKey).setHeader("Key");
-        grid.addColumn(Sprint::getName).setHeader("Name");
+        grid.addColumn(new ComponentRenderer<>(sprint -> {
+            Div div    = new Div();
+            Div square = new Div();
+            square.setMinHeight("16px");
+            square.setMaxHeight("16px");
+            square.setMinWidth("16px");
+            square.setMaxWidth("16px");
+//                        square.getStyle().set("background-color", "#" + ColorUtil.colorToHtmlColor(sprint.getColor()));
+            square.getStyle().set("float", "left");
+            square.getStyle().set("margin", "1px");
+            div.add(square);
+            div.add(sprint.getName());
+            div.setId(SPRINT_GRID_NAME_PREFIX + sprint.getName());
+            return div;
+        })).setHeader("Name");
 //        grid.addColumn(version -> dateTimeFormatter.format(version.getCreated())).setHeader("Created");
 //        grid.addColumn(version -> dateTimeFormatter.format(version.getUpdated())).setHeader("Updated");
         grid.addColumn(sprint -> dateTimeFormatter.format(sprint.getStart())).setHeader("Start");

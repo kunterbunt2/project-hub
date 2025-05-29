@@ -165,6 +165,15 @@ public class SeleniumHandler {
         //        }
     }
 
+    public String getRouteValue(Class<?> viewClass) {
+        if (viewClass.isAnnotationPresent(com.vaadin.flow.router.Route.class)) {
+            com.vaadin.flow.router.Route route = viewClass.getAnnotation(com.vaadin.flow.router.Route.class);
+            if (route != null)
+                return route.value();
+        }
+        return null;
+    }
+
     public String getTextField(String id) {
         WebElement e     = findElement(By.id(id));
         String     value = e.getAttribute("value");
@@ -182,6 +191,51 @@ public class SeleniumHandler {
 
     public Duration getWaitDuration() {
         return waitDuration;
+    }
+
+    public void selectGridRow(String gridRowBaseId, Class<?> viewClass, String rowName) {
+        String  url             = getRouteValue(viewClass);
+        boolean outerTesting    = true;
+        int     outerIterations = 12;//5 seconds
+//        WebElement label           = findElement(By.id(labelId));
+        //try several times
+        do {
+            WebElement row = findElement(By.id(gridRowBaseId + rowName));
+            try {
+                row.click();
+            } catch (StaleElementReferenceException e) {
+                //ignore and retry
+            }
+            //check several times
+            int     innerIterations = 10;//5 seconds
+            boolean innerTesting    = true;
+            do {
+                if (ExpectedConditions.urlContains(url).apply(driver)) {
+                    outerTesting = false;
+                }
+                if (--innerIterations == 0) {
+                    innerTesting = false;
+                }
+                if (outerTesting) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        //ignore
+                    }
+                }
+            } while (innerTesting && outerTesting);
+            if (--outerIterations == 0) {
+                outerTesting = false;
+            }
+            if (outerTesting) {
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    //ignore
+                }
+            }
+        } while (outerTesting);
+//        assertEquals(rowName, label.getText());
     }
 
     public void selectGridRow(String gridRowBaseId, String labelId, String rowName) {

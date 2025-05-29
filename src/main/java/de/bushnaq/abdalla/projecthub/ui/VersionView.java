@@ -19,8 +19,10 @@ package de.bushnaq.abdalla.projecthub.ui;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.api.VersionApi;
@@ -39,10 +41,11 @@ import java.util.Map;
 //@Menu(order = 1, icon = "vaadin:factory", title = "version List")
 @PermitAll // When security is enabled, allow all authenticated users
 public class VersionView extends Main implements AfterNavigationObserver {
-    private final Grid<Version> grid;
-    private final H2            pageTitle;
-    private       Long          productId;
-    private final VersionApi    versionApi;
+    public static final String        VERSION_GRID_NAME_PREFIX = "version-grid-name-";
+    private final       Grid<Version> grid;
+    private final       H2            pageTitle;
+    private             Long          productId;
+    private final       VersionApi    versionApi;
 
     public VersionView(VersionApi versionApi, Clock clock) {
         this.versionApi = versionApi;
@@ -62,7 +65,21 @@ public class VersionView extends Main implements AfterNavigationObserver {
             grid.setItems(versionApi.getAll());
         }
         grid.addColumn(Version::getKey).setHeader("Key");
-        grid.addColumn(Version::getName).setHeader("Name");
+        grid.addColumn(new ComponentRenderer<>(version -> {
+            Div div    = new Div();
+            Div square = new Div();
+            square.setMinHeight("16px");
+            square.setMaxHeight("16px");
+            square.setMinWidth("16px");
+            square.setMaxWidth("16px");
+//                        square.getStyle().set("background-color", "#" + ColorUtil.colorToHtmlColor(version.getColor()));
+            square.getStyle().set("float", "left");
+            square.getStyle().set("margin", "1px");
+            div.add(square);
+            div.add(version.getName());
+            div.setId(VERSION_GRID_NAME_PREFIX + version.getName());
+            return div;
+        })).setHeader("Name");
         grid.addColumn(version -> dateTimeFormatter.format(version.getCreated())).setHeader("Created");
         grid.addColumn(version -> dateTimeFormatter.format(version.getUpdated())).setHeader("Updated");
         grid.setSizeFull();
