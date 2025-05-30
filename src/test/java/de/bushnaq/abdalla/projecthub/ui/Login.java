@@ -19,15 +19,15 @@ package de.bushnaq.abdalla.projecthub.ui;
 
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
-import de.bushnaq.abdalla.projecthub.ui.util.UiTestBase;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import de.bushnaq.abdalla.projecthub.util.*;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,9 +42,11 @@ import java.util.List;
 @AutoConfigureMockMvc
 @Transactional
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-public class Login extends UiTestBase {
-    @LocalServerPort
-    private int port;
+public class Login extends AbstractGanttTestUtil {
+    @Autowired
+    ProductViewTester productViewTester;
+    @Autowired
+    private SeleniumHandler seleniumHandler;
 
     private static String generateFeatureName(int t) {
         return String.format("Feature-%d", t);
@@ -103,8 +105,7 @@ public class Login extends UiTestBase {
         generateTasks(randomCase);
         levelResources(testInfo, null);
         generateWorklogs(ParameterOptions.getLocalNow());
-        seleniumHandler.get("http://localhost:" + port + "/" + ProductListView.ROUTE);
-        ProductViewTester productViewTester = new ProductViewTester(seleniumHandler);
+        productViewTester.switchToProductListView();
         productViewTester.selectProduct("Product-1");
         VersionViewTester versionViewTester = new VersionViewTester(seleniumHandler);
         versionViewTester.selectVersion("1.0.0");

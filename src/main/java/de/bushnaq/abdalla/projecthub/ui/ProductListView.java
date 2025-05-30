@@ -52,8 +52,16 @@ import java.util.Map;
 @Menu(order = 1, icon = "vaadin:factory", title = "product List")
 @PermitAll // When security is enabled, allow all authenticated users
 public class ProductListView extends Main implements AfterNavigationObserver {
-    public static final String        PRODUCT_GRID_NAME_PREFIX = "product-grid-name-";
-    public static final String        ROUTE                    = "product-list";
+    public static final String        CANCEL_BUTTON                     = "cancel-product-button";
+    public static final String        CONFIRM_BUTTON                    = "save-product-button";
+    public static final String        CREATE_PRODUCT_BUTTON             = "create-product-button";
+    public static final String        PRODUCT_GRID_ACTION_BUTTON_PREFIX = "product-grid-action-button-prefix-";
+    public static final String        PRODUCT_GRID_DELETE_BUTTON_PREFIX = "product-grid-delete-button-prefix-";
+    public static final String        PRODUCT_GRID_EDIT_BUTTON_PREFIX   = "product-grid-edit-button-prefix-";
+    public static final String        PRODUCT_GRID_NAME_PREFIX          = "product-grid-name-";
+    public static final String        PRODUCT_LIST_PAGE_TITLE           = "product-list-page-title";
+    public static final String        PRODUCT_NAME_FIELD                = "product-name-field";
+    public static final String        ROUTE                             = "product-list";
     private final       Clock         clock;
     private final       Grid<Product> grid;
     private final       ProductApi    productApi;
@@ -70,12 +78,14 @@ public class ProductListView extends Main implements AfterNavigationObserver {
         headerLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
 
         H2 pageTitle = new H2("Products");
+        pageTitle.setId(PRODUCT_LIST_PAGE_TITLE);
         pageTitle.addClassNames(
                 LumoUtility.Margin.Top.MEDIUM,
                 LumoUtility.Margin.Bottom.SMALL
         );
 
         Button createButton = new Button("Create", new Icon(VaadinIcon.PLUS));
+        createButton.setId(CREATE_PRODUCT_BUTTON);
         createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         createButton.addClickListener(e -> openProductDialog(null));
 
@@ -119,6 +129,7 @@ public class ProductListView extends Main implements AfterNavigationObserver {
         // Add actions column with context menu - fix the text alignment issue
         grid.addColumn(new ComponentRenderer<>(product -> {
             Button actionButton = new Button(new Icon(VaadinIcon.ELLIPSIS_DOTS_V));
+            actionButton.setId(PRODUCT_GRID_ACTION_BUTTON_PREFIX + product.getName());
             actionButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
             actionButton.getElement().setAttribute("aria-label", "More options");
 
@@ -130,8 +141,8 @@ public class ProductListView extends Main implements AfterNavigationObserver {
             contextMenu.setOpenOnClick(true);
             contextMenu.setTarget(actionButton);
 
-            contextMenu.addItem("Edit...", e -> openProductDialog(product));
-            contextMenu.addItem("Delete...", e -> confirmDelete(product));
+            contextMenu.addItem("Edit...", e -> openProductDialog(product)).setId(PRODUCT_GRID_EDIT_BUTTON_PREFIX + product.getName());
+            contextMenu.addItem("Delete...", e -> confirmDelete(product)).setId(PRODUCT_GRID_DELETE_BUTTON_PREFIX + product.getName());
 
             return actionButton;
         })).setWidth("70px").setFlexGrow(0);
@@ -183,9 +194,11 @@ public class ProductListView extends Main implements AfterNavigationObserver {
             refreshGrid();
             Notification.show("Product deleted", 3000, Notification.Position.BOTTOM_START);
         });
+        deleteButton.setId(CONFIRM_BUTTON);
         deleteButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
 
         Button cancelButton = new Button("Cancel", e -> confirmDialog.close());
+        cancelButton.setId(CANCEL_BUTTON);
 
         HorizontalLayout buttonLayout = new HorizontalLayout();
         buttonLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
@@ -209,6 +222,7 @@ public class ProductListView extends Main implements AfterNavigationObserver {
         dialogLayout.setSpacing(true);
 
         TextField nameField = new TextField("Product Name");
+        nameField.setId(PRODUCT_NAME_FIELD);
         nameField.setWidthFull();
         nameField.setRequired(true);
 
@@ -238,9 +252,10 @@ public class ProductListView extends Main implements AfterNavigationObserver {
             dialog.close();
             refreshGrid();
         });
-
+        saveButton.setId(CONFIRM_BUTTON);
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         Button cancelButton = new Button("Cancel", e -> dialog.close());
+        cancelButton.setId(CANCEL_BUTTON);
 
         HorizontalLayout buttonLayout = new HorizontalLayout();
         buttonLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);

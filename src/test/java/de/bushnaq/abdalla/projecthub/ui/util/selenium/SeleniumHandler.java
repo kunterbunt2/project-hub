@@ -18,8 +18,8 @@
 package de.bushnaq.abdalla.projecthub.ui.util.selenium;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
+import jakarta.annotation.PreDestroy;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.TestInfo;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -28,6 +28,7 @@ import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Wait;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.List;
@@ -38,10 +39,11 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * handles vaadin ui tests using selenium
  */
+@Component
 public class SeleniumHandler {
     private       WebDriver     driver;
     private final Duration      implicitWaitDuration;
-    private final WebDriverWait wait;
+    private       WebDriverWait wait;
     private       Duration      waitDuration;
 
     public SeleniumHandler() {
@@ -52,57 +54,32 @@ public class SeleniumHandler {
         this.implicitWaitDuration = implicitWaitDuration;
         this.waitDuration         = waitDuration;
         //chrome
-        {
-            WebDriverManager.chromedriver().setup();
-            ChromeOptions options = new ChromeOptions();
-            options.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
-            options.addArguments("--remote-allow-origins=*");
-            driver = new ChromeDriver(options);
-        }
-        //firefox
-        {
-            //            WebDriverManager.firefoxdriver().setup();
-            //            FirefoxOptions options = new FirefoxOptions();
-            //            options.setCapability("moz:webdriverClick", false);//https://stackoverflow.com/questions/49864965/org-openqa-selenium-elementnotinteractableexception-element-is-not-reachable-by
-            //            options.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
-            //            driver = new FirefoxDriver(options);
-        }
-        wait = new WebDriverWait(driver, waitDuration);
-
-        //Applied wait time
-        setImplicit(implicitWaitDuration);
-        //maximize window
-        driver.manage().window().maximize();
     }
 
-    public void cleanup(TestInfo testInfo) {
+    public void click(String id) {
+        waitUntil(ExpectedConditions.elementToBeClickable(By.id(id)));
+        WebElement element = findElement(By.id(id));
+        element.click();
+    }
+
+    @PreDestroy
+    public void destroy() {
         if (driver != null) {
-            ScreenShotCreator.takeScreenShot(driver, testInfo.getDisplayName(), testInfo.getTestMethod().get().getName());
+//            ScreenShotCreator.takeScreenShot(driver, testInfo.getDisplayName(), testInfo.getTestMethod().get().getName());
             driver.close();//closing the browser
             driver.quit();//quit the driver
             driver = null;
         }
     }
 
-    public void click(String id) {
-        WebElement element = findElement(By.id(id));
-        element.click();
-    }
-
     public void ensureIsInList(String id, String userName) {
         waitUntil(ExpectedConditions.elementToBeClickable(By.id(id + userName)));
     }
 
-    public void ensureIsNotInList(String id, String userName) {
+    public void ensureIsNotInList(String id, String name) {
         Duration implicitTime = getImplicitWaitDuration();
-        try {
-            setImplicit(Duration.ofSeconds(1));
-            WebElement e = findElement(By.id(id + userName));
-            if (e.isDisplayed()) {
-                fail("expected user not to exist");
-            }
-        } catch (NoSuchElementException e) {
-        }
+        setImplicit(Duration.ofSeconds(1));
+        waitUntil(ExpectedConditions.not(ExpectedConditions.elementToBeClickable(By.id(id + name))));
         setImplicit(implicitTime);
     }
 
@@ -119,20 +96,20 @@ public class SeleniumHandler {
         //        for (WebElement e : l) {
         //            System.out.println(i++ + " " + e.getText() + " " + e.getTagName());
         //        }
-        WebElement ele = (WebElement) ((JavascriptExecutor) driver).executeScript(script, element);
+        WebElement ele = (WebElement) ((JavascriptExecutor) getDriver()).executeScript(script, element);
         return ele;
     }
 
     public WebElement findElement(By by) {
-        return driver.findElement(by);
+        return getDriver().findElement(by);
     }
 
     public List<WebElement> findElements(By by) {
-        return driver.findElements(by);
+        return getDriver().findElements(by);
     }
 
     public void get(String url) {
-        driver.get(url);
+        getDriver().get(url);
     }
 
     public void getAndCheck(String url) {
@@ -147,7 +124,31 @@ public class SeleniumHandler {
     }
 
     public String getCurrentUrl() {
-        return driver.getCurrentUrl();
+        return getDriver().getCurrentUrl();
+    }
+
+    private WebDriver getDriver() {
+        if (driver == null) {
+            WebDriverManager.chromedriver().setup();
+            ChromeOptions options = new ChromeOptions();
+            options.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
+            options.addArguments("--remote-allow-origins=*");
+            driver = new ChromeDriver(options);
+            wait   = new WebDriverWait(getDriver(), waitDuration);
+            //Applied wait time
+            setImplicit(implicitWaitDuration);
+            //maximize window
+            getDriver().manage().window().maximize();
+            //firefox
+            {
+                //            WebDriverManager.firefoxdriver().setup();
+                //            FirefoxOptions options = new FirefoxOptions();
+                //            options.setCapability("moz:webdriverClick", false);//https://stackoverflow.com/questions/49864965/org-openqa-selenium-elementnotinteractableexception-element-is-not-reachable-by
+                //            options.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
+                //            driver = new FirefoxDriver(options);
+            }
+        }
+        return driver;
     }
 
     public Duration getImplicitWaitDuration() {
@@ -186,7 +187,7 @@ public class SeleniumHandler {
     }
 
     public String getTitle() {
-        return driver.getTitle();
+        return getDriver().getTitle();
     }
 
     public Duration getWaitDuration() {
@@ -210,7 +211,7 @@ public class SeleniumHandler {
             int     innerIterations = 10;//5 seconds
             boolean innerTesting    = true;
             do {
-                if (ExpectedConditions.urlContains(url).apply(driver)) {
+                if (ExpectedConditions.urlContains(url).apply(getDriver())) {
                     outerTesting = false;
                 }
                 if (--innerIterations == 0) {
@@ -254,7 +255,7 @@ public class SeleniumHandler {
             int     innerIterations = 10;//5 seconds
             boolean innerTesting    = true;
             do {
-                if (ExpectedConditions.textToBePresentInElement(label, rowName).apply(driver)) {
+                if (ExpectedConditions.textToBePresentInElement(label, rowName).apply(getDriver())) {
                     outerTesting = false;
                 }
                 if (--innerIterations == 0) {
@@ -300,7 +301,7 @@ public class SeleniumHandler {
     }
 
     public void setImplicit(Duration duration) {
-        driver.manage().timeouts().implicitlyWait(duration);
+        getDriver().manage().timeouts().implicitlyWait(duration);
     }
 
     public void setIntegerField(String id, String userName) {
@@ -328,6 +329,7 @@ public class SeleniumHandler {
     }
 
     public void setTextField(String id, String userName) {
+        waitUntil(ExpectedConditions.elementToBeClickable(By.id(id)));
         WebElement e     = findElement(By.id(id));
         WebElement i     = e.findElement(By.tagName("input"));
         String     value = i.getAttribute("value");
@@ -377,7 +379,7 @@ public class SeleniumHandler {
                 return ((JavascriptExecutor) driver).executeScript("return document.readyState").equals("complete");
             }
         };
-        Wait<WebDriver> wait = new WebDriverWait(driver, Duration.ofSeconds(seconds));
+        Wait<WebDriver> wait = new WebDriverWait(getDriver(), Duration.ofSeconds(seconds));
         try {
             wait.until(expectation);
         } catch (Throwable error) {
@@ -418,7 +420,7 @@ public class SeleniumHandler {
         while (true) {
             try {
                 // Try to execute a simple script or get window handles to verify browser is open
-                driver.getWindowHandles();
+                getDriver().getWindowHandles();
                 // Short sleep to prevent high CPU usage
                 try {
                     Thread.sleep(500);
