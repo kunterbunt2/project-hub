@@ -77,54 +77,6 @@ public abstract class AbstractCanvas extends ReportLink {
         return String.format("<img class=\"%s\" border=\"0\" src=\"%s.%s\">", cssClass, imageName, extension);
     }
 
-    public void generateImage(String copyright, ByteArrayOutputStream o) throws Exception {
-        try (Profiler p1 = new Profiler(SampleType.GPU)) {
-//            String imageFileName;
-//            if (path.isEmpty()) {
-//                imageFileName = String.format("%s.svg", imageName);
-//            } else {
-//                imageFileName = String.format(path + "/%s.svg", imageName);
-//            }
-            prepareSvgGraphics();
-            drawBackground();
-            drawCaption(graphics2D);
-            createReport();
-            drawFooter(graphics2D);
-            drawBorder(graphics2D);
-            try (Profiler p2 = new Profiler(SampleType.FILE)) {
-                boolean useCSS = true; // we want to use CSS style attributes
-                Writer  out    = new OutputStreamWriter(o, StandardCharsets.UTF_8);
-                svgGenerator.stream(out, useCSS);
-            }
-//            text = FileUtil.loadFile(null, imageFileName).replace("<svg ", "<svg class=\"qtip-shadow\"");
-        }
-
-    }
-
-    public void generateImage(String copyright, String description, String path) throws Exception {
-        try (Profiler p1 = new Profiler(SampleType.GPU)) {
-            String imageFileName;
-            if (path.isEmpty()) {
-                imageFileName = String.format("%s.svg", imageName);
-            } else {
-                imageFileName = String.format(path + "/%s.svg", imageName);
-            }
-            prepareSvgGraphics();
-            drawBackground();
-            drawCaption(graphics2D);
-            createReport();
-            drawFooter(graphics2D);
-            drawBorder(graphics2D);
-            try (Profiler p2 = new Profiler(SampleType.FILE)) {
-                boolean          useCSS = true; // we want to use CSS style attributes
-                FileOutputStream o      = new FileOutputStream(imageFileName);
-                Writer           out    = new OutputStreamWriter(o, StandardCharsets.UTF_8);
-                svgGenerator.stream(out, useCSS);
-            }
-            text = FileUtil.loadFile(null, imageFileName).replace("<svg ", "<svg class=\"qtip-shadow\"");
-        }
-    }
-
     public int getBorderWidth() {
         return borderWidth;
     }
@@ -164,6 +116,47 @@ public abstract class AbstractCanvas extends ReportLink {
         //        graphics2D.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         //        graphics2D.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         //        graphics2D.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+    }
+
+    public void render(String copyright, ByteArrayOutputStream o) throws Exception {
+        try (Profiler p1 = new Profiler(SampleType.GPU)) {
+            prepareSvgGraphics();
+            drawBackground();
+            drawCaption(graphics2D);
+            createReport();
+            drawFooter(graphics2D);
+            drawBorder(graphics2D);
+            try (Profiler p2 = new Profiler(SampleType.FILE)) {
+                boolean useCSS = true; // we want to use CSS style attributes
+                Writer  out    = new OutputStreamWriter(o, StandardCharsets.UTF_8);
+                svgGenerator.stream(out, useCSS);
+            }
+        }
+
+    }
+
+    public void render(String copyright, String description, String path) throws Exception {
+        try (Profiler p1 = new Profiler(SampleType.GPU)) {
+            String imageFileName;
+            if (path.isEmpty()) {
+                imageFileName = String.format("%s.svg", imageName);
+            } else {
+                imageFileName = String.format(path + "/%s.svg", imageName);
+            }
+            prepareSvgGraphics();
+            drawBackground();
+            drawCaption(graphics2D);
+            createReport();
+            drawFooter(graphics2D);
+            drawBorder(graphics2D);
+            try (Profiler p2 = new Profiler(SampleType.FILE)) {
+                boolean          useCSS = true; // we want to use CSS style attributes
+                FileOutputStream o      = new FileOutputStream(imageFileName);
+                Writer           out    = new OutputStreamWriter(o, StandardCharsets.UTF_8);
+                svgGenerator.stream(out, useCSS);
+            }
+            text = FileUtil.loadFile(null, imageFileName).replace("<svg ", "<svg class=\"qtip-shadow\"");
+        }
     }
 
     public void setBorderWidth(int borderWidth) {

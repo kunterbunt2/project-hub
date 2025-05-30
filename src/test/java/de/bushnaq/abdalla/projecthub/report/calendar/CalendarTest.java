@@ -69,7 +69,7 @@ public class CalendarTest extends AbstractGanttTestUtil {
 
         for (User user : gc.allUsers) {
             CalendarChart chart = new CalendarChart(context, ParameterOptions.getLocalNow(), user, "scheduleWithMargin", context.parameters.graphicsTheme);
-            chart.generateImage(Util.generateCopyrightString(ParameterOptions.getLocalNow()), "", testResultFolder);
+            chart.render(Util.generateCopyrightString(ParameterOptions.getLocalNow()), "", testResultFolder);
         }
     }
 

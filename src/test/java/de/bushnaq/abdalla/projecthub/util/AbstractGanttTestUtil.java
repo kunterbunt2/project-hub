@@ -191,14 +191,14 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         RenderDao     dao         = createRenderDao(context, sprint, TestInfoUtil.getTestMethodName(testInfo), ParameterOptions.getLocalNow(), width, height,  /*urlPrefix +*/ "sprint-" + sprint.getId() + "/sprint.html");
         BurnDownChart chart       = new BurnDownChart("/", dao);
         String        description = testInfo.getDisplayName().replace("_", "-");
-        chart.generateImage(Util.generateCopyrightString(ParameterOptions.getLocalNow()), description, testResultFolder);
+        chart.render(Util.generateCopyrightString(ParameterOptions.getLocalNow()), description, testResultFolder);
     }
 
     protected void generateGanttChart(TestInfo testInfo, ProjectFile projectFile) throws Exception {
         GanttChart chart = new GanttChart(context, "", "/", "Gantt Chart", TestInfoUtil.getTestMethodName(testInfo) + "-gant-chart", exceptions, ParameterOptions.getLocalNow(), false, sprint/*, 1887, 1000*/, "scheduleWithMargin", context.parameters.graphicsTheme);
 //        String     description = testCaseInfo.getDisplayName().replace("_", "-");
         String description = TestInfoUtil.getTestMethodName(testInfo);
-        chart.generateImage(Util.generateCopyrightString(ParameterOptions.getLocalNow()), description, testResultFolder);
+        chart.render(Util.generateCopyrightString(ParameterOptions.getLocalNow()), description, testResultFolder);
         compareResults(projectFile, testInfo);
     }
 

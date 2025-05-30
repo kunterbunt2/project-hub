@@ -101,13 +101,9 @@ public class Demo extends UiTestBase {
         TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
-        generateOneProduct(testInfo);
         generateTasks(randomCase);
         levelResources(testInfo, null);
         generateWorklogs(ParameterOptions.getLocalNow());
-        printTables();
-        generateGanttChart(testInfo, null);
-        generateBurndownChart(testInfo, 640, 400);
         seleniumHandler.get("http://localhost:" + port + "/" + ProductListView.ROUTE);
         seleniumHandler.waitUntilBrowserClosed(0);
     }
