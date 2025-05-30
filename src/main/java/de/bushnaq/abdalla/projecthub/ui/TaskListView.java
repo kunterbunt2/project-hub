@@ -45,11 +45,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Route("task")
-@PageTitle("Task Page")
+@Route("task-list")
+@PageTitle("Task List Page")
 @CssImport("./styles/grid-styles.css")
 @PermitAll // When security is enabled, allow all authenticated users
-public class TaskView extends Main implements AfterNavigationObserver {
+public class TaskListView extends Main implements AfterNavigationObserver {
     public static final String     TASK_GRID_NAME_PREFIX = "task-grid-name-";
     private final       Clock      clock;
     private final       Grid<Task> grid;
@@ -63,7 +63,7 @@ public class TaskView extends Main implements AfterNavigationObserver {
     private final       UserApi    userApi;
     private             Long       versionId;
 
-    public TaskView(TaskApi taskApi, SprintApi sprintApi, UserApi userApi, Clock clock) {
+    public TaskListView(TaskApi taskApi, SprintApi sprintApi, UserApi userApi, Clock clock) {
         this.taskApi   = taskApi;
         this.sprintApi = sprintApi;
         this.userApi   = userApi;
@@ -100,7 +100,6 @@ public class TaskView extends Main implements AfterNavigationObserver {
 
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
-        //- Get productId from query parameters
         Location        location        = event.getLocation();
         QueryParameters queryParameters = location.getQueryParameters();
         if (queryParameters.getParameters().containsKey("product")) {
@@ -119,7 +118,7 @@ public class TaskView extends Main implements AfterNavigationObserver {
         //- populate grid with tasks of the sprint
         sprint = sprintApi.getById(sprintId);
         sprint.initUserMap(userApi.getAll(sprintId));
-        sprint.initTaskMap(taskApi.getAll(sprintId));
+        sprint.initTaskMap(taskApi.getAll(sprintId), null);
         pageTitle.setText("Task of Sprint ID: " + sprintId);
         grid.setItems(sprint.getTasks());
         //- Update breadcrumbs
@@ -127,24 +126,24 @@ public class TaskView extends Main implements AfterNavigationObserver {
                 .ifPresent(component -> {
                     if (component instanceof MainLayout mainLayout) {
                         mainLayout.getBreadcrumbs().clear();
-                        mainLayout.getBreadcrumbs().addItem("Products", ProductView.class);
+                        mainLayout.getBreadcrumbs().addItem("Products", ProductListView.class);
                         {
                             Map<String, String> params = new HashMap<>();
                             params.put("product", String.valueOf(productId));
-                            mainLayout.getBreadcrumbs().addItem("Versions", VersionView.class, params);
+                            mainLayout.getBreadcrumbs().addItem("Versions", VersionListView.class, params);
                         }
                         {
                             Map<String, String> params = new HashMap<>();
                             params.put("product", String.valueOf(productId));
                             params.put("version", String.valueOf(versionId));
-                            mainLayout.getBreadcrumbs().addItem("Projects", ProjectView.class, params);
+                            mainLayout.getBreadcrumbs().addItem("Projects", ProjectListView.class, params);
                         }
                         {
                             Map<String, String> params = new HashMap<>();
                             params.put("product", String.valueOf(productId));
                             params.put("version", String.valueOf(versionId));
                             params.put("project", String.valueOf(projectId));
-                            mainLayout.getBreadcrumbs().addItem("Sprints", SprintView.class, params);
+                            mainLayout.getBreadcrumbs().addItem("Sprints", SprintListView.class, params);
                         }
                         {
                             Map<String, String> params = new HashMap<>();
@@ -152,7 +151,7 @@ public class TaskView extends Main implements AfterNavigationObserver {
                             params.put("version", String.valueOf(versionId));
                             params.put("project", String.valueOf(projectId));
                             params.put("sprint", String.valueOf(sprintId));
-                            mainLayout.getBreadcrumbs().addItem("Tasks", TaskView.class, params);
+                            mainLayout.getBreadcrumbs().addItem("Tasks", TaskListView.class, params);
                         }
                     }
                 });

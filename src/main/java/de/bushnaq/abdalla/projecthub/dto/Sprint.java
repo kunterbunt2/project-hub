@@ -28,10 +28,12 @@ import de.bushnaq.abdalla.util.DurationSerializer;
 import de.bushnaq.abdalla.util.date.DateUtil;
 import de.bushnaq.abdalla.util.date.ReportUtil;
 import lombok.*;
-import net.sf.mpxj.ProjectCalendar;
+import net.sf.mpxj.*;
 
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,34 +49,36 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
     @JsonIgnore
     private ProjectCalendar calendar;
 
-    private   LocalDateTime   end;
+    private       LocalDateTime   end;
     @JsonIgnore
-    public    List<Throwable> exceptions = new ArrayList<>();
-    private   Long            id;
-    private   String          name;
+    public        List<Throwable> exceptions  = new ArrayList<>();
+    private       Long            id;
+    private       String          name;
     @JsonSerialize(using = DurationSerializer.class)
     @JsonDeserialize(using = DurationDeserializer.class)
-    private   Duration        originalEstimation;
+    private       Duration        originalEstimation;
     @JsonIgnore
     @ToString.Exclude//help intellij debugger not to go into a loop
-    private   Project         project;
-    private   Long            projectId;
-    private   LocalDateTime   releaseDate;//calculated from the task work, worklogs and remaining work
+    private       Project         project;
+    @JsonIgnore
+    private final ProjectFile     projectFile = new ProjectFile();
+    private       Long            projectId;
+    private       LocalDateTime   releaseDate;//calculated from the task work, worklogs and remaining work
     @JsonSerialize(using = DurationSerializer.class)
     @JsonDeserialize(using = DurationDeserializer.class)
-    private   Duration        remaining;
-    private   LocalDateTime   start;
-    private   Status          status;
+    private       Duration        remaining;
+    private       LocalDateTime   start;
+    private       Status          status;
     @JsonIgnore
-    transient Map<Long, Task> taskMap    = new HashMap<>();
+    transient     Map<Long, Task> taskMap     = new HashMap<>();
     @JsonIgnore
-    private   List<Task>      tasks      = new ArrayList<>();
-    private   Long            userId;
+    private       List<Task>      tasks       = new ArrayList<>();
+    private       Long            userId;
     @JsonIgnore
-    transient Map<Long, User> userMap    = new HashMap<>();
+    transient     Map<Long, User> userMap     = new HashMap<>();
     @JsonSerialize(using = DurationSerializer.class)
     @JsonDeserialize(using = DurationDeserializer.class)
-    private   Duration        worked;
+    private       Duration        worked;
     @JsonIgnore
     List<WorklogRemaining> worklogRemaining = new ArrayList<>();
     @JsonIgnore
@@ -111,6 +115,33 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
     @Override
     public int compareTo(Sprint other) {
         return this.id.compareTo(other.id);
+    }
+
+    private void defineCalendar() {
+        final boolean[] DEFAULT_WORKING_WEEK = {false, true, true, true, true, true, false};
+        // HolidaysDownloader hd = new HolidaysDownloader();
+        // Map<LocalDate, String> downloadHolidays = hd.downloadHolidays();
+
+        // define the base calendar
+        calendar = projectFile.addDefaultBaseCalendar();
+        calendar.setWorkingDay(DayOfWeek.SATURDAY, false);
+        calendar.setWorkingDay(DayOfWeek.SUNDAY, false);
+        for (int index = 0; index < 7; index++) {
+            DayOfWeek day = DayOfWeek.of(index + 1);
+            //            calendar.setWorkingDay(day, DEFAULT_WORKING_WEEK[index]);
+            if (calendar.isWorkingDay(day)) {
+                ProjectCalendarHours hours = calendar.addCalendarHours(DayOfWeek.of(index + 1));
+                hours.add(new LocalTimeRange(LocalTime.of(8, 0), LocalTime.of(12, 0)));
+                hours.add(new LocalTimeRange(LocalTime.of(13, 0), LocalTime.of(16, 30)));
+            }
+        }
+//        BankHolidayReader bhr = new BankHolidayReader();
+//        context.bankHolidays = bhr.read(context.parameters.smbParameters, ParameterOptions.now.toLocalDate());
+//        for (LocalDate ld : context.bankHolidays.keySet()) {
+//            // System.out.println(ld.toString() + " " + bankHolidays.get(ld));
+//            ProjectCalendarException calendarException = calendar.addCalendarException(ld, ld);
+//            calendarException.setName(context.bankHolidays.get(ld));
+//        }
     }
 
     @JsonIgnore
@@ -161,7 +192,8 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
         return userMap.get(resourceId);
     }
 
-    public void initTaskMap(List<Task> tasks) {
+    public void initTaskMap(List<Task> tasks, List<Worklog> worklogs) {
+        this.worklogs = worklogs;
         taskMap.clear();
         for (Task task : tasks) {
             taskMap.put(task.getId(), task);
@@ -173,14 +205,16 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
                 //add the task to the parent task
                 task.getParentTask().addChildTask(task);
             }
-//            for (Worklog worklog : worklogs) {
-//                if (worklog.getTaskId().equals(task.getId())) {
-//                    task.addWorklog(worklog);
-//                }
-//            }
+            if (worklogs != null) {
+                for (Worklog worklog : worklogs) {
+                    if (worklog.getTaskId().equals(task.getId())) {
+                        task.addWorklog(worklog);
+                    }
+                }
+            }
             task.setSprint(this);
             task.initialize();
-//            addWorklogRemaining(task);
+            addWorklogRemaining(task);
         });
         this.tasks = tasks;
     }
@@ -188,8 +222,27 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
     public void initUserMap(List<User> users) {
         userMap.clear();
         for (User user : users) {
+            user.initialize(this);
             userMap.put(user.getId(), user);
         }
+        if (userId == null) {
+//            calendar = projectFile.getDefaultCalendar();
+        } else {
+            calendar = getUser().getCalendar();
+        }
+    }
+
+//    public void initWorklogs(List<Worklog> allWorklogs) {
+//        allWorklogs.forEach(worklog -> {
+//            if (worklog.getSprintId().equals(id)) {
+//                worklogs.add(worklog);
+//            }
+//        });
+//    }
+
+    public void initialize() {
+        setProjectProperties();
+        initializeCalendar();
     }
 
     public void initialize(GanttContext gc) {
@@ -234,6 +287,39 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
 
     }
 
+    private void initializeCalendar() {
+        defineCalendar();
+        ProjectProperties projectProperties = projectFile.getProjectProperties();
+        ProjectCalendar   projectCalendar   = projectFile.getCalendarByName(ProjectCalendar.DEFAULT_BASE_CALENDAR_NAME);
+        if (projectCalendar == null) {
+            projectCalendar = projectFile.getDefaultCalendar();
+        }
+        if (projectCalendar == null) {
+            projectCalendar = projectFile.addDefaultBaseCalendar();
+            for (DayOfWeek day : DayOfWeek.values()) {
+                if (projectCalendar.getCalendarDayType(day) == DayType.WORKING) {
+                    ProjectCalendarHours hours = projectCalendar.getCalendarHours(day);
+                    hours.clear();
+                    hours.add(new LocalTimeRange(LocalTime.of(8, 0), LocalTime.of(12, 0)));
+                    hours.add(new LocalTimeRange(LocalTime.of(13, 0), LocalTime.of(16, 30)));
+                }
+            }
+//            BankHolidayReader bhr = new BankHolidayReader();
+//            context.bankHolidays = bhr.read(context.parameters.smbParameters, ParameterOptions.now.toLocalDate());
+//            for (LocalDate ld : context.bankHolidays.keySet()) {
+//                // System.out.println(ld.toString() + " " + bankHolidays.get(ld));
+//                ProjectCalendarException calendarException = projectCalendar.addCalendarException(ld, ld);
+//                calendarException.setName(context.bankHolidays.get(ld));
+//            }
+
+        }
+        ProjectCalendar projectPropertiesCalendar = projectProperties.getDefaultCalendar();
+        if (projectPropertiesCalendar == null) {
+            projectProperties.setDefaultCalendar(projectCalendar);
+        }
+
+    }
+
     @JsonIgnore
     public boolean isClosed() {
         return getStatus().equals(Status.CLOSED);
@@ -259,5 +345,24 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
             //calculate the release date based on the work done and the remaining work
             releaseDate = ReportUtil.calculateReleaseDate(getStart(), now, getWorked(), DateUtil.add(getWorked(), getRemaining()));
         }
+    }
+
+    @JsonIgnore
+    private void setProjectProperties() {
+        ProjectProperties properties = projectFile.getProjectProperties();
+//        properties.setProjectTitle(new File(XlsxUtil.removeExtension(xlsxFile)).getName());
+//        properties.setAuthor("XLSX-to-MPP " + moduleVersion);
+        properties.setCurrentDate(null);
+        properties.setDefaultStartTime(LocalTime.of(8, 0));
+        properties.setDefaultEndTime(LocalTime.of(16, 30));
+        properties.setMinutesPerDay((int) (7.5 * 60));
+        properties.setMinutesPerWeek(5 * (int) (7.5 * 60));
+        //        properties.setDefaultDurationUnits(TimeUnit.HOURS);
+        //        TaskUtil.createMetaData(projectFile);
+        //        Map<String, Object> customProperties = new HashMap<>();
+        //        HashMap<Task, MetaData> mdMap = new HashMap<>();
+        //        customProperties.put(MetaData.METADATA, mdMap);
+        //        properties.setCustomProperties(customProperties);
+        //        HashMap<Task, MetaData> mdMap1 = (HashMap<Task, MetaData>)projectfile.getProjectProperties().getCustomProperties().get(MetaData.METADATA);
     }
 }

@@ -17,109 +17,88 @@
 
 package de.bushnaq.abdalla.projecthub.ui;
 
-import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
+import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import de.bushnaq.abdalla.projecthub.Context;
+import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.api.SprintApi;
+import de.bushnaq.abdalla.projecthub.api.TaskApi;
+import de.bushnaq.abdalla.projecthub.api.UserApi;
+import de.bushnaq.abdalla.projecthub.api.WorklogApi;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
+import de.bushnaq.abdalla.projecthub.report.burndown.BurnDownChart;
+import de.bushnaq.abdalla.projecthub.report.burndown.RenderDao;
 import de.bushnaq.abdalla.projecthub.ui.view.MainLayout;
+import de.bushnaq.abdalla.util.Util;
 import de.bushnaq.abdalla.util.date.DateUtil;
+import de.bushnaq.abdalla.util.date.ReportUtil;
 import jakarta.annotation.security.PermitAll;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.time.Clock;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
+
+// Create a utility method for generating two-part cells
+
 
 @Route("sprint")
 @PageTitle("Sprint Page")
 //@Menu(order = 1, icon = "vaadin:factory", title = "project List")
 @PermitAll // When security is enabled, allow all authenticated users
 public class SprintView extends Main implements AfterNavigationObserver {
-    public static final String       SPRINT_GRID_NAME_PREFIX = "sprint-grid-name-";
-    private final       Grid<Sprint> grid;
-    private final       H2           pageTitle;
-    private             Long         productId;
-    private             Long         projectId;
-    private final       SprintApi    sprintApi;
-    private             Long         versionId;
+    public static final String        SPRINT_GRID_NAME_PREFIX = "sprint-grid-name-";
+    private final       Clock         clock;
+    @Autowired
+    protected           Context       context;
+    private final       LocalDateTime created;
+    final               Logger        logger                  = LoggerFactory.getLogger(this.getClass());
+    private final       LocalDateTime now;
+    private final       H2            pageTitle;
+    private             Long          productId;
+    private             Long          projectId;
+    private             Sprint        sprint;
+    private final       SprintApi     sprintApi;
+    private             Long          sprintId;
+    private final       TaskApi       taskApi;
+    private final       UserApi       userApi;
+    private             Long          versionId;
+    private final       WorklogApi    worklogApi;
 
-    public SprintView(SprintApi sprintApi, Clock clock) {
-        this.sprintApi = sprintApi;
+    public SprintView(WorklogApi worklogApi, TaskApi taskApi, SprintApi sprintApi, UserApi userApi, Clock clock) {
+        created         = LocalDateTime.now(clock);
+        this.worklogApi = worklogApi;
+        this.taskApi    = taskApi;
+        this.sprintApi  = sprintApi;
+        this.userApi    = userApi;
+        this.clock      = clock;
+        this.now        = LocalDateTime.now(clock);
 
         pageTitle = new H2("Projects");
         pageTitle.addClassNames(
                 LumoUtility.Margin.Top.MEDIUM,
                 LumoUtility.Margin.Bottom.SMALL
         );
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
-
-        grid = new Grid<>();
-        // Only show sprints for the selected project
-        if (projectId != null) {
-            grid.setItems(sprintApi.getAll(projectId));
-        } else {
-            grid.setItems(sprintApi.getAll());
-        }
-        grid.addColumn(Sprint::getKey).setHeader("Key");
-        grid.addColumn(new ComponentRenderer<>(sprint -> {
-            Div div    = new Div();
-            Div square = new Div();
-            square.setMinHeight("16px");
-            square.setMaxHeight("16px");
-            square.setMinWidth("16px");
-            square.setMaxWidth("16px");
-//                        square.getStyle().set("background-color", "#" + ColorUtil.colorToHtmlColor(sprint.getColor()));
-            square.getStyle().set("float", "left");
-            square.getStyle().set("margin", "1px");
-            div.add(square);
-            div.add(sprint.getName());
-            div.setId(SPRINT_GRID_NAME_PREFIX + sprint.getName());
-            return div;
-        })).setHeader("Name");
-//        grid.addColumn(version -> dateTimeFormatter.format(version.getCreated())).setHeader("Created");
-//        grid.addColumn(version -> dateTimeFormatter.format(version.getUpdated())).setHeader("Updated");
-        grid.addColumn(sprint -> dateTimeFormatter.format(sprint.getStart())).setHeader("Start");
-        grid.addColumn(sprint -> dateTimeFormatter.format(sprint.getEnd())).setHeader("End");
-        grid.addColumn(sprint -> sprint.getStatus().name()).setHeader("Status");
-        grid.addColumn(sprint -> DateUtil.createDurationString(sprint.getOriginalEstimation(), false, true, true)).setHeader("Original Estimation");
-        grid.addColumn(sprint -> DateUtil.createDurationString(sprint.getWorked(), false, true, true)).setHeader("Worked");
-        grid.addColumn(sprint -> DateUtil.createDurationString(sprint.getRemaining(), false, true, true)).setHeader("Remaining");
-        grid.setSizeFull();
-        //- Add click listener to navigate to TaskView with the selected version ID
-        grid.addItemClickListener(event -> {
-            Sprint selectedSprint = event.getItem();
-            //- Create parameters map
-            Map<String, String> params = new HashMap<>();
-            params.put("product", String.valueOf(productId));
-            params.put("version", String.valueOf(versionId));
-            params.put("project", String.valueOf(projectId));
-            params.put("sprint", String.valueOf(selectedSprint.getId()));
-            //- Navigate with query parameters
-            UI.getCurrent().navigate(
-                    TaskView.class,
-                    QueryParameters.simple(params)
-            );
-        });
-
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        add(pageTitle, grid);
     }
 
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
-        //- Get productId from query parameters
         Location        location        = event.getLocation();
         QueryParameters queryParameters = location.getQueryParameters();
-        // Check if productId is present in the query parameters
         if (queryParameters.getParameters().containsKey("product")) {
             this.productId = Long.parseLong(queryParameters.getParameters().get("product").getFirst());
         }
@@ -128,34 +107,343 @@ public class SprintView extends Main implements AfterNavigationObserver {
         }
         if (queryParameters.getParameters().containsKey("project")) {
             this.projectId = Long.parseLong(queryParameters.getParameters().get("project").getFirst());
-            pageTitle.setText("Sprints of Project ID: " + projectId);
         }
-        //- Only now the component is attached to the DOM
+        if (queryParameters.getParameters().containsKey("sprint")) {
+            this.sprintId = Long.parseLong(queryParameters.getParameters().get("sprint").getFirst());
+        }
+        //- populate grid with tasks of the sprint
+        sprint = sprintApi.getById(sprintId);
+        sprint.initialize();
+        sprint.initUserMap(userApi.getAll(sprintId));
+        sprint.initTaskMap(taskApi.getAll(sprintId), worklogApi.getAll(sprintId));
+
+        renderBurnDownGraph();
+        pageTitle.setText(sprint.getName());
+        //- Update breadcrumbs
         getElement().getParent().getComponent()
                 .ifPresent(component -> {
                     if (component instanceof MainLayout mainLayout) {
                         mainLayout.getBreadcrumbs().clear();
-                        mainLayout.getBreadcrumbs().addItem("Products", ProductView.class);
+                        mainLayout.getBreadcrumbs().addItem("Products", ProductListView.class);
                         {
                             Map<String, String> params = new HashMap<>();
                             params.put("product", String.valueOf(productId));
-                            mainLayout.getBreadcrumbs().addItem("Versions", VersionView.class, params);
+                            mainLayout.getBreadcrumbs().addItem("Versions", VersionListView.class, params);
                         }
                         {
                             Map<String, String> params = new HashMap<>();
                             params.put("product", String.valueOf(productId));
                             params.put("version", String.valueOf(versionId));
-                            mainLayout.getBreadcrumbs().addItem("Projects", ProjectView.class, params);
+                            mainLayout.getBreadcrumbs().addItem("Projects", ProjectListView.class, params);
                         }
                         {
                             Map<String, String> params = new HashMap<>();
                             params.put("product", String.valueOf(productId));
                             params.put("version", String.valueOf(versionId));
                             params.put("project", String.valueOf(projectId));
-                            mainLayout.getBreadcrumbs().addItem("Sprints", SprintView.class, params);
+                            mainLayout.getBreadcrumbs().addItem("Sprints", SprintListView.class, params);
+                        }
+                        {
+                            Map<String, String> params = new HashMap<>();
+                            params.put("product", String.valueOf(productId));
+                            params.put("version", String.valueOf(versionId));
+                            params.put("project", String.valueOf(projectId));
+                            params.put("sprint", String.valueOf(sprintId));
+                            mainLayout.getBreadcrumbs().addItem("Tasks", TaskListView.class, params);
                         }
                     }
                 });
+        createSprintDetailsLayout();
+        logTime();
+    }
+
+    //    private Div createFieldDisplay(String label, String value) {
+//        Div container = new Div();
+//        container.getStyle()
+//                .set("display", "flex")
+//                .set("flex-direction", "column")
+//                .set("padding", "var(--lumo-space-s)")
+//                .set("background", "var(--lumo-base-color)");
+//
+//        // Value part (top)
+//        Span valueSpan = new Span(value);
+//        valueSpan.getStyle()
+//                .set("font-weight", "500")
+//                .set("font-size", "var(--lumo-font-size-xl)");
+//
+//        // Name part with HTML support for special characters
+//        Span nameSpan = new Span();
+//        nameSpan.getElement().setProperty("innerHTML", label); // Use innerHTML to render HTML entities
+//        nameSpan.getStyle()
+//                .set("font-size", "var(--lumo-font-size-xs)")
+//                .set("color", "var(--lumo-secondary-text-color)")
+//                .set("margin-top", "var(--lumo-space-xs)");
+//
+//        container.add(valueSpan, nameSpan);
+//        return container;
+//    }
+//    private Div createFieldDisplay(String label, String value, String status) {
+//        Div container = new Div();
+//        container.getStyle()
+//                .set("display", "flex")
+//                .set("flex-direction", "column")
+//                .set("padding", "var(--lumo-space-s)")
+//                .set("background", "var(--lumo-base-color)");
+//
+//        // Value part (top)
+//        Span valueSpan = new Span(value);
+//        valueSpan.getStyle()
+//                .set("font-weight", "500")
+//                .set("font-size", "var(--lumo-font-size-xl)");
+//
+//        // Apply status-based styling if status is provided
+//        if (status != null) {
+//            switch (status) {
+//                case "GOOD":
+//                    valueSpan.getStyle().set("background-color", "var(--lumo-success-color-10pct)");
+//                    break;
+//                case "NORMAL":
+//                    // Default styling
+//                    break;
+//                case "WARNING":
+//                    valueSpan.getStyle().set("background-color", "rgba(255, 179, 0, 0.1)");
+//                    break;
+//                case "CRITICAL":
+//                    valueSpan.getStyle().set("background-color", "var(--lumo-error-color-10pct)");
+//                    break;
+//            }
+//        }
+//
+//        // Name part with HTML support for special characters
+//        Span nameSpan = new Span();
+//        nameSpan.getElement().setProperty("innerHTML", label);
+//        nameSpan.getStyle()
+//                .set("font-size", "var(--lumo-font-size-xs)")
+//                .set("color", "var(--lumo-secondary-text-color)")
+//                .set("margin-top", "var(--lumo-space-xs)");
+//
+//        container.add(valueSpan, nameSpan);
+//        return container;
+//    }
+    private Div createFieldDisplay(String label, String value, String status) {
+        Div container = new Div();
+        container.getStyle()
+                .set("display", "flex")
+                .set("flex-direction", "column")
+                .set("padding", "var(--lumo-space-s)")
+                .set("background", "var(--lumo-base-color)");
+
+        // Create a wrapper div for the value part that doesn't stretch
+        Div valueWrapper = new Div();
+        valueWrapper.getStyle()
+                .set("display", "flex") // Use flex to allow inner content to determine size
+                .set("width", "auto");  // Don't stretch to full width
+
+        // Value part (top)
+        Span valueSpan = new Span(value);
+        valueSpan.getStyle()
+                .set("font-weight", "500")
+                .set("font-size", "var(--lumo-font-size-xl)");
+
+        // Apply status-based styling if status is provided
+        if (status != null) {
+            valueSpan.getStyle()
+                    .set("padding", "0 var(--lumo-space-xs)")
+                    .set("border-radius", "var(--lumo-border-radius-s)");
+
+            switch (status) {
+                case "GOOD":
+                    valueSpan.getStyle().set("background-color", "var(--lumo-success-color)");
+                    break;
+                case "NORMAL":
+                    // Default styling
+                    break;
+                case "WARNING":
+                    valueSpan.getStyle().set("background-color", "rgba(255, 179, 0, 1)");
+                    break;
+                case "CRITICAL":
+                    valueSpan.getStyle().set("background-color", "var(--lumo-error-color)");
+                    break;
+            }
+        }
+
+        valueWrapper.add(valueSpan);
+
+        // Name part with HTML support for special characters
+        Span nameSpan = new Span();
+        nameSpan.getElement().setProperty("innerHTML", label);
+        nameSpan.getStyle()
+                .set("font-size", "var(--lumo-font-size-xs)")
+                .set("color", "var(--lumo-secondary-text-color)")
+                .set("margin-top", "var(--lumo-space-xs)");
+
+        container.add(valueWrapper, nameSpan);
+        return container;
+    }
+
+    // Overload for backward compatibility
+    private Div createFieldDisplay(String label, String value) {
+        return createFieldDisplay(label, value, null);
+    }
+
+    private RenderDao createRenderDao(Context context, Sprint sprint, String column, LocalDateTime now, int chartWidth, int chartHeight, String link) {
+        RenderDao dao = new RenderDao();
+        dao.context            = context;
+        dao.column             = column;
+        dao.sprintName         = column + "-burn-down";
+        dao.link               = link;
+        dao.start              = sprint.getStart();
+        dao.now                = now;
+        dao.end                = sprint.getEnd();
+        dao.release            = sprint.getReleaseDate();
+        dao.chartWidth         = chartWidth;
+        dao.chartHeight        = chartHeight;
+        dao.sprint             = sprint;
+        dao.estimatedBestWork  = DateUtil.add(sprint.getWorked(), sprint.getRemaining());
+        dao.estimatedWorstWork = null;
+        dao.maxWorked          = DateUtil.add(sprint.getWorked(), sprint.getRemaining());
+        dao.remaining          = sprint.getRemaining();
+        dao.worklog            = sprint.getWorklogs();
+        dao.worklogRemaining   = sprint.getWorklogRemaining();
+        dao.cssClass           = "scheduleWithMargin";
+        dao.graphicsTheme      = context.parameters.graphicsTheme;
+        return dao;
+    }
+
+    private void createSprintDetailsLayout() {
+        final DateTimeFormatter dtfymd = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+
+        // Create a container with CSS Grid layout
+        Div gridContainer = new Div();
+        gridContainer.getStyle()
+                .set("display", "grid")
+                .set("grid-template-columns", "repeat(4, 1fr) 2fr repeat(2, 1fr)")  // 4 columns left, 1 middle (wider), 2 right
+                .set("grid-template-rows", "auto auto auto auto")  // 3 rows
+                .set("gap", "var(--lumo-space-m)")  // spacing between cells
+                .set("width", "100%")
+                .set("height", "auto");
+
+        Duration estimation     = DateUtil.add(sprint.getWorked(), sprint.getRemaining());
+        String   manDelayString = ReportUtil.calcualteManDelayString(sprint.getStart(), now, sprint.getEnd(), sprint.getWorked(), DateUtil.add(sprint.getWorked(), sprint.getRemaining()));
+        double   delayFraction  = ReportUtil.calcualteDelayFraction(sprint.getStart(), now, sprint.getEnd(), sprint.getWorked(), DateUtil.add(sprint.getWorked(), sprint.getRemaining()));
+        String   status         = HtmlColor.calculateStatusColor(delayFraction);
+
+        // First row
+        gridContainer.add(createFieldDisplay("Sprint Name", sprint.getName()));//column 1
+        gridContainer.add(createFieldDisplay("Sprint Start Date", DateUtil.createDateString(sprint.getStart(), dtfymd)));//column 2
+        gridContainer.add(createFieldDisplay("Total Work Days", "" + DateUtil.calculateWorkingDaysIncluding(sprint.getStart().toLocalDate(), sprint.getEnd().toLocalDate())));//column 3
+        gridContainer.add(createFieldDisplay("Remaining Work Days", "" + DateUtil.calculateWorkingDaysIncluding(now, sprint.getEnd())));//column 4
+        gridContainer.add(createFieldDisplay("Current Effort Delay", String.format("%s (%.0f%%)", manDelayString, 100 * delayFraction), status));//column 6
+        gridContainer.add(createFieldDisplay("&Sigma; Effort Spent", DateUtil.createDurationString(sprint.getWorked(), false, true, false)));//column 7
+
+        // Second row
+        gridContainer.add(createFieldDisplay("", ""));//column 1
+        gridContainer.add(createFieldDisplay("Sprint End Date", DateUtil.createDateString(sprint.getEnd(), dtfymd)));//column 2
+        gridContainer.add(createFieldDisplay("Expected Progress", String.format("%.0f%%", 100 * ReportUtil.calcualteExpectedProgress(sprint.getStart(), now, sprint.getEnd(), sprint.getWorked(), sprint.getOriginalEstimation(), estimation, sprint.getRemaining()))));//column 3
+        gridContainer.add(createFieldDisplay("Progress", String.format("%.0f%%", 100 * ReportUtil.calcualteProgress(sprint.getWorked(), estimation))));//column 4
+        gridContainer.add(createFieldDisplay("Current Schedule Delay", DateUtil.createDurationString(ReportUtil.calcualteWorkDaysMiliseconsDelay(sprint.getStart(), now, sprint.getEnd(), sprint.getWorked(), sprint.getOriginalEstimation(), estimation, sprint.getRemaining()), false, true, false)));//column 6
+        gridContainer.add(createFieldDisplay("&Sigma; Effort Estimate", DateUtil.createWorkDayDurationString(DateUtil.add(sprint.getWorked(), sprint.getRemaining()), false, true, false)));//column 7
+
+
+        // Third row
+        gridContainer.add(createFieldDisplay("3.1", "a"));//column 1
+        gridContainer.add(createFieldDisplay("3.2", "b"));//column 2
+        gridContainer.add(createFieldDisplay("3.3", "a"));//column 3
+        gridContainer.add(createFieldDisplay("3.4", "b"));//column 4
+        gridContainer.add(createFieldDisplay("3.6", "a"));//column 6
+        gridContainer.add(createFieldDisplay("3.7", "b"));//column 7
+
+
+        // forth row
+        gridContainer.add(createFieldDisplay("4.1", "a"));//column 1
+        gridContainer.add(createFieldDisplay("4.2", "b"));//column 2
+        gridContainer.add(createFieldDisplay("4.3", "a"));//column 3
+        gridContainer.add(createFieldDisplay("4.4", "b"));//column 4
+        gridContainer.add(createFieldDisplay("4.6", "a"));//column 6
+        gridContainer.add(createFieldDisplay("4.7", "b"));//column 7
+
+        // Create the spanning column (column 5)
+        Div spanningColumn = new Div();
+        spanningColumn.getStyle()
+                .set("grid-column", "5 / 6")  // Column 5
+                .set("grid-row", "1 / 5")     // Span all 4 rows
+                .set("padding", "var(--lumo-space-m)")
+                .set("background-color", "var(--lumo-base-color)");
+
+        // Add SVG image
+        try {
+            // Create a stream resource from the ByteArrayOutputStream
+            StreamResource resource = new StreamResource("burndown.svg", () -> {
+                try (ByteArrayOutputStream outputStream = renderBurnDownGraph()) {
+                    // Convert ByteArrayOutputStream to ByteArrayInputStream
+                    return new ByteArrayInputStream(outputStream.toByteArray());
+                } catch (Exception e) {
+                    logger.error("Error creating burndown chart", e);
+                    return new ByteArrayInputStream(new byte[0]); // Empty stream in case of error
+                }
+            });
+            // Create an image component with the SVG resource
+            Image burndownChart = new Image(resource, "Sprint Burndown Chart");
+            burndownChart.setWidthFull();
+            burndownChart.getStyle()
+//                    .set("max-height", "400px") // Adjust this value as needed
+                    .set("object-fit", "contain") // Maintain aspect ratio
+                    .set("margin-top", "var(--lumo-space-m)");
+
+            spanningColumn.add(burndownChart);
+        } catch (Exception e) {
+            spanningColumn.add(new Paragraph("Error loading burndown chart: " + e.getMessage()));
+        }
+        gridContainer.add(spanningColumn);
+
+        add(gridContainer);
+    }
+
+    private ComponentRenderer<Div, Sprint> createTwoPartRenderer(
+            Function<Sprint, String> valueProvider,
+            Function<Sprint, String> nameProvider) {
+
+        return new ComponentRenderer<>(item -> {
+            Div container = new Div();
+            container.getStyle()
+                    .set("display", "flex")
+                    .set("flex-direction", "column");
+
+            // Value part (top)
+            Span value = new Span(valueProvider.apply(item));
+            value.getStyle()
+                    .set("font-weight", "normal");
+
+            // Name part (bottom, smaller)
+            Span name = new Span(nameProvider.apply(item));
+            name.getStyle()
+                    .set("font-size", "var(--lumo-font-size-xs)")
+                    .set("color", "var(--lumo-secondary-text-color)");
+
+            container.add(value, name);
+            return container;
+        });
+    }
+
+    private void logTime() {
+        logger.info("generated page in {}", DateUtil.create24hDurationString(Duration.between(created, LocalDateTime.now()), true, true, true, false));
+    }
+
+    ByteArrayOutputStream renderBurnDownGraph() {
+        RenderDao             dao = createRenderDao(context, sprint, "burn-down", ParameterOptions.getLocalNow(), 640, 400, "sprint-" + sprint.getId() + "/sprint.html");
+        ByteArrayOutputStream o   = new ByteArrayOutputStream(64 * 1024); // 64 KB
+        try {
+            BurnDownChart chart = new BurnDownChart("/", dao);
+            chart.generateImage(Util.generateCopyrightString(ParameterOptions.getLocalNow()), o);
+            return o;
+        } catch (Exception e) {
+            try {
+                o.close(); // Close the stream in case of error
+            } catch (Exception closeException) {
+                logger.warn("Failed to close output stream", closeException);
+            }
+            throw new RuntimeException(e);
+        }
     }
 
 }

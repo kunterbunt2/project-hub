@@ -15,21 +15,8 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.util;
+package de.bushnaq.abdalla.projecthub.ui;
 
-import de.bushnaq.abdalla.projecthub.ui.SprintListView;
-import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
-
-import static de.bushnaq.abdalla.projecthub.ui.ProjectListView.PROJECT_GRID_NAME_PREFIX;
-
-public class ProjectViewTester {
-    private final SeleniumHandler seleniumHandler;
-
-    public ProjectViewTester(SeleniumHandler seleniumHandler) {
-        this.seleniumHandler = seleniumHandler;
-    }
-
-    public void selectProject(String name) {
-        seleniumHandler.selectGridRow(PROJECT_GRID_NAME_PREFIX, SprintListView.class, name);
-    }
+public enum SprintStatus {
+    CRITICAL, WARNING, GOOD, NORMAL
 }

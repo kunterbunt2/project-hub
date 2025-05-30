@@ -159,6 +159,10 @@
             </exclusions>
             <!--            <scope>test</scope>-->
         </dependency>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-lumo-theme</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

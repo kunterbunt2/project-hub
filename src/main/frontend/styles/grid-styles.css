@@ -1,0 +1,14 @@
+.jira-style-grid {
+  border: 1px solid var(--lumo-contrast-10pct);
+}
+
+.jira-style-grid [part~="cell"] {
+  border-color: var(--lumo-contrast-10pct);
+  padding: 4px 8px !important;
+}
+
+.jira-style-grid [part~="header-cell"] {
+  padding: 4px 8px !important; /* Reduce header cell padding (top/bottom, left/right) */
+}
+
+

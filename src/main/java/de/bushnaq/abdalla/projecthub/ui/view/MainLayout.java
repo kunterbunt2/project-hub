@@ -66,11 +66,12 @@ public final class MainLayout extends AppLayout {
         // Add navigation tabs to the center
         createNavTabs();
         tabs.addClassNames(Margin.Horizontal.MEDIUM);
+        ThemeToggle themeToggle = new ThemeToggle();
 
         // Add user menu to the right
         Component userMenu = createUserMenu();
 
-        navbarLayout.add(logoLayout, tabs, userMenu);
+        navbarLayout.add(logoLayout, tabs, themeToggle, userMenu);
         navbarLayout.expand(tabs);
 
         addToNavbar(true, navbarLayout);

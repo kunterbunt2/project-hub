@@ -17,10 +17,10 @@
 
 package de.bushnaq.abdalla.projecthub.util;
 
-import de.bushnaq.abdalla.projecthub.ui.ProjectView;
+import de.bushnaq.abdalla.projecthub.ui.ProjectListView;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 
-import static de.bushnaq.abdalla.projecthub.ui.VersionView.VERSION_GRID_NAME_PREFIX;
+import static de.bushnaq.abdalla.projecthub.ui.VersionListView.VERSION_GRID_NAME_PREFIX;
 
 public class VersionViewTester {
     private final SeleniumHandler seleniumHandler;
@@ -30,6 +30,6 @@ public class VersionViewTester {
     }
 
     public void selectVersion(String name) {
-        seleniumHandler.selectGridRow(VERSION_GRID_NAME_PREFIX, ProjectView.class, name);
+        seleniumHandler.selectGridRow(VERSION_GRID_NAME_PREFIX, ProjectListView.class, name);
     }
 }

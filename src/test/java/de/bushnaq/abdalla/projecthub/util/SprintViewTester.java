@@ -17,10 +17,10 @@
 
 package de.bushnaq.abdalla.projecthub.util;
 
-import de.bushnaq.abdalla.projecthub.ui.TaskView;
+import de.bushnaq.abdalla.projecthub.ui.SprintView;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 
-import static de.bushnaq.abdalla.projecthub.ui.SprintView.SPRINT_GRID_NAME_PREFIX;
+import static de.bushnaq.abdalla.projecthub.ui.SprintListView.SPRINT_GRID_NAME_PREFIX;
 
 public class SprintViewTester {
     private final SeleniumHandler seleniumHandler;
@@ -30,6 +30,6 @@ public class SprintViewTester {
     }
 
     public void selectSprint(String name) {
-        seleniumHandler.selectGridRow(SPRINT_GRID_NAME_PREFIX, TaskView.class, name);
+        seleniumHandler.selectGridRow(SPRINT_GRID_NAME_PREFIX, SprintView.class, name);
     }
 }

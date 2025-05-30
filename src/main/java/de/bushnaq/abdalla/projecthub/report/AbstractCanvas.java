@@ -32,10 +32,7 @@ import org.w3c.dom.Document;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 
@@ -78,6 +75,30 @@ public abstract class AbstractCanvas extends ReportLink {
         String extension = "svg";
 //        return String.format("<img class=\"%s\" usemap=\"#%s\" border=\"0\" src=\"%s.%s\">", cssClass, mapName, imageName, extension);
         return String.format("<img class=\"%s\" border=\"0\" src=\"%s.%s\">", cssClass, imageName, extension);
+    }
+
+    public void generateImage(String copyright, ByteArrayOutputStream o) throws Exception {
+        try (Profiler p1 = new Profiler(SampleType.GPU)) {
+//            String imageFileName;
+//            if (path.isEmpty()) {
+//                imageFileName = String.format("%s.svg", imageName);
+//            } else {
+//                imageFileName = String.format(path + "/%s.svg", imageName);
+//            }
+            prepareSvgGraphics();
+            drawBackground();
+            drawCaption(graphics2D);
+            createReport();
+            drawFooter(graphics2D);
+            drawBorder(graphics2D);
+            try (Profiler p2 = new Profiler(SampleType.FILE)) {
+                boolean useCSS = true; // we want to use CSS style attributes
+                Writer  out    = new OutputStreamWriter(o, StandardCharsets.UTF_8);
+                svgGenerator.stream(out, useCSS);
+            }
+//            text = FileUtil.loadFile(null, imageFileName).replace("<svg ", "<svg class=\"qtip-shadow\"");
+        }
+
     }
 
     public void generateImage(String copyright, String description, String path) throws Exception {

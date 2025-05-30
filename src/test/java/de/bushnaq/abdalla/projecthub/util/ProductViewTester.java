@@ -17,10 +17,10 @@
 
 package de.bushnaq.abdalla.projecthub.util;
 
-import de.bushnaq.abdalla.projecthub.ui.VersionView;
+import de.bushnaq.abdalla.projecthub.ui.VersionListView;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 
-import static de.bushnaq.abdalla.projecthub.ui.ProductView.PRODUCT_GRID_NAME_PREFIX;
+import static de.bushnaq.abdalla.projecthub.ui.ProductListView.PRODUCT_GRID_NAME_PREFIX;
 
 public class ProductViewTester {
     private final SeleniumHandler seleniumHandler;
@@ -30,6 +30,6 @@ public class ProductViewTester {
     }
 
     public void selectProduct(String name) {
-        seleniumHandler.selectGridRow(PRODUCT_GRID_NAME_PREFIX, VersionView.class, name);
+        seleniumHandler.selectGridRow(PRODUCT_GRID_NAME_PREFIX, VersionListView.class, name);
     }
 }

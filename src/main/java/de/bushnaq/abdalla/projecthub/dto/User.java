@@ -131,6 +131,46 @@ public class User extends AbstractTimeAware implements Comparable<User> {
 
     }
 
+    public void initialize(Sprint sprint) {
+        ProjectCalendar resourceCalendar = getCalendar();
+        if (resourceCalendar == null) {
+            resourceCalendar = sprint.getProjectFile().addDefaultDerivedCalendar();
+            resourceCalendar.setParent(sprint.getCalendar());
+            resourceCalendar.setName(getName());
+            setCalendar(resourceCalendar);
+        }
+
+        //TODO rethink employee leaving company and coming back
+        ProjectCalendar pc = getCalendar();
+        LocalDate       endDateInclusive;
+        for (int i = 0; i < locations.size(); i++) {
+            Location  location           = locations.get(i);
+            LocalDate startDateInclusive = location.getStart();
+            if (i + 1 < locations.size())
+                endDateInclusive = locations.get(i + 1).getStart();//end of this location is start of next location
+            else
+                endDateInclusive = ParameterOptions.now.plusYears(MAX_PROJECT_LENGTH).toLocalDate();
+            HolidayManager holidayManager = HolidayManager.getInstance(ManagerParameters.create(location.getCountry()));
+            List<Holiday>  holidays       = holidayManager.getHolidays(startDateInclusive, endDateInclusive, location.getState()).stream().sorted().collect(Collectors.toList());
+            URL            url            = getClass().getClassLoader().getResource("holidays/carnival-holidays.xml");
+            if (url != null && "nw".equals(location.getState())) {
+                UrlManagerParameter urlManParam        = new UrlManagerParameter(url, new Properties());
+                HolidayManager      customManager      = HolidayManager.getInstance(urlManParam);
+                Set<Holiday>        additionalHolidays = customManager.getHolidays(startDateInclusive, endDateInclusive, location.getState());
+                holidays.addAll(additionalHolidays.stream().toList());
+            }
+            for (Holiday holiday : holidays) {
+                ProjectCalendarException pce = pc.addCalendarException(holiday.getDate());
+                pce.setName(holiday.getDescription());
+            }
+        }
+        for (OffDay offDay : getOffDays()) {
+            ProjectCalendarException pce = pc.addCalendarException(offDay.getFirstDay(), offDay.getLastDay());
+            pce.setName(offDay.getType().name());
+        }
+
+    }
+
     public void removeAvailability(Availability availability) {
         availabilities.remove(availability);
     }

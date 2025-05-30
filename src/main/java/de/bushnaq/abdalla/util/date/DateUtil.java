@@ -208,7 +208,7 @@ public class DateUtil {
         aTime                            = aTime.minusSeconds(_timePieces[MINUTE_INDEX] * 60L);
         _timePieces[SECONDS_INDEX]       = aTime.getSeconds();
         aTime                            = aTime.minusSeconds(_timePieces[SECONDS_INDEX]);
-        _timePieces[MILLI_SECONDS_INDEX] = aTime.getNano() / 1000;
+        _timePieces[MILLI_SECONDS_INDEX] = aTime.getNano() / 1000000;
 
         boolean _weFoundTheFirstNonezeroValue = aPrintLeadingZeros;
         int     _indexEnd                     = 0;
@@ -289,7 +289,7 @@ public class DateUtil {
         duration                         = duration.minusSeconds(_timePieces[MINUTE_INDEX] * 60L);
         _timePieces[SECONDS_INDEX]       = duration.getSeconds();
         duration                         = duration.minusSeconds(_timePieces[SECONDS_INDEX]);
-        _timePieces[MILLI_SECONDS_INDEX] = duration.getNano() / 1000;
+        _timePieces[MILLI_SECONDS_INDEX] = duration.getNano() / 1000000;
 
         boolean _weFoundTheFirstNonezeroValue = aPrintLeadingZeros;
         int     _indexEnd                     = 0;
@@ -549,7 +549,7 @@ public class DateUtil {
         duration                         = duration.minusSeconds(_timePieces[MINUTE_INDEX] * 60L);
         _timePieces[SECONDS_INDEX]       = duration.getSeconds();
         duration                         = duration.minusSeconds(_timePieces[SECONDS_INDEX]);
-        _timePieces[MILLI_SECONDS_INDEX] = duration.getNano() / 1000;
+        _timePieces[MILLI_SECONDS_INDEX] = duration.getNano() / 1000000;
 
         boolean _weFoundTheFirstNonezeroValue = aPrintLeadingZeros;
         int     _indexEnd                     = 0;

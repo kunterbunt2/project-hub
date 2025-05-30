@@ -36,17 +36,17 @@ import java.time.format.FormatStyle;
 import java.util.HashMap;
 import java.util.Map;
 
-@Route("product")
-@PageTitle("Product Page")
+@Route("product-list")
+@PageTitle("Product List Page")
 @Menu(order = 1, icon = "vaadin:factory", title = "product List")
 @PermitAll // When security is enabled, allow all authenticated users
-public class ProductView extends Main implements AfterNavigationObserver {
+public class ProductListView extends Main implements AfterNavigationObserver {
     public static final String        PRODUCT_GRID_NAME_PREFIX = "product-grid-name-";
-    public static final String        ROUTE                    = "product";
+    public static final String        ROUTE                    = "product-list";
     private final       Grid<Product> grid;
     private final       ProductApi    productApi;
 
-    public ProductView(ProductApi productApi, Clock clock) {
+    public ProductListView(ProductApi productApi, Clock clock) {
         this.productApi = productApi;
 
 
@@ -99,7 +99,7 @@ public class ProductView extends Main implements AfterNavigationObserver {
             params.put("product", String.valueOf(selectedProduct.getId()));
             // Navigate with query parameters
             UI.getCurrent().navigate(
-                    VersionView.class,
+                    VersionListView.class,
                     QueryParameters.simple(params)
             );
         });
@@ -116,7 +116,7 @@ public class ProductView extends Main implements AfterNavigationObserver {
                 .ifPresent(component -> {
                     if (component instanceof MainLayout mainLayout) {
                         mainLayout.getBreadcrumbs().clear();
-                        mainLayout.getBreadcrumbs().addItem("Products", ProductView.class);
+                        mainLayout.getBreadcrumbs().addItem("Products", ProductListView.class);
                     }
                 });
     }

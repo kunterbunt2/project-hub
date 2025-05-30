@@ -28,7 +28,7 @@ import java.time.Clock;
 
 @SpringBootApplication
 @ComponentScan
-@Theme("default")
+@Theme(value = "theme")
 public class Application implements AppShellConfigurator {
     @Bean
     public Clock clock() {
