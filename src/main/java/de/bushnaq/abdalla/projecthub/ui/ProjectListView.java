@@ -59,12 +59,6 @@ public class ProjectListView extends Main implements AfterNavigationObserver {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
         grid = new Grid<>();
-        //- Only show versions for the selected product
-        if (versionId != null) {
-            grid.setItems(projectApi.getAll(versionId));
-        } else {
-            grid.setItems(projectApi.getAll());
-        }
         grid.addColumn(Project::getKey).setHeader("Key");
         grid.addColumn(new ComponentRenderer<>(project -> {
             Div div    = new Div();
@@ -107,10 +101,9 @@ public class ProjectListView extends Main implements AfterNavigationObserver {
 
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
-        //- Get productId from query parameters
+        //- Get query parameters
         Location        location        = event.getLocation();
         QueryParameters queryParameters = location.getQueryParameters();
-        // Check if productId is present in the query parameters
         if (queryParameters.getParameters().containsKey("product")) {
             this.productId = Long.parseLong(queryParameters.getParameters().get("product").getFirst());
         }
@@ -118,7 +111,7 @@ public class ProjectListView extends Main implements AfterNavigationObserver {
             this.versionId = Long.parseLong(queryParameters.getParameters().get("version").getFirst());
             pageTitle.setText("Projects of Version " + versionId);
         }
-        //- Only now the component is attached to the DOM
+        //- update breadcrumbs
         getElement().getParent().getComponent()
                 .ifPresent(component -> {
                     if (component instanceof MainLayout mainLayout) {
@@ -137,5 +130,13 @@ public class ProjectListView extends Main implements AfterNavigationObserver {
                         }
                     }
                 });
+
+        //- populate grid
+        //- Only show versions for the selected product
+        if (versionId != null) {
+            grid.setItems(projectApi.getAll(versionId));
+        } else {
+            grid.setItems(projectApi.getAll());
+        }
     }
 }

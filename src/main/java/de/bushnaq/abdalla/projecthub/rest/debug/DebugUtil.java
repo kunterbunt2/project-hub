@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class DebugUtil {
-    public static boolean DEBUG = false;
+    public static boolean DEBUG = true;
     @Autowired
     ObjectMapper objectMapper;
 

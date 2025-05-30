@@ -61,12 +61,6 @@ public class SprintListView extends Main implements AfterNavigationObserver {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
         grid = new Grid<>();
-        // Only show sprints for the selected project
-        if (projectId != null) {
-            grid.setItems(sprintApi.getAll(projectId));
-        } else {
-            grid.setItems(sprintApi.getAll());
-        }
         grid.addColumn(Sprint::getKey).setHeader("Key");
         grid.addColumn(new ComponentRenderer<>(sprint -> {
             Div div    = new Div();
@@ -116,10 +110,9 @@ public class SprintListView extends Main implements AfterNavigationObserver {
 
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
-        //- Get productId from query parameters
+        //- Get query parameters
         Location        location        = event.getLocation();
         QueryParameters queryParameters = location.getQueryParameters();
-        // Check if productId is present in the query parameters
         if (queryParameters.getParameters().containsKey("product")) {
             this.productId = Long.parseLong(queryParameters.getParameters().get("product").getFirst());
         }
@@ -130,7 +123,7 @@ public class SprintListView extends Main implements AfterNavigationObserver {
             this.projectId = Long.parseLong(queryParameters.getParameters().get("project").getFirst());
             pageTitle.setText("Sprints of Project ID: " + projectId);
         }
-        //- Only now the component is attached to the DOM
+        //- update breadcrumbs
         getElement().getParent().getComponent()
                 .ifPresent(component -> {
                     if (component instanceof MainLayout mainLayout) {
@@ -156,6 +149,14 @@ public class SprintListView extends Main implements AfterNavigationObserver {
                         }
                     }
                 });
+
+        //- populate grid
+        // Only show sprints for the selected project
+        if (projectId != null) {
+            grid.setItems(sprintApi.getAll(projectId));
+        } else {
+            grid.setItems(sprintApi.getAll());
+        }
     }
 
 }

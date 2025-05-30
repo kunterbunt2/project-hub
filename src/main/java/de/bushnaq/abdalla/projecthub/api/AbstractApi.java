@@ -45,19 +45,14 @@ public class AbstractApi {
     protected AbstractApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
-        this.restTemplate.setErrorHandler(new DefaultResponseErrorHandler());
-
-        this.baseUrl = baseUrl;
-        // Configure message converters for JSON
-        restTemplate.getMessageConverters().clear();
-        MappingJackson2HttpMessageConverter messageConverter = new MappingJackson2HttpMessageConverter();
-        messageConverter.setObjectMapper(objectMapper);
-        restTemplate.getMessageConverters().add(messageConverter);
+        this.baseUrl      = baseUrl;
+        initialize(restTemplate, objectMapper);
     }
 
     protected AbstractApi(RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
+        initialize(restTemplate, objectMapper);
     }
 
     protected AbstractApi() {
@@ -98,6 +93,15 @@ public class AbstractApi {
                 throw new IllegalArgumentException(String.format("Error processing server response '%s'.", e.getResponseBodyAsString()));
             }
         }
+    }
+
+    private void initialize(RestTemplate restTemplate, ObjectMapper objectMapper) {
+        this.restTemplate.setErrorHandler(new DefaultResponseErrorHandler());
+        // Configure message converters for JSON
+        restTemplate.getMessageConverters().clear();
+        MappingJackson2HttpMessageConverter messageConverter = new MappingJackson2HttpMessageConverter();
+        messageConverter.setObjectMapper(objectMapper);
+        restTemplate.getMessageConverters().add(messageConverter);
     }
 
     @FunctionalInterface

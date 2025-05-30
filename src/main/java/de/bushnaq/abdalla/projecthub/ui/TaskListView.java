@@ -80,17 +80,12 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         // Add borders between columns
         grid.addThemeVariants(GridVariant.LUMO_COLUMN_BORDERS, GridVariant.LUMO_ROW_STRIPES);
 
-// Add custom styling for more JIRA-like appearance
+        // Add custom styling for more JIRA-like appearance
         grid.addClassName("jira-style-grid");
 
-// Apply custom styling directly to make borders lighter gray
+        // Apply custom styling directly to make borders lighter gray
         grid.getElement().getStyle().set("--lumo-contrast-10pct", "#e0e0e0");
         grid.setSizeFull();
-        // Add click listener to navigate to ProjectView with the selected version ID
-//        grid.addItemClickListener(event -> {
-//            Task selectedTask = event.getItem();
-//            UI.getCurrent().navigate(TaskView.class, selectedTask.getId());
-//        });
 
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
@@ -100,6 +95,7 @@ public class TaskListView extends Main implements AfterNavigationObserver {
 
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
+        //- Get query parameters
         Location        location        = event.getLocation();
         QueryParameters queryParameters = location.getQueryParameters();
         if (queryParameters.getParameters().containsKey("product")) {
@@ -115,12 +111,7 @@ public class TaskListView extends Main implements AfterNavigationObserver {
             this.sprintId = Long.parseLong(queryParameters.getParameters().get("sprint").getFirst());
             pageTitle.setText("Task of Sprint ID: " + sprintId);
         }
-        //- populate grid with tasks of the sprint
-        sprint = sprintApi.getById(sprintId);
-        sprint.initUserMap(userApi.getAll(sprintId));
-        sprint.initTaskMap(taskApi.getAll(sprintId), null);
-        pageTitle.setText("Task of Sprint ID: " + sprintId);
-        grid.setItems(sprint.getTasks());
+
         //- Update breadcrumbs
         getElement().getParent().getComponent()
                 .ifPresent(component -> {
@@ -155,6 +146,13 @@ public class TaskListView extends Main implements AfterNavigationObserver {
                         }
                     }
                 });
+
+        //- populate grid
+        sprint = sprintApi.getById(sprintId);
+        sprint.initUserMap(userApi.getAll(sprintId));
+        sprint.initTaskMap(taskApi.getAll(sprintId), null);
+        pageTitle.setText("Task of Sprint ID: " + sprintId);
+        grid.setItems(sprint.getTasks());
     }
 
     private void setupGridColumns() {
@@ -169,7 +167,6 @@ public class TaskListView extends Main implements AfterNavigationObserver {
             square.setMaxHeight("16px");
             square.setMinWidth("16px");
             square.setMaxWidth("16px");
-//                        square.getStyle().set("background-color", "#" + ColorUtil.colorToHtmlColor(task.getColor()));
             square.getStyle().set("float", "left");
             square.getStyle().set("margin", "1px");
             div.add(square);
@@ -178,8 +175,6 @@ public class TaskListView extends Main implements AfterNavigationObserver {
             return div;
         })).setHeader("Name").setAutoWidth(true);
         grid.addColumn(task -> task.getResourceId() != null ? sprint.getuser(task.getResourceId()).getName() : "").setHeader("Assigned").setAutoWidth(true);
-//        grid.addColumn(version -> dateTimeFormatter.format(version.getCreated())).setHeader("Created");
-//        grid.addColumn(version -> dateTimeFormatter.format(version.getUpdated())).setHeader("Updated");
         grid.addColumn(task -> dateTimeFormatter.format(task.getStart())).setHeader("Start").setAutoWidth(true);
         grid.addColumn(task -> dateTimeFormatter.format(task.getFinish())).setHeader("End").setAutoWidth(true);
         grid.addColumn(task -> !task.getOriginalEstimate().equals(Duration.ZERO) ? DateUtil.createDurationString(task.getOriginalEstimate(), false, true, false) : "").setHeader("Original Estimate").setAutoWidth(true);
@@ -202,16 +197,6 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         }).setHeader("Dependency").setAutoWidth(true);
         grid.addColumn(task -> task.getTaskMode().name()).setHeader("Mode").setAutoWidth(true);
 
-// Or set CSS variables that control padding
-//        grid.getElement().getStyle().set("--vaadin-grid-header-cell-height", "auto");
-//        grid.getElement().getStyle().set("--vaadin-grid-cell-padding", "4px 8px");
-//        grid.getElement().executeJs(
-//                "this.querySelector('thead tr th').forEach(cell => cell.style.padding = '4px 8px');"
-//        );
-//        grid.getElement().executeJs(
-//                "this.querySelector('thead tr th').forEach(cell => cell.style.padding = '4px 8px');"
-//        );
-//        "min-height: var(--lumo-size-s)"
     }
 
 }

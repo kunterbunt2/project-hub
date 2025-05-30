@@ -100,6 +100,7 @@ public class SprintView extends Main implements AfterNavigationObserver {
 
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
+        //- Get query parameters
         Location        location        = event.getLocation();
         QueryParameters queryParameters = location.getQueryParameters();
         if (queryParameters.getParameters().containsKey("product")) {
@@ -120,9 +121,8 @@ public class SprintView extends Main implements AfterNavigationObserver {
         sprint.initUserMap(userApi.getAll(sprintId));
         sprint.initTaskMap(taskApi.getAll(sprintId), worklogApi.getAll(sprintId));
 
-        renderBurnDownChart();
         pageTitle.setText(sprint.getName());
-        //- Update breadcrumbs
+        //- update breadcrumbs
         getElement().getParent().getComponent()
                 .ifPresent(component -> {
                     if (component instanceof MainLayout mainLayout) {
@@ -156,79 +156,12 @@ public class SprintView extends Main implements AfterNavigationObserver {
                         }
                     }
                 });
+//        renderBurnDownChart();
         createSprintDetailsLayout();
         createGanttChart();
         logTime();
     }
 
-    //    private Div createFieldDisplay(String label, String value) {
-//        Div container = new Div();
-//        container.getStyle()
-//                .set("display", "flex")
-//                .set("flex-direction", "column")
-//                .set("padding", "var(--lumo-space-s)")
-//                .set("background", "var(--lumo-base-color)");
-//
-//        // Value part (top)
-//        Span valueSpan = new Span(value);
-//        valueSpan.getStyle()
-//                .set("font-weight", "500")
-//                .set("font-size", "var(--lumo-font-size-xl)");
-//
-//        // Name part with HTML support for special characters
-//        Span nameSpan = new Span();
-//        nameSpan.getElement().setProperty("innerHTML", label); // Use innerHTML to render HTML entities
-//        nameSpan.getStyle()
-//                .set("font-size", "var(--lumo-font-size-xs)")
-//                .set("color", "var(--lumo-secondary-text-color)")
-//                .set("margin-top", "var(--lumo-space-xs)");
-//
-//        container.add(valueSpan, nameSpan);
-//        return container;
-//    }
-//    private Div createFieldDisplay(String label, String value, String status) {
-//        Div container = new Div();
-//        container.getStyle()
-//                .set("display", "flex")
-//                .set("flex-direction", "column")
-//                .set("padding", "var(--lumo-space-s)")
-//                .set("background", "var(--lumo-base-color)");
-//
-//        // Value part (top)
-//        Span valueSpan = new Span(value);
-//        valueSpan.getStyle()
-//                .set("font-weight", "500")
-//                .set("font-size", "var(--lumo-font-size-xl)");
-//
-//        // Apply status-based styling if status is provided
-//        if (status != null) {
-//            switch (status) {
-//                case "GOOD":
-//                    valueSpan.getStyle().set("background-color", "var(--lumo-success-color-10pct)");
-//                    break;
-//                case "NORMAL":
-//                    // Default styling
-//                    break;
-//                case "WARNING":
-//                    valueSpan.getStyle().set("background-color", "rgba(255, 179, 0, 0.1)");
-//                    break;
-//                case "CRITICAL":
-//                    valueSpan.getStyle().set("background-color", "var(--lumo-error-color-10pct)");
-//                    break;
-//            }
-//        }
-//
-//        // Name part with HTML support for special characters
-//        Span nameSpan = new Span();
-//        nameSpan.getElement().setProperty("innerHTML", label);
-//        nameSpan.getStyle()
-//                .set("font-size", "var(--lumo-font-size-xs)")
-//                .set("color", "var(--lumo-secondary-text-color)")
-//                .set("margin-top", "var(--lumo-space-xs)");
-//
-//        container.add(valueSpan, nameSpan);
-//        return container;
-//    }
     private Div createFieldDisplay(String label, String value, String status) {
         Div container = new Div();
         container.getStyle()
