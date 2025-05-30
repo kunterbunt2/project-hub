@@ -34,11 +34,12 @@ import org.springframework.transaction.annotation.Transactional;
 @AutoConfigureMockMvc
 @Transactional
 public class ProductListViewTest extends AbstractGanttTestUtil {
+    private final String            name    = "Product-2";
+    private final String            newName = "NewProduct-2";
     @Autowired
-    ProductViewTester productViewTester;
+    private       ProductViewTester productViewTester;
     @Autowired
-    private SeleniumHandler seleniumHandler;
-
+    private       SeleniumHandler   seleniumHandler;
 
     @Override
     protected void generateOneProduct(TestInfo testInfo) throws Exception {
@@ -48,21 +49,18 @@ public class ProductListViewTest extends AbstractGanttTestUtil {
     @Test
     public void testCreateCancel(TestInfo testInfo) throws Exception {
         productViewTester.switchToProductListView();
-        String name = "Product-2";
         productViewTester.createProductCancel(name);
     }
 
     @Test
     public void testCreateConfirm(TestInfo testInfo) throws Exception {
         productViewTester.switchToProductListView();
-        String name = "Product-2";
         productViewTester.createProductConfirm(name);
     }
 
     @Test
     public void testDeleteCancel(TestInfo testInfo) throws Exception {
         productViewTester.switchToProductListView();
-        String name = "Product-2";
         productViewTester.createProductConfirm(name);
         productViewTester.deleteProductCancel(name);
     }
@@ -70,7 +68,6 @@ public class ProductListViewTest extends AbstractGanttTestUtil {
     @Test
     public void testDeleteConfirm(TestInfo testInfo) throws Exception {
         productViewTester.switchToProductListView();
-        String name = "Product-2";
         productViewTester.createProductConfirm(name);
         productViewTester.deleteProductConfirm(name);
     }
@@ -78,18 +75,14 @@ public class ProductListViewTest extends AbstractGanttTestUtil {
     @Test
     public void testEditCancel(TestInfo testInfo) throws Exception {
         productViewTester.switchToProductListView();
-        String name = "Product-2";
         productViewTester.createProductConfirm(name);
-        String newName = "NewProduct-2";
         productViewTester.editProductCancel(name, newName);
     }
 
     @Test
     public void testEditConfirm(TestInfo testInfo) throws Exception {
         productViewTester.switchToProductListView();
-        String name = "Product-2";
         productViewTester.createProductConfirm(name);
-        String newName = "NewProduct-2";
         productViewTester.editProductConfirm(name, newName);
     }
 

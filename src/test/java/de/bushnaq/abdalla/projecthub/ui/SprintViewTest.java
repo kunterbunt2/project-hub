@@ -19,6 +19,7 @@ package de.bushnaq.abdalla.projecthub.ui;
 
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
+import de.bushnaq.abdalla.projecthub.rest.debug.DebugUtil;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import de.bushnaq.abdalla.projecthub.util.*;
 import org.junit.jupiter.api.TestInfo;
@@ -42,11 +43,11 @@ import java.util.List;
 @AutoConfigureMockMvc
 @Transactional
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-public class Login extends AbstractGanttTestUtil {
+public class SprintViewTest extends AbstractGanttTestUtil {
     @Autowired
-    ProductViewTester productViewTester;
+    private ProductViewTester productViewTester;
     @Autowired
-    private SeleniumHandler seleniumHandler;
+    private SeleniumHandler   seleniumHandler;
 
     private static String generateFeatureName(int t) {
         return String.format("Feature-%d", t);
@@ -113,7 +114,11 @@ public class Login extends AbstractGanttTestUtil {
         projectViewTester.selectProject("Project-0");
         SprintViewTester sprintViewTester = new SprintViewTester(seleniumHandler);
         sprintViewTester.selectSprint("sprint-0");
-        seleniumHandler.waitUntilBrowserClosed(0);
+        if (DebugUtil.DEBUG) {
+            seleniumHandler.waitUntilBrowserClosed(0);
+        } else {
+            seleniumHandler.waitUntilBrowserClosed(5000);
+        }
     }
 
 }

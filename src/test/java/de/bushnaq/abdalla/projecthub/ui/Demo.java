@@ -19,6 +19,7 @@ package de.bushnaq.abdalla.projecthub.ui;
 
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
+import de.bushnaq.abdalla.projecthub.rest.debug.DebugUtil;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import de.bushnaq.abdalla.projecthub.util.AbstractGanttTestUtil;
 import de.bushnaq.abdalla.projecthub.util.ProductViewTester;
@@ -47,9 +48,9 @@ import java.util.List;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class Demo extends AbstractGanttTestUtil {
     @Autowired
-    ProductViewTester productViewTester;
+    private ProductViewTester productViewTester;
     @Autowired
-    private SeleniumHandler seleniumHandler;
+    private SeleniumHandler   seleniumHandler;
 
     private static String generateFeatureName(int t) {
         return String.format("Feature-%d", t);
@@ -109,7 +110,11 @@ public class Demo extends AbstractGanttTestUtil {
         levelResources(testInfo, null);
         generateWorklogs(ParameterOptions.getLocalNow());
         productViewTester.switchToProductListView();
-        seleniumHandler.waitUntilBrowserClosed(0);
+        if (DebugUtil.DEBUG) {
+            seleniumHandler.waitUntilBrowserClosed(0);
+        } else {
+            seleniumHandler.waitUntilBrowserClosed(5000);
+        }
     }
 
 }
