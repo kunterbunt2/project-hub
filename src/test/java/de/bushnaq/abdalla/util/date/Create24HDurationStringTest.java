@@ -84,7 +84,7 @@ public class Create24HDurationStringTest {
     @Test
     public void test_01ms() throws IOException {
         LocalDateTime start = LocalDateTime.parse("2019-08-01T08:00", formatter);
-        LocalDateTime end   = LocalDateTime.parse("2019-08-01T08:00:00", formatter).plusNanos(1000);
+        LocalDateTime end   = LocalDateTime.parse("2019-08-01T08:00:00", formatter).plusNanos(1000000);
         //        Calendar start = new GregorianCalendar(2019, Calendar.AUGUST, 1, 8, 0);
         //        Calendar end = new GregorianCalendar(2019, Calendar.AUGUST, 1, 8, 0);
         //        end.add(Calendar.MILLISECOND, 1);

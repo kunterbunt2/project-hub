@@ -100,7 +100,7 @@ public class Login extends UiTestBase {
         TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
-        generateOneProduct(testInfo);
+//        generateOneProduct(testInfo);
         generateTasks(randomCase);
         levelResources(testInfo, null);
         generateWorklogs(ParameterOptions.getLocalNow());

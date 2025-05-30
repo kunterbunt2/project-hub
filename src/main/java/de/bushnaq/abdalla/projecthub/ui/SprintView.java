@@ -323,10 +323,13 @@ public class SprintView extends Main implements AfterNavigationObserver {
                 .set("width", "100%")
                 .set("height", "auto");
 
-        Duration estimation     = DateUtil.add(sprint.getWorked(), sprint.getRemaining());
-        String   manDelayString = ReportUtil.calcualteManDelayString(sprint.getStart(), now, sprint.getEnd(), sprint.getWorked(), DateUtil.add(sprint.getWorked(), sprint.getRemaining()));
-        double   delayFraction  = ReportUtil.calcualteDelayFraction(sprint.getStart(), now, sprint.getEnd(), sprint.getWorked(), DateUtil.add(sprint.getWorked(), sprint.getRemaining()));
-        String   status         = HtmlColor.calculateStatusColor(delayFraction);
+        Duration estimation                      = DateUtil.add(sprint.getWorked(), sprint.getRemaining());
+        String   manDelayString                  = ReportUtil.calcualteManDelayString(sprint.getStart(), now, sprint.getEnd(), sprint.getWorked(), DateUtil.add(sprint.getWorked(), sprint.getRemaining()));
+        double   delayFraction                   = ReportUtil.calcualteDelayFraction(sprint.getStart(), now, sprint.getEnd(), sprint.getWorked(), DateUtil.add(sprint.getWorked(), sprint.getRemaining()));
+        String   status                          = HtmlColor.calculateStatusColor(delayFraction);
+        Double   extrapolatedDelayFraction       = ReportUtil.calculateExtrapolatedScheduleDelayFraction(sprint.getStart(), now, sprint.getEnd(), sprint.getWorked(), DateUtil.add(sprint.getWorked(), sprint.getRemaining()));
+        String   extrapolatedStatus              = HtmlColor.calculateStatusColor(extrapolatedDelayFraction);
+        String   extrapolatedScheduleDelayString = ReportUtil.calculateExtrapolatedScheduleDelayString(sprint.getStart(), now, sprint.getEnd(), sprint.getWorked(), DateUtil.add(sprint.getWorked(), sprint.getRemaining()));// Delay
 
         // First row
         gridContainer.add(createFieldDisplay("Sprint Name", sprint.getName()));//column 1
@@ -340,18 +343,26 @@ public class SprintView extends Main implements AfterNavigationObserver {
         gridContainer.add(createFieldDisplay("", ""));//column 1
         gridContainer.add(createFieldDisplay("Sprint End Date", DateUtil.createDateString(sprint.getEnd(), dtfymd)));//column 2
         gridContainer.add(createFieldDisplay("Expected Progress", String.format("%.0f%%", 100 * ReportUtil.calcualteExpectedProgress(sprint.getStart(), now, sprint.getEnd(), sprint.getWorked(), sprint.getOriginalEstimation(), estimation, sprint.getRemaining()))));//column 3
-        gridContainer.add(createFieldDisplay("Progress", String.format("%.0f%%", 100 * ReportUtil.calcualteProgress(sprint.getWorked(), estimation))));//column 4
-        gridContainer.add(createFieldDisplay("Current Schedule Delay", DateUtil.createDurationString(ReportUtil.calcualteWorkDaysMiliseconsDelay(sprint.getStart(), now, sprint.getEnd(), sprint.getWorked(), sprint.getOriginalEstimation(), estimation, sprint.getRemaining()), false, true, false)));//column 6
+        gridContainer.add(createFieldDisplay("Progress", String.format("%.0f%%", 100 * ReportUtil.calcualteProgress(sprint.getWorked(), estimation)), status));//column 4
+        gridContainer.add(createFieldDisplay("Current Schedule Delay", DateUtil.createDurationString(ReportUtil.calcualteWorkDaysMiliseconsDelay(sprint.getStart(), now, sprint.getEnd(), sprint.getWorked(), sprint.getOriginalEstimation(), estimation, sprint.getRemaining()), false, true, false), status));//column 6
         gridContainer.add(createFieldDisplay("&Sigma; Effort Estimate", DateUtil.createWorkDayDurationString(DateUtil.add(sprint.getWorked(), sprint.getRemaining()), false, true, false)));//column 7
 
 
         // Third row
         gridContainer.add(createFieldDisplay("3.1", "a"));//column 1
-        gridContainer.add(createFieldDisplay("3.2", "b"));//column 2
-        gridContainer.add(createFieldDisplay("3.3", "a"));//column 3
-        gridContainer.add(createFieldDisplay("3.4", "b"));//column 4
-        gridContainer.add(createFieldDisplay("3.6", "a"));//column 6
-        gridContainer.add(createFieldDisplay("3.7", "b"));//column 7
+        if (sprint.getRemaining() == null || sprint.getRemaining().equals(Duration.ZERO)) {
+            gridContainer.add(createFieldDisplay("Actual Sprint Release Date", DateUtil.createDateString(sprint.getReleaseDate(), dtfymd), status));//column 2
+        } else {
+            gridContainer.add(createFieldDisplay("Extrapolated Sprint Release Date", DateUtil.createDateString(sprint.getReleaseDate(), dtfymd), extrapolatedStatus));//column 2
+        }
+        gridContainer.add(createFieldDisplay("Optimal Efficiency", ReportUtil.createPersonDayEfficiencyString(ReportUtil.calcualteOptimaleEfficiency(sprint.getStart(), sprint.getEnd(), DateUtil.add(sprint.getWorked(), sprint.getRemaining())))));//column 3
+        gridContainer.add(createFieldDisplay("Efficiency", ReportUtil.createPersonDayEfficiencyString(ReportUtil.calcualteEfficiency(sprint.getStart(), now, sprint.getEnd(), sprint.getWorked(), sprint.getRemaining())), status));//column 4
+        if (extrapolatedDelayFraction != null) {
+            gridContainer.add(createFieldDisplay("Extrapolated Schedule Delay", String.format("%s (%.0f%%)", extrapolatedScheduleDelayString, 100 * extrapolatedDelayFraction), extrapolatedStatus));//column 6
+        } else {
+            gridContainer.add(createFieldDisplay("Extrapolated Schedule Delay", "NA", extrapolatedStatus));//column 6
+        }
+        gridContainer.add(createFieldDisplay("&Sigma; Remaining Effort Estimate", DateUtil.createDurationString(sprint.getRemaining(), false, true, false)));//column 7
 
 
         // forth row
