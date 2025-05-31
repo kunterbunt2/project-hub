@@ -19,6 +19,7 @@ package de.bushnaq.abdalla.projecthub.ui.util.selenium;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 import jakarta.annotation.PreDestroy;
+import lombok.Getter;
 import org.junit.jupiter.api.Assertions;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -28,8 +29,13 @@ import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Wait;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
 
@@ -40,9 +46,13 @@ import static org.junit.jupiter.api.Assertions.fail;
  * handles vaadin ui tests using selenium
  */
 @Component
+@Getter
 public class SeleniumHandler {
     private       WebDriver     driver;
     private final Duration      implicitWaitDuration;
+    public        boolean       isRecording = false;
+    private final Logger        logger      = LoggerFactory.getLogger(this.getClass());
+    private final VideoRecorder videoRecorder;
     private       WebDriverWait wait;
     private       Duration      waitDuration;
 
@@ -53,6 +63,7 @@ public class SeleniumHandler {
     public SeleniumHandler(Duration implicitWaitDuration, Duration waitDuration) {
         this.implicitWaitDuration = implicitWaitDuration;
         this.waitDuration         = waitDuration;
+        this.videoRecorder        = new VideoRecorder();
         //chrome
     }
 
@@ -64,6 +75,10 @@ public class SeleniumHandler {
 
     @PreDestroy
     public void destroy() {
+        if (isRecording) {
+            stopRecording();
+        }
+
         if (driver != null) {
 //            ScreenShotCreator.takeScreenShot(driver, testInfo.getDisplayName(), testInfo.getTestMethod().get().getName());
             driver.close();//closing the browser
@@ -344,6 +359,45 @@ public class SeleniumHandler {
     public void setWaitDuration(Duration waitDuration) {
         this.waitDuration = waitDuration;
         wait.withTimeout(waitDuration);
+    }
+
+    /**
+     * Start recording screen activities for the current test
+     *
+     * @param testName Name of the test for the video file name
+     */
+    public void startRecording(String folderName, String testName) {
+        if (!isRecording) {
+            try {
+                getDriver();// Ensure the driver is initialized and browser is open
+                videoRecorder.startRecording(folderName, testName);
+                isRecording = true;
+                logger.info("Started video recording for test: {}", testName);
+            } catch (IOException | AWTException e) {
+                logger.error("Failed to start video recording: {}", e.getMessage(), e);
+            }
+        }
+    }
+
+    /**
+     * Stop the active recording and save the video file
+     *
+     * @return File object pointing to the recorded video, or null if recording failed
+     */
+    public File stopRecording() {
+        if (isRecording) {
+            try {
+                File videoFile = videoRecorder.stopRecording();
+                isRecording = false;
+                if (videoFile != null) {
+                    logger.info("Video recording saved to: {}", videoFile.getAbsolutePath());
+                }
+                return videoFile;
+            } catch (IOException e) {
+                logger.error("Failed to stop video recording: {}", e.getMessage(), e);
+            }
+        }
+        return null;
     }
 
     private void testForAnyError() {

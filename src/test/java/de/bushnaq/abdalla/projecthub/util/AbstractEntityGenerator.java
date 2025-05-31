@@ -32,6 +32,7 @@ import org.ajbrown.namemachine.NameGenerator;
 import org.ajbrown.namemachine.NameGeneratorOptions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -492,8 +493,8 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     }
 
     @BeforeEach
-    protected void beforeEach() {
-        super.beforeEach();
+    protected void beforeEach(TestInfo testInfo) {
+        super.beforeEach(testInfo);
         productIndex = 0;
         projectIndex = 0;
         sprintIndex  = 0;

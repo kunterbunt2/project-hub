@@ -43,7 +43,7 @@ import java.util.List;
 @AutoConfigureMockMvc
 @Transactional
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-public class SprintViewTest extends AbstractGanttTestUtil {
+public class SprintViewTest extends AbstractUiTestUtil {
     @Autowired
     private ProductViewTester productViewTester;
     @Autowired
@@ -53,11 +53,6 @@ public class SprintViewTest extends AbstractGanttTestUtil {
 
     private static String generateFeatureName(int t) {
         return String.format("Feature-%d", t);
-    }
-
-    @Override
-    protected void generateOneProduct(TestInfo testInfo) throws Exception {
-        //no need to create default product and user
     }
 
     private void generateTasks(RandomCase randomCase) {

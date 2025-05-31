@@ -15,38 +15,33 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.ui.util;
+package de.bushnaq.abdalla.projecthub.ui;
 
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import de.bushnaq.abdalla.projecthub.util.AbstractGanttTestUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
+import org.springframework.beans.factory.annotation.Autowired;
 
-/**
- * prepare test server
- * provide application specific utility methods
- */
+public class AbstractUiTestUtil extends AbstractGanttTestUtil {
+    @Autowired
+    private SeleniumHandler seleniumHandler;
 
-public class UiTestBase extends AbstractGanttTestUtil {
-    //    SeleniumHandler seleniumHandler
-    public UiTestBase() {
-//        this.seleniumHandler=seleniumHandler;
-//        System.setProperty("javax.net.ssl.keyStore", "config/serverkeystore");
-//        System.setProperty("javax.net.ssl.keyStorePassword", "timeTrackerkey");
+    {
+        System.setProperty("java.awt.headless", "false");
     }
 
-    //    @Override
-    @AfterEach
-    public void afterEach(TestInfo testInfo) throws Exception {
-//        super.afterEach(testInfo);
-//        seleniumHandler.cleanup(testInfo);
-    }
-
-    //    @Override
     @BeforeEach
-    public void beforeEach(TestInfo testInfo) throws Exception {
-        super.beforeEach();
-//        seleniumHandler = new SeleniumHandler();
+    public void setupTest(TestInfo testInfo) {
+        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), testInfo.getDisplayName());
     }
 
+    @AfterEach
+    public void tearDownTest() throws InterruptedException {
+        if (seleniumHandler.isRecording())
+            Thread.sleep(1000); // Wait for any pending actions to complete for the recording
+        // Stop and save the recording
+        seleniumHandler.stopRecording();
+    }
 }

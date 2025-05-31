@@ -144,17 +144,22 @@
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
-            <version>4.25.0</version>
+            <version>4.33.0</version>
             <!--            <scope>test</scope>-->
         </dependency>
         <dependency>
             <groupId>io.github.bonigarcia</groupId>
             <artifactId>webdrivermanager</artifactId>
-            <version>5.9.2</version>
+            <version>6.1.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.google.guava</groupId>
                     <artifactId>guava</artifactId>
+                </exclusion>
+                <!-- Add this exclusion to fix SLF4J multiple binding issue -->
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-jdk14</artifactId>
                 </exclusion>
             </exclusions>
             <!--            <scope>test</scope>-->
@@ -162,6 +167,13 @@
         <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-lumo-theme</artifactId>
+        </dependency>
+
+        <!-- Monte Screen Recorder for UI test video recording -->
+        <dependency>
+            <groupId>com.github.stephenc.monte</groupId>
+            <artifactId>monte-screen-recorder</artifactId>
+            <version>0.7.7.0</version>
         </dependency>
     </dependencies>
 
@@ -312,6 +324,12 @@
         <repository>
             <id>vaadin-directory</id>
             <url>https://maven.vaadin.com/vaadin-addons</url>
+        </repository>
+
+        <!-- Repository for Monte Screen Recorder -->
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
         </repository>
     </repositories>
 

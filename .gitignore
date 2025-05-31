@@ -23,4 +23,5 @@ webpack.generated.js
 /docs
 *.db
 test-results
+test-recordings
 src/main/frontend/generated

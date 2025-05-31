@@ -17,12 +17,10 @@
 
 package de.bushnaq.abdalla.projecthub.ui;
 
-import de.bushnaq.abdalla.projecthub.util.AbstractGanttTestUtil;
 import de.bushnaq.abdalla.projecthub.util.ProductViewTester;
 import de.bushnaq.abdalla.projecthub.util.VersionViewTester;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -34,7 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, properties = "server.port=8080")
 @AutoConfigureMockMvc
 @Transactional
-public class VersionListViewTest extends AbstractGanttTestUtil {
+public class VersionListViewTest extends AbstractUiTestUtil {
     private final String            newVersionName = "NewVersion-2";
     private final String            productName    = "Product-2";
     @Autowired
@@ -44,47 +42,42 @@ public class VersionListViewTest extends AbstractGanttTestUtil {
     private       VersionViewTester versionViewTester;
 
     @BeforeEach
-    public void createProduct(TestInfo testInfo) throws Exception {
+    public void createProduct() throws Exception {
         productViewTester.switchToProductListView();
         productViewTester.createProductConfirm(productName);
         productViewTester.selectProduct(productName);
     }
 
-    @Override
-    protected void generateOneProduct(TestInfo testInfo) throws Exception {
-        // no need to create default product and user
-    }
-
     @Test
-    public void testCreateCancel(TestInfo testInfo) throws Exception {
+    public void testCreateCancel() throws Exception {
         versionViewTester.createVersionCancel(versionName);
     }
 
     @Test
-    public void testCreateConfirm(TestInfo testInfo) throws Exception {
+    public void testCreateConfirm() throws Exception {
         versionViewTester.createVersionConfirm(versionName);
     }
 
     @Test
-    public void testDeleteCancel(TestInfo testInfo) throws Exception {
+    public void testDeleteCancel() throws Exception {
         versionViewTester.createVersionConfirm(versionName);
         versionViewTester.deleteVersionCancel(versionName);
     }
 
     @Test
-    public void testDeleteConfirm(TestInfo testInfo) throws Exception {
+    public void testDeleteConfirm() throws Exception {
         versionViewTester.createVersionConfirm(versionName);
         versionViewTester.deleteVersionConfirm(versionName);
     }
 
     @Test
-    public void testEditCancel(TestInfo testInfo) throws Exception {
+    public void testEditCancel() throws Exception {
         versionViewTester.createVersionConfirm(versionName);
         versionViewTester.editVersionCancel(versionName, newVersionName);
     }
 
     @Test
-    public void testEditConfirm(TestInfo testInfo) throws Exception {
+    public void testEditConfirm() throws Exception {
         versionViewTester.createVersionConfirm(versionName);
         versionViewTester.editVersionConfirm(versionName, newVersionName);
     }

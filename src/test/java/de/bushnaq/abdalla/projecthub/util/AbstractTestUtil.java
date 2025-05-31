@@ -18,7 +18,9 @@
 package de.bushnaq.abdalla.projecthub.util;
 
 import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -27,8 +29,18 @@ public class AbstractTestUtil extends DTOAsserts {
     @Autowired
     protected EntityManager entityManager;
 
+    @AfterEach
+    protected void afterEach(TestInfo testInfo) throws Exception {
+        logger.info("----------------------------------------------");
+        logger.info("stop " + testInfo.getDisplayName());
+        logger.info("==============================================");
+    }
+
     @BeforeEach
-    protected void beforeEach() {
+    protected void beforeEach(TestInfo testInfo) {
+        logger.info("==============================================");
+        logger.info("start " + testInfo.getDisplayName());
+        logger.info("----------------------------------------------");
         List<String> tableNames = getAllTableNames();
         entityManager.createNativeQuery("SET REFERENTIAL_INTEGRITY FALSE").executeUpdate();
         for (String tableName : tableNames) {
