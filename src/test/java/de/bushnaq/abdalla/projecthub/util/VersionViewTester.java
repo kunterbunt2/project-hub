@@ -18,10 +18,15 @@
 package de.bushnaq.abdalla.projecthub.util;
 
 import de.bushnaq.abdalla.projecthub.ui.ProjectListView;
+import de.bushnaq.abdalla.projecthub.ui.VersionListView;
+import de.bushnaq.abdalla.projecthub.ui.common.ConfirmDialog;
+import de.bushnaq.abdalla.projecthub.ui.common.VersionDialog;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import org.springframework.stereotype.Component;
 
 import static de.bushnaq.abdalla.projecthub.ui.VersionListView.VERSION_GRID_NAME_PREFIX;
 
+@Component
 public class VersionViewTester {
     private final SeleniumHandler seleniumHandler;
 
@@ -29,7 +34,54 @@ public class VersionViewTester {
         this.seleniumHandler = seleniumHandler;
     }
 
+    public void createVersionCancel(String name) {
+        seleniumHandler.click(VersionListView.CREATE_VERSION_BUTTON);
+        seleniumHandler.setTextField(VersionDialog.VERSION_NAME_FIELD, name);
+        seleniumHandler.click(VersionDialog.CANCEL_BUTTON);
+        seleniumHandler.ensureIsNotInList(VersionListView.VERSION_GRID_NAME_PREFIX, name);
+    }
+
+    public void createVersionConfirm(String name) {
+        seleniumHandler.click(VersionListView.CREATE_VERSION_BUTTON);
+        seleniumHandler.setTextField(VersionDialog.VERSION_NAME_FIELD, name);
+        seleniumHandler.click(VersionDialog.CONFIRM_BUTTON);
+        seleniumHandler.ensureIsInList(VersionListView.VERSION_GRID_NAME_PREFIX, name);
+    }
+
+    public void deleteVersionCancel(String name) {
+        seleniumHandler.click(VersionListView.VERSION_GRID_ACTION_BUTTON_PREFIX + name);
+        seleniumHandler.click(VersionListView.VERSION_GRID_DELETE_BUTTON_PREFIX + name);
+        seleniumHandler.click(ConfirmDialog.CANCEL_BUTTON);
+        seleniumHandler.ensureIsInList(VersionListView.VERSION_GRID_NAME_PREFIX, name);
+    }
+
+    public void deleteVersionConfirm(String name) {
+        seleniumHandler.click(VersionListView.VERSION_GRID_ACTION_BUTTON_PREFIX + name);
+        seleniumHandler.click(VersionListView.VERSION_GRID_DELETE_BUTTON_PREFIX + name);
+        seleniumHandler.click(ConfirmDialog.CONFIRM_BUTTON);
+        seleniumHandler.ensureIsNotInList(VersionListView.VERSION_GRID_NAME_PREFIX, name);
+    }
+
+    public void editVersionCancel(String name, String newName) {
+        seleniumHandler.click(VersionListView.VERSION_GRID_ACTION_BUTTON_PREFIX + name);
+        seleniumHandler.click(VersionListView.VERSION_GRID_EDIT_BUTTON_PREFIX + name);
+        seleniumHandler.setTextField(VersionDialog.VERSION_NAME_FIELD, newName);
+        seleniumHandler.click(VersionDialog.CANCEL_BUTTON);
+        seleniumHandler.ensureIsInList(VersionListView.VERSION_GRID_NAME_PREFIX, name);
+        seleniumHandler.ensureIsNotInList(VersionListView.VERSION_GRID_NAME_PREFIX, newName);
+    }
+
+    public void editVersionConfirm(String name, String newName) {
+        seleniumHandler.click(VersionListView.VERSION_GRID_ACTION_BUTTON_PREFIX + name);
+        seleniumHandler.click(VersionListView.VERSION_GRID_EDIT_BUTTON_PREFIX + name);
+        seleniumHandler.setTextField(VersionDialog.VERSION_NAME_FIELD, newName);
+        seleniumHandler.click(VersionDialog.CONFIRM_BUTTON);
+        seleniumHandler.ensureIsInList(VersionListView.VERSION_GRID_NAME_PREFIX, newName);
+        seleniumHandler.ensureIsNotInList(VersionListView.VERSION_GRID_NAME_PREFIX, name);
+    }
+
     public void selectVersion(String name) {
         seleniumHandler.selectGridRow(VERSION_GRID_NAME_PREFIX, ProjectListView.class, name);
     }
+
 }

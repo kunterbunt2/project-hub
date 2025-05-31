@@ -21,7 +21,6 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
-import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
@@ -31,13 +30,13 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.api.ProductApi;
 import de.bushnaq.abdalla.projecthub.dto.Product;
+import de.bushnaq.abdalla.projecthub.ui.common.ConfirmDialog;
+import de.bushnaq.abdalla.projecthub.ui.common.ProductDialog;
 import de.bushnaq.abdalla.projecthub.ui.view.MainLayout;
 import jakarta.annotation.security.PermitAll;
 
@@ -52,15 +51,12 @@ import java.util.Map;
 @Menu(order = 1, icon = "vaadin:factory", title = "product List")
 @PermitAll // When security is enabled, allow all authenticated users
 public class ProductListView extends Main implements AfterNavigationObserver {
-    public static final String        CANCEL_BUTTON                     = "cancel-product-button";
-    public static final String        CONFIRM_BUTTON                    = "save-product-button";
     public static final String        CREATE_PRODUCT_BUTTON             = "create-product-button";
     public static final String        PRODUCT_GRID_ACTION_BUTTON_PREFIX = "product-grid-action-button-prefix-";
     public static final String        PRODUCT_GRID_DELETE_BUTTON_PREFIX = "product-grid-delete-button-prefix-";
     public static final String        PRODUCT_GRID_EDIT_BUTTON_PREFIX   = "product-grid-edit-button-prefix-";
     public static final String        PRODUCT_GRID_NAME_PREFIX          = "product-grid-name-";
     public static final String        PRODUCT_LIST_PAGE_TITLE           = "product-list-page-title";
-    public static final String        PRODUCT_NAME_FIELD                = "product-name-field";
     public static final String        ROUTE                             = "product-list";
     private final       Clock         clock;
     private final       Grid<Product> grid;
@@ -107,7 +103,6 @@ public class ProductListView extends Main implements AfterNavigationObserver {
                 square.setMaxHeight("16px");
                 square.setMinWidth("16px");
                 square.setMaxWidth("16px");
-//                        square.getStyle().set("background-color", "#" + ColorUtil.colorToHtmlColor(product.getColor()));
                 square.getStyle().set("float", "left");
                 square.getStyle().set("margin", "1px");
                 div.add(square);
@@ -126,7 +121,7 @@ public class ProductListView extends Main implements AfterNavigationObserver {
             column.setId("product-grid-updated-column");
         }
 
-        // Add actions column with context menu - fix the text alignment issue
+        // Add actions column with context menu
         grid.addColumn(new ComponentRenderer<>(product -> {
             Button actionButton = new Button(new Icon(VaadinIcon.ELLIPSIS_DOTS_V));
             actionButton.setId(PRODUCT_GRID_ACTION_BUTTON_PREFIX + product.getName());
@@ -170,7 +165,6 @@ public class ProductListView extends Main implements AfterNavigationObserver {
 
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
-        //- update breadcrumbs
         getElement().getParent().getComponent()
                 .ifPresent(component -> {
                     if (component instanceof MainLayout mainLayout) {
@@ -181,90 +175,33 @@ public class ProductListView extends Main implements AfterNavigationObserver {
     }
 
     private void confirmDelete(Product product) {
-        Dialog confirmDialog = new Dialog();
-        confirmDialog.setHeaderTitle("Confirm Delete");
-
-        VerticalLayout dialogLayout = new VerticalLayout();
-        dialogLayout.add("Are you sure you want to delete product \"" + product.getName() + "\"?");
-        dialogLayout.setPadding(true);
-
-        Button deleteButton = new Button("Delete", e -> {
-            productApi.deleteById(product.getId());
-            confirmDialog.close();
-            refreshGrid();
-            Notification.show("Product deleted", 3000, Notification.Position.BOTTOM_START);
-        });
-        deleteButton.setId(CONFIRM_BUTTON);
-        deleteButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
-
-        Button cancelButton = new Button("Cancel", e -> confirmDialog.close());
-        cancelButton.setId(CANCEL_BUTTON);
-
-        HorizontalLayout buttonLayout = new HorizontalLayout();
-        buttonLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
-        buttonLayout.add(cancelButton, deleteButton);
-        buttonLayout.setWidthFull();
-
-        dialogLayout.add(buttonLayout);
-        confirmDialog.add(dialogLayout);
-
-        confirmDialog.open();
+        String message = "Are you sure you want to delete product \"" + product.getName() + "\"?";
+        ConfirmDialog dialog = new ConfirmDialog(
+                "Confirm Delete",
+                message,
+                "Delete",
+                () -> {
+                    productApi.deleteById(product.getId());
+                    refreshGrid();
+                    Notification.show("Product deleted", 3000, Notification.Position.BOTTOM_START);
+                }
+        );
+        dialog.open();
     }
 
     private void openProductDialog(Product product) {
-        Dialog  dialog     = new Dialog();
-        boolean isEditMode = product != null;
-
-        dialog.setHeaderTitle(isEditMode ? "Edit Product" : "Create Product");
-
-        VerticalLayout dialogLayout = new VerticalLayout();
-        dialogLayout.setPadding(false);
-        dialogLayout.setSpacing(true);
-
-        TextField nameField = new TextField("Product Name");
-        nameField.setId(PRODUCT_NAME_FIELD);
-        nameField.setWidthFull();
-        nameField.setRequired(true);
-
-        if (isEditMode) {
-            nameField.setValue(product.getName());
-        }
-
-        dialogLayout.add(nameField);
-
-        Button saveButton = new Button("Save", e -> {
-            if (nameField.getValue().trim().isEmpty()) {
-                Notification.show("Please enter a product name", 3000, Notification.Position.MIDDLE);
-                return;
-            }
-
-            if (isEditMode) {
-                product.setName(nameField.getValue().trim());
-                productApi.update(product);
+        ProductDialog dialog = new ProductDialog(product, savedProduct -> {
+            if (product != null) {
+                // Edit mode
+                productApi.update(savedProduct);
                 Notification.show("Product updated", 3000, Notification.Position.BOTTOM_START);
             } else {
-                Product newProduct = new Product();
-                newProduct.setName(nameField.getValue().trim());
-                productApi.persist(newProduct);
+                // Create mode
+                productApi.persist(savedProduct);
                 Notification.show("Product created", 3000, Notification.Position.BOTTOM_START);
             }
-
-            dialog.close();
             refreshGrid();
         });
-        saveButton.setId(CONFIRM_BUTTON);
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        Button cancelButton = new Button("Cancel", e -> dialog.close());
-        cancelButton.setId(CANCEL_BUTTON);
-
-        HorizontalLayout buttonLayout = new HorizontalLayout();
-        buttonLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
-        buttonLayout.add(cancelButton, saveButton);
-        buttonLayout.setWidthFull();
-
-        dialogLayout.add(buttonLayout);
-        dialog.add(dialogLayout);
-
         dialog.open();
     }
 

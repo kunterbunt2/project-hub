@@ -19,6 +19,8 @@ package de.bushnaq.abdalla.projecthub.util;
 
 import de.bushnaq.abdalla.projecthub.ui.ProductListView;
 import de.bushnaq.abdalla.projecthub.ui.VersionListView;
+import de.bushnaq.abdalla.projecthub.ui.common.ConfirmDialog;
+import de.bushnaq.abdalla.projecthub.ui.common.ProductDialog;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import org.openqa.selenium.By;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -39,37 +41,37 @@ public class ProductViewTester {
 
     public void createProductCancel(String name) {
         seleniumHandler.click(ProductListView.CREATE_PRODUCT_BUTTON);
-        seleniumHandler.setTextField(ProductListView.PRODUCT_NAME_FIELD, name);
-        seleniumHandler.click(ProductListView.CANCEL_BUTTON);
+        seleniumHandler.setTextField(ProductDialog.PRODUCT_NAME_FIELD, name);
+        seleniumHandler.click(ProductDialog.CANCEL_BUTTON);
         seleniumHandler.ensureIsNotInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, name);
     }
 
     public void createProductConfirm(String name) {
         seleniumHandler.click(ProductListView.CREATE_PRODUCT_BUTTON);
-        seleniumHandler.setTextField(ProductListView.PRODUCT_NAME_FIELD, name);
-        seleniumHandler.click(ProductListView.CONFIRM_BUTTON);
+        seleniumHandler.setTextField(ProductDialog.PRODUCT_NAME_FIELD, name);
+        seleniumHandler.click(ProductDialog.CONFIRM_BUTTON);
         seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, name);
     }
 
     public void deleteProductCancel(String name) {
         seleniumHandler.click(ProductListView.PRODUCT_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(ProductListView.PRODUCT_GRID_DELETE_BUTTON_PREFIX + name);
-        seleniumHandler.click(ProductListView.CANCEL_BUTTON);
+        seleniumHandler.click(ConfirmDialog.CANCEL_BUTTON);
         seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, name);
     }
 
     public void deleteProductConfirm(String name) {
         seleniumHandler.click(ProductListView.PRODUCT_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(ProductListView.PRODUCT_GRID_DELETE_BUTTON_PREFIX + name);
-        seleniumHandler.click(ProductListView.CONFIRM_BUTTON);
+        seleniumHandler.click(ConfirmDialog.CONFIRM_BUTTON);
         seleniumHandler.ensureIsNotInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, name);
     }
 
     public void editProductCancel(String name, String newName) {
         seleniumHandler.click(ProductListView.PRODUCT_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(ProductListView.PRODUCT_GRID_EDIT_BUTTON_PREFIX + name);
-        seleniumHandler.setTextField(ProductListView.PRODUCT_NAME_FIELD, newName);
-        seleniumHandler.click(ProductListView.CANCEL_BUTTON);
+        seleniumHandler.setTextField(ProductDialog.PRODUCT_NAME_FIELD, newName);
+        seleniumHandler.click(ProductDialog.CANCEL_BUTTON);
         seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, name);
         seleniumHandler.ensureIsNotInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, newName);
     }
@@ -77,8 +79,8 @@ public class ProductViewTester {
     public void editProductConfirm(String name, String newName) {
         seleniumHandler.click(ProductListView.PRODUCT_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(ProductListView.PRODUCT_GRID_EDIT_BUTTON_PREFIX + name);
-        seleniumHandler.setTextField(ProductListView.PRODUCT_NAME_FIELD, newName);
-        seleniumHandler.click(ProductListView.CONFIRM_BUTTON);
+        seleniumHandler.setTextField(ProductDialog.PRODUCT_NAME_FIELD, newName);
+        seleniumHandler.click(ProductDialog.CONFIRM_BUTTON);
         seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, newName);
         seleniumHandler.ensureIsNotInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, name);
     }

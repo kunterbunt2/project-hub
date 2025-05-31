@@ -48,6 +48,8 @@ public class SprintViewTest extends AbstractGanttTestUtil {
     private ProductViewTester productViewTester;
     @Autowired
     private SeleniumHandler   seleniumHandler;
+    @Autowired
+    private VersionViewTester versionViewTester;
 
     private static String generateFeatureName(int t) {
         return String.format("Feature-%d", t);
@@ -108,7 +110,6 @@ public class SprintViewTest extends AbstractGanttTestUtil {
         generateWorklogs(ParameterOptions.getLocalNow());
         productViewTester.switchToProductListView();
         productViewTester.selectProduct("Product-1");
-        VersionViewTester versionViewTester = new VersionViewTester(seleniumHandler);
         versionViewTester.selectVersion("1.0.0");
         ProjectViewTester projectViewTester = new ProjectViewTester(seleniumHandler);
         projectViewTester.selectProject("Project-0");
