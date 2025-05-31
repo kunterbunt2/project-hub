@@ -55,9 +55,9 @@ public class ProjectController {
         return projectRepository.findAll();
     }
 
-    @PostMapping("/{versionId}")
-    public ResponseEntity<ProjectDAO> save(@RequestBody ProjectDAO project, @PathVariable Long versionId) {
-        return versionRepository.findById(versionId).map(version -> {
+    @PostMapping()
+    public ResponseEntity<ProjectDAO> save(@RequestBody ProjectDAO project) {
+        return versionRepository.findById(project.getVersionId()).map(version -> {
             ProjectDAO save = projectRepository.save(project);
             return ResponseEntity.ok(save);
         }).orElse(ResponseEntity.notFound().build());

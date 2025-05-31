@@ -227,16 +227,15 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         return saved;
     }
 
-    protected Project addProject(Version version, String name, String requester) {
+    protected Project addProject(Version version, String name) {
         Project project = new Project();
         project.setName(name);
-        project.setRequester(requester);
 
         project.setVersion(version);
         project.setVersionId(version.getId());
         project.setCreated(ParameterOptions.now);
         project.setUpdated(ParameterOptions.now);
-        Project saved = projectApi.persist(project, version.getId());
+        Project saved = projectApi.persist(project);
         expectedProjects.add(saved);
 
         version.addProject(saved);
@@ -261,7 +260,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     }
 
     protected Project addRandomProject(Version version) {
-        return addProject(version, generateProjectName(projectIndex), String.format("Requester-%d", projectIndex));
+        return addProject(version, generateProjectName(projectIndex));
     }
 
     protected Sprint addRandomSprint(Project project) {

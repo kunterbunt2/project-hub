@@ -15,7 +15,7 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.ui;
+package de.bushnaq.abdalla.projecthub.ui.util;
 
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import de.bushnaq.abdalla.projecthub.util.AbstractGanttTestUtil;
@@ -41,7 +41,8 @@ public class AbstractUiTestUtil extends AbstractGanttTestUtil {
     public void tearDownTest() throws InterruptedException {
         if (seleniumHandler.isRecording())
             Thread.sleep(1000); // Wait for any pending actions to complete for the recording
-        // Stop and save the recording
-        seleniumHandler.stopRecording();
+        seleniumHandler.destroy();
+//        // Stop and save the recording
+//        seleniumHandler.stopRecording();
     }
 }

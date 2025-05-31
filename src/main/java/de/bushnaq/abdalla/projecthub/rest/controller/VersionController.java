@@ -64,7 +64,6 @@ public class VersionController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
-    //TODO fix version update
     @PutMapping()
     public void update(@RequestBody VersionDAO version) {
         versionRepository.save(version);

@@ -83,7 +83,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         for (int i = 0; i < count; i++) {
             Product product = addProduct("Product-" + i);
             Version version = addVersion(product, String.format("1.%d.0", i));
-            Project project = addProject(version, String.format("Project-%d", i), String.format("Requester-%d", i));
+            Project project = addProject(version, String.format("Project-%d", i));
             sprint = addSprint(project, sprintName);
         }
         testProducts();

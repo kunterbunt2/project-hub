@@ -76,13 +76,12 @@ public class ProjectApi extends AbstractApi {
                 ));
     }
 
-    public Project persist(Project project, Long versionId) {
+    public Project persist(Project project) {
         return executeWithErrorHandling(() ->
                 restTemplate.postForObject(
-                        baseUrl + "/project/{versionId}",
+                        baseUrl + "/project",
                         project,
-                        Project.class,
-                        versionId
+                        Project.class
                 ));
     }
 

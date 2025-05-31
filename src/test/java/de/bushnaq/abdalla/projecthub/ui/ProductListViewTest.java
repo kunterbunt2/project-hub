@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.ui;
 
+import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
 import de.bushnaq.abdalla.projecthub.util.ProductViewTester;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

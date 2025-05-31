@@ -33,7 +33,6 @@ import java.util.Objects;
 public class Project extends AbstractTimeAware implements Comparable<Project> {
     private Long   id;
     private String name;
-    private String requester;
 
     @JsonIgnore
     @ToString.Exclude//help intellij debugger not to go into a loop

@@ -17,17 +17,22 @@
 
 package de.bushnaq.abdalla.projecthub.ui;
 
+import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
-import de.bushnaq.abdalla.projecthub.util.AbstractGanttTestUtil;
+import de.bushnaq.abdalla.projecthub.rest.debug.DebugUtil;
+import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import de.bushnaq.abdalla.projecthub.util.ProductViewTester;
 import de.bushnaq.abdalla.projecthub.util.RandomCase;
+import de.bushnaq.abdalla.projecthub.util.TestInfoUtil;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.awt.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -38,20 +43,15 @@ import java.util.List;
 //@AutoConfigureMockMvc
 //@Transactional
 //@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-public class Demo extends AbstractGanttTestUtil {
-//    @Autowired
-//    private ProductViewTester productViewTester;
-//    @Autowired
-//    private SeleniumHandler   seleniumHandler;
+public class Demo extends AbstractUiTestUtil {
+    @Autowired
+    private ProductViewTester productViewTester;
+    @Autowired
+    private SeleniumHandler   seleniumHandler;
 
     private static String generateFeatureName(int t) {
         return String.format("Feature-%d", t);
     }
-
-//    @Override
-//    protected void generateOneProduct(TestInfo testInfo) throws Exception {
-//        //no need to create default product and user
-//    }
 
     private void generateTasks(RandomCase randomCase) {
         random.setSeed(randomCase.getSeed());
@@ -95,23 +95,18 @@ public class Demo extends AbstractGanttTestUtil {
     @ParameterizedTest
     @MethodSource("listRandomCases")
     public void testShowProducts(RandomCase randomCase, TestInfo testInfo) throws Exception {
-        if (GraphicsEnvironment.isHeadless()) {
-            System.out.println("WARNING: Running in headless mode despite IDE environment. Video recording disabled.");
-            System.out.println("Check your IntelliJ run configuration for -Djava.awt.headless=true flag");
-            // Skip recording in headless environments
+        TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
+        TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
+        setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
+        generateTasks(randomCase);
+        levelResources(testInfo, null);
+        generateWorklogs(ParameterOptions.getLocalNow());
+        productViewTester.switchToProductListView();
+        if (DebugUtil.DEBUG) {
+            seleniumHandler.waitUntilBrowserClosed(0);
+        } else {
+            seleniumHandler.waitUntilBrowserClosed(5000);
         }
-//        TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
-//        TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
-//        setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
-//        generateTasks(randomCase);
-//        levelResources(testInfo, null);
-//        generateWorklogs(ParameterOptions.getLocalNow());
-//        productViewTester.switchToProductListView();
-//        if (DebugUtil.DEBUG) {
-//            seleniumHandler.waitUntilBrowserClosed(0);
-//        } else {
-//            seleniumHandler.waitUntilBrowserClosed(5000);
-//        }
     }
 
 }

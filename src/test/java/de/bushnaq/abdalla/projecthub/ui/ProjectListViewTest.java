@@ -19,6 +19,7 @@ package de.bushnaq.abdalla.projecthub.ui;
 
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
 import de.bushnaq.abdalla.projecthub.util.ProductViewTester;
+import de.bushnaq.abdalla.projecthub.util.ProjectViewTester;
 import de.bushnaq.abdalla.projecthub.util.VersionViewTester;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,53 +34,61 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, properties = "server.port=8080")
 @AutoConfigureMockMvc
 @Transactional
-public class VersionListViewTest extends AbstractUiTestUtil {
-    private final String            newVersionName = "NewVersion-2";
+public class ProjectListViewTest extends AbstractUiTestUtil {
+    private final String            newProjectName = "NewProject-2";
     private final String            productName    = "Product-2";
     @Autowired
     private       ProductViewTester productViewTester;
+    private final String            projectName    = "Project-2";
+    @Autowired
+    private       ProjectViewTester projectViewTester;
     private final String            versionName    = "Version-2";
     @Autowired
     private       VersionViewTester versionViewTester;
 
     @BeforeEach
-    public void createProduct() throws Exception {
+    public void setupEnvironment() throws Exception {
+        // Navigate to product list and create a product
         productViewTester.switchToProductListView();
         productViewTester.createProductConfirm(productName);
         productViewTester.selectProduct(productName);
+
+        // Create a version
+        versionViewTester.createVersionConfirm(versionName);
+        versionViewTester.selectVersion(versionName);
     }
 
     @Test
     public void testCreateCancel() throws Exception {
-        versionViewTester.createVersionCancel(versionName);
+        projectViewTester.createProjectCancel(projectName);
     }
 
     @Test
     public void testCreateConfirm() throws Exception {
-        versionViewTester.createVersionConfirm(versionName);
+        projectViewTester.createProjectConfirm(projectName);
     }
 
     @Test
     public void testDeleteCancel() throws Exception {
-        versionViewTester.createVersionConfirm(versionName);
-        versionViewTester.deleteVersionCancel(versionName);
+        projectViewTester.createProjectConfirm(projectName);
+        projectViewTester.deleteProjectCancel(projectName);
     }
 
     @Test
     public void testDeleteConfirm() throws Exception {
-        versionViewTester.createVersionConfirm(versionName);
-        versionViewTester.deleteVersionConfirm(versionName);
+        projectViewTester.createProjectConfirm(projectName);
+        projectViewTester.deleteProjectConfirm(projectName);
     }
 
     @Test
     public void testEditCancel() throws Exception {
-        versionViewTester.createVersionConfirm(versionName);
-        versionViewTester.editVersionCancel(versionName, newVersionName);
+        projectViewTester.createProjectConfirm(projectName);
+        projectViewTester.editProjectCancel(projectName, newProjectName);
     }
 
     @Test
     public void testEditConfirm() throws Exception {
-        versionViewTester.createVersionConfirm(versionName);
-        versionViewTester.editVersionConfirm(versionName, newVersionName);
+        projectViewTester.createProjectConfirm(projectName);
+        projectViewTester.editProjectConfirm(projectName, newProjectName);
     }
 }

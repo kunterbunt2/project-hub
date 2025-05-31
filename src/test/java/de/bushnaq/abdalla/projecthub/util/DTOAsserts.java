@@ -88,7 +88,6 @@ public class DTOAsserts {
 //        assertEquals(expected.getUpdated(), actual.getUpdated(), String.format("Project '%s' updated date does not match", actual.getName()));
         assertEquals(expected.getId(), actual.getId(), "Project IDs do not match");
         assertEquals(expected.getName(), actual.getName(), "Project names do not match");
-        assertEquals(expected.getRequester(), actual.getRequester(), "Project requesters do not match");
         if (!shallow) {
             assertEquals(expected.getSprints().size(), actual.getSprints().size(), String.format("Number of sprints in project '%s' do not match", actual.getName()));
             for (int i = 0; i < expected.getSprints().size(); i++) {
