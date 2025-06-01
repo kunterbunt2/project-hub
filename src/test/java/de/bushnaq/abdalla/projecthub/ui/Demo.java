@@ -19,6 +19,7 @@ package de.bushnaq.abdalla.projecthub.ui;
 
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
+import de.bushnaq.abdalla.projecthub.rest.debug.DebugUtil;
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import de.bushnaq.abdalla.projecthub.util.ProductViewTester;
@@ -101,12 +102,11 @@ public class Demo extends AbstractUiTestUtil {
         levelResources(testInfo, null);
         generateWorklogs(ParameterOptions.getLocalNow());
         productViewTester.switchToProductListView();
-        seleniumHandler.waitUntilBrowserClosed(0);
-//        if (DebugUtil.DEBUG) {
-//            seleniumHandler.waitUntilBrowserClosed(0);
-//        } else {
-//            seleniumHandler.waitUntilBrowserClosed(5000);
-//        }
+        if (DebugUtil.DEBUG) {
+            seleniumHandler.waitUntilBrowserClosed(0);
+        } else {
+            seleniumHandler.waitUntilBrowserClosed(5000);
+        }
     }
 
 }
