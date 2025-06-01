@@ -37,6 +37,8 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -103,6 +105,22 @@ public class SeleniumHandler {
         waitUntil(ExpectedConditions.textToBePresentInElement(label, userName));
     }
 
+    /**
+     * Executes JavaScript in the current browser window.
+     * <p>
+     * This method allows executing arbitrary JavaScript code in the browser, which is useful for
+     * interacting with complex components that may be difficult to access through standard Selenium methods.
+     * It's particularly useful for setting values on custom components like color pickers and date pickers.
+     *
+     * @param script the JavaScript to execute
+     * @param args   the arguments to pass to the script (will be available in the script as arguments[0], arguments[1], etc.)
+     * @return the value returned by the script, which may be null
+     */
+    public Object executeJavaScript(String script, Object... args) {
+        JavascriptExecutor jsExecutor = (JavascriptExecutor) getDriver();
+        return jsExecutor.executeScript(script, args);
+    }
+
     public WebElement expandRootElementAndFindElement(WebElement element, String elementName) {
         String script = String.format("return arguments[0].shadowRoot.querySelector('%s')", elementName);
         //        Object o = ((JavascriptExecutor) driver).executeScript(script, element);
@@ -138,8 +156,65 @@ public class SeleniumHandler {
         return element.getAttribute("checked") != null;
     }
 
+    /**
+     * Gets the current value from a color picker component.
+     * <p>
+     * This method retrieves the color value from a Vaadin ColorPicker component
+     * using JavaScript. It accesses the component's shadow DOM to get the color
+     * input element's value. Returns the hex color code with # prefix.
+     *
+     * @param colorPickerId the ID of the color picker component
+     * @return the current color value as a hex string (e.g. "#FF5733"), or null if not available
+     */
+    public String getColorPickerValue(String colorPickerId) {
+        // Wait for the color picker element to be present
+        waitUntil(ExpectedConditions.presenceOfElementLocated(By.id(colorPickerId)));
+
+        // Access the color input element through the shadow DOM, similar to the set method
+        String colorScript =
+                "var picker = document.getElementById('" + colorPickerId + "');" +
+                        "if (picker) {" +
+                        "  var inputElement = picker.shadowRoot.querySelector('input[type=\"color\"]');" +
+                        "  if (inputElement) {" +
+                        "    return inputElement.value;" +
+                        "  }" +
+                        "  return picker.value;" + // Fallback to component's value if input not found
+                        "}" +
+                        "return null;";
+
+        return (String) executeJavaScript(colorScript);
+    }
+
     public String getCurrentUrl() {
         return getDriver().getCurrentUrl();
+    }
+
+    /**
+     * Gets the current value from a date picker component.
+     * <p>
+     * This method retrieves the date value from a Vaadin DatePicker component
+     * using JavaScript and converts it to a LocalDate object.
+     *
+     * @param datePickerId the ID of the date picker component
+     * @return the current date value as LocalDate, or null if no date is set or component not found
+     */
+    public LocalDate getDatePickerValue(String datePickerId) {
+        // Wait for the date picker element to be present
+        waitUntil(ExpectedConditions.presenceOfElementLocated(By.id(datePickerId)));
+
+        String dateScript =
+                "var datePicker = document.getElementById('" + datePickerId + "');" +
+                        "if (datePicker && datePicker.value) {" +
+                        "  return datePicker.value;" +
+                        "}" +
+                        "return null;";
+
+        String dateStr = (String) executeJavaScript(dateScript);
+
+        if (dateStr != null && !dateStr.isEmpty()) {
+            return LocalDate.parse(dateStr, DateTimeFormatter.ISO_LOCAL_DATE);
+        }
+        return null;
     }
 
     private WebDriver getDriver() {
@@ -312,6 +387,104 @@ public class SeleniumHandler {
                     i.click();
                 }
             }
+        }
+    }
+
+    /**
+     * Sets a value to a color picker component.
+     * <p>
+     * This method provides a reliable way to set color values on Vaadin ColorPicker
+     * components. It uses JavaScript to set the value directly and ensures the component
+     * properly registers the color change by triggering necessary events.
+     *
+     * @param colorPickerId the ID of the color picker component
+     * @param colorValue    the color value to set (hex format with # prefix, e.g., "#FF5733")
+     * @return true if the color was successfully set, false otherwise
+     */
+    public boolean setColorPickerValue(String colorPickerId, String colorValue) {
+        // Wait for the color picker element to be present
+        waitUntil(ExpectedConditions.presenceOfElementLocated(By.id(colorPickerId)));
+
+        // First attempt: set the value and trigger necessary events
+        String colorScript =
+                "var picker = document.getElementById('" + colorPickerId + "');" +
+                        "if (picker) {" +
+                        "  picker.value = '" + colorValue + "';" +
+                        "  if (typeof picker._valueChanged === 'function') {" +
+                        "    picker._valueChanged('" + colorValue + "');" +
+                        "  }" +
+                        "  var inputElement = picker.shadowRoot.querySelector('input[type=\"color\"]');" +
+                        "  if (inputElement) {" +
+                        "    inputElement.value = '" + colorValue + "';" +
+                        "    inputElement.dispatchEvent(new Event('input', {bubbles: true}));" +
+                        "    inputElement.dispatchEvent(new Event('change', {bubbles: true}));" +
+                        "  }" +
+                        "  return picker.value === '" + colorValue + "';" +
+                        "}" +
+                        "return false;";
+
+        Boolean result = (Boolean) executeJavaScript(colorScript);
+
+        // If first attempt failed, try a simpler direct approach
+        if (result == null || !result) {
+            // Direct method as fallback: use the component's public API
+            executeJavaScript(
+                    "document.getElementById('" + colorPickerId + "').value = '" + colorValue + "';" +
+                            "document.getElementById('" + colorPickerId + "').dispatchEvent(new Event('change'));"
+            );
+
+            // Verify the color was set correctly
+            String verifyScript = "return document.getElementById('" + colorPickerId + "').value;";
+            String verifyResult = (String) executeJavaScript(verifyScript);
+
+            return verifyResult != null && verifyResult.equalsIgnoreCase(colorValue);
+        }
+
+        return result;
+    }
+
+    /**
+     * Sets a value to a date picker component.
+     * <p>
+     * This method provides a reliable way to set date values on Vaadin DatePicker
+     * components. It uses JavaScript to set the value directly in ISO date format
+     * and ensures the component properly registers the date change by triggering
+     * necessary events.
+     *
+     * @param datePickerId the ID of the date picker component
+     * @param date         the LocalDate value to set, can be null to clear the date
+     * @return true if the date was successfully set, false otherwise
+     */
+    public boolean setDatePickerValue(String datePickerId, LocalDate date) {
+        // Wait for the date picker element to be present
+        waitUntil(ExpectedConditions.presenceOfElementLocated(By.id(datePickerId)));
+
+        if (date == null) {
+            // Clear the date picker
+            String clearScript =
+                    "var datePicker = document.getElementById('" + datePickerId + "');" +
+                            "if (datePicker) {" +
+                            "  datePicker.value = '';" +
+                            "  datePicker.dispatchEvent(new CustomEvent('change', { bubbles: true }));" +
+                            "  return true;" +
+                            "}" +
+                            "return false;";
+
+            return Boolean.TRUE.equals(executeJavaScript(clearScript));
+        } else {
+            // Format the date in ISO format (YYYY-MM-DD) as expected by the date picker
+            String dateStr = date.format(DateTimeFormatter.ISO_LOCAL_DATE);
+
+            String dateScript =
+                    "var datePicker = document.getElementById('" + datePickerId + "');" +
+                            "if (datePicker) {" +
+                            "  datePicker.value = '" + dateStr + "';" +
+                            "  datePicker.dispatchEvent(new CustomEvent('change', { bubbles: true }));" +
+                            "  return true;" +
+                            "}" +
+                            "return false;";
+
+            return Boolean.TRUE.equals(executeJavaScript(dateScript));
         }
     }
 
@@ -504,3 +677,4 @@ public class SeleniumHandler {
         }
     }
 }
+

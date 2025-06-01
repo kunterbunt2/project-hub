@@ -38,8 +38,7 @@
         <!-- Vaadin -->
         <dependency>
             <groupId>com.vaadin</groupId>
-            <!-- Replace artifactId with vaadin-core to use only free components -->
-            <artifactId>vaadin</artifactId>
+            <artifactId>vaadin-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.vaadin</groupId>
@@ -94,6 +93,11 @@
             <groupId>de.focus-shift</groupId>
             <artifactId>jollyday-jackson</artifactId>
             <version>1.5.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.vaadin.addons.tatu</groupId>
+            <artifactId>colorpicker</artifactId>
+            <version>1.4.1</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

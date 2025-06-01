@@ -87,7 +87,8 @@ public class User extends AbstractTimeAware implements Comparable<User> {
         return this.id.compareTo(other.id);
     }
 
-    String getKey() {
+    @JsonIgnore
+    public String getKey() {
         return "U-" + id;
     }
 
