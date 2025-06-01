@@ -82,7 +82,7 @@ public class VideoRecorder {
                         FrameRateKey, Rational.valueOf(60),// 60 FPS
                         QualityKey, 0.9f,
                         KeyFrameIntervalKey, 10),
-                null,//- Mouse recording is disabled
+                new Format(MediaTypeKey, MediaType.VIDEO, EncodingKey, ScreenRecorder.ENCODING_BLACK_CURSOR, FrameRateKey, Rational.valueOf(60)),//- Mouse recording is disabled
                 null,//- Audio recording is disabled
                 rootDirectory);
         this.screenRecorder.start();

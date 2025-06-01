@@ -17,18 +17,146 @@
 
 package de.bushnaq.abdalla.projecthub.util;
 
+import de.bushnaq.abdalla.projecthub.ui.SprintListView;
 import de.bushnaq.abdalla.projecthub.ui.SprintView;
+import de.bushnaq.abdalla.projecthub.ui.common.ConfirmDialog;
+import de.bushnaq.abdalla.projecthub.ui.common.SprintDialog;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import org.springframework.stereotype.Component;
 
 import static de.bushnaq.abdalla.projecthub.ui.SprintListView.SPRINT_GRID_NAME_PREFIX;
 
+/**
+ * Test helper class for interacting with the Sprint UI components.
+ * <p>
+ * This class provides methods to test sprint-related operations in the UI such as
+ * creating, editing, deleting sprints and navigating between views. It uses
+ * {@link SeleniumHandler} to interact with UI elements and validate results.
+ * <p>
+ * Sprints represent time-boxed work periods within a project and contain tasks.
+ * In the hierarchy: Products contain Versions, Versions contain Projects, Projects contain Sprints,
+ * and Sprints contain Tasks.
+ */
+@Component
 public class SprintViewTester {
     private final SeleniumHandler seleniumHandler;
 
+    /**
+     * Constructs a new SprintViewTester with the given Selenium handler.
+     *
+     * @param seleniumHandler the handler for Selenium operations
+     */
     public SprintViewTester(SeleniumHandler seleniumHandler) {
         this.seleniumHandler = seleniumHandler;
     }
 
+    /**
+     * Tests the creation of a sprint where the user cancels the operation.
+     * <p>
+     * Opens the sprint creation dialog, enters the given sprint name, then cancels
+     * the dialog. Verifies that no sprint with the specified name appears in the sprint list.
+     *
+     * @param name the name of the sprint to attempt to create
+     */
+    public void createSprintCancel(String name) {
+        seleniumHandler.click(SprintListView.CREATE_SPRINT_BUTTON);
+        seleniumHandler.setTextField(SprintDialog.SPRINT_NAME_FIELD, name);
+        seleniumHandler.click(SprintDialog.CANCEL_BUTTON);
+        seleniumHandler.ensureIsNotInList(SprintListView.SPRINT_GRID_NAME_PREFIX, name);
+    }
+
+    /**
+     * Tests the successful creation of a sprint.
+     * <p>
+     * Opens the sprint creation dialog, enters the given sprint name, then confirms
+     * the dialog. Verifies that a sprint with the specified name appears in the sprint list.
+     *
+     * @param name the name of the sprint to create
+     */
+    public void createSprintConfirm(String name) {
+        seleniumHandler.click(SprintListView.CREATE_SPRINT_BUTTON);
+        seleniumHandler.setTextField(SprintDialog.SPRINT_NAME_FIELD, name);
+        seleniumHandler.click(SprintDialog.CONFIRM_BUTTON);
+        seleniumHandler.ensureIsInList(SprintListView.SPRINT_GRID_NAME_PREFIX, name);
+    }
+
+    /**
+     * Tests sprint deletion where the user cancels the delete confirmation.
+     * <p>
+     * Opens the context menu for the specified sprint, selects the delete option,
+     * then cancels the confirmation dialog. Verifies that the sprint still exists in the list.
+     *
+     * @param name the name of the sprint to attempt to delete
+     */
+    public void deleteSprintCancel(String name) {
+        seleniumHandler.click(SprintListView.SPRINT_GRID_ACTION_BUTTON_PREFIX + name);
+        seleniumHandler.click(SprintListView.SPRINT_GRID_DELETE_BUTTON_PREFIX + name);
+        seleniumHandler.click(ConfirmDialog.CANCEL_BUTTON);
+        seleniumHandler.ensureIsInList(SprintListView.SPRINT_GRID_NAME_PREFIX, name);
+    }
+
+    /**
+     * Tests the successful deletion of a sprint.
+     * <p>
+     * Opens the context menu for the specified sprint, selects the delete option,
+     * then confirms the deletion in the confirmation dialog. Verifies that the sprint
+     * is removed from the sprint list.
+     *
+     * @param name the name of the sprint to delete
+     */
+    public void deleteSprintConfirm(String name) {
+        seleniumHandler.click(SprintListView.SPRINT_GRID_ACTION_BUTTON_PREFIX + name);
+        seleniumHandler.click(SprintListView.SPRINT_GRID_DELETE_BUTTON_PREFIX + name);
+        seleniumHandler.click(ConfirmDialog.CONFIRM_BUTTON);
+        seleniumHandler.ensureIsNotInList(SprintListView.SPRINT_GRID_NAME_PREFIX, name);
+    }
+
+    /**
+     * Tests sprint editing where the user cancels the edit operation.
+     * <p>
+     * Opens the context menu for the specified sprint, selects the edit option,
+     * enters a new name, then cancels the edit dialog. Verifies that the sprint
+     * still exists with its original name and no sprint with the new name exists.
+     *
+     * @param name    the original name of the sprint to edit
+     * @param newName the new name to attempt to assign to the sprint
+     */
+    public void editSprintCancel(String name, String newName) {
+        seleniumHandler.click(SprintListView.SPRINT_GRID_ACTION_BUTTON_PREFIX + name);
+        seleniumHandler.click(SprintListView.SPRINT_GRID_EDIT_BUTTON_PREFIX + name);
+        seleniumHandler.setTextField(SprintDialog.SPRINT_NAME_FIELD, newName);
+        seleniumHandler.click(SprintDialog.CANCEL_BUTTON);
+        seleniumHandler.ensureIsInList(SprintListView.SPRINT_GRID_NAME_PREFIX, name);
+        seleniumHandler.ensureIsNotInList(SprintListView.SPRINT_GRID_NAME_PREFIX, newName);
+    }
+
+    /**
+     * Tests the successful editing of a sprint.
+     * <p>
+     * Opens the context menu for the specified sprint, selects the edit option,
+     * enters a new name, then confirms the edit. Verifies that the sprint with
+     * the new name appears in the list and the sprint with the old name is gone.
+     *
+     * @param name    the original name of the sprint to edit
+     * @param newName the new name to assign to the sprint
+     */
+    public void editSprintConfirm(String name, String newName) {
+        seleniumHandler.click(SprintListView.SPRINT_GRID_ACTION_BUTTON_PREFIX + name);
+        seleniumHandler.click(SprintListView.SPRINT_GRID_EDIT_BUTTON_PREFIX + name);
+        seleniumHandler.setTextField(SprintDialog.SPRINT_NAME_FIELD, newName);
+        seleniumHandler.click(SprintDialog.CONFIRM_BUTTON);
+        seleniumHandler.ensureIsInList(SprintListView.SPRINT_GRID_NAME_PREFIX, newName);
+        seleniumHandler.ensureIsNotInList(SprintListView.SPRINT_GRID_NAME_PREFIX, name);
+    }
+
+    /**
+     * Selects a sprint from the sprint grid and navigates to its tasks.
+     * <p>
+     * Clicks on the specified sprint row in the sprint grid, which should
+     * navigate to the SprintView for that sprint, where tasks can be managed.
+     *
+     * @param name the name of the sprint to select
+     */
     public void selectSprint(String name) {
         seleniumHandler.selectGridRow(SPRINT_GRID_NAME_PREFIX, SprintView.class, name);
     }

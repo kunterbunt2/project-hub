@@ -68,7 +68,7 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
     @JsonDeserialize(using = DurationDeserializer.class)
     private       Duration        remaining;
     private       LocalDateTime   start;
-    private       Status          status;
+    private       Status          status      = Status.CREATED;
     @JsonIgnore
     transient     Map<Long, Task> taskMap     = new HashMap<>();
     @JsonIgnore

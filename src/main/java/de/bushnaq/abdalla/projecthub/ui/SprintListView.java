@@ -18,15 +18,25 @@
 package de.bushnaq.abdalla.projecthub.ui;
 
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.api.SprintApi;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
+import de.bushnaq.abdalla.projecthub.ui.common.ConfirmDialog;
+import de.bushnaq.abdalla.projecthub.ui.common.SprintDialog;
 import de.bushnaq.abdalla.projecthub.ui.view.MainLayout;
 import de.bushnaq.abdalla.util.date.DateUtil;
 import jakarta.annotation.security.PermitAll;
@@ -42,7 +52,13 @@ import java.util.Map;
 //@Menu(order = 1, icon = "vaadin:factory", title = "project List")
 @PermitAll // When security is enabled, allow all authenticated users
 public class SprintListView extends Main implements AfterNavigationObserver {
-    public static final String       SPRINT_GRID_NAME_PREFIX = "sprint-grid-name-";
+    public static final String       CREATE_SPRINT_BUTTON             = "create-sprint-button";
+    public static final String       SPRINT_GRID_ACTION_BUTTON_PREFIX = "sprint-grid-action-button-prefix-";
+    public static final String       SPRINT_GRID_DELETE_BUTTON_PREFIX = "sprint-grid-delete-button-prefix-";
+    public static final String       SPRINT_GRID_EDIT_BUTTON_PREFIX   = "sprint-grid-edit-button-prefix-";
+    public static final String       SPRINT_GRID_NAME_PREFIX          = "sprint-grid-name-";
+    public static final String       SPRINT_LIST_PAGE_TITLE           = "sprint-list-page-title";
+    private final       Clock        clock;
     private final       Grid<Sprint> grid;
     private final       H2           pageTitle;
     private             Long         productId;
@@ -52,12 +68,29 @@ public class SprintListView extends Main implements AfterNavigationObserver {
 
     public SprintListView(SprintApi sprintApi, Clock clock) {
         this.sprintApi = sprintApi;
+        this.clock     = clock;
 
-        pageTitle = new H2("Projects");
+        // Create header layout with title and create button
+        HorizontalLayout headerLayout = new HorizontalLayout();
+        headerLayout.setWidthFull();
+        headerLayout.setPadding(false);
+        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+        headerLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+
+        pageTitle = new H2("Sprints");
+        pageTitle.setId(SPRINT_LIST_PAGE_TITLE);
         pageTitle.addClassNames(
                 LumoUtility.Margin.Top.MEDIUM,
                 LumoUtility.Margin.Bottom.SMALL
         );
+
+        Button createButton = new Button("Create", new Icon(VaadinIcon.PLUS));
+        createButton.setId(CREATE_SPRINT_BUTTON);
+        createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        createButton.addClickListener(e -> openSprintDialog(null));
+
+        headerLayout.add(pageTitle, createButton);
+
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
         grid = new Grid<>();
@@ -69,7 +102,6 @@ public class SprintListView extends Main implements AfterNavigationObserver {
             square.setMaxHeight("16px");
             square.setMinWidth("16px");
             square.setMaxWidth("16px");
-//                        square.getStyle().set("background-color", "#" + ColorUtil.colorToHtmlColor(sprint.getColor()));
             square.getStyle().set("float", "left");
             square.getStyle().set("margin", "1px");
             div.add(square);
@@ -77,14 +109,34 @@ public class SprintListView extends Main implements AfterNavigationObserver {
             div.setId(SPRINT_GRID_NAME_PREFIX + sprint.getName());
             return div;
         })).setHeader("Name");
-//        grid.addColumn(version -> dateTimeFormatter.format(version.getCreated())).setHeader("Created");
-//        grid.addColumn(version -> dateTimeFormatter.format(version.getUpdated())).setHeader("Updated");
-        grid.addColumn(sprint -> dateTimeFormatter.format(sprint.getStart())).setHeader("Start");
-        grid.addColumn(sprint -> dateTimeFormatter.format(sprint.getEnd())).setHeader("End");
+        grid.addColumn(sprint -> sprint.getStart() != null ? dateTimeFormatter.format(sprint.getStart()) : "").setHeader("Start");
+        grid.addColumn(sprint -> sprint.getEnd() != null ? dateTimeFormatter.format(sprint.getEnd()) : "").setHeader("End");
         grid.addColumn(sprint -> sprint.getStatus().name()).setHeader("Status");
-        grid.addColumn(sprint -> DateUtil.createDurationString(sprint.getOriginalEstimation(), false, true, true)).setHeader("Original Estimation");
-        grid.addColumn(sprint -> DateUtil.createDurationString(sprint.getWorked(), false, true, true)).setHeader("Worked");
-        grid.addColumn(sprint -> DateUtil.createDurationString(sprint.getRemaining(), false, true, true)).setHeader("Remaining");
+        grid.addColumn(sprint -> sprint.getOriginalEstimation() != null ? DateUtil.createDurationString(sprint.getOriginalEstimation(), false, true, true) : "").setHeader("Original Estimation");
+        grid.addColumn(sprint -> sprint.getWorked() != null ? DateUtil.createDurationString(sprint.getWorked(), false, true, true) : "").setHeader("Worked");
+        grid.addColumn(sprint -> sprint.getRemaining() != null ? DateUtil.createDurationString(sprint.getRemaining(), false, true, true) : "").setHeader("Remaining");
+
+        // Add actions column with context menu
+        grid.addColumn(new ComponentRenderer<>(sprint -> {
+            Button actionButton = new Button(new Icon(VaadinIcon.ELLIPSIS_DOTS_V));
+            actionButton.setId(SPRINT_GRID_ACTION_BUTTON_PREFIX + sprint.getName());
+            actionButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+            actionButton.getElement().setAttribute("aria-label", "More options");
+
+            // Center the button with CSS
+            actionButton.getStyle().set("margin", "auto");
+            actionButton.getStyle().set("display", "block");
+
+            ContextMenu contextMenu = new ContextMenu();
+            contextMenu.setOpenOnClick(true);
+            contextMenu.setTarget(actionButton);
+
+            contextMenu.addItem("Edit...", e -> openSprintDialog(sprint)).setId(SPRINT_GRID_EDIT_BUTTON_PREFIX + sprint.getName());
+            contextMenu.addItem("Delete...", e -> confirmDelete(sprint)).setId(SPRINT_GRID_DELETE_BUTTON_PREFIX + sprint.getName());
+
+            return actionButton;
+        })).setWidth("70px").setFlexGrow(0);
+
         grid.setSizeFull();
         //- Add click listener to navigate to TaskView with the selected version ID
         grid.addItemClickListener(event -> {
@@ -105,7 +157,7 @@ public class SprintListView extends Main implements AfterNavigationObserver {
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        add(pageTitle, grid);
+        add(headerLayout, grid);
     }
 
     @Override
@@ -150,7 +202,42 @@ public class SprintListView extends Main implements AfterNavigationObserver {
                     }
                 });
 
-        //- populate grid
+        refreshGrid();
+    }
+
+    private void confirmDelete(Sprint sprint) {
+        String message = "Are you sure you want to delete sprint \"" + sprint.getName() + "\"?";
+        ConfirmDialog dialog = new ConfirmDialog(
+                "Confirm Delete",
+                message,
+                "Delete",
+                () -> {
+                    sprintApi.deleteById(sprint.getId());
+                    refreshGrid();
+                    Notification.show("Sprint deleted", 3000, Notification.Position.BOTTOM_START);
+                }
+        );
+        dialog.open();
+    }
+
+    private void openSprintDialog(Sprint sprint) {
+        SprintDialog dialog = new SprintDialog(sprint, savedSprint -> {
+            if (sprint != null) {
+                // Edit mode
+                sprintApi.update(savedSprint);
+                Notification.show("Sprint updated", 3000, Notification.Position.BOTTOM_START);
+            } else {
+                // Create mode
+                savedSprint.setProjectId(projectId);
+                sprintApi.persist(savedSprint);
+                Notification.show("Sprint created", 3000, Notification.Position.BOTTOM_START);
+            }
+            refreshGrid();
+        });
+        dialog.open();
+    }
+
+    private void refreshGrid() {
         // Only show sprints for the selected project
         if (projectId != null) {
             grid.setItems(sprintApi.getAll(projectId));
@@ -158,5 +245,4 @@ public class SprintListView extends Main implements AfterNavigationObserver {
             grid.setItems(sprintApi.getAll());
         }
     }
-
 }
