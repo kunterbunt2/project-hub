@@ -22,11 +22,14 @@ import org.openqa.selenium.NoSuchSessionException;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 
 public class ScreenShotCreator {
+    private static final Logger logger = LoggerFactory.getLogger(ScreenShotCreator.class);
 
     static String fileNameGenerator(String displayName, String testmethod) {
         displayName = displayName.replace("'", "");
@@ -38,12 +41,24 @@ public class ScreenShotCreator {
         return "target" + File.separator + "externalFiles" + File.separator + "screenshots" + File.separator;
     }
 
-    public static void takeScreenShot(WebDriver driver, String displayName, String testmethod) {
+    public static void takeScreenShot(WebDriver driver, String displayName, String testMethod) {
+        String fileName = fileNameGenerator(displayName, testMethod);
         try {
             File screenshotFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
-            FileUtils.copyFile(screenshotFile, new File(fileNameGenerator(displayName, testmethod)));
+            FileUtils.copyFile(screenshotFile, new File(fileName));
+            logger.info("Screenshot saved to: {}", fileName);
         } catch (IOException | NoSuchSessionException e) {
-            throw new RuntimeException("Could not make a screenshot", e);
+            throw new RuntimeException("Could not make screenshot {}" + fileName, e);
+        }
+    }
+
+    public static void takeScreenShot(WebDriver driver, String fileName) {
+        try {
+            File screenshotFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+            FileUtils.copyFile(screenshotFile, new File(fileName));
+            logger.info("Screenshot saved to: {}", fileName);
+        } catch (IOException | NoSuchSessionException e) {
+            throw new RuntimeException("Could not make screenshot {}" + fileName, e);
         }
     }
 }

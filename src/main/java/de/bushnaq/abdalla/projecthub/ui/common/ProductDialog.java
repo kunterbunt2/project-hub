@@ -33,21 +33,26 @@ import java.util.function.Consumer;
  * A reusable dialog for creating and editing products.
  */
 public class ProductDialog extends Dialog {
-    
-    public static final String CANCEL_BUTTON = "cancel-product-button";
-    public static final String CONFIRM_BUTTON = "save-product-button";
-    public static final String PRODUCT_NAME_FIELD = "product-name-field";
-    
+
+    public static final String  CANCEL_BUTTON      = "cancel-product-button";
+    public static final String  CONFIRM_BUTTON     = "save-product-button";
+    public static final String  PRODUCT_DIALOG     = "product-dialog";
+    public static final String  PRODUCT_NAME_FIELD = "product-name-field";
+    private final       boolean isEditMode;
+
     /**
      * Creates a dialog for creating or editing a product.
-     * 
-     * @param product The product to edit, or null for creating a new product
+     *
+     * @param product      The product to edit, or null for creating a new product
      * @param saveCallback Callback that receives the product with updated values
      */
     public ProductDialog(Product product, Consumer<Product> saveCallback) {
-        boolean isEditMode = product != null;
-        
+        isEditMode = product != null;
+
+        // Set the dialog title
         setHeaderTitle(isEditMode ? "Edit Product" : "Create Product");
+        setId(PRODUCT_DIALOG);
+
 
         VerticalLayout dialogLayout = new VerticalLayout();
         dialogLayout.setPadding(false);
@@ -78,13 +83,13 @@ public class ProductDialog extends Dialog {
                 productToSave = new Product();
                 productToSave.setName(nameField.getValue().trim());
             }
-            
+
             saveCallback.accept(productToSave);
             close();
         });
         saveButton.setId(CONFIRM_BUTTON);
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        
+
         Button cancelButton = new Button("Cancel", e -> close());
         cancelButton.setId(CANCEL_BUTTON);
 
@@ -96,4 +101,5 @@ public class ProductDialog extends Dialog {
         dialogLayout.add(buttonLayout);
         add(dialogLayout);
     }
+
 }

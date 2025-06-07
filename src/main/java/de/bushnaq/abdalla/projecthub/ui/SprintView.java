@@ -61,6 +61,8 @@ import java.util.function.Function;
 //@Menu(order = 1, icon = "vaadin:factory", title = "project List")
 @PermitAll // When security is enabled, allow all authenticated users
 public class SprintView extends Main implements AfterNavigationObserver {
+    public static final String        BURNDOWN_CHART          = "burndown-chart";
+    public static final String        GANTT_CHART             = "gantt-chart";
     public static final String        SPRINT_GRID_NAME_PREFIX = "sprint-grid-name-";
     private final       Clock         clock;
     @Autowired
@@ -381,6 +383,7 @@ public class SprintView extends Main implements AfterNavigationObserver {
         });
         // Create an image component with the SVG resource
         Image burndownChart = new Image(resource, "Sprint Burndown Chart");
+        burndownChart.setId(BURNDOWN_CHART);
         burndownChart.setWidthFull();
         return burndownChart;
     }
@@ -389,6 +392,7 @@ public class SprintView extends Main implements AfterNavigationObserver {
         List<Throwable> exceptions = new ArrayList<>();
         GanttChart      chart      = new GanttChart(context, "", "/", "Gantt Chart", sprint.getName() + "-gant-chart", exceptions, ParameterOptions.getLocalNow(), false, sprint/*, 1887, 1000*/, "scheduleWithMargin", context.parameters.graphicsTheme);
         Image           ganttChart = renderGanttImage(chart);
+        ganttChart.setId(GANTT_CHART);
         ganttChart.setWidth(chart.getChartWidth() + "px");
         return ganttChart;
     }

@@ -121,8 +121,8 @@ public class Demo extends AbstractUiTestUtil {
         levelResources(testInfo, null);
         generateWorklogs(ParameterOptions.getLocalNow());
         productViewTester.switchToProductListView();
-//        seleniumHandler.waitUntilBrowserClosed(0);
-        seleniumHandler.waitUntilBrowserClosed(5000);
+        seleniumHandler.waitUntilBrowserClosed(0);
+//        seleniumHandler.waitUntilBrowserClosed(5000);
     }
 
 }

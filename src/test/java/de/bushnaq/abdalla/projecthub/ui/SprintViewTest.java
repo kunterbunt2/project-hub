@@ -49,7 +49,11 @@ public class SprintViewTest extends AbstractUiTestUtil {
     @Autowired
     private ProductViewTester productViewTester;
     @Autowired
+    private ProjectViewTester projectViewTester;
+    @Autowired
     private SeleniumHandler   seleniumHandler;
+    @Autowired
+    private SprintViewTester  sprintViewTester;
     @Autowired
     private VersionViewTester versionViewTester;
 
@@ -109,9 +113,7 @@ public class SprintViewTest extends AbstractUiTestUtil {
         productViewTester.switchToProductListView();
         productViewTester.selectProduct("Product-1");
         versionViewTester.selectVersion("1.0.0");
-        ProjectViewTester projectViewTester = new ProjectViewTester(seleniumHandler);
         projectViewTester.selectProject("Project-0");
-        SprintViewTester sprintViewTester = new SprintViewTester(seleniumHandler);
         sprintViewTester.selectSprint("sprint-0");
         if (DebugUtil.DEBUG) {
             seleniumHandler.waitUntilBrowserClosed(0);

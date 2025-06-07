@@ -33,21 +33,25 @@ import java.util.function.Consumer;
  * A reusable dialog for creating and editing versions.
  */
 public class VersionDialog extends Dialog {
-    
-    public static final String CANCEL_BUTTON = "cancel-version-button";
-    public static final String CONFIRM_BUTTON = "save-version-button";
-    public static final String VERSION_NAME_FIELD = "version-name-field";
-    
+
+    public static final String  CANCEL_BUTTON      = "cancel-version-button";
+    public static final String  CONFIRM_BUTTON     = "save-version-button";
+    public static final String  VERSION_DIALOG     = "version-dialog";
+    public static final String  VERSION_NAME_FIELD = "version-name-field";
+    private final       boolean isEditMode;
+
     /**
      * Creates a dialog for creating or editing a version.
-     * 
-     * @param version The version to edit, or null for creating a new version
+     *
+     * @param version      The version to edit, or null for creating a new version
      * @param saveCallback Callback that receives the version with updated values
      */
     public VersionDialog(Version version, Consumer<Version> saveCallback) {
-        boolean isEditMode = version != null;
-        
+        isEditMode = version != null;
+
+        // Set the dialog title
         setHeaderTitle(isEditMode ? "Edit Version" : "Create Version");
+        setId(VERSION_DIALOG);
 
         VerticalLayout dialogLayout = new VerticalLayout();
         dialogLayout.setPadding(false);
@@ -78,13 +82,13 @@ public class VersionDialog extends Dialog {
                 versionToSave = new Version();
                 versionToSave.setName(nameField.getValue().trim());
             }
-            
+
             saveCallback.accept(versionToSave);
             close();
         });
         saveButton.setId(CONFIRM_BUTTON);
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        
+
         Button cancelButton = new Button("Cancel", e -> close());
         cancelButton.setId(CANCEL_BUTTON);
 

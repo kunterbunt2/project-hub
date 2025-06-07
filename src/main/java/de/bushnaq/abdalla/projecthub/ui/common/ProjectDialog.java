@@ -34,10 +34,11 @@ import java.util.function.Consumer;
  */
 public class ProjectDialog extends Dialog {
 
-    public static final String CANCEL_BUTTON      = "cancel-project-button";
-    public static final String CONFIRM_BUTTON     = "save-project-button";
-    public static final String PROJECT_NAME_FIELD = "project-name-field";
-//    public static final String PROJECT_REQUESTER_FIELD = "project-requester-field";
+    public static final String  CANCEL_BUTTON      = "cancel-project-button";
+    public static final String  CONFIRM_BUTTON     = "save-project-button";
+    public static final String  PROJECT_DIALOG     = "project-dialog";
+    public static final String  PROJECT_NAME_FIELD = "project-name-field";
+    private final       boolean isEditMode;
 
     /**
      * Creates a dialog for creating or editing a project.
@@ -46,9 +47,10 @@ public class ProjectDialog extends Dialog {
      * @param saveCallback Callback that receives the project with updated values
      */
     public ProjectDialog(Project project, Consumer<Project> saveCallback) {
-        boolean isEditMode = project != null;
+        isEditMode = project != null;
 
         setHeaderTitle(isEditMode ? "Edit Project" : "Create Project");
+        setId(PROJECT_DIALOG);
 
         VerticalLayout dialogLayout = new VerticalLayout();
         dialogLayout.setPadding(false);

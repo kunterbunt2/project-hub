@@ -29,8 +29,9 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
  */
 public class ConfirmDialog extends Dialog {
 
-    public static final String CANCEL_BUTTON  = "cancel-dialog-button";
-    public static final String CONFIRM_BUTTON = "confirm-dialog-button";
+    public static final String CANCEL_BUTTON  = "cancel-confirm-button";
+    public static final String CONFIRM_BUTTON = "confirm-button";
+    public static final String CONFIRM_DIALOG = "confirm-dialog";
 
     /**
      * Creates a confirmation dialog for delete operations.
@@ -42,6 +43,7 @@ public class ConfirmDialog extends Dialog {
      */
     public ConfirmDialog(String title, String message, String confirmButtonText, Runnable action) {
         setHeaderTitle(title);
+        setId(CONFIRM_DIALOG);
 
         VerticalLayout dialogLayout = new VerticalLayout();
         dialogLayout.add(message);

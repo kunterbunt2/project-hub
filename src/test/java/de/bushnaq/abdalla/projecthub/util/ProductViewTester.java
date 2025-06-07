@@ -23,6 +23,7 @@ import de.bushnaq.abdalla.projecthub.ui.common.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.common.ProductDialog;
 import de.bushnaq.abdalla.projecthub.ui.login.LoginView;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import lombok.Getter;
 import org.openqa.selenium.By;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,6 +40,7 @@ import static de.bushnaq.abdalla.projecthub.ui.ProductListView.PRODUCT_GRID_NAME
  */
 @Component
 public class ProductViewTester {
+    @Getter
     private final int             port;
     private final SeleniumHandler seleniumHandler;
 
@@ -164,16 +166,23 @@ public class ProductViewTester {
         seleniumHandler.selectGridRow(PRODUCT_GRID_NAME_PREFIX, VersionListView.class, name);
     }
 
+    public void switchToProductListView() {
+        switchToProductListView(null);
+    }
+
     /**
      * Navigates to the ProductListView.
      * <p>
      * Opens the product list URL directly and waits for the page to load
      * by checking for the presence of the page title element.
      */
-    public void switchToProductListView() {
+    public void switchToProductListView(String screenshotFileName) {
         seleniumHandler.getAndCheck("http://localhost:" + port + "/" + LoginView.ROUTE);
         seleniumHandler.setLoginUser("admin-user");
         seleniumHandler.setLoginPassword("test-password");
+        if (screenshotFileName != null) {
+            seleniumHandler.takeElementScreenshot(seleniumHandler.findLoginOverlayElement(LoginView.LOGIN_VIEW), LoginView.LOGIN_VIEW, "../project-hub.wiki/screenshots/login-view.png");
+        }
         seleniumHandler.loginSubmit();
         seleniumHandler.waitUntil(ExpectedConditions.elementToBeClickable(By.id(ProductListView.PRODUCT_LIST_PAGE_TITLE)));
     }

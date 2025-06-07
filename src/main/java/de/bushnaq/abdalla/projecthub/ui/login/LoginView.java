@@ -32,12 +32,14 @@ import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
 @PageTitle("Login | Project Hub")
 @AnonymousAllowed
 public class LoginView extends VerticalLayout implements BeforeEnterObserver {
-    public static final String ROUTE = "login";
+    public static final String LOGIN_VIEW = "login-view";
+    public static final String ROUTE      = "login";
 
     private final LoginForm loginForm = new LoginForm();
 
     public LoginView() {
-        addClassName("login-view");
+        setId(LOGIN_VIEW);
+        addClassName(LOGIN_VIEW);
         setSizeFull();
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);

@@ -39,13 +39,15 @@ import java.util.function.Consumer;
  */
 public class UserDialog extends Dialog {
 
-    public static final String CANCEL_BUTTON                 = "cancel-user-button";
-    public static final String CONFIRM_BUTTON                = "save-user-button";
-    public static final String USER_COLOR_PICKER             = "user-color-picker";
-    public static final String USER_EMAIL_FIELD              = "user-email-field";
-    public static final String USER_FIRST_WORKING_DAY_PICKER = "user-first-working-day-picker";
-    public static final String USER_LAST_WORKING_DAY_PICKER  = "user-last-working-day-picker";
-    public static final String USER_NAME_FIELD               = "user-name-field";
+    public static final String  CANCEL_BUTTON                 = "cancel-user-button";
+    public static final String  CONFIRM_BUTTON                = "save-user-button";
+    public static final String  USER_COLOR_PICKER             = "user-color-picker";
+    public static final String  USER_DIALOG                   = "user-dialog";
+    public static final String  USER_EMAIL_FIELD              = "user-email-field";
+    public static final String  USER_FIRST_WORKING_DAY_PICKER = "user-first-working-day-picker";
+    public static final String  USER_LAST_WORKING_DAY_PICKER  = "user-last-working-day-picker";
+    public static final String  USER_NAME_FIELD               = "user-name-field";
+    private final       boolean isEditMode;
 
     /**
      * Creates a dialog for creating or editing a user.
@@ -54,9 +56,10 @@ public class UserDialog extends Dialog {
      * @param saveCallback Callback that receives the user with updated values
      */
     public UserDialog(User user, Consumer<User> saveCallback) {
-        boolean isEditMode = user != null;
+        isEditMode = user != null;
 
         setHeaderTitle(isEditMode ? "Edit User" : "Create User");
+        setId(USER_DIALOG);
 
         VerticalLayout dialogLayout = new VerticalLayout();
         dialogLayout.setPadding(false);

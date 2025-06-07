@@ -34,9 +34,11 @@ import java.util.function.Consumer;
  */
 public class SprintDialog extends Dialog {
 
-    public static final String CANCEL_BUTTON     = "cancel-sprint-button";
-    public static final String CONFIRM_BUTTON    = "save-sprint-button";
-    public static final String SPRINT_NAME_FIELD = "sprint-name-field";
+    public static final String  CANCEL_BUTTON     = "cancel-sprint-button";
+    public static final String  CONFIRM_BUTTON    = "save-sprint-button";
+    public static final String  SPRINT_DIALOG     = "sprint-dialog";
+    public static final String  SPRINT_NAME_FIELD = "sprint-name-field";
+    private final       boolean isEditMode;
 
     /**
      * Creates a dialog for creating or editing a sprint.
@@ -45,9 +47,10 @@ public class SprintDialog extends Dialog {
      * @param saveCallback Callback that receives the sprint with updated values
      */
     public SprintDialog(Sprint sprint, Consumer<Sprint> saveCallback) {
-        boolean isEditMode = sprint != null;
+        isEditMode = sprint != null;
 
         setHeaderTitle(isEditMode ? "Edit Sprint" : "Create Sprint");
+        setId(SPRINT_DIALOG);
 
         VerticalLayout dialogLayout = new VerticalLayout();
         dialogLayout.setPadding(false);
