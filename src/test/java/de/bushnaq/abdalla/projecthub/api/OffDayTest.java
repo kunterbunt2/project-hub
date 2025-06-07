@@ -25,6 +25,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ServerErrorException;
@@ -32,6 +36,7 @@ import org.springframework.web.server.ServerErrorException;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
 @ExtendWith(SpringExtension.class)
@@ -46,6 +51,7 @@ public class OffDayTest extends AbstractEntityGenerator {
     private static final String LAST_DATE_1  = "2025-07-01";
 
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void add() throws Exception {
         Long id;
 
@@ -54,11 +60,53 @@ public class OffDayTest extends AbstractEntityGenerator {
             User user = addRandomUser(LocalDate.parse(FIRST_DATE_0));
             id = user.getId();
         }
+
+        //add a vacation
+        {
+            User user = expectedUsers.getFirst();
+            //vacation
+            addOffDay(user, LocalDate.parse(FIRST_DATE_0), LocalDate.parse(LAST_DATE_0), OffDayType.VACATION);
+        }
     }
 
     @Test
-    public void delete() throws Exception {
+    public void anonymousSecurity() {
+        {
+            setUser("admin-user", "ROLE_ADMIN");
+            User user = addRandomUser(LocalDate.parse(FIRST_DATE_0));
+            addOffDay(user, LocalDate.parse(FIRST_DATE_0), LocalDate.parse(LAST_DATE_0), OffDayType.VACATION);
+            SecurityContextHolder.clearContext();
+        }
 
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> {
+            User user = expectedUsers.getFirst();
+            addOffDay(user, LocalDate.parse(FIRST_DATE_1), LocalDate.parse(LAST_DATE_1), OffDayType.SICK);
+        });
+
+        {
+            User       user         = expectedUsers.getFirst();
+            OffDay     offDay       = user.getOffDays().getFirst();
+            OffDayType originalType = offDay.getType();
+            try {
+                offDay.setType(OffDayType.SICK);
+                updateOffDay(offDay, user);
+                fail("Should not be able to update OffDay");
+            } catch (AuthenticationCredentialsNotFoundException e) {
+                // Restore original values
+                offDay.setType(originalType);
+            }
+        }
+
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> {
+            User   user   = expectedUsers.getFirst();
+            OffDay offDay = user.getOffDays().getFirst();
+            removeOffDay(offDay, user);
+        });
+    }
+
+    @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
+    public void delete() throws Exception {
         //create a user
         {
             User user = addRandomUser(LocalDate.parse(FIRST_DATE_0));
@@ -80,8 +128,8 @@ public class OffDayTest extends AbstractEntityGenerator {
     }
 
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void deleteUsingFakeId() throws Exception {
-
         //create a user
         {
             User user = addRandomUser(LocalDate.parse(FIRST_DATE_0));
@@ -112,8 +160,8 @@ public class OffDayTest extends AbstractEntityGenerator {
     }
 
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void deleteUsingFakeUserId() throws Exception {
-
         //create a user
         {
             User user = addRandomUser(LocalDate.parse(FIRST_DATE_0));
@@ -143,8 +191,8 @@ public class OffDayTest extends AbstractEntityGenerator {
     }
 
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void update() throws Exception {
-
         //create a user
         {
             User user = addRandomUser(LocalDate.parse(FIRST_DATE_0));
@@ -172,8 +220,8 @@ public class OffDayTest extends AbstractEntityGenerator {
     }
 
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void updateUsingFakeId() throws Exception {
-
         //create a user
         {
             User user = addRandomUser(LocalDate.parse(FIRST_DATE_0));
@@ -206,8 +254,8 @@ public class OffDayTest extends AbstractEntityGenerator {
     }
 
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void updateUsingFakeUserId() throws Exception {
-
         //create a user
         {
             User user = addRandomUser(LocalDate.parse(FIRST_DATE_0));
@@ -239,4 +287,38 @@ public class OffDayTest extends AbstractEntityGenerator {
         }
     }
 
+    @Test
+    public void userSecurity() {
+        {
+            setUser("admin-user", "ROLE_ADMIN");
+            User user = addRandomUser(LocalDate.parse(FIRST_DATE_0));
+            addOffDay(user, LocalDate.parse(FIRST_DATE_0), LocalDate.parse(LAST_DATE_0), OffDayType.VACATION);
+            setUser("user", "ROLE_USER");
+        }
+
+        assertThrows(AccessDeniedException.class, () -> {
+            User user = expectedUsers.getFirst();
+            addOffDay(user, LocalDate.parse(FIRST_DATE_1), LocalDate.parse(LAST_DATE_1), OffDayType.SICK);
+        });
+
+        {
+            User       user         = expectedUsers.getFirst();
+            OffDay     offDay       = user.getOffDays().getFirst();
+            OffDayType originalType = offDay.getType();
+            try {
+                offDay.setType(OffDayType.SICK);
+                updateOffDay(offDay, user);
+                fail("Should not be able to update OffDay");
+            } catch (AccessDeniedException e) {
+                // Restore original values
+                offDay.setType(originalType);
+            }
+        }
+
+        assertThrows(AccessDeniedException.class, () -> {
+            User   user   = expectedUsers.getFirst();
+            OffDay offDay = user.getOffDays().getFirst();
+            removeOffDay(offDay, user);
+        });
+    }
 }

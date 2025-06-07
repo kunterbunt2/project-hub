@@ -25,6 +25,7 @@ import de.bushnaq.abdalla.projecthub.rest.debug.DebugUtil;
 import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -46,11 +47,13 @@ public class UserController {
     private UserRepository userRepository;
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public void delete(@PathVariable Long id) {
         userRepository.deleteById(id);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<UserDAO> get(@PathVariable Long id) throws JsonProcessingException {
         return userRepository.findById(id)
                 .map(ResponseEntity::ok)
@@ -58,22 +61,27 @@ public class UserController {
     }
 
     @GetMapping("/sprint/{sprintId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public List<UserDAO> getAll(@PathVariable Long sprintId) throws JsonProcessingException {
         return userRepository.findBySprintId(sprintId);
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public List<UserDAO> getAll() {
         return userRepository.findAll();
     }
 
     @PostMapping(consumes = "application/json", produces = "application/json")
+    @PreAuthorize("hasRole('ADMIN')")
     public UserDAO save(@RequestBody UserDAO user) {
         return userRepository.save(user);
     }
 
     @PutMapping()
+    @PreAuthorize("hasRole('ADMIN')")
     public void update(@RequestBody UserDAO user) {
         userRepository.save(user);
     }
 }
+

@@ -25,6 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +44,7 @@ public class WorklogTest extends AbstractEntityGenerator {
 
     //TODO add missing test cases
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void create() throws Exception {
         User user1 = addRandomUser();
 
@@ -67,6 +69,7 @@ public class WorklogTest extends AbstractEntityGenerator {
     }
 
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void update() throws Exception {
         User user1 = addRandomUser();
 

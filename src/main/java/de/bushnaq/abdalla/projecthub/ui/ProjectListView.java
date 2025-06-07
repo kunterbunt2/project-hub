@@ -39,6 +39,7 @@ import de.bushnaq.abdalla.projecthub.ui.common.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.common.ProjectDialog;
 import de.bushnaq.abdalla.projecthub.ui.view.MainLayout;
 import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
 
 import java.time.Clock;
 import java.time.format.DateTimeFormatter;
@@ -50,6 +51,7 @@ import java.util.Map;
 @PageTitle("Project List Page")
 //@Menu(order = 1, icon = "vaadin:factory", title = "project List")
 @PermitAll // When security is enabled, allow all authenticated users
+@RolesAllowed({"USER", "ADMIN"}) // Restrict access to users with specific roles
 public class ProjectListView extends Main implements AfterNavigationObserver {
     public static final String        CREATE_PROJECT_BUTTON_ID          = "create-project-button";
     public static final String        DELETE_PROJECT_BUTTON_ID          = "delete-project-button";

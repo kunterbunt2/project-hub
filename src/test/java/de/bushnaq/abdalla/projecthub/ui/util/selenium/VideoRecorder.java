@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.ui.util.selenium;
 
+import lombok.Getter;
 import org.monte.media.Format;
 import org.monte.media.FormatKeys;
 import org.monte.media.math.Rational;
@@ -35,9 +36,12 @@ import static org.monte.media.VideoFormatKeys.*;
 /**
  * Utility class for recording screen during UI tests
  */
+
 public class VideoRecorder {
     private       String         currentTestName;
-    private final Logger         logger = LoggerFactory.getLogger(this.getClass());
+    @Getter
+    private       boolean        isRecording = false;
+    private final Logger         logger      = LoggerFactory.getLogger(this.getClass());
     private       File           outputDirectory;
     private final File           rootDirectory;
     private       ScreenRecorder screenRecorder;
@@ -56,17 +60,19 @@ public class VideoRecorder {
      * Start recording with the given test name
      *
      * @param testName Name to use for the video file
+     * @return true if recording started successfully, false if in headless mode
      * @throws IOException  If there's an IO error
      * @throws AWTException If there's an issue with AWT
      */
-    public void startRecording(String subFolderName, String testName) throws IOException, AWTException {
+    public boolean startRecording(String subFolderName, String testName) throws IOException, AWTException {
         this.outputDirectory = new File(rootDirectory, subFolderName);
         outputDirectory.mkdirs();
         if (GraphicsEnvironment.isHeadless()) {
             logger.warn("WARNING: Running in headless mode despite IDE environment. Video recording disabled.");
             logger.warn("Check your IntelliJ run configuration for -Djava.awt.headless=true flag");
-            return; // Skip recording in headless environments
+            return false; // Skip recording in headless environments
         }
+        isRecording          = true;
         this.currentTestName = testName;
         GraphicsConfiguration gc = GraphicsEnvironment.getLocalGraphicsEnvironment()
                 .getDefaultScreenDevice().getDefaultConfiguration();
@@ -86,6 +92,7 @@ public class VideoRecorder {
                 null,//- Audio recording is disabled
                 rootDirectory);
         this.screenRecorder.start();
+        return true;
     }
 
     /**
@@ -95,8 +102,9 @@ public class VideoRecorder {
      * @throws IOException If there's an IO error
      */
     public File stopRecording() throws IOException {
-        if (this.screenRecorder != null) {
+        if (this.screenRecorder != null && isRecording) {
             this.screenRecorder.stop();
+            isRecording = false;
             return this.screenRecorder.getCreatedMovieFiles().get(0);
         }
         return null;

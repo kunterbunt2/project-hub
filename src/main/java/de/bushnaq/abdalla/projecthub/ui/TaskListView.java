@@ -35,6 +35,7 @@ import de.bushnaq.abdalla.projecthub.dto.Task;
 import de.bushnaq.abdalla.projecthub.ui.view.MainLayout;
 import de.bushnaq.abdalla.util.date.DateUtil;
 import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -49,6 +50,7 @@ import java.util.stream.Collectors;
 @PageTitle("Task List Page")
 @CssImport("./styles/grid-styles.css")
 @PermitAll // When security is enabled, allow all authenticated users
+@RolesAllowed({"USER", "ADMIN"}) // Allow access to users with specific roles
 public class TaskListView extends Main implements AfterNavigationObserver {
     public static final String     TASK_GRID_NAME_PREFIX = "task-grid-name-";
     private final       Clock      clock;

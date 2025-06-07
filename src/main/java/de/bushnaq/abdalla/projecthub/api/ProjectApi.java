@@ -20,6 +20,7 @@ package de.bushnaq.abdalla.projecthub.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.dto.Project;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -44,23 +45,30 @@ public class ProjectApi extends AbstractApi {
     }
 
     public void deleteById(long id) {
-        executeWithErrorHandling(() -> restTemplate.delete(
+        executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/project/{id}",
+                HttpMethod.DELETE,
+                createHttpEntity(),
+                Void.class,
                 id
         ));
     }
 
     public List<Project> getAll() {
-        ResponseEntity<Project[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(
+        ResponseEntity<Project[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/project",
+                HttpMethod.GET,
+                createHttpEntity(),
                 Project[].class
         ));
         return Arrays.asList(response.getBody());
     }
 
     public List<Project> getAll(Long versionId) {
-        ResponseEntity<Project[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(
+        ResponseEntity<Project[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/project/version/{versionId}",
+                HttpMethod.GET,
+                createHttpEntity(),
                 Project[].class,
                 versionId
         ));
@@ -68,27 +76,32 @@ public class ProjectApi extends AbstractApi {
     }
 
     public Project getById(Long id) {
-        return executeWithErrorHandling(() ->
-                restTemplate.getForObject(
-                        baseUrl + "/project/{id}",
-                        Project.class,
-                        id
-                ));
+        ResponseEntity<Project> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                baseUrl + "/project/{id}",
+                HttpMethod.GET,
+                createHttpEntity(),
+                Project.class,
+                id
+        ));
+        return response.getBody();
     }
 
     public Project persist(Project project) {
-        return executeWithErrorHandling(() ->
-                restTemplate.postForObject(
-                        baseUrl + "/project",
-                        project,
-                        Project.class
-                ));
+        ResponseEntity<Project> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                baseUrl + "/project",
+                HttpMethod.POST,
+                createHttpEntity(project),
+                Project.class
+        ));
+        return response.getBody();
     }
 
     public void update(Project project) {
-        executeWithErrorHandling(() -> restTemplate.put(
+        executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/project",
-                project
+                HttpMethod.PUT,
+                createHttpEntity(project),
+                Void.class
         ));
     }
 }

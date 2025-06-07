@@ -21,6 +21,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.dto.OffDay;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -31,47 +33,55 @@ public class OffDayApi extends AbstractApi {
         super(restTemplate, objectMapper, baseUrl);
     }
 
+    public OffDayApi() {
+
+    }
+
     @Autowired
     public OffDayApi(RestTemplate restTemplate, ObjectMapper objectMapper) {
         super(restTemplate, objectMapper);
     }
 
-    public OffDayApi() {
-
-    }
-
     //TODO use ids instead of objects
     public void deleteById(User user, OffDay offDay) throws org.springframework.web.client.RestClientException {
-        executeWithErrorHandling(() -> restTemplate.delete(
+        executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/offday/{userId}/{id}",
+                HttpMethod.DELETE,
+                createHttpEntity(),
+                Void.class,
                 user.getId(),
                 offDay.getId()
         ));
     }
 
     public OffDay getById(Long id) {
-        return executeWithErrorHandling(() ->
-                restTemplate.getForObject(
-                        baseUrl + "/offday/{id}",
-                        OffDay.class,
-                        id
-                ));
+        ResponseEntity<OffDay> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                baseUrl + "/offday/{id}",
+                HttpMethod.GET,
+                createHttpEntity(),
+                OffDay.class,
+                id
+        ));
+        return response.getBody();
     }
 
     public OffDay persist(OffDay offDay, Long userId) {
-        return executeWithErrorHandling(() ->
-                restTemplate.postForObject(
-                        baseUrl + "/offday/{userId}",
-                        offDay,
-                        OffDay.class,
-                        userId
-                ));
+        ResponseEntity<OffDay> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                baseUrl + "/offday/{userId}",
+                HttpMethod.POST,
+                createHttpEntity(offDay),
+                OffDay.class,
+                userId
+        ));
+        return response.getBody();
     }
 
     public void update(OffDay offDay, Long userId) {
-        executeWithErrorHandling(() -> restTemplate.put(
+        executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/offday/{userId}",
-                offDay,
+                HttpMethod.PUT,
+                createHttpEntity(offDay),
+                Void.class,
                 userId
         ));
     }

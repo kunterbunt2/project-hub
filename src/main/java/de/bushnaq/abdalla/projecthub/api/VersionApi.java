@@ -20,6 +20,7 @@ package de.bushnaq.abdalla.projecthub.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.dto.Version;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -44,23 +45,30 @@ public class VersionApi extends AbstractApi {
     }
 
     public void deleteById(Long id) {
-        executeWithErrorHandling(() -> restTemplate.delete(
+        executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/version/{id}",
+                HttpMethod.DELETE,
+                createHttpEntity(),
+                Void.class,
                 id
         ));
     }
 
     public List<Version> getAll() {
-        ResponseEntity<Version[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(
+        ResponseEntity<Version[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/version",
+                HttpMethod.GET,
+                createHttpEntity(),
                 Version[].class
         ));
         return Arrays.asList(response.getBody());
     }
 
     public List<Version> getAll(Long productId) {
-        ResponseEntity<Version[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(
+        ResponseEntity<Version[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/version/product/{productId}",
+                HttpMethod.GET,
+                createHttpEntity(),
                 Version[].class,
                 productId
         ));
@@ -68,28 +76,32 @@ public class VersionApi extends AbstractApi {
     }
 
     public Version getById(Long id) {
-        return executeWithErrorHandling(() ->
-                restTemplate.getForObject(
-                        baseUrl + "/version/{id}",
-                        Version.class,
-                        id
-                ));
+        ResponseEntity<Version> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                baseUrl + "/version/{id}",
+                HttpMethod.GET,
+                createHttpEntity(),
+                Version.class,
+                id
+        ));
+        return response.getBody();
     }
 
     public Version persist(Version version) {
-        return executeWithErrorHandling(() ->
-                restTemplate.postForObject(
-                        baseUrl + "/version",
-                        version,
-                        Version.class
-                ));
+        ResponseEntity<Version> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                baseUrl + "/version",
+                HttpMethod.POST,
+                createHttpEntity(version),
+                Version.class
+        ));
+        return response.getBody();
     }
 
     public void update(Version version) {
-        executeWithErrorHandling(() -> restTemplate.put(
+        executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/version",
-                version
+                HttpMethod.PUT,
+                createHttpEntity(version),
+                Void.class
         ));
     }
-
 }

@@ -20,7 +20,6 @@ package de.bushnaq.abdalla.projecthub.ui.util.selenium;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import jakarta.annotation.PreDestroy;
 import lombok.Getter;
-import org.junit.jupiter.api.Assertions;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -41,8 +40,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * handles vaadin ui tests using selenium
@@ -52,8 +50,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class SeleniumHandler {
     private       WebDriver     driver;
     private final Duration      implicitWaitDuration;
-    public        boolean       isRecording = false;
-    private final Logger        logger      = LoggerFactory.getLogger(this.getClass());
+    private final Logger        logger = LoggerFactory.getLogger(this.getClass());
     private final VideoRecorder videoRecorder;
     private       WebDriverWait wait;
     private       Duration      waitDuration;
@@ -77,7 +74,7 @@ public class SeleniumHandler {
 
     @PreDestroy
     public void destroy() {
-        if (isRecording) {
+        if (videoRecorder.isRecording()) {
             stopRecording();
         }
 
@@ -282,6 +279,17 @@ public class SeleniumHandler {
 
     public Duration getWaitDuration() {
         return waitDuration;
+    }
+
+    public boolean isRecording() {
+        return videoRecorder.isRecording();
+    }
+
+    public void loginSubmit() {
+        // Find the login button using a more specific XPath selector that matches the attributes
+        WebElement button = findElement(By.xpath("//vaadin-button[@slot='submit' and contains(@theme, 'submit')]"));
+        button.click();
+        waitForPageLoaded();
     }
 
     public void selectGridRow(String gridRowBaseId, Class<?> viewClass, String rowName) {
@@ -504,6 +512,16 @@ public class SeleniumHandler {
         i.sendKeys(userName);
     }
 
+    public void setLoginPassword(String loginPassword) {
+        WebElement passwordElement = findElement(By.name("password"));
+        passwordElement.sendKeys(loginPassword);
+    }
+
+    public void setLoginUser(String loginUser) {
+        WebElement usernameElement = findElement(By.id("vaadinLoginUsername"));
+        usernameElement.sendKeys(loginUser);
+    }
+
     public void setTextArea(String id, String userName) {
         WebElement e     = findElement(By.id(id));
         WebElement i     = e.findElement(By.tagName("textarea"));
@@ -540,12 +558,12 @@ public class SeleniumHandler {
      * @param testName Name of the test for the video file name
      */
     public void startRecording(String folderName, String testName) {
-        if (!isRecording) {
+        if (!videoRecorder.isRecording()) {
             try {
                 getDriver();// Ensure the driver is initialized and browser is open
-                videoRecorder.startRecording(folderName, testName);
-                isRecording = true;
-                logger.info("Started video recording for test: {}", testName);
+                if (videoRecorder.startRecording(folderName, testName)) {
+                    logger.info("Started video recording for test: {}", testName);
+                }
             } catch (IOException | AWTException e) {
                 logger.error("Failed to start video recording: {}", e.getMessage(), e);
             }
@@ -558,10 +576,9 @@ public class SeleniumHandler {
      * @return File object pointing to the recorded video, or null if recording failed
      */
     public File stopRecording() {
-        if (isRecording) {
+        if (videoRecorder.isRecording()) {
             try {
                 File videoFile = videoRecorder.stopRecording();
-                isRecording = false;
                 if (videoFile != null) {
                     logger.info("Video recording saved to: {}", videoFile.getAbsolutePath());
                 }
@@ -579,7 +596,14 @@ public class SeleniumHandler {
 
     private void testForError(String errorTitle) {
         //        String errorMessage = String.format("HTTP Status %d – Not Found", errorCode);
-        Assertions.assertTrue(getTitle().indexOf(errorTitle) != -1, String.format("Expected '%s', but got '%s'.", errorTitle, getTitle()));
+        assertTrue(getTitle().indexOf(errorTitle) != -1, String.format("Expected '%s', but got '%s'.", errorTitle, getTitle()));
+    }
+
+    public void testUrl(String expectedUrl) {
+        String currentUrl = getCurrentUrl();
+        waitUntil(ExpectedConditions.urlContains(expectedUrl));
+        logger.trace(String.format("expectedUrl=%s, actualUrl=%s", expectedUrl, currentUrl));
+        assertTrue(currentUrl.contains(expectedUrl));
     }
 
     public void toggleCheckbox(String id) {

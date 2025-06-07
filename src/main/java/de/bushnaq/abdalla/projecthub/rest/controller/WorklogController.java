@@ -21,6 +21,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import de.bushnaq.abdalla.projecthub.dao.WorklogDAO;
 import de.bushnaq.abdalla.projecthub.repository.WorklogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,27 +35,32 @@ public class WorklogController {
     private WorklogRepository worklogRepository;
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public void delete(@PathVariable Long id) {
         worklogRepository.deleteById(id);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public Optional<WorklogDAO> get(@PathVariable Long id) throws JsonProcessingException {
         Optional<WorklogDAO> task = worklogRepository.findById(id);
         return task;
     }
 
     @GetMapping()
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public List<WorklogDAO> getAll() {
         return worklogRepository.findAll();
     }
 
     @GetMapping("/sprint/{sprintId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public List<WorklogDAO> getBySprintId(@PathVariable Long sprintId) {
         return worklogRepository.findBySprintId(sprintId);
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public WorklogDAO save(@RequestBody WorklogDAO worklog) {
         return worklogRepository.save(worklog);
     }

@@ -29,8 +29,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -39,9 +45,9 @@ import java.util.List;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, properties = "server.port=8080")
-//@AutoConfigureMockMvc
-//@Transactional
-//@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+@AutoConfigureMockMvc
+@Transactional
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class Demo extends AbstractUiTestUtil {
     @Autowired
     private ProductViewTester productViewTester;
@@ -58,6 +64,7 @@ public class Demo extends AbstractUiTestUtil {
         int numberOfFeatures = random.nextInt(randomCase.getMaxNumberOfFeatures()) + 1;
         int numberOfTasks    = random.nextInt(randomCase.getMaxNumberOfWork()) + 1;
         {
+            printAuthentication();
             addRandomUsers(numberOfUsers);
             Product product = addProduct("Product-" + 1);
             Version version = addVersion(product, String.format("1.%d.0", 0));
@@ -91,9 +98,22 @@ public class Demo extends AbstractUiTestUtil {
         return Arrays.stream(randomCases).toList();
     }
 
+    private void printAuthentication() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            String username = authentication.getName();
+            String password = "test-password";
+            logger.info("Running demo with user: {} and password: {}", username, password);
+        } else {
+            logger.warn("No authenticated user found. Running demo without authentication.");
+        }
+    }
+
     @ParameterizedTest
     @MethodSource("listRandomCases")
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void testShowProducts(RandomCase randomCase, TestInfo testInfo) throws Exception {
+        printAuthentication();
         TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
@@ -101,12 +121,10 @@ public class Demo extends AbstractUiTestUtil {
         levelResources(testInfo, null);
         generateWorklogs(ParameterOptions.getLocalNow());
         productViewTester.switchToProductListView();
-        seleniumHandler.waitUntilBrowserClosed(0);
-//        if (DebugUtil.DEBUG) {
-//            seleniumHandler.waitUntilBrowserClosed(0);
-//        } else {
-//            seleniumHandler.waitUntilBrowserClosed(5000);
-//        }
+//        seleniumHandler.waitUntilBrowserClosed(0);
+        seleniumHandler.waitUntilBrowserClosed(5000);
     }
 
 }
+
+

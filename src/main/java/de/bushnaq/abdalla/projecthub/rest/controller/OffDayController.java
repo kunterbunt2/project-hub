@@ -22,6 +22,7 @@ import de.bushnaq.abdalla.projecthub.repository.OffDayRepository;
 import de.bushnaq.abdalla.projecthub.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -37,6 +38,7 @@ public class OffDayController {
     private UserRepository userRepository;
 
     @DeleteMapping("/{userId}/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Object> delete(@PathVariable Long userId, @PathVariable Long id) {
         return userRepository.findById(userId).map(
                 user -> {
@@ -50,12 +52,14 @@ public class OffDayController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public Optional<OffDayDAO> getById(@PathVariable Long id) {
         OffDayDAO e = offDayRepository.findById(id).orElseThrow();
         return Optional.of(e);
     }
 
     @PostMapping("/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<OffDayDAO> save(@RequestBody OffDayDAO offDay, @PathVariable Long userId) {
         return userRepository.findById(userId).map(user -> {
             offDay.setUser(user);
@@ -65,6 +69,7 @@ public class OffDayController {
     }
 
     @PutMapping("/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Object> update(@RequestBody OffDayDAO offDay, @PathVariable Long userId) {
         return userRepository.findById(userId).map(user -> {
             offDay.setUser(user);

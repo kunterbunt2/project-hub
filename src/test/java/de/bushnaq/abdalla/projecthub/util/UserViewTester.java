@@ -20,6 +20,7 @@ package de.bushnaq.abdalla.projecthub.util;
 import de.bushnaq.abdalla.projecthub.ui.UserListView;
 import de.bushnaq.abdalla.projecthub.ui.common.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.common.UserDialog;
+import de.bushnaq.abdalla.projecthub.ui.login.LoginView;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import org.junit.jupiter.api.Assertions;
 import org.openqa.selenium.By;
@@ -232,6 +233,10 @@ public class UserViewTester {
      * by checking for the presence of the page title element.
      */
     public void switchToUserListView() {
+        seleniumHandler.getAndCheck("http://localhost:" + port + "/" + LoginView.ROUTE);
+        seleniumHandler.setLoginUser("admin-user");
+        seleniumHandler.setLoginPassword("test-password");
+        seleniumHandler.loginSubmit();
         seleniumHandler.getAndCheck("http://localhost:" + port + "/" + UserListView.ROUTE);
         seleniumHandler.waitUntil(ExpectedConditions.elementToBeClickable(By.id(UserListView.USER_LIST_PAGE_TITLE)));
     }

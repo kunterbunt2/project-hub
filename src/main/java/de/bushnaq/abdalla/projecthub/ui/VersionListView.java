@@ -51,18 +51,18 @@ import java.util.Map;
 //@Menu(order = 1, icon = "vaadin:factory", title = "version List")
 @PermitAll // When security is enabled, allow all authenticated users
 public class VersionListView extends Main implements AfterNavigationObserver {
-    public static final String CREATE_VERSION_BUTTON             = "create-version-button";
-    public static final String ROUTE                             = "version-list";
-    public static final String VERSION_GRID_ACTION_BUTTON_PREFIX = "version-grid-action-button-prefix-";
-    public static final String VERSION_GRID_DELETE_BUTTON_PREFIX = "version-grid-delete-button-prefix-";
-    public static final String VERSION_GRID_EDIT_BUTTON_PREFIX   = "version-grid-edit-button-prefix-";
-    public static final String VERSION_GRID_NAME_PREFIX          = "version-grid-name-";
-    public static final String VERSION_LIST_PAGE_TITLE           = "version-list-page-title";
-    private final Clock         clock;
-    private final Grid<Version> grid;
-    private final H2            pageTitle;
-    private       Long          productId;
-    private final VersionApi    versionApi;
+    public static final String        CREATE_VERSION_BUTTON             = "create-version-button";
+    public static final String        ROUTE                             = "version-list";
+    public static final String        VERSION_GRID_ACTION_BUTTON_PREFIX = "version-grid-action-button-prefix-";
+    public static final String        VERSION_GRID_DELETE_BUTTON_PREFIX = "version-grid-delete-button-prefix-";
+    public static final String        VERSION_GRID_EDIT_BUTTON_PREFIX   = "version-grid-edit-button-prefix-";
+    public static final String        VERSION_GRID_NAME_PREFIX          = "version-grid-name-";
+    public static final String        VERSION_LIST_PAGE_TITLE           = "version-list-page-title";
+    private final       Clock         clock;
+    private final       Grid<Version> grid;
+    private final       H2            pageTitle;
+    private             Long          productId;
+    private final       VersionApi    versionApi;
 
     public VersionListView(VersionApi versionApi, Clock clock) {
         this.versionApi = versionApi;

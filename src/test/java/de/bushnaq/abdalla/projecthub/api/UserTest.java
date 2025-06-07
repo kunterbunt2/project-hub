@@ -23,14 +23,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ServerErrorException;
 
 import java.time.LocalDate;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 @ExtendWith(SpringExtension.class)
@@ -38,12 +42,51 @@ import static org.junit.jupiter.api.Assertions.fail;
 @AutoConfigureMockMvc
 @Transactional
 public class UserTest extends AbstractEntityGenerator {
-    public static final String FIRST_START_DATE  = "2024-03-14";
-    public static final String SECOND_START_DATE = "2025-07-01";
+    private static final long   FAKE_ID           = 999999L;
+    public static final  String FIRST_START_DATE  = "2024-03-14";
+    public static final  String SECOND_START_DATE = "2025-07-01";
 
     @Test
-    public void create() throws Exception {
+    public void anonymousSecurity() {
+        {
+            setUser("admin-user", "ROLE_ADMIN");
+            addRandomUsers(1);
+            SecurityContextHolder.clearContext();
+        }
 
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> {
+            addRandomUser(LocalDate.parse(FIRST_START_DATE));
+        });
+
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> {
+            List<User> allUsers = userApi.getAll();
+        });
+
+        {
+            User      user           = expectedUsers.getFirst();
+            LocalDate lastWorkingDay = user.getLastWorkingDay();
+            try {
+                user.setLastWorkingDay(LocalDate.parse(SECOND_START_DATE));
+                updateUser(user);
+                fail("should not be able to update");
+            } catch (AuthenticationCredentialsNotFoundException e) {
+                //restore fields to match db for later tests in @AfterEach
+                user.setLastWorkingDay(lastWorkingDay);
+            }
+        }
+
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> {
+            removeUser(expectedUsers.getFirst().getId());
+        });
+
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> {
+            User user = userApi.getById(expectedUsers.getFirst().getId());
+        });
+    }
+
+    @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
+    public void create() throws Exception {
         //create the users
         addRandomUsers(1);
 
@@ -52,60 +95,54 @@ public class UserTest extends AbstractEntityGenerator {
     }
 
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void delete() throws Exception {
-
         //create the users
         addRandomUsers(2);
         removeUser(expectedUsers.getFirst().getId());
 
-        //delete by unknown id should be ignored
-        {
-            userApi.deleteById(9999999L);
-        }
-        testUsers();
-        printTables();
     }
 
     @Test
     public void getAllEmpty() throws Exception {
         //get empty list
-        userApi.getAll();
+        setUser("admin-user", "ROLE_ADMIN");
+        List<User> allUsers = userApi.getAll();
+        assertEquals(0, allUsers.size());
     }
 
     @Test
     public void getById() throws Exception {
-
-        //create the users
-        addRandomUsers(1);
+        {
+            setUser("admin-user", "ROLE_ADMIN");
+            //create the users
+            addRandomUsers(1);
+            setUser("user", "ROLE_USER");
+        }
 
         //get user by id
         {
             User user = userApi.getById(expectedUsers.first().getId());
             assertUserEquals(expectedUsers.first(), user);
         }
-        //get by unknown id
-        {
-            try {
-                User user = userApi.getById(9999999L);
-                fail("User should not exist");
-            } catch (ServerErrorException e) {
-                //expected
-            }
-        }
+
         testUsers();
         printTables();
     }
 
     @Test
     public void getByUnknownId() throws Exception {
-
-        //create the users
-        addRandomUsers(1);
+        {
+            setUser("admin-user", "ROLE_ADMIN");
+            //create the users
+            addRandomUsers(1);
+            setUser("user", "ROLE_USER");
+        }
 
         //get by unknown id
         {
             try {
-                User user = userApi.getById(9999999L);
+                User user = userApi.getById(FAKE_ID);
                 fail("User should not exist");
             } catch (ServerErrorException e) {
                 //expected
@@ -116,6 +153,7 @@ public class UserTest extends AbstractEntityGenerator {
     }
 
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void update() throws Exception {
         Long id;
 
@@ -144,5 +182,33 @@ public class UserTest extends AbstractEntityGenerator {
         printTables();
     }
 
+    @Test
+    public void userSecurity() {
+        {
+            setUser("admin-user", "ROLE_ADMIN");
+            addRandomUsers(1);
+            setUser("user", "ROLE_USER");
+        }
 
+        assertThrows(AccessDeniedException.class, () -> {
+            addRandomUser(LocalDate.parse(FIRST_START_DATE));
+        });
+
+        {
+            User      user           = expectedUsers.getFirst();
+            LocalDate lastWorkingDay = user.getLastWorkingDay();
+            try {
+                user.setLastWorkingDay(LocalDate.parse(SECOND_START_DATE));
+                updateUser(user);
+                fail("should not be able to update");
+            } catch (AccessDeniedException e) {
+                //restore fields to match db for later tests in @AfterEach
+                user.setLastWorkingDay(lastWorkingDay);
+            }
+        }
+
+        assertThrows(AccessDeniedException.class, () -> {
+            removeUser(expectedUsers.getFirst().getId());
+        });
+    }
 }

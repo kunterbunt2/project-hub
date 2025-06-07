@@ -24,6 +24,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ServerErrorException;
@@ -33,6 +37,7 @@ import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
 @ExtendWith(SpringExtension.class)
@@ -47,8 +52,8 @@ public class LocationTest extends AbstractEntityGenerator {
     private static final String SECOND_STATE      = "fl";
 
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void add() throws Exception {
-
         //create a user with australian locale
         {
             Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
@@ -78,8 +83,45 @@ public class LocationTest extends AbstractEntityGenerator {
     }
 
     @Test
-    public void deleteFirstLocation() throws Exception {
+    public void anonymousSecurity() {
+        {
+            setUser("admin-user", "ROLE_ADMIN");
+            User user = addRandomUser(LocalDate.parse(FIRST_START_DATE));
+            SecurityContextHolder.clearContext();
+        }
 
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> {
+            User user = expectedUsers.getFirst();
+            addLocation(user, "de", "nw", LocalDate.parse(SECOND_START_DATE));
+        });
+
+        {
+            User     user            = expectedUsers.getFirst();
+            Location location        = user.getLocations().getFirst();
+            String   originalCountry = location.getCountry();
+            String   originalState   = location.getState();
+            location.setCountry(SECOND_COUNTRY);
+            location.setState(SECOND_STATE);
+            try {
+                updateLocation(location, user);
+                fail("should not be able to update");
+            } catch (AuthenticationCredentialsNotFoundException e) {
+                //restore fields to match db for later tests in @AfterEach
+                location.setCountry(originalCountry);
+                location.setState(originalState);
+            }
+        }
+
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> {
+            User     user     = expectedUsers.getFirst();
+            Location location = user.getLocations().getFirst();
+            removeLocation(location, user);
+        });
+    }
+
+    @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
+    public void deleteFirstLocation() throws Exception {
         {
             User user = addRandomUser(LocalDate.parse(FIRST_START_DATE));
         }
@@ -97,8 +139,8 @@ public class LocationTest extends AbstractEntityGenerator {
     }
 
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void deleteSecondLocation() throws Exception {
-
         {
             User user = addRandomUser(LocalDate.parse(FIRST_START_DATE));
         }
@@ -120,8 +162,8 @@ public class LocationTest extends AbstractEntityGenerator {
     }
 
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void deleteUsingFakeId() throws Exception {
-
         //create a user with australian locale
         {
             Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
@@ -154,8 +196,8 @@ public class LocationTest extends AbstractEntityGenerator {
     }
 
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void deleteUsingFakeUserId() throws Exception {
-
         //create a user with australian locale
         {
             Locale.setDefault(new Locale.Builder().setLanguage("en").setRegion("AU").build());//australian locale
@@ -187,8 +229,8 @@ public class LocationTest extends AbstractEntityGenerator {
     }
 
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void updateLocation() throws Exception {
-
         {
             User user = addRandomUser(LocalDate.parse(FIRST_START_DATE));
         }
@@ -213,6 +255,7 @@ public class LocationTest extends AbstractEntityGenerator {
     }
 
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void updateUsingFakeId() throws Exception {
 
         //create the user with german locale
@@ -246,6 +289,7 @@ public class LocationTest extends AbstractEntityGenerator {
     }
 
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void updateUsingFakeUserId() throws Exception {
 
         {
@@ -278,4 +322,42 @@ public class LocationTest extends AbstractEntityGenerator {
             }
         }
     }
+
+    @Test
+    public void userSecurity() {
+        {
+            setUser("admin-user", "ROLE_ADMIN");
+            User user = addRandomUser(LocalDate.parse(FIRST_START_DATE));
+            setUser("user", "ROLE_USER");
+        }
+
+        assertThrows(AccessDeniedException.class, () -> {
+            User user = expectedUsers.getFirst();
+            addLocation(user, "de", "nw", LocalDate.parse(SECOND_START_DATE));
+        });
+
+        {
+            User     user            = expectedUsers.getFirst();
+            Location location        = user.getLocations().getFirst();
+            String   originalCountry = location.getCountry();
+            String   originalState   = location.getState();
+            try {
+                location.setCountry(SECOND_COUNTRY);
+                location.setState(SECOND_STATE);
+                updateLocation(location, user);
+                fail("Should not be able to update location");
+            } catch (AccessDeniedException e) {
+                // Restore original values
+                location.setCountry(originalCountry);
+                location.setState(originalState);
+            }
+        }
+
+        assertThrows(AccessDeniedException.class, () -> {
+            User     user     = expectedUsers.getFirst();
+            Location location = user.getLocations().getFirst();
+            removeLocation(location, user);
+        });
+    }
 }
+

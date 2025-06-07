@@ -35,8 +35,12 @@ import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.Layout;
 import com.vaadin.flow.server.menu.MenuConfiguration;
 import com.vaadin.flow.server.menu.MenuEntry;
+import de.bushnaq.abdalla.projecthub.security.SecurityUtils;
 import de.bushnaq.abdalla.projecthub.ui.component.Breadcrumbs;
 import jakarta.annotation.security.PermitAll;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -77,13 +81,6 @@ public final class MainLayout extends AppLayout {
         addToNavbar(true, navbarLayout);
 
         // Add breadcrumbs below the navbar
-//        Div breadcrumbContainer = new Div(breadcrumbs);
-//        breadcrumbContainer.addClassNames(
-//                Padding.Horizontal.MEDIUM,
-//                Padding.Bottom.SMALL,
-//                Width.FULL
-//        );
-//        addToNavbar(breadcrumbContainer);
         Div breadcrumbContainer = new Div(breadcrumbs);
         breadcrumbContainer.addClassNames(
                 Padding.Horizontal.MEDIUM,
@@ -146,8 +143,10 @@ public final class MainLayout extends AppLayout {
     }
 
     private Component createUserMenu() {
-        // TODO Replace with real user information and actions
-        var avatar = new Avatar("John Smith");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String         username       = authentication != null ? authentication.getName() : "Guest";
+
+        var avatar = new Avatar(username);
         avatar.addThemeVariants(AvatarVariant.LUMO_XSMALL);
         avatar.addClassNames(Margin.Right.SMALL);
         avatar.setColorIndex(5);
@@ -157,10 +156,10 @@ public final class MainLayout extends AppLayout {
         userMenu.addClassNames(Margin.Right.MEDIUM);
 
         var userMenuItem = userMenu.addItem(avatar);
-        userMenuItem.add("John Smith");
+        userMenuItem.add(username);
         userMenuItem.getSubMenu().addItem("View Profile").setEnabled(false);
         userMenuItem.getSubMenu().addItem("Manage Settings").setEnabled(false);
-        userMenuItem.getSubMenu().addItem("Logout").setEnabled(false);
+        userMenuItem.getSubMenu().addItem("Logout", e -> logout());
 
         return userMenu;
     }
@@ -168,5 +167,11 @@ public final class MainLayout extends AppLayout {
     // Method to get the breadcrumbs component (to be used by views)
     public Breadcrumbs getBreadcrumbs() {
         return breadcrumbs;
+    }
+
+    private void logout() {
+        SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
+        logoutHandler.logout(SecurityUtils.getHttpServletRequest(), SecurityUtils.getHttpServletResponse(), SecurityContextHolder.getContext().getAuthentication());
+        getUI().ifPresent(ui -> ui.getPage().setLocation("/login"));
     }
 }

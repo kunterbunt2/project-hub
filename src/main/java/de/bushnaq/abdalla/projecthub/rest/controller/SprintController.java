@@ -21,6 +21,7 @@ import de.bushnaq.abdalla.projecthub.dao.SprintDAO;
 import de.bushnaq.abdalla.projecthub.repository.ProjectRepository;
 import de.bushnaq.abdalla.projecthub.repository.SprintRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,33 +36,39 @@ public class SprintController {
     private SprintRepository  sprintRepository;
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public void delete(@PathVariable Long id) {
         sprintRepository.deleteById(id);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public SprintDAO get(@PathVariable Long id) {
         SprintDAO sprintEntity = sprintRepository.findById(id).orElseThrow();
         return sprintEntity;
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public List<SprintDAO> getAll() {
         return sprintRepository.findAll();
     }
 
     @GetMapping("/project/{projectId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public List<SprintDAO> getAll(@PathVariable Long projectId) {
         return sprintRepository.findByProjectId(projectId);
     }
 
     @PostMapping()
+    @PreAuthorize("hasRole('ADMIN')")
     public SprintDAO save(@RequestBody SprintDAO sprintDAO) {
         SprintDAO save = sprintRepository.save(sprintDAO);
         return save;
     }
 
     @PutMapping()
+    @PreAuthorize("hasRole('ADMIN')")
     public SprintDAO update(@RequestBody SprintDAO sprintEntity) {
         return sprintRepository.save(sprintEntity);
     }

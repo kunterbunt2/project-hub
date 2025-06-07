@@ -22,6 +22,7 @@ import de.bushnaq.abdalla.projecthub.dao.TaskDAO;
 import de.bushnaq.abdalla.projecthub.repository.SprintRepository;
 import de.bushnaq.abdalla.projecthub.repository.TaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,32 +38,38 @@ public class TaskController {
     private TaskRepository   taskRepository;
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public void delete(@PathVariable Long id) {
         taskRepository.deleteById(id);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public Optional<TaskDAO> get(@PathVariable Long id) throws JsonProcessingException {
         Optional<TaskDAO> task = taskRepository.findById(id);
         return task;
     }
 
     @GetMapping("/sprint/{sprintId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public List<TaskDAO> getAll(@PathVariable Long sprintId) {
         return taskRepository.findBySprintId(sprintId);
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public List<TaskDAO> getAll() {
         return taskRepository.findAll();
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public TaskDAO save(@RequestBody TaskDAO task) {
         return taskRepository.save(task);
     }
 
     @PutMapping()
+    @PreAuthorize("hasRole('ADMIN')")
     public void update(@RequestBody TaskDAO task) {
         taskRepository.save(task);
     }

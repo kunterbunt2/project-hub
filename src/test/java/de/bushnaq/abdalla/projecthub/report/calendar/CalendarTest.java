@@ -29,6 +29,7 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +45,7 @@ public class CalendarTest extends AbstractGanttTestUtil {
      * there is per se no test, just successfully rendering the calendar without exceptions.
      */
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void calendar_01(TestInfo testInfo) throws Exception {
         int testCaseIndex = 1;
         TestInfoUtil.setTestCaseIndex(testInfo, testCaseIndex);

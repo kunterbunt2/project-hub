@@ -20,6 +20,7 @@ package de.bushnaq.abdalla.projecthub.rest.controller;
 import de.bushnaq.abdalla.projecthub.dao.ProductDAO;
 import de.bushnaq.abdalla.projecthub.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,27 +34,32 @@ public class ProductController {
     private ProductRepository productRepository;
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public void delete(@PathVariable Long id) {
         productRepository.deleteById(id);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public Optional<ProductDAO> get(@PathVariable Long id) {
         ProductDAO productEntity = productRepository.findById(id).orElseThrow();
         return Optional.of(productEntity);
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public List<ProductDAO> getAll() {
         return productRepository.findAll();
     }
 
     @PostMapping(consumes = "application/json;charset=UTF-8", produces = "application/json;charset=UTF-8")
+    @PreAuthorize("hasRole('ADMIN')")
     public ProductDAO save(@RequestBody ProductDAO product) {
         return productRepository.save(product);
     }
 
     @PutMapping()
+    @PreAuthorize("hasRole('ADMIN')")
     public void update(@RequestBody ProductDAO product) {
         productRepository.save(product);
     }

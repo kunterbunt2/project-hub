@@ -21,6 +21,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.dto.Location;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -31,49 +33,56 @@ public class LocationApi extends AbstractApi {
         super(restTemplate, objectMapper, baseUrl);
     }
 
+    public LocationApi() {
+
+    }
+
     @Autowired
     public LocationApi(RestTemplate restTemplate, ObjectMapper objectMapper) {
         super(restTemplate, objectMapper);
     }
 
-    public LocationApi() {
-
-    }
-
     //TODO use ids instead of objects
     public void deleteById(User user, Location location) throws org.springframework.web.client.RestClientException {
-        executeWithErrorHandling(() -> restTemplate.delete(
+        executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/location/{userId}/{id}",
+                HttpMethod.DELETE,
+                createHttpEntity(),
+                Void.class,
                 user.getId(),
                 location.getId()
         ));
     }
 
     public Location getById(Long id) {
-        return executeWithErrorHandling(() ->
-                restTemplate.getForObject(
-                        baseUrl + "/location/{id}",
-                        Location.class,
-                        id
-                ));
+        ResponseEntity<Location> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                baseUrl + "/location/{id}",
+                HttpMethod.GET,
+                createHttpEntity(),
+                Location.class,
+                id
+        ));
+        return response.getBody();
     }
 
     public Location persist(Location location, Long userId) {
-        return executeWithErrorHandling(() ->
-                restTemplate.postForObject(
-                        baseUrl + "/location/{userId}",
-                        location,
-                        Location.class,
-                        userId
-                ));
+        ResponseEntity<Location> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                baseUrl + "/location/{userId}",
+                HttpMethod.POST,
+                createHttpEntity(location),
+                Location.class,
+                userId
+        ));
+        return response.getBody();
     }
 
     public void update(Location location, Long userId) {
-        executeWithErrorHandling(() -> restTemplate.put(
+        executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/location/{userId}",
-                location,
+                HttpMethod.PUT,
+                createHttpEntity(location),
+                Void.class,
                 userId
         ));
     }
-
 }

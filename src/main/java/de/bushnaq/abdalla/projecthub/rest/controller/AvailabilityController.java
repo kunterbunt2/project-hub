@@ -22,6 +22,7 @@ import de.bushnaq.abdalla.projecthub.repository.AvailabilityRepository;
 import de.bushnaq.abdalla.projecthub.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Objects;
@@ -37,6 +38,7 @@ public class AvailabilityController {
     private UserRepository userRepository;
 
     @DeleteMapping("/{userId}/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Object> delete(@PathVariable Long userId, @PathVariable Long id) {
         return userRepository.findById(userId).map(user ->
                 availabilityRepository.findById(id).map(availability -> {
@@ -51,11 +53,13 @@ public class AvailabilityController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<AvailabilityDAO> getById(@PathVariable Long id) {
         return availabilityRepository.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AvailabilityDAO> save(@RequestBody AvailabilityDAO availability, @PathVariable Long userId) {
         return userRepository.findById(userId).map(user -> {
             availability.setUser(user);
@@ -65,6 +69,7 @@ public class AvailabilityController {
     }
 
     @PutMapping("/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Object> update(@RequestBody AvailabilityDAO availability, @PathVariable Long userId) {
         return userRepository.findById(userId).map(user -> {
             availability.setUser(user);

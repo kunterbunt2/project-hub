@@ -33,6 +33,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,6 +65,7 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
      */
     @MethodSource("listFilesByExtension")
     @ParameterizedTest
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void legacyTest(Path mppFileName, TestInfo testInfo) throws Exception {
         TestInfoUtil.setTestCaseIndex(testInfo, testCaseIndex);
         TestInfoUtil.setTestMethod(testInfo, generateTestCaseName(testInfo));

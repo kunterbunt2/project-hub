@@ -20,6 +20,7 @@ package de.bushnaq.abdalla.projecthub.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.dto.Product;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -44,43 +45,52 @@ public class ProductApi extends AbstractApi {
     }
 
     public void deleteById(Long id) {
-        executeWithErrorHandling(() -> restTemplate.delete(
+        executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/product/{id}",
+                HttpMethod.DELETE,
+                createHttpEntity(),
+                Void.class,
                 id
         ));
     }
 
     public List<Product> getAll() {
-        ResponseEntity<Product[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(
+        ResponseEntity<Product[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/product",
+                HttpMethod.GET,
+                createHttpEntity(),
                 Product[].class
         ));
         return Arrays.asList(response.getBody());
     }
 
     public Product getById(Long id) {
-        return executeWithErrorHandling(() ->
-                restTemplate.getForObject(
-                        baseUrl + "/product/{id}",
-                        Product.class,
-                        id
-                ));
+        ResponseEntity<Product> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                baseUrl + "/product/{id}",
+                HttpMethod.GET,
+                createHttpEntity(),
+                Product.class,
+                id
+        ));
+        return response.getBody();
     }
 
     public Product persist(Product product) {
-        return executeWithErrorHandling(() ->
-                restTemplate.postForObject(
-                        baseUrl + "/product",
-                        product,
-                        Product.class
-                ));
+        ResponseEntity<Product> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                baseUrl + "/product",
+                HttpMethod.POST,
+                createHttpEntity(product),
+                Product.class
+        ));
+        return response.getBody();
     }
 
     public void update(Product product) {
-        executeWithErrorHandling(() -> restTemplate.put(
+        executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/product",
-                product
+                HttpMethod.PUT,
+                createHttpEntity(product),
+                Void.class
         ));
     }
-
 }

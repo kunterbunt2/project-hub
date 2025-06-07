@@ -30,6 +30,7 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,6 +48,7 @@ public class GanttTest extends AbstractGanttTestUtil {
      * test dependency between two tasks
      */
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void gantt_01(TestInfo testInfo) throws Exception {
         int testCaseIndex = 1;
         TestInfoUtil.setTestCaseIndex(testInfo, testCaseIndex);
@@ -77,6 +79,7 @@ public class GanttTest extends AbstractGanttTestUtil {
      * dependency between two parent tasks
      */
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void gantt_02(TestInfo testInfo) throws Exception {
         int testCaseIndex = 2;
         TestInfoUtil.setTestCaseIndex(testInfo, testCaseIndex);
@@ -112,6 +115,7 @@ public class GanttTest extends AbstractGanttTestUtil {
      * two tasks with different resources and no dependency
      */
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void gantt_03(TestInfo testInfo) throws Exception {
         int testCaseIndex = 3;
         TestInfoUtil.setTestCaseIndex(testInfo, testCaseIndex);

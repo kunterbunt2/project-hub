@@ -30,6 +30,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
@@ -97,6 +98,7 @@ public class SprintViewTest extends AbstractUiTestUtil {
 
     @ParameterizedTest
     @MethodSource("listRandomCases")
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void testShowProducts(RandomCase randomCase, TestInfo testInfo) throws Exception {
         TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());

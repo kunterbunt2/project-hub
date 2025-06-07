@@ -21,6 +21,7 @@ import de.bushnaq.abdalla.projecthub.ui.ProductListView;
 import de.bushnaq.abdalla.projecthub.ui.VersionListView;
 import de.bushnaq.abdalla.projecthub.ui.common.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.common.ProductDialog;
+import de.bushnaq.abdalla.projecthub.ui.login.LoginView;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import org.openqa.selenium.By;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -170,7 +171,12 @@ public class ProductViewTester {
      * by checking for the presence of the page title element.
      */
     public void switchToProductListView() {
-        seleniumHandler.getAndCheck("http://localhost:" + port + "/" + ProductListView.ROUTE);
+        seleniumHandler.getAndCheck("http://localhost:" + port + "/" + LoginView.ROUTE);
+        seleniumHandler.setLoginUser("admin-user");
+        seleniumHandler.setLoginPassword("test-password");
+        seleniumHandler.loginSubmit();
         seleniumHandler.waitUntil(ExpectedConditions.elementToBeClickable(By.id(ProductListView.PRODUCT_LIST_PAGE_TITLE)));
     }
 }
+
+

@@ -20,6 +20,7 @@ package de.bushnaq.abdalla.projecthub.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -30,13 +31,13 @@ import java.util.List;
 @Service
 public class SprintApi extends AbstractApi {
 
-    public SprintApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
-        super(restTemplate, objectMapper, baseUrl);
-    }
-
     @Autowired
     public SprintApi(RestTemplate restTemplate, ObjectMapper objectMapper) {
         super(restTemplate, objectMapper);
+    }
+
+    public SprintApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
+        super(restTemplate, objectMapper, baseUrl);
     }
 
     public SprintApi() {
@@ -44,23 +45,30 @@ public class SprintApi extends AbstractApi {
     }
 
     public void deleteById(long id) {
-        executeWithErrorHandling(() -> restTemplate.delete(
+        executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/sprint/{id}",
+                HttpMethod.DELETE,
+                createHttpEntity(),
+                Void.class,
                 id
         ));
     }
 
     public List<Sprint> getAll() {
-        ResponseEntity<Sprint[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(
+        ResponseEntity<Sprint[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/sprint",
+                HttpMethod.GET,
+                createHttpEntity(),
                 Sprint[].class
         ));
         return Arrays.asList(response.getBody());
     }
 
     public List<Sprint> getAll(Long projectId) {
-        ResponseEntity<Sprint[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(
+        ResponseEntity<Sprint[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/sprint/project/{projectId}",
+                HttpMethod.GET,
+                createHttpEntity(),
                 Sprint[].class,
                 projectId
         ));
@@ -68,26 +76,32 @@ public class SprintApi extends AbstractApi {
     }
 
     public Sprint getById(Long id) {
-        return executeWithErrorHandling(() -> restTemplate.getForObject(
+        ResponseEntity<Sprint> response = executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/sprint/{id}",
+                HttpMethod.GET,
+                createHttpEntity(),
                 Sprint.class,
                 id
         ));
+        return response.getBody();
     }
 
     public Sprint persist(Sprint sprint) {
-        return executeWithErrorHandling(() ->
-                restTemplate.postForObject(
-                        baseUrl + "/sprint",
-                        sprint,
-                        Sprint.class
-                ));
+        ResponseEntity<Sprint> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                baseUrl + "/sprint",
+                HttpMethod.POST,
+                createHttpEntity(sprint),
+                Sprint.class
+        ));
+        return response.getBody();
     }
 
     public void update(Sprint sprint) {
-        executeWithErrorHandling(() -> restTemplate.put(
+        executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/sprint",
-                sprint
+                HttpMethod.PUT,
+                createHttpEntity(sprint),
+                Void.class
         ));
     }
 }

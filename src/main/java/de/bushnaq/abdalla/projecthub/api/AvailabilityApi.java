@@ -21,6 +21,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.dto.Availability;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -31,48 +33,55 @@ public class AvailabilityApi extends AbstractApi {
         super(restTemplate, objectMapper, baseUrl);
     }
 
+    public AvailabilityApi() {
+    }
+
     @Autowired
     public AvailabilityApi(RestTemplate restTemplate, ObjectMapper objectMapper) {
         super(restTemplate, objectMapper);
     }
 
-    public AvailabilityApi() {
-    }
-
     //TODO use ids instead of objects
     public void deleteById(User user, Availability availability) throws org.springframework.web.client.RestClientException {
-        executeWithErrorHandling(() -> restTemplate.delete(
+        executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/availability/{userId}/{id}",
+                HttpMethod.DELETE,
+                createHttpEntity(),
+                Void.class,
                 user.getId(),
                 availability.getId()
         ));
     }
 
     public Availability getById(Long id) {
-        return executeWithErrorHandling(() ->
-                restTemplate.getForObject(
-                        baseUrl + "/availability/{id}",
-                        Availability.class,
-                        id
-                ));
+        ResponseEntity<Availability> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                baseUrl + "/availability/{id}",
+                HttpMethod.GET,
+                createHttpEntity(),
+                Availability.class,
+                id
+        ));
+        return response.getBody();
     }
 
     public Availability persist(Availability availability, Long userId) {
-        return executeWithErrorHandling(() ->
-                restTemplate.postForObject(
-                        baseUrl + "/availability/{userId}",
-                        availability,
-                        Availability.class,
-                        userId
-                ));
+        ResponseEntity<Availability> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                baseUrl + "/availability/{userId}",
+                HttpMethod.POST,
+                createHttpEntity(availability),
+                Availability.class,
+                userId
+        ));
+        return response.getBody();
     }
 
     public void update(Availability availability, Long userId) {
-        executeWithErrorHandling(() -> restTemplate.put(
+        executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/availability/{userId}",
-                availability,
+                HttpMethod.PUT,
+                createHttpEntity(availability),
+                Void.class,
                 userId
         ));
     }
-
 }

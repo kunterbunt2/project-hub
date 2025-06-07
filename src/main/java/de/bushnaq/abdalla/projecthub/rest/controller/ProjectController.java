@@ -22,6 +22,7 @@ import de.bushnaq.abdalla.projecthub.repository.ProjectRepository;
 import de.bushnaq.abdalla.projecthub.repository.VersionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,26 +37,31 @@ public class ProjectController {
     private VersionRepository versionRepository;
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public void delete(@PathVariable Long id) {
         projectRepository.deleteById(id);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<ProjectDAO> get(@PathVariable Long id) {
         return projectRepository.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/version/{versionId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public List<ProjectDAO> getAll(@PathVariable Long versionId) {
         return projectRepository.findByVersionId(versionId);
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public List<ProjectDAO> getAll() {
         return projectRepository.findAll();
     }
 
     @PostMapping()
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProjectDAO> save(@RequestBody ProjectDAO project) {
         return versionRepository.findById(project.getVersionId()).map(version -> {
             ProjectDAO save = projectRepository.save(project);
@@ -64,7 +70,9 @@ public class ProjectController {
     }
 
     @PutMapping()
+    @PreAuthorize("hasRole('ADMIN')")
     public ProjectDAO update(@RequestBody ProjectDAO project) {
         return projectRepository.save(project);
     }
 }
+

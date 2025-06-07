@@ -20,6 +20,7 @@ package de.bushnaq.abdalla.projecthub.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -44,23 +45,30 @@ public class UserApi extends AbstractApi {
     }
 
     public void deleteById(Long id) {
-        executeWithErrorHandling(() -> restTemplate.delete(
+        executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/user/{id}",
+                HttpMethod.DELETE,
+                createHttpEntity(),
+                Void.class,
                 id
         ));
     }
 
     public List<User> getAll() {
-        ResponseEntity<User[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(
+        ResponseEntity<User[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/user",
+                HttpMethod.GET,
+                createHttpEntity(),
                 User[].class
         ));
         return Arrays.asList(response.getBody());
     }
 
     public List<User> getAll(Long sprintId) {
-        ResponseEntity<User[]> response = executeWithErrorHandling(() -> restTemplate.getForEntity(
+        ResponseEntity<User[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/user/sprint/{sprintId}",
+                HttpMethod.GET,
+                createHttpEntity(),
                 User[].class,
                 sprintId
         ));
@@ -68,28 +76,32 @@ public class UserApi extends AbstractApi {
     }
 
     public User getById(Long id) {
-        return executeWithErrorHandling(() ->
-                restTemplate.getForObject(
-                        baseUrl + "/user/{id}",
-                        User.class,
-                        id
-                ));
+        ResponseEntity<User> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                baseUrl + "/user/{id}",
+                HttpMethod.GET,
+                createHttpEntity(),
+                User.class,
+                id
+        ));
+        return response.getBody();
     }
 
     public User persist(User user) {
-        return executeWithErrorHandling(() ->
-                restTemplate.postForObject(
-                        baseUrl + "/user",
-                        user,
-                        User.class
-                ));
+        ResponseEntity<User> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                baseUrl + "/user",
+                HttpMethod.POST,
+                createHttpEntity(user),
+                User.class
+        ));
+        return response.getBody();
     }
 
     public void update(User user) {
-        executeWithErrorHandling(() -> restTemplate.put(
+        executeWithErrorHandling(() -> restTemplate.exchange(
                 baseUrl + "/user",
-                user
+                HttpMethod.PUT,
+                createHttpEntity(user),
+                Void.class
         ));
     }
-
 }

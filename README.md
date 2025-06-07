@@ -53,9 +53,11 @@ minimalistic project effort estimation and progress tracking and release date in
 
 # Issues
 
-1. api url should start with api to separate it from the web interface.
-2. gantt calendar too light.
-3. gantt calendar should be using sprint calendar.
+1. api authentication currently uses a fixed password. this needs to be fixed after introduction of oidc.
+2. AvailabilityTest.userSecurity() generates several exceptions on server side that the test does not catch.
+3. Demo sporadically fails with Authentication missing.
+4. gantt calendar too light.
+5. gantt calendar should be using sprint calendar.
 
 # License
 

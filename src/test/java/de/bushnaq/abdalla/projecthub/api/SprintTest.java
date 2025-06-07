@@ -21,10 +21,12 @@ import de.bushnaq.abdalla.projecthub.dto.Sprint;
 import de.bushnaq.abdalla.projecthub.util.AbstractEntityGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ServerErrorException;
@@ -33,6 +35,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -41,15 +44,49 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class SprintTest extends AbstractEntityGenerator {
     private static final long   FAKE_ID     = 999999L;
     private static final String SECOND_NAME = "SECOND_NAME";
-    Logger logger = LoggerFactory.getLogger(SprintTest.class);
 
     @Test
-    public void create() throws Exception {
-        addRandomProducts(1);
+    public void anonymousSecurity() {
+        {
+            setUser("admin-user", "ROLE_ADMIN");
+            addRandomProducts(1);
+            SecurityContextHolder.clearContext();
+        }
 
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> {
+            List<Sprint> allSprints = sprintApi.getAll();
+        });
+
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> {
+            Sprint sprint = sprintApi.getById(expectedSprints.getFirst().getId());
+        });
+
+        {
+            Sprint sprint = expectedSprints.getFirst();
+            String name   = sprint.getName();
+            try {
+                sprint.setName(SECOND_NAME);
+                updateSprint(sprint);
+                fail("should not be able to update");
+            } catch (AuthenticationCredentialsNotFoundException e) {
+                //restore fields to match db for later tests in @AfterEach
+                sprint.setName(name);
+            }
+        }
+
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> {
+            removeSprint(expectedSprints.getFirst().getId());
+        });
     }
 
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
+    public void create() throws Exception {
+        addRandomProducts(1);
+    }
+
+    @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void delete() throws Exception {
         // Create products with sprints
         addRandomProducts(2);
@@ -58,6 +95,7 @@ public class SprintTest extends AbstractEntityGenerator {
     }
 
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void deleteUsingFakeId() throws Exception {
         addRandomProducts(2);
         try {
@@ -69,12 +107,17 @@ public class SprintTest extends AbstractEntityGenerator {
 
     @Test
     public void getAll() throws Exception {
-        addRandomProducts(3);
+        {
+            setUser("admin-user", "ROLE_ADMIN");
+            addRandomProducts(3);
+            setUser("user", "ROLE_USER");
+        }
         List<Sprint> allSprints = sprintApi.getAll();
         assertEquals(3, allSprints.size());
     }
 
     @Test
+    @WithMockUser(roles = "USER")
     public void getAllEmpty() throws Exception {
         List<Sprint> allSprints = sprintApi.getAll();
         assertEquals(0, allSprints.size());
@@ -82,7 +125,11 @@ public class SprintTest extends AbstractEntityGenerator {
 
     @Test
     public void getByFakeId() throws Exception {
-        addRandomProducts(1);
+        {
+            setUser("admin-user", "ROLE_ADMIN");
+            addRandomProducts(1);
+            setUser("user", "ROLE_USER");
+        }
         try {
             sprintApi.getById(FAKE_ID);
             fail("Sprint should not exist");
@@ -93,12 +140,17 @@ public class SprintTest extends AbstractEntityGenerator {
 
     @Test
     public void getById() throws Exception {
-        addRandomProducts(1);
+        {
+            setUser("admin-user", "ROLE_ADMIN");
+            addRandomProducts(1);
+            setUser("user", "ROLE_USER");
+        }
         Sprint sprint = sprintApi.getById(expectedSprints.getFirst().getId());
         assertSprintEquals(expectedSprints.getFirst(), sprint, true);
     }
 
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void update() throws Exception {
         addRandomProducts(2);
         Sprint sprint = expectedSprints.getFirst();
@@ -107,6 +159,7 @@ public class SprintTest extends AbstractEntityGenerator {
     }
 
     @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void updateUsingFakeId() throws Exception {
         addRandomProducts(2);
         Sprint sprint = expectedSprints.getFirst();
@@ -122,5 +175,37 @@ public class SprintTest extends AbstractEntityGenerator {
             sprint.setId(id);
             sprint.setName(name);
         }
+    }
+
+    @Test
+    public void userSecurity() {
+        {
+            setUser("admin-user", "ROLE_ADMIN");
+            addRandomProducts(1);
+            setUser("user", "ROLE_USER");
+        }
+
+        // Regular users should be able to view sprints
+        List<Sprint> allSprints = sprintApi.getAll();
+        Sprint       sprint     = sprintApi.getById(expectedSprints.getFirst().getId());
+
+        // But not modify them
+        {
+            Sprint sprintToModify = expectedSprints.getFirst();
+            String originalName   = sprintToModify.getName();
+            try {
+                sprintToModify.setName(SECOND_NAME);
+                updateSprint(sprintToModify);
+                fail("Should not be able to update sprint");
+            } catch (AccessDeniedException e) {
+                // Expected exception
+                // Restore original name to prevent test failures
+                sprintToModify.setName(originalName);
+            }
+        }
+
+        assertThrows(AccessDeniedException.class, () -> {
+            removeSprint(expectedSprints.getFirst().getId());
+        });
     }
 }

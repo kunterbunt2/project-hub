@@ -36,6 +36,7 @@ import org.junit.jupiter.api.TestInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.server.ServerErrorException;
 
 import java.awt.*;
@@ -577,6 +578,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         options.setRandomSeed(123L);//Get deterministic results by setting a random seed.
         NameGenerator generator = new NameGenerator(options);
         names = generator.generateNames(1000);
+
         // Set the correct port after injection
         String baseUrl = "http://localhost:" + port + "/api";
         productApi      = new ProductApi(testRestTemplate.getRestTemplate(), objectMapper, baseUrl);
@@ -661,8 +663,9 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         }
     }
 
-    private void removeTaskTree(Task task) {
+    protected void removeTaskTree(Task task) {
         expectedTasks.remove(task);
+        taskApi.deleteById(task.getId());
         for (Task childTask : task.getChildTasks()) {
             removeTaskTree(childTask);
         }
@@ -706,6 +709,15 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         }
     }
 
+    protected static void setUser(String principal, String ROLE_ADMIN) {
+        SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        principal, "password",
+                        List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority(ROLE_ADMIN))
+                )
+        );
+    }
+
     protected void testAll() {
         testProducts();
         testUsers();
@@ -713,6 +725,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
 
     @AfterEach
     protected void testAllAndPrintTables() {
+        setUser("admin-user", "ROLE_ADMIN");
         testAll();
         printTables();
     }
@@ -791,6 +804,12 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         sprintApi.update(sprint);
         expectedSprints.remove(sprint);
         expectedSprints.add(sprint); // Replace old sprint with the updated one
+    }
+
+    protected void updateTask(Task task) {
+        taskApi.update(task);
+        expectedTasks.remove(task);
+        expectedTasks.add(task);//replace old products with the updated one
     }
 
     protected void updateUser(User user) throws ServerErrorException {
