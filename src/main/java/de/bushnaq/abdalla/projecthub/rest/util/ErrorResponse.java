@@ -19,18 +19,19 @@ package de.bushnaq.abdalla.projecthub.rest.util;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.http.HttpStatus;
 
 @Getter
 @Setter
 public class ErrorResponse {
-    private Exception exception;
-    private String    message;
-    private int       status;
+    private Exception  exception;
+    private String     message;
+    private HttpStatus status;
 
     public ErrorResponse() {
     }
 
-    public ErrorResponse(int status, String message, Exception e) {
+    public ErrorResponse(HttpStatus status, String message, Exception e) {
         this.status    = status;
         this.message   = message;
         this.exception = e;

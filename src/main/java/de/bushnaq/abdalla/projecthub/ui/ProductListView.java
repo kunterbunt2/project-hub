@@ -208,6 +208,6 @@ public class ProductListView extends Main implements AfterNavigationObserver {
     }
 
     private void refreshGrid() {
-//        grid.setItems(productApi.getAll());
+        grid.setItems(productApi.getAll());
     }
 }

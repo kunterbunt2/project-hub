@@ -53,13 +53,29 @@ public class SecurityConfig extends VaadinWebSecurity {
     @Autowired
     private SecurityUserDetailsService userDetailsService;
 
+    @Bean
+    public AuthenticationManager authenticationManager() {
+        // Create authentication provider for the test users
+        DaoAuthenticationProvider testProvider = new DaoAuthenticationProvider();
+        testProvider.setPasswordEncoder(passwordEncoder());
+        testProvider.setUserDetailsService(testUsers());
+
+        // Create authentication provider for the regular users
+        DaoAuthenticationProvider regularProvider = new DaoAuthenticationProvider();
+        regularProvider.setPasswordEncoder(passwordEncoder());
+        regularProvider.setUserDetailsService(userDetailsService);
+
+        // Return a provider manager with both providers
+        return new ProviderManager(testProvider, regularProvider);
+    }
+
     /**
      * Separate security configuration specifically for API endpoints
      * This uses HTTP Basic Authentication for API security
      */
     @Bean
-    @Order(1) // Higher precedence than the Vaadin security filter chain
-    public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
+    @Order(2) // Lower precedence than the OAuth2 API security filter chain
+    public SecurityFilterChain basicAuthApiSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .securityMatcher("/api/**") // Apply this configuration only to API endpoints
                 .authorizeHttpRequests(authorize -> authorize
@@ -82,22 +98,6 @@ public class SecurityConfig extends VaadinWebSecurity {
                 )
                 .authenticationManager(authenticationManager()) // Use our combined authentication manager
                 .build();
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager() {
-        // Create authentication provider for the test users
-        DaoAuthenticationProvider testProvider = new DaoAuthenticationProvider();
-        testProvider.setPasswordEncoder(passwordEncoder());
-        testProvider.setUserDetailsService(testUsers());
-
-        // Create authentication provider for the regular users
-        DaoAuthenticationProvider regularProvider = new DaoAuthenticationProvider();
-        regularProvider.setPasswordEncoder(passwordEncoder());
-        regularProvider.setUserDetailsService(userDetailsService);
-
-        // Return a provider manager with both providers
-        return new ProviderManager(testProvider, regularProvider);
     }
 
     @Override

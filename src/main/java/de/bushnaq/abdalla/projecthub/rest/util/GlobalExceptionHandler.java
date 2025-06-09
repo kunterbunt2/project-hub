@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(Exception ex) {
         ErrorResponse error = new ErrorResponse(
-                HttpStatus.FORBIDDEN.value(),
+                HttpStatus.FORBIDDEN,
                 "Access Denied: " + ex.getMessage(), ex
         );
         return ResponseEntity
@@ -48,7 +48,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ResponseEntity<ErrorResponse> handleAuthenticationException(Exception ex) {
         ErrorResponse error = new ErrorResponse(
-                HttpStatus.UNAUTHORIZED.value(),
+                HttpStatus.UNAUTHORIZED,
                 "Authentication Failed: " + ex.getMessage(), ex
         );
         return ResponseEntity
@@ -61,7 +61,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<ErrorResponse> handleException(Exception ex) {
         ErrorResponse error = new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST,
                 ex.getMessage(), ex
         );
         return ResponseEntity

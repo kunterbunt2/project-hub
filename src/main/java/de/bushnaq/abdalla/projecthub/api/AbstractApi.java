@@ -20,11 +20,19 @@ package de.bushnaq.abdalla.projecthub.api;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.rest.util.ErrorResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -32,15 +40,21 @@ import org.springframework.web.server.ServerErrorException;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 /**
  * Allows us to handle exceptions from server.
  */
 //@Service
 public class AbstractApi {
-    protected String       baseUrl = "http://localhost:8080/api"; // Configure as needed
-    protected ObjectMapper objectMapper;
-    protected RestTemplate restTemplate;
+    private static final Logger logger = LoggerFactory.getLogger(AbstractApi.class);
+
+    @Autowired(required = false)
+    protected OAuth2AuthorizedClientService authorizedClientService;
+    protected String                        baseUrl = "http://localhost:8080/api"; // Configure as needed
+    protected ObjectMapper                  objectMapper;
+    protected RestTemplate                  restTemplate;
 
     /**
      * used for uni tests to enforce in-memory db.
@@ -67,8 +81,10 @@ public class AbstractApi {
     }
 
     /**
-     * Creates HTTP headers with Basic Authentication using the current user's credentials.
+     * Creates HTTP headers with authentication using either OIDC token or Basic Auth.
      * This ensures API calls made from the UI have proper authentication.
+     * Role information is extracted from the security context and logged.
+     * The OIDC token already contains the role information, so roles are handled automatically.
      */
     protected HttpHeaders createAuthHeaders() {
         HttpHeaders headers = new HttpHeaders();
@@ -77,6 +93,51 @@ public class AbstractApi {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication != null && authentication.isAuthenticated()) {
+            // Log user roles for debugging purposes
+            Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+            String roles = authorities.stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(Collectors.joining(", "));
+            logger.debug("User {} has roles: {}", authentication.getName(), roles);
+
+            // Check if the authentication is OAuth2/OIDC
+            if (authentication instanceof OAuth2AuthenticationToken oauth2Token && authorizedClientService != null) {
+                OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(
+                        oauth2Token.getAuthorizedClientRegistrationId(),
+                        oauth2Token.getName());
+
+                if (client != null && client.getAccessToken() != null) {
+                    // Use OAuth2 Bearer Token authentication
+                    String tokenValue = client.getAccessToken().getTokenValue();
+
+                    // Critical: Ensure token is properly formatted for JWT authentication
+                    // Spring Security's JWT processing expects "Bearer" prefix
+                    if (tokenValue != null && !tokenValue.isEmpty()) {
+//                        headers.setBearerAuth(tokenValue);
+                        headers.set("Authorization", "Bearer " + tokenValue);
+
+                        // Enhanced logging for debugging
+                        logger.debug("Bearer token set in headers. Token length: {}", tokenValue.length());
+
+                        // For debugging: add user information from OAuth2 token
+                        OAuth2User principal = oauth2Token.getPrincipal();
+                        logger.debug("OAuth2 user attributes: {}", principal.getAttributes());
+                    } else {
+                        logger.warn("Access token value is empty or null");
+                    }
+
+                    // Ensure we're setting Content-Type for JSON properly
+                    headers.set("Content-Type", "application/json");
+                    headers.set("Accept", "application/json");
+
+                    return headers;
+                } else {
+                    logger.warn("OAuth2 client or access token is null for user {}", oauth2Token.getName());
+                }
+            }
+
+            // Fallback to basic auth if no OIDC token is available
+            logger.debug("Falling back to basic auth for user {}", authentication.getName());
             String username = authentication.getName();
             // For simplicity in this demo environment, we use a fixed password for API calls
             // In production, this would need a more secure approach
@@ -87,6 +148,14 @@ public class AbstractApi {
             String authHeader  = "Basic " + new String(encodedAuth);
 
             headers.set("Authorization", authHeader);
+            headers.set("Content-Type", "application/json");
+            headers.set("Accept", "application/json");
+
+            // For basic auth, we can optionally include roles in a custom header for debugging
+            headers.set("X-User-Roles", roles);
+            logger.debug("Using basic auth with roles: {}", roles);
+        } else {
+            logger.warn("No authentication found in SecurityContextHolder");
         }
 
         return headers;
@@ -110,8 +179,13 @@ public class AbstractApi {
         try {
             return operation.execute();
         } catch (HttpClientErrorException e) {
+            logger.error("REST API call failed with status: {} and response: {}",
+                    e.getStatusCode(), e.getResponseBodyAsString());
             handleExceptions(e);
             return null;
+        } catch (Exception e) {
+            logger.error("Unexpected error in REST API call", e);
+            throw new ServerErrorException("Failed to execute REST API call", e);
         }
     }
 
@@ -119,7 +193,12 @@ public class AbstractApi {
         try {
             operation.execute();
         } catch (HttpClientErrorException e) {
+            logger.error("REST API call failed with status: {} and response: {}",
+                    e.getStatusCode(), e.getResponseBodyAsString());
             handleExceptions(e);
+        } catch (Exception e) {
+            logger.error("Unexpected error in REST API call", e);
+            throw new ServerErrorException("Failed to execute REST API call", e);
         }
     }
 

@@ -45,7 +45,7 @@ import java.util.Set;
 
 /**
  * Security configuration for OAuth2/OIDC authentication.
- * This class configures Spring Security to use OAuth2/OIDC for authentication with Keycloak.
+ * This class configures Spring Security to use OAuth2/OIDC for authentication with Vaadin UI.
  * It's only enabled when the 'spring.security.oauth2.client.registration.keycloak.client-id' property is defined.
  */
 @EnableWebSecurity
@@ -59,6 +59,8 @@ public class OidcSecurityConfig extends VaadinWebSecurity {
 
     /**
      * Configures Spring Security to use OAuth2 login for Vaadin UI pages.
+     * This security configuration is now specifically for Vaadin UI endpoints,
+     * separate from the API security configuration.
      */
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -91,8 +93,9 @@ public class OidcSecurityConfig extends VaadinWebSecurity {
                 .requestMatchers(new AntPathRequestMatcher("/frontend-es5/**")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/frontend-es6/**")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/oauth2/**")).permitAll()
-                .requestMatchers(new AntPathRequestMatcher("/login/oauth2/**")).permitAll()
-        );
+                .requestMatchers(new AntPathRequestMatcher("/login/oauth2/**")).permitAll())
+        // Note: We no longer configure API endpoints here, as they're handled by ApiSecurityConfig
+        ;
 
         // Configure OAuth2 login support for Vaadin UI
         if (clientRegistrationRepository != null) {
@@ -111,6 +114,8 @@ public class OidcSecurityConfig extends VaadinWebSecurity {
             http.logout(logout -> logout
                     .logoutSuccessHandler(oidcLogoutSuccessHandler())
             );
+
+            // Note: We no longer configure JWT resource server here, as it's now in ApiSecurityConfig
         }
 
         // Complete Vaadin security configuration
