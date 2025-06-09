@@ -25,24 +25,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
-import org.springframework.core.annotation.Order;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
-import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority;
 import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
-import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import java.util.HashSet;
@@ -60,11 +54,8 @@ import java.util.Set;
 public class OidcSecurityConfig extends VaadinWebSecurity {
 
     @Autowired(required = false)
-    private OAuth2AuthorizationRequestResolver authorizationRequestResolver;
-    @Autowired(required = false)
-    private ClientRegistrationRepository clientRegistrationRepository;
-    // Add a logger
-    private final Logger logger = LoggerFactory.getLogger(OidcSecurityConfig.class);
+    private       ClientRegistrationRepository clientRegistrationRepository;
+    private final Logger                       logger = LoggerFactory.getLogger(OidcSecurityConfig.class);
 
     /**
      * Configures Spring Security to use OAuth2 login for Vaadin UI pages.
@@ -111,18 +102,9 @@ public class OidcSecurityConfig extends VaadinWebSecurity {
             // Configure OAuth2 login with custom resolver if available
             http.oauth2Login(oauth2Config -> {
                 oauth2Config.loginPage("/" + LoginView.ROUTE)
-                        .defaultSuccessUrl("/product-list", true)
+                        .defaultSuccessUrl("/ui/product-list", true) // Redirects to "/product-list" after successful login
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userAuthoritiesMapper(grantedAuthoritiesMapper()));
-
-                // Use our custom authorization request resolver if available
-                if (authorizationRequestResolver != null) {
-                    logger.info("Using custom OAuth2AuthorizationRequestResolver");
-                    oauth2Config.authorizationEndpoint(authEndpoint ->
-                            authEndpoint.authorizationRequestResolver(authorizationRequestResolver));
-                } else {
-                    logger.warn("No custom OAuth2AuthorizationRequestResolver available");
-                }
             });
 
             // Configure OAuth2 logout
@@ -185,24 +167,6 @@ public class OidcSecurityConfig extends VaadinWebSecurity {
 
             return mappedAuthorities;
         };
-    }
-
-    /**
-     * Configure API endpoints to use OAuth2 Resource Server for JWT validation.
-     * This is only used when the application is running with OIDC authentication.
-     */
-    @Bean
-    @Primary
-    @Order(1)
-    public SecurityFilterChain oidcApiSecurityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .securityMatcher("/oauth2/**") // Apply this configuration only to API endpoints
-                .authorizeHttpRequests(authorize -> authorize
-                        .anyRequest().permitAll()
-                )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
-                .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for API endpoints
-                .build();
     }
 
     /**

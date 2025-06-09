@@ -266,6 +266,7 @@ public class ProductViewTester {
                     seleniumHandler.waitUntil(ExpectedConditions.elementToBeClickable(
                             By.id(ProductListView.PRODUCT_LIST_PAGE_TITLE)));
                     System.out.println("OIDC Login: Successfully logged in with OIDC");
+                    seleniumHandler.waitUntilBrowserClosed(0);
                 } catch (Exception e) {
                     System.out.println("OIDC Login: Error during Keycloak login: " + e.getMessage());
                     throw e;

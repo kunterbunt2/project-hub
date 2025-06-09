@@ -18,8 +18,6 @@
 package de.bushnaq.abdalla.projecthub.ui;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
-import de.bushnaq.abdalla.projecthub.Application;
-import de.bushnaq.abdalla.projecthub.security.OidcTestDebugConfig;
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
 import de.bushnaq.abdalla.projecthub.util.ProductViewTester;
 import org.junit.jupiter.api.Test;
@@ -52,8 +50,7 @@ import java.util.Map;
                 "spring.profiles.active=test",
                 // Disable basic authentication for these tests
                 "spring.security.basic.enabled=false"
-        },
-        classes = {Application.class, OidcTestDebugConfig.class} // Include our debug configuration
+        }
 )
 @AutoConfigureMockMvc
 @Transactional
