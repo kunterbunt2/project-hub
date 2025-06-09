@@ -228,7 +228,7 @@ public class SeleniumHandler {
         return null;
     }
 
-    private WebDriver getDriver() {
+    public WebDriver getDriver() {
         if (driver == null) {
             WebDriverManager.chromedriver().setup();
             ChromeOptions options = new ChromeOptions();
@@ -293,6 +293,31 @@ public class SeleniumHandler {
 
     public Duration getWaitDuration() {
         return waitDuration;
+    }
+
+    /**
+     * Checks if an element is present on the page
+     *
+     * @param locator the By locator for the element to check
+     * @return true if the element is present, false otherwise
+     */
+    public boolean isElementPresent(By locator) {
+        try {
+            driver.findElement(locator);
+            return true;
+        } catch (NoSuchElementException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Checks if an element with the specified ID is present on the page
+     *
+     * @param id the ID of the element to check
+     * @return true if the element is present, false otherwise
+     */
+    public boolean isElementPresent(String id) {
+        return isElementPresent(By.id(id));
     }
 
     public boolean isRecording() {
@@ -773,5 +798,3 @@ public class SeleniumHandler {
         }
     }
 }
-
-

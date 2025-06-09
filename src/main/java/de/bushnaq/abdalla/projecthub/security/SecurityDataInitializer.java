@@ -24,6 +24,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
 
 //@Component
+//TODO: Remove this class if not needed
 public class SecurityDataInitializer implements CommandLineRunner {
 
     @Autowired

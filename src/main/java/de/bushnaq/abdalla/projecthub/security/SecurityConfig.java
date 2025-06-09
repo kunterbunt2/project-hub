@@ -34,7 +34,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -65,9 +64,6 @@ public class SecurityConfig extends VaadinWebSecurity {
                 .securityMatcher("/api/**") // Apply this configuration only to API endpoints
                 .authorizeHttpRequests(authorize -> authorize
                         .anyRequest().authenticated()
-                )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Don't create sessions for API calls
                 )
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for API endpoints
                 .httpBasic() // Enable HTTP Basic Auth for APIs
