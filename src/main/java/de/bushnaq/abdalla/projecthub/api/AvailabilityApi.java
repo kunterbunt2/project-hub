@@ -44,7 +44,7 @@ public class AvailabilityApi extends AbstractApi {
     //TODO use ids instead of objects
     public void deleteById(User user, Availability availability) throws org.springframework.web.client.RestClientException {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/availability/{userId}/{id}",
+                getBaseUrl() + "/availability/{userId}/{id}",
                 HttpMethod.DELETE,
                 createHttpEntity(),
                 Void.class,
@@ -55,7 +55,7 @@ public class AvailabilityApi extends AbstractApi {
 
     public Availability getById(Long id) {
         ResponseEntity<Availability> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/availability/{id}",
+                getBaseUrl() + "/availability/{id}",
                 HttpMethod.GET,
                 createHttpEntity(),
                 Availability.class,
@@ -66,7 +66,7 @@ public class AvailabilityApi extends AbstractApi {
 
     public Availability persist(Availability availability, Long userId) {
         ResponseEntity<Availability> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/availability/{userId}",
+                getBaseUrl() + "/availability/{userId}",
                 HttpMethod.POST,
                 createHttpEntity(availability),
                 Availability.class,
@@ -77,7 +77,7 @@ public class AvailabilityApi extends AbstractApi {
 
     public void update(Availability availability, Long userId) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/availability/{userId}",
+                getBaseUrl() + "/availability/{userId}",
                 HttpMethod.PUT,
                 createHttpEntity(availability),
                 Void.class,

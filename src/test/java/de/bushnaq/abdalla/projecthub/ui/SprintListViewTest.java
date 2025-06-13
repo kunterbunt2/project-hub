@@ -40,7 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
  * to be created first, as sprints exist within the context of a project.
  */
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, properties = "server.port=8080")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Transactional
 public class SprintListViewTest extends AbstractUiTestUtil {

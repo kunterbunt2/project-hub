@@ -24,6 +24,7 @@ import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import de.bushnaq.abdalla.projecthub.util.ProductViewTester;
 import de.bushnaq.abdalla.projecthub.util.RandomCase;
 import de.bushnaq.abdalla.projecthub.util.TestInfoUtil;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -48,6 +49,7 @@ import java.util.List;
 @AutoConfigureMockMvc
 @Transactional
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+@Disabled
 public class Demo extends AbstractUiTestUtil {
     @Autowired
     private ProductViewTester productViewTester;
@@ -122,7 +124,6 @@ public class Demo extends AbstractUiTestUtil {
         generateWorklogs(ParameterOptions.getLocalNow());
         productViewTester.switchToProductListView();
         seleniumHandler.waitUntilBrowserClosed(0);
-//        seleniumHandler.waitUntilBrowserClosed(5000);
     }
 
 }

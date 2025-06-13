@@ -46,7 +46,7 @@ public class ProjectApi extends AbstractApi {
 
     public void deleteById(long id) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/project/{id}",
+                getBaseUrl() + "/project/{id}",
                 HttpMethod.DELETE,
                 createHttpEntity(),
                 Void.class,
@@ -56,7 +56,7 @@ public class ProjectApi extends AbstractApi {
 
     public List<Project> getAll() {
         ResponseEntity<Project[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/project",
+                getBaseUrl() + "/project",
                 HttpMethod.GET,
                 createHttpEntity(),
                 Project[].class
@@ -66,7 +66,7 @@ public class ProjectApi extends AbstractApi {
 
     public List<Project> getAll(Long versionId) {
         ResponseEntity<Project[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/project/version/{versionId}",
+                getBaseUrl() + "/project/version/{versionId}",
                 HttpMethod.GET,
                 createHttpEntity(),
                 Project[].class,
@@ -77,7 +77,7 @@ public class ProjectApi extends AbstractApi {
 
     public Project getById(Long id) {
         ResponseEntity<Project> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/project/{id}",
+                getBaseUrl() + "/project/{id}",
                 HttpMethod.GET,
                 createHttpEntity(),
                 Project.class,
@@ -88,7 +88,7 @@ public class ProjectApi extends AbstractApi {
 
     public Project persist(Project project) {
         ResponseEntity<Project> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/project",
+                getBaseUrl() + "/project",
                 HttpMethod.POST,
                 createHttpEntity(project),
                 Project.class
@@ -98,7 +98,7 @@ public class ProjectApi extends AbstractApi {
 
     public void update(Project project) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/project",
+                getBaseUrl() + "/project",
                 HttpMethod.PUT,
                 createHttpEntity(project),
                 Void.class

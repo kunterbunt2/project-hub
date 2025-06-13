@@ -47,7 +47,7 @@ public class TaskApi extends AbstractApi {
 
     public void deleteById(Long taskId) throws org.springframework.web.client.RestClientException {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/task/{id}",
+                getBaseUrl() + "/task/{id}",
                 HttpMethod.DELETE,
                 createHttpEntity(),
                 Void.class,
@@ -57,7 +57,7 @@ public class TaskApi extends AbstractApi {
 
     public List<Task> getAll(Long sprintId) {
         ResponseEntity<Task[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/task/sprint/{sprintId}",
+                getBaseUrl() + "/task/sprint/{sprintId}",
                 HttpMethod.GET,
                 createHttpEntity(),
                 Task[].class,
@@ -68,7 +68,7 @@ public class TaskApi extends AbstractApi {
 
     public List<Task> getAll() {
         ResponseEntity<Task[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/task",
+                getBaseUrl() + "/task",
                 HttpMethod.GET,
                 createHttpEntity(),
                 Task[].class
@@ -78,7 +78,7 @@ public class TaskApi extends AbstractApi {
 
     public Task getById(Long id) {
         ResponseEntity<Task> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/task/{id}",
+                getBaseUrl() + "/task/{id}",
                 HttpMethod.GET,
                 createHttpEntity(),
                 Task.class,
@@ -89,7 +89,7 @@ public class TaskApi extends AbstractApi {
 
     public Task persist(Task task) {
         ResponseEntity<Task> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/task",
+                getBaseUrl() + "/task",
                 HttpMethod.POST,
                 createHttpEntity(task),
                 Task.class
@@ -99,7 +99,7 @@ public class TaskApi extends AbstractApi {
 
     public void update(Task task) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/task",
+                getBaseUrl() + "/task",
                 HttpMethod.PUT,
                 createHttpEntity(task),
                 Void.class

@@ -29,6 +29,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import static de.bushnaq.abdalla.projecthub.ui.ProductListView.PRODUCT_GRID_NAME_PREFIX;
@@ -41,6 +42,7 @@ import static de.bushnaq.abdalla.projecthub.ui.ProductListView.PRODUCT_GRID_NAME
  * {@link SeleniumHandler} to interact with UI elements and validate results.
  */
 @Component
+@Lazy
 public class ProductViewTester {
     @Getter
     private final int             port;
@@ -187,7 +189,7 @@ public class ProductViewTester {
      * @param screenshotFileName optional filename to save a screenshot of the login view
      */
     public void switchToProductListView(String screenshotFileName) {
-        seleniumHandler.getAndCheck("http://localhost:" + port + "/" + LoginView.ROUTE);
+        seleniumHandler.getAndCheck("http://localhost:" + port + "/ui/" + LoginView.ROUTE);
         seleniumHandler.setLoginUser("admin-user");
         seleniumHandler.setLoginPassword("test-password");
         if (screenshotFileName != null) {
@@ -208,8 +210,6 @@ public class ProductViewTester {
      */
     public void switchToProductListViewWithOidc(KeycloakContainer keycloakContainer, String username, String password) {
         try {
-
-
             System.out.println("OIDC Login: Starting OIDC login flow");
             System.out.println("OIDC Login: Keycloak auth server URL: " + keycloakContainer.getAuthServerUrl());
 
@@ -222,9 +222,6 @@ public class ProductViewTester {
             System.out.println("OIDC Login: Checking for OIDC login button with ID: " + LoginView.OIDC_LOGIN_BUTTON);
             if (seleniumHandler.isElementPresent(By.id(LoginView.OIDC_LOGIN_BUTTON))) {
                 System.out.println("OIDC Login: OIDC login button found, clicking it now");
-
-                // Get page source before clicking
-//                System.out.println("OIDC Login: Page source before clicking: " + seleniumHandler.getDriver().getPageSource());
 
                 // Click with JavaScript for more reliability
                 seleniumHandler.executeJavaScript(
@@ -244,7 +241,6 @@ public class ProductViewTester {
                 System.out.println("OIDC Login: Waiting for Keycloak login page");
                 seleniumHandler.waitForPageLoaded(10);
                 System.out.println("OIDC Login: Current URL after waiting: " + seleniumHandler.getCurrentUrl());
-//                seleniumHandler.waitUntilBrowserClosed(0);
                 // Check for username field
                 System.out.println("OIDC Login: Looking for username field");
                 try {

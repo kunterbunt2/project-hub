@@ -45,7 +45,7 @@ public class OffDayApi extends AbstractApi {
     //TODO use ids instead of objects
     public void deleteById(User user, OffDay offDay) throws org.springframework.web.client.RestClientException {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/offday/{userId}/{id}",
+                getBaseUrl() + "/offday/{userId}/{id}",
                 HttpMethod.DELETE,
                 createHttpEntity(),
                 Void.class,
@@ -56,7 +56,7 @@ public class OffDayApi extends AbstractApi {
 
     public OffDay getById(Long id) {
         ResponseEntity<OffDay> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/offday/{id}",
+                getBaseUrl() + "/offday/{id}",
                 HttpMethod.GET,
                 createHttpEntity(),
                 OffDay.class,
@@ -67,7 +67,7 @@ public class OffDayApi extends AbstractApi {
 
     public OffDay persist(OffDay offDay, Long userId) {
         ResponseEntity<OffDay> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/offday/{userId}",
+                getBaseUrl() + "/offday/{userId}",
                 HttpMethod.POST,
                 createHttpEntity(offDay),
                 OffDay.class,
@@ -78,7 +78,7 @@ public class OffDayApi extends AbstractApi {
 
     public void update(OffDay offDay, Long userId) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/offday/{userId}",
+                getBaseUrl() + "/offday/{userId}",
                 HttpMethod.PUT,
                 createHttpEntity(offDay),
                 Void.class,

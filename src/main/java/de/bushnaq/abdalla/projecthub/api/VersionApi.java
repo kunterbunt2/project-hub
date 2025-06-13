@@ -46,7 +46,7 @@ public class VersionApi extends AbstractApi {
 
     public void deleteById(Long id) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/version/{id}",
+                getBaseUrl() + "/version/{id}",
                 HttpMethod.DELETE,
                 createHttpEntity(),
                 Void.class,
@@ -56,7 +56,7 @@ public class VersionApi extends AbstractApi {
 
     public List<Version> getAll() {
         ResponseEntity<Version[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/version",
+                getBaseUrl() + "/version",
                 HttpMethod.GET,
                 createHttpEntity(),
                 Version[].class
@@ -66,7 +66,7 @@ public class VersionApi extends AbstractApi {
 
     public List<Version> getAll(Long productId) {
         ResponseEntity<Version[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/version/product/{productId}",
+                getBaseUrl() + "/version/product/{productId}",
                 HttpMethod.GET,
                 createHttpEntity(),
                 Version[].class,
@@ -77,7 +77,7 @@ public class VersionApi extends AbstractApi {
 
     public Version getById(Long id) {
         ResponseEntity<Version> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/version/{id}",
+                getBaseUrl() + "/version/{id}",
                 HttpMethod.GET,
                 createHttpEntity(),
                 Version.class,
@@ -88,7 +88,7 @@ public class VersionApi extends AbstractApi {
 
     public Version persist(Version version) {
         ResponseEntity<Version> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/version",
+                getBaseUrl() + "/version",
                 HttpMethod.POST,
                 createHttpEntity(version),
                 Version.class
@@ -98,7 +98,7 @@ public class VersionApi extends AbstractApi {
 
     public void update(Version version) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/version",
+                getBaseUrl() + "/version",
                 HttpMethod.PUT,
                 createHttpEntity(version),
                 Void.class

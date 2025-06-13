@@ -38,7 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
  * as versions exist within the context of a product.
  */
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, properties = "server.port=8080")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Transactional
 public class VersionListViewTest extends AbstractUiTestUtil {

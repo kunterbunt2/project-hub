@@ -46,7 +46,7 @@ public class ProductApi extends AbstractApi {
 
     public void deleteById(Long id) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/product/{id}",
+                getBaseUrl() + "/product/{id}",
                 HttpMethod.DELETE,
                 createHttpEntity(),
                 Void.class,
@@ -56,7 +56,7 @@ public class ProductApi extends AbstractApi {
 
     public List<Product> getAll() {
         ResponseEntity<Product[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/product",
+                getBaseUrl() + "/product",
                 HttpMethod.GET,
                 createHttpEntity(),
                 Product[].class
@@ -66,7 +66,7 @@ public class ProductApi extends AbstractApi {
 
     public Product getById(Long id) {
         ResponseEntity<Product> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/product/{id}",
+                getBaseUrl() + "/product/{id}",
                 HttpMethod.GET,
                 createHttpEntity(),
                 Product.class,
@@ -77,7 +77,7 @@ public class ProductApi extends AbstractApi {
 
     public Product persist(Product product) {
         ResponseEntity<Product> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/product",
+                getBaseUrl() + "/product",
                 HttpMethod.POST,
                 createHttpEntity(product),
                 Product.class
@@ -87,7 +87,7 @@ public class ProductApi extends AbstractApi {
 
     public void update(Product product) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/product",
+                getBaseUrl() + "/product",
                 HttpMethod.PUT,
                 createHttpEntity(product),
                 Void.class

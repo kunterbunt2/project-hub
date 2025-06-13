@@ -46,7 +46,7 @@ public class UserApi extends AbstractApi {
 
     public void deleteById(Long id) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/user/{id}",
+                getBaseUrl() + "/user/{id}",
                 HttpMethod.DELETE,
                 createHttpEntity(),
                 Void.class,
@@ -56,7 +56,7 @@ public class UserApi extends AbstractApi {
 
     public List<User> getAll() {
         ResponseEntity<User[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/user",
+                getBaseUrl() + "/user",
                 HttpMethod.GET,
                 createHttpEntity(),
                 User[].class
@@ -66,7 +66,7 @@ public class UserApi extends AbstractApi {
 
     public List<User> getAll(Long sprintId) {
         ResponseEntity<User[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/user/sprint/{sprintId}",
+                getBaseUrl() + "/user/sprint/{sprintId}",
                 HttpMethod.GET,
                 createHttpEntity(),
                 User[].class,
@@ -77,7 +77,7 @@ public class UserApi extends AbstractApi {
 
     public User getById(Long id) {
         ResponseEntity<User> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/user/{id}",
+                getBaseUrl() + "/user/{id}",
                 HttpMethod.GET,
                 createHttpEntity(),
                 User.class,
@@ -88,7 +88,7 @@ public class UserApi extends AbstractApi {
 
     public User persist(User user) {
         ResponseEntity<User> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/user",
+                getBaseUrl() + "/user",
                 HttpMethod.POST,
                 createHttpEntity(user),
                 User.class
@@ -98,7 +98,7 @@ public class UserApi extends AbstractApi {
 
     public void update(User user) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/user",
+                getBaseUrl() + "/user",
                 HttpMethod.PUT,
                 createHttpEntity(user),
                 Void.class

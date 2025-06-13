@@ -105,14 +105,14 @@ public class SecurityConfig extends VaadinWebSecurity {
         // Configure for all non-API endpoints (Vaadin UI)
 
         // Allow for H2 console
-        http
-                .authorizeHttpRequests(authorize -> authorize
+        http//
+                .authorizeHttpRequests(authorize -> authorize//
                         .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll()
-                )
-                .csrf(csrf -> csrf
+                )//
+                .csrf(csrf -> csrf//
                         .ignoringRequestMatchers(new AntPathRequestMatcher("/h2-console/**"))
-                )
-                .headers(headers -> headers
+                )//
+                .headers(headers -> headers//
                         .frameOptions(frameOptions -> frameOptions.sameOrigin())
                 );
 
@@ -123,9 +123,7 @@ public class SecurityConfig extends VaadinWebSecurity {
         setLoginView(http, LoginView.class);
 
         // Set the default success URL after login to ProductListView
-        http.formLogin(formLogin ->
-                formLogin.defaultSuccessUrl("/product-list", true)
-        );
+        http.formLogin(formLogin -> formLogin.defaultSuccessUrl("/ui/product-list", true));
     }
 
     @Bean

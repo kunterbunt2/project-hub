@@ -45,7 +45,7 @@ public class LocationApi extends AbstractApi {
     //TODO use ids instead of objects
     public void deleteById(User user, Location location) throws org.springframework.web.client.RestClientException {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/location/{userId}/{id}",
+                getBaseUrl() + "/location/{userId}/{id}",
                 HttpMethod.DELETE,
                 createHttpEntity(),
                 Void.class,
@@ -56,7 +56,7 @@ public class LocationApi extends AbstractApi {
 
     public Location getById(Long id) {
         ResponseEntity<Location> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/location/{id}",
+                getBaseUrl() + "/location/{id}",
                 HttpMethod.GET,
                 createHttpEntity(),
                 Location.class,
@@ -67,7 +67,7 @@ public class LocationApi extends AbstractApi {
 
     public Location persist(Location location, Long userId) {
         ResponseEntity<Location> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/location/{userId}",
+                getBaseUrl() + "/location/{userId}",
                 HttpMethod.POST,
                 createHttpEntity(location),
                 Location.class,
@@ -78,7 +78,7 @@ public class LocationApi extends AbstractApi {
 
     public void update(Location location, Long userId) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/location/{userId}",
+                getBaseUrl() + "/location/{userId}",
                 HttpMethod.PUT,
                 createHttpEntity(location),
                 Void.class,

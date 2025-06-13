@@ -44,9 +44,29 @@ public class WorklogApi extends AbstractApi {
 
     }
 
+    public void deleteById(Long id) {
+        executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/worklog/{id}",
+                HttpMethod.DELETE,
+                createHttpEntity(),
+                Void.class,
+                id
+        ));
+    }
+
+    public List<Worklog> getAll() {
+        ResponseEntity<Worklog[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/worklog",
+                HttpMethod.GET,
+                createHttpEntity(),
+                Worklog[].class
+        ));
+        return Arrays.asList(response.getBody());
+    }
+
     public List<Worklog> getAll(Long sprintId) {
         ResponseEntity<Worklog[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/worklog/sprint/{sprintId}",
+                getBaseUrl() + "/worklog/sprint/{sprintId}",
                 HttpMethod.GET,
                 createHttpEntity(),
                 Worklog[].class,
@@ -55,19 +75,9 @@ public class WorklogApi extends AbstractApi {
         return Arrays.asList(response.getBody());
     }
 
-    public List<Worklog> getAll() {
-        ResponseEntity<Worklog[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/worklog",
-                HttpMethod.GET,
-                createHttpEntity(),
-                Worklog[].class
-        ));
-        return Arrays.asList(response.getBody());
-    }
-
-    public Worklog getWorklog(Long id) {
+    public Worklog getById(Long id) {
         ResponseEntity<Worklog> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/worklog/{id}",
+                getBaseUrl() + "/worklog/{id}",
                 HttpMethod.GET,
                 createHttpEntity(),
                 Worklog.class,
@@ -78,11 +88,20 @@ public class WorklogApi extends AbstractApi {
 
     public Worklog persist(Worklog worklog) {
         ResponseEntity<Worklog> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/worklog",
+                getBaseUrl() + "/worklog",
                 HttpMethod.POST,
                 createHttpEntity(worklog),
                 Worklog.class
         ));
         return response.getBody();
+    }
+
+    public void update(Worklog worklog) {
+        executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/worklog",
+                HttpMethod.PUT,
+                createHttpEntity(worklog),
+                Void.class
+        ));
     }
 }

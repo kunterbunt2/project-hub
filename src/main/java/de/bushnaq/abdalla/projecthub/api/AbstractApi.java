@@ -23,6 +23,8 @@ import de.bushnaq.abdalla.projecthub.rest.util.ErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -52,8 +54,13 @@ public class AbstractApi {
 
     @Autowired(required = false)
     protected OAuth2AuthorizedClientService authorizedClientService;
-    protected String                        baseUrl = "http://localhost:8080/api"; // Configure as needed
+    @Value("${projecthub.api.base-url:}")
+    private   String                        configuredBaseUrl;
+    @Autowired(required = false)
+    private   Environment                   environment;
     protected ObjectMapper                  objectMapper;
+    @Value("${server.port:8080}")
+    private   int                           port;
     protected RestTemplate                  restTemplate;
 
     /**
@@ -64,9 +71,9 @@ public class AbstractApi {
      * @param baseUrl      the base url to the local rest server
      */
     protected AbstractApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
-        this.restTemplate = restTemplate;
-        this.objectMapper = objectMapper;
-        this.baseUrl      = baseUrl;
+        this.restTemplate      = restTemplate;
+        this.objectMapper      = objectMapper;
+        this.configuredBaseUrl = baseUrl;
         initialize(restTemplate, objectMapper);
     }
 
@@ -77,7 +84,6 @@ public class AbstractApi {
     }
 
     protected AbstractApi() {
-
     }
 
     /**
@@ -98,7 +104,7 @@ public class AbstractApi {
             String roles = authorities.stream()
                     .map(GrantedAuthority::getAuthority)
                     .collect(Collectors.joining(", "));
-            logger.debug("User {} has roles: {}", authentication.getName(), roles);
+//            logger.debug("User {} has roles: {}", authentication.getName(), roles);
 
             // Check if the authentication is OAuth2/OIDC
             if (authentication instanceof OAuth2AuthenticationToken oauth2Token && authorizedClientService != null) {
@@ -117,11 +123,11 @@ public class AbstractApi {
                         headers.set("Authorization", "Bearer " + tokenValue);
 
                         // Enhanced logging for debugging
-                        logger.debug("Bearer token set in headers. Token length: {}", tokenValue.length());
+//                        logger.debug("Bearer token set in headers. Token length: {}", tokenValue.length());
 
                         // For debugging: add user information from OAuth2 token
                         OAuth2User principal = oauth2Token.getPrincipal();
-                        logger.debug("OAuth2 user attributes: {}", principal.getAttributes());
+//                        logger.debug("OAuth2 user attributes: {}", principal.getAttributes());
                     } else {
                         logger.warn("Access token value is empty or null");
                     }
@@ -137,7 +143,7 @@ public class AbstractApi {
             }
 
             // Fallback to basic auth if no OIDC token is available
-            logger.debug("Falling back to basic auth for user {}", authentication.getName());
+//            logger.debug("Falling back to basic auth for user {}", authentication.getName());
             String username = authentication.getName();
             // For simplicity in this demo environment, we use a fixed password for API calls
             // In production, this would need a more secure approach
@@ -153,7 +159,7 @@ public class AbstractApi {
 
             // For basic auth, we can optionally include roles in a custom header for debugging
             headers.set("X-User-Roles", roles);
-            logger.debug("Using basic auth with roles: {}", roles);
+//            logger.debug("Using basic auth with roles: {}", roles);
         } else {
             logger.warn("No authentication found in SecurityContextHolder");
         }
@@ -179,8 +185,7 @@ public class AbstractApi {
         try {
             return operation.execute();
         } catch (HttpClientErrorException e) {
-            logger.error("REST API call failed with status: {} and response: {}",
-                    e.getStatusCode(), e.getResponseBodyAsString());
+            logger.error("REST API call failed with status: {} and response: {}", e.getStatusCode(), e.getResponseBodyAsString());
             handleExceptions(e);
             return null;
         } catch (Exception e) {
@@ -193,8 +198,7 @@ public class AbstractApi {
         try {
             operation.execute();
         } catch (HttpClientErrorException e) {
-            logger.error("REST API call failed with status: {} and response: {}",
-                    e.getStatusCode(), e.getResponseBodyAsString());
+            logger.error("REST API call failed with status: {} and response: {}", e.getStatusCode(), e.getResponseBodyAsString());
             handleExceptions(e);
         } catch (Exception e) {
             logger.error("Unexpected error in REST API call", e);
@@ -202,17 +206,41 @@ public class AbstractApi {
         }
     }
 
+    protected String getBaseUrl() {
+        if (configuredBaseUrl != null && !configuredBaseUrl.isBlank()) {
+            return configuredBaseUrl;
+        }
+        if (port == 0) {
+            port = 8080;
+            //- we are probably in a test, try to get the port dynamically at runtime
+            String portStr = null;
+            if (environment != null) {
+                portStr = environment.getProperty("local.server.port");
+                if (portStr == null) {
+                    portStr = environment.getProperty("server.port");
+                }
+            }
+            if (portStr != null) {
+                try {
+                    port = Integer.parseInt(portStr);
+                } catch (NumberFormatException ignored) {
+                    logger.warn("Invalid port number '{}' from environment, using default port 8080", portStr);
+                }
+            }
+        }
+        configuredBaseUrl = "http://localhost:" + port + "/api";
+        return configuredBaseUrl;
+    }
+
     private void handleExceptions(HttpClientErrorException e) {
         try {
             // Handle authentication/authorization errors specifically for test cases
             if (e instanceof HttpClientErrorException.Unauthorized) {
                 // Convert 401 Unauthorized to AuthenticationCredentialsNotFoundException
-                throw new org.springframework.security.authentication.AuthenticationCredentialsNotFoundException(
-                        "Authentication credentials not found when accessing API");
+                throw new org.springframework.security.authentication.AuthenticationCredentialsNotFoundException("Authentication credentials not found when accessing API");
             } else if (e instanceof HttpClientErrorException.Forbidden) {
                 // Convert 403 Forbidden to AccessDeniedException
-                throw new org.springframework.security.access.AccessDeniedException(
-                        "Access denied when accessing API");
+                throw new org.springframework.security.access.AccessDeniedException("Access denied when accessing API");
             } else if (e instanceof HttpClientErrorException.BadRequest) {
                 throw new ServerErrorException(e.getMessage(), e.getCause());
             } else if (e instanceof HttpClientErrorException.NotFound) {

@@ -27,6 +27,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,11 +40,13 @@ import org.springframework.transaction.annotation.Transactional;
  * to be created first, as projects exist within the context of a version.
  */
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, properties = "server.port=8080")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Transactional
 public class ProjectListViewTest extends AbstractUiTestUtil {
     private final String            newProjectName = "NewProject-2";
+    @LocalServerPort
+    private       int               port;
     private final String            productName    = "Product-2";
     @Autowired
     private       ProductViewTester productViewTester;

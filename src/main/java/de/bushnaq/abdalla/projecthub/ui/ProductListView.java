@@ -50,8 +50,8 @@ import java.util.Map;
 @Route("product-list")
 @PageTitle("Product List Page")
 @Menu(order = 1, icon = "vaadin:factory", title = "product List")
-@PermitAll // When security is enabled, allow all authenticated users
-@RolesAllowed({"USER", "ADMIN"}) // Restrict access to users with specific roles
+@PermitAll
+@RolesAllowed({"USER", "ADMIN"})
 public class ProductListView extends Main implements AfterNavigationObserver {
     public static final String        CREATE_PRODUCT_BUTTON             = "create-product-button";
     public static final String        PRODUCT_GRID_ACTION_BUTTON_PREFIX = "product-grid-action-button-prefix-";

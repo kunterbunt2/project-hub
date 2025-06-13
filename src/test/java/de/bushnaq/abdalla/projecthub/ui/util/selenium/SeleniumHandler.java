@@ -65,7 +65,6 @@ public class SeleniumHandler {
         this.implicitWaitDuration = implicitWaitDuration;
         this.waitDuration         = waitDuration;
         this.videoRecorder        = new VideoRecorder();
-        //chrome
     }
 
     public void click(String id) {
@@ -121,14 +120,8 @@ public class SeleniumHandler {
     }
 
     public WebElement expandRootElementAndFindElement(WebElement element, String elementName) {
-        String script = String.format("return arguments[0].shadowRoot.querySelector('%s')", elementName);
-        //        Object o = ((JavascriptExecutor) driver).executeScript(script, element);
-        //        List<WebElement> l = (List<WebElement>) ((JavascriptExecutor) driver).executeScript("return arguments[0].shadowRoot.children", element);
-        //        int i = 0;
-        //        for (WebElement e : l) {
-        //            System.out.println(i++ + " " + e.getText() + " " + e.getTagName());
-        //        }
-        WebElement ele = (WebElement) ((JavascriptExecutor) getDriver()).executeScript(script, element);
+        String     script = String.format("return arguments[0].shadowRoot.querySelector('%s')", elementName);
+        WebElement ele    = (WebElement) ((JavascriptExecutor) getDriver()).executeScript(script, element);
         return ele;
     }
 
@@ -259,12 +252,7 @@ public class SeleniumHandler {
     public String getIntegerField(String id) {
         WebElement e     = findElement(By.id(id));
         String     value = e.getAttribute("value");
-        //        if (value.isEmpty()) {
-        //            fail("filter TextField not empy");
-        //            return null;
-        //        } else {
         return value;
-        //        }
     }
 
     public String getRouteValue(Class<?> viewClass) {
@@ -279,12 +267,7 @@ public class SeleniumHandler {
     public String getTextField(String id) {
         WebElement e     = findElement(By.id(id));
         String     value = e.getAttribute("value");
-        //        if (value.isEmpty()) {
-        //            fail("filter TextField not empy");
-        //            return null;
-        //        } else {
         return value;
-        //        }
     }
 
     public String getTitle() {
@@ -335,7 +318,6 @@ public class SeleniumHandler {
         String  url             = getRouteValue(viewClass);
         boolean outerTesting    = true;
         int     outerIterations = 12;//5 seconds
-//        WebElement label           = findElement(By.id(labelId));
         //try several times
         do {
             WebElement row = findElement(By.id(gridRowBaseId + rowName));
@@ -373,7 +355,6 @@ public class SeleniumHandler {
                 }
             }
         } while (outerTesting);
-//        assertEquals(rowName, label.getText());
     }
 
     public void selectGridRow(String gridRowBaseId, String labelId, String rowName) {
@@ -473,6 +454,7 @@ public class SeleniumHandler {
         Boolean result = (Boolean) executeJavaScript(colorScript);
 
         // If first attempt failed, try a simpler direct approach
+        //TODO do we ned this?
         if (result == null || !result) {
             // Direct method as fallback: use the component's public API
             executeJavaScript(

@@ -90,7 +90,8 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 //            });
 //            button.setId(OIDC_LOGIN_BUTTON);
 //            authContainer.add(button);
-            Anchor loginWithOidcButton = new Anchor("http://localhost:8080/oauth2/authorization/keycloak", "Login with SSO");
+//            Anchor loginWithOidcButton = new Anchor("http://localhost:8080/oauth2/authorization/keycloak", "Login with SSO");
+            Anchor loginWithOidcButton = new Anchor("/oauth2/authorization/keycloak", "Login with SSO");
             loginWithOidcButton.setRouterIgnore(true); // Prevent Vaadin from intercepting the link
             loginWithOidcButton.setId(OIDC_LOGIN_BUTTON);
 //            loginWithOidcButton.getStyle().set("background-color", "var(--lumo-primary-color)");

@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.util;
 
+import de.bushnaq.abdalla.projecthub.ui.ProductListView;
 import de.bushnaq.abdalla.projecthub.ui.UserListView;
 import de.bushnaq.abdalla.projecthub.ui.common.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.common.UserDialog;
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.Assertions;
 import org.openqa.selenium.By;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -38,6 +40,7 @@ import java.time.LocalDate;
  * {@link SeleniumHandler} to interact with UI elements and validate results.
  */
 @Component
+@Lazy
 public class UserViewTester {
     private final int             port;
     private final SeleniumHandler seleniumHandler;
@@ -73,12 +76,6 @@ public class UserViewTester {
         seleniumHandler.setColorPickerValue(UserDialog.USER_COLOR_PICKER, color);
         seleniumHandler.setDatePickerValue(UserDialog.USER_FIRST_WORKING_DAY_PICKER, firstWorkingDay);
         seleniumHandler.setDatePickerValue(UserDialog.USER_LAST_WORKING_DAY_PICKER, lastWorkingDay);
-        // Short pause to ensure UI updates
-//        try {
-//            Thread.sleep(300);
-//        } catch (InterruptedException e) {
-//            Thread.currentThread().interrupt();
-//        }
         seleniumHandler.click(UserDialog.CANCEL_BUTTON);
         seleniumHandler.ensureIsNotInList(UserListView.USER_GRID_NAME_PREFIX, name);
     }
@@ -214,13 +211,6 @@ public class UserViewTester {
         seleniumHandler.setColorPickerValue(UserDialog.USER_COLOR_PICKER, color);
         seleniumHandler.setDatePickerValue(UserDialog.USER_FIRST_WORKING_DAY_PICKER, firstWorkingDay);
         seleniumHandler.setDatePickerValue(UserDialog.USER_LAST_WORKING_DAY_PICKER, lastWorkingDay);
-
-        // Final verification before submitting
-//        try {
-//            Thread.sleep(300); // Short pause to ensure UI updates
-//        } catch (InterruptedException e) {
-//            Thread.currentThread().interrupt();
-//        }
         seleniumHandler.click(UserDialog.CONFIRM_BUTTON);
         seleniumHandler.ensureIsInList(UserListView.USER_GRID_NAME_PREFIX, newName);
         seleniumHandler.ensureIsNotInList(UserListView.USER_GRID_NAME_PREFIX, name);
@@ -233,11 +223,12 @@ public class UserViewTester {
      * by checking for the presence of the page title element.
      */
     public void switchToUserListView() {
-        seleniumHandler.getAndCheck("http://localhost:" + port + "/" + LoginView.ROUTE);
+        seleniumHandler.getAndCheck("http://localhost:" + port + "/ui/" + LoginView.ROUTE);
         seleniumHandler.setLoginUser("admin-user");
         seleniumHandler.setLoginPassword("test-password");
         seleniumHandler.loginSubmit();
-        seleniumHandler.getAndCheck("http://localhost:" + port + "/" + UserListView.ROUTE);
+        seleniumHandler.waitUntil(ExpectedConditions.elementToBeClickable(By.id(ProductListView.PRODUCT_LIST_PAGE_TITLE)));
+        seleniumHandler.getAndCheck("http://localhost:" + port + "/ui/" + UserListView.ROUTE);
         seleniumHandler.waitUntil(ExpectedConditions.elementToBeClickable(By.id(UserListView.USER_LIST_PAGE_TITLE)));
     }
 
@@ -284,12 +275,6 @@ public class UserViewTester {
         // Open the edit dialog for the specified user
         seleniumHandler.click(UserListView.USER_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(UserListView.USER_GRID_EDIT_BUTTON_PREFIX + name);
-        // Wait for the dialog to fully load
-//        try {
-//            Thread.sleep(300); // Short pause to ensure UI updates
-//        } catch (InterruptedException e) {
-//            Thread.currentThread().interrupt();
-//        }
         // Read actual values from the dialog
         String    actualName     = seleniumHandler.getTextField(UserDialog.USER_NAME_FIELD);
         String    actualEmail    = seleniumHandler.getTextField(UserDialog.USER_EMAIL_FIELD);

@@ -46,7 +46,7 @@ public class SprintApi extends AbstractApi {
 
     public void deleteById(long id) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/sprint/{id}",
+                getBaseUrl() + "/sprint/{id}",
                 HttpMethod.DELETE,
                 createHttpEntity(),
                 Void.class,
@@ -56,7 +56,7 @@ public class SprintApi extends AbstractApi {
 
     public List<Sprint> getAll() {
         ResponseEntity<Sprint[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/sprint",
+                getBaseUrl() + "/sprint",
                 HttpMethod.GET,
                 createHttpEntity(),
                 Sprint[].class
@@ -66,7 +66,7 @@ public class SprintApi extends AbstractApi {
 
     public List<Sprint> getAll(Long projectId) {
         ResponseEntity<Sprint[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/sprint/project/{projectId}",
+                getBaseUrl() + "/sprint/project/{projectId}",
                 HttpMethod.GET,
                 createHttpEntity(),
                 Sprint[].class,
@@ -77,7 +77,7 @@ public class SprintApi extends AbstractApi {
 
     public Sprint getById(Long id) {
         ResponseEntity<Sprint> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/sprint/{id}",
+                getBaseUrl() + "/sprint/{id}",
                 HttpMethod.GET,
                 createHttpEntity(),
                 Sprint.class,
@@ -88,7 +88,7 @@ public class SprintApi extends AbstractApi {
 
     public Sprint persist(Sprint sprint) {
         ResponseEntity<Sprint> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/sprint",
+                getBaseUrl() + "/sprint",
                 HttpMethod.POST,
                 createHttpEntity(sprint),
                 Sprint.class
@@ -98,7 +98,7 @@ public class SprintApi extends AbstractApi {
 
     public void update(Sprint sprint) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                baseUrl + "/sprint",
+                getBaseUrl() + "/sprint",
                 HttpMethod.PUT,
                 createHttpEntity(sprint),
                 Void.class

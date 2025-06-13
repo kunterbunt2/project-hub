@@ -48,9 +48,9 @@ import java.util.stream.Collectors;
 @EnableWebSecurity
 @Configuration
 @ConditionalOnProperty(name = "spring.security.oauth2.client.registration.keycloak.client-id")
-public class ApiSecurityConfig {
+public class OidcApiSecurityConfig {
 
-    private final Logger logger = LoggerFactory.getLogger(ApiSecurityConfig.class);
+    private final Logger logger = LoggerFactory.getLogger(OidcApiSecurityConfig.class);
 
     /**
      * Configures Spring Security for REST API endpoints.
