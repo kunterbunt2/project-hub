@@ -15,10 +15,10 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.api;
+package de.bushnaq.abdalla.projecthub.rest.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.bushnaq.abdalla.projecthub.dto.Location;
+import de.bushnaq.abdalla.projecthub.dto.OffDay;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
@@ -27,62 +27,63 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
-public class LocationApi extends AbstractApi {
+public class OffDayApi extends AbstractApi {
 
-    public LocationApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
+    public OffDayApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
         super(restTemplate, objectMapper, baseUrl);
     }
 
-    public LocationApi() {
+    public OffDayApi() {
 
     }
 
     @Autowired
-    public LocationApi(RestTemplate restTemplate, ObjectMapper objectMapper) {
+    public OffDayApi(RestTemplate restTemplate, ObjectMapper objectMapper) {
         super(restTemplate, objectMapper);
     }
 
     //TODO use ids instead of objects
-    public void deleteById(User user, Location location) throws org.springframework.web.client.RestClientException {
+    public void deleteById(User user, OffDay offDay) throws org.springframework.web.client.RestClientException {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/location/{userId}/{id}",
+                getBaseUrl() + "/offday/{userId}/{id}",
                 HttpMethod.DELETE,
                 createHttpEntity(),
                 Void.class,
                 user.getId(),
-                location.getId()
+                offDay.getId()
         ));
     }
 
-    public Location getById(Long id) {
-        ResponseEntity<Location> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/location/{id}",
+    public OffDay getById(Long id) {
+        ResponseEntity<OffDay> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/offday/{id}",
                 HttpMethod.GET,
                 createHttpEntity(),
-                Location.class,
+                OffDay.class,
                 id
         ));
         return response.getBody();
     }
 
-    public Location persist(Location location, Long userId) {
-        ResponseEntity<Location> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/location/{userId}",
+    public OffDay persist(OffDay offDay, Long userId) {
+        ResponseEntity<OffDay> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/offday/{userId}",
                 HttpMethod.POST,
-                createHttpEntity(location),
-                Location.class,
+                createHttpEntity(offDay),
+                OffDay.class,
                 userId
         ));
         return response.getBody();
     }
 
-    public void update(Location location, Long userId) {
+    public void update(OffDay offDay, Long userId) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/location/{userId}",
+                getBaseUrl() + "/offday/{userId}",
                 HttpMethod.PUT,
-                createHttpEntity(location),
+                createHttpEntity(offDay),
                 Void.class,
                 userId
         ));
     }
+
 }

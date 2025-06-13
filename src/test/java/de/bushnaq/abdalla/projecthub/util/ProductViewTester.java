@@ -18,11 +18,11 @@
 package de.bushnaq.abdalla.projecthub.util;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
+import de.bushnaq.abdalla.projecthub.ui.LoginView;
 import de.bushnaq.abdalla.projecthub.ui.ProductListView;
 import de.bushnaq.abdalla.projecthub.ui.VersionListView;
 import de.bushnaq.abdalla.projecthub.ui.common.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.common.ProductDialog;
-import de.bushnaq.abdalla.projecthub.ui.login.LoginView;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import lombok.Getter;
 import org.openqa.selenium.By;

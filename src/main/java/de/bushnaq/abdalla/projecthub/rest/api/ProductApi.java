@@ -15,75 +15,82 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.api;
+package de.bushnaq.abdalla.projecthub.rest.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.bushnaq.abdalla.projecthub.dto.OffDay;
-import de.bushnaq.abdalla.projecthub.dto.User;
+import de.bushnaq.abdalla.projecthub.dto.Product;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-@Service
-public class OffDayApi extends AbstractApi {
+import java.util.Arrays;
+import java.util.List;
 
-    public OffDayApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
+@Service
+public class ProductApi extends AbstractApi {
+
+    public ProductApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
         super(restTemplate, objectMapper, baseUrl);
     }
 
-    public OffDayApi() {
-
-    }
-
     @Autowired
-    public OffDayApi(RestTemplate restTemplate, ObjectMapper objectMapper) {
+    public ProductApi(RestTemplate restTemplate, ObjectMapper objectMapper) {
         super(restTemplate, objectMapper);
     }
 
-    //TODO use ids instead of objects
-    public void deleteById(User user, OffDay offDay) throws org.springframework.web.client.RestClientException {
+    public ProductApi() {
+
+    }
+
+    public void deleteById(Long id) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/offday/{userId}/{id}",
+                getBaseUrl() + "/product/{id}",
                 HttpMethod.DELETE,
                 createHttpEntity(),
                 Void.class,
-                user.getId(),
-                offDay.getId()
+                id
         ));
     }
 
-    public OffDay getById(Long id) {
-        ResponseEntity<OffDay> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/offday/{id}",
+    public List<Product> getAll() {
+        ResponseEntity<Product[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/product",
                 HttpMethod.GET,
                 createHttpEntity(),
-                OffDay.class,
+                Product[].class
+        ));
+        return Arrays.asList(response.getBody());
+    }
+
+    public Product getById(Long id) {
+        ResponseEntity<Product> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/product/{id}",
+                HttpMethod.GET,
+                createHttpEntity(),
+                Product.class,
                 id
         ));
         return response.getBody();
     }
 
-    public OffDay persist(OffDay offDay, Long userId) {
-        ResponseEntity<OffDay> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/offday/{userId}",
+    public Product persist(Product product) {
+        ResponseEntity<Product> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/product",
                 HttpMethod.POST,
-                createHttpEntity(offDay),
-                OffDay.class,
-                userId
+                createHttpEntity(product),
+                Product.class
         ));
         return response.getBody();
     }
 
-    public void update(OffDay offDay, Long userId) {
+    public void update(Product product) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/offday/{userId}",
+                getBaseUrl() + "/product",
                 HttpMethod.PUT,
-                createHttpEntity(offDay),
-                Void.class,
-                userId
+                createHttpEntity(product),
+                Void.class
         ));
     }
-
 }

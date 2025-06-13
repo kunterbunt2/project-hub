@@ -15,10 +15,10 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.api;
+package de.bushnaq.abdalla.projecthub.rest.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.bushnaq.abdalla.projecthub.dto.Task;
+import de.bushnaq.abdalla.projecthub.dto.Sprint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -29,79 +29,78 @@ import java.util.Arrays;
 import java.util.List;
 
 @Service
-public class TaskApi extends AbstractApi {
-
-    public TaskApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
-        super(restTemplate, objectMapper, baseUrl);
-    }
+public class SprintApi extends AbstractApi {
 
     @Autowired
-    public TaskApi(RestTemplate restTemplate, ObjectMapper objectMapper) {
+    public SprintApi(RestTemplate restTemplate, ObjectMapper objectMapper) {
         super(restTemplate, objectMapper);
     }
 
-    public TaskApi() {
+    public SprintApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
+        super(restTemplate, objectMapper, baseUrl);
+    }
+
+    public SprintApi() {
 
     }
 
-
-    public void deleteById(Long taskId) throws org.springframework.web.client.RestClientException {
+    public void deleteById(long id) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/task/{id}",
+                getBaseUrl() + "/sprint/{id}",
                 HttpMethod.DELETE,
                 createHttpEntity(),
                 Void.class,
-                taskId
+                id
         ));
     }
 
-    public List<Task> getAll(Long sprintId) {
-        ResponseEntity<Task[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/task/sprint/{sprintId}",
+    public List<Sprint> getAll() {
+        ResponseEntity<Sprint[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/sprint",
                 HttpMethod.GET,
                 createHttpEntity(),
-                Task[].class,
-                sprintId
-        ));
-        return Arrays.asList(response.getBody());
-    }
-
-    public List<Task> getAll() {
-        ResponseEntity<Task[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/task",
-                HttpMethod.GET,
-                createHttpEntity(),
-                Task[].class
+                Sprint[].class
         ));
         return Arrays.asList(response.getBody());
     }
 
-    public Task getById(Long id) {
-        ResponseEntity<Task> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/task/{id}",
+    public List<Sprint> getAll(Long projectId) {
+        ResponseEntity<Sprint[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/sprint/project/{projectId}",
                 HttpMethod.GET,
                 createHttpEntity(),
-                Task.class,
+                Sprint[].class,
+                projectId
+        ));
+        return Arrays.asList(response.getBody());
+    }
+
+    public Sprint getById(Long id) {
+        ResponseEntity<Sprint> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/sprint/{id}",
+                HttpMethod.GET,
+                createHttpEntity(),
+                Sprint.class,
                 id
         ));
         return response.getBody();
     }
 
-    public Task persist(Task task) {
-        ResponseEntity<Task> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/task",
+    public Sprint persist(Sprint sprint) {
+        ResponseEntity<Sprint> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/sprint",
                 HttpMethod.POST,
-                createHttpEntity(task),
-                Task.class
+                createHttpEntity(sprint),
+                Sprint.class
         ));
         return response.getBody();
     }
 
-    public void update(Task task) {
+    public void update(Sprint sprint) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/task",
+                getBaseUrl() + "/sprint",
                 HttpMethod.PUT,
-                createHttpEntity(task),
+                createHttpEntity(sprint),
                 Void.class
         ));
     }

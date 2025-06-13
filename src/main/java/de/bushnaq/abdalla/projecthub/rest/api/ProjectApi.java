@@ -15,10 +15,10 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.api;
+package de.bushnaq.abdalla.projecthub.rest.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.bushnaq.abdalla.projecthub.dto.Product;
+import de.bushnaq.abdalla.projecthub.dto.Project;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -29,24 +29,24 @@ import java.util.Arrays;
 import java.util.List;
 
 @Service
-public class ProductApi extends AbstractApi {
+public class ProjectApi extends AbstractApi {
 
-    public ProductApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
+    public ProjectApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
         super(restTemplate, objectMapper, baseUrl);
     }
 
     @Autowired
-    public ProductApi(RestTemplate restTemplate, ObjectMapper objectMapper) {
+    public ProjectApi(RestTemplate restTemplate, ObjectMapper objectMapper) {
         super(restTemplate, objectMapper);
     }
 
-    public ProductApi() {
+    public ProjectApi() {
 
     }
 
-    public void deleteById(Long id) {
+    public void deleteById(long id) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/product/{id}",
+                getBaseUrl() + "/project/{id}",
                 HttpMethod.DELETE,
                 createHttpEntity(),
                 Void.class,
@@ -54,42 +54,53 @@ public class ProductApi extends AbstractApi {
         ));
     }
 
-    public List<Product> getAll() {
-        ResponseEntity<Product[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/product",
+    public List<Project> getAll() {
+        ResponseEntity<Project[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/project",
                 HttpMethod.GET,
                 createHttpEntity(),
-                Product[].class
+                Project[].class
         ));
         return Arrays.asList(response.getBody());
     }
 
-    public Product getById(Long id) {
-        ResponseEntity<Product> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/product/{id}",
+    public List<Project> getAll(Long versionId) {
+        ResponseEntity<Project[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/project/version/{versionId}",
                 HttpMethod.GET,
                 createHttpEntity(),
-                Product.class,
+                Project[].class,
+                versionId
+        ));
+        return Arrays.asList(response.getBody());
+    }
+
+    public Project getById(Long id) {
+        ResponseEntity<Project> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/project/{id}",
+                HttpMethod.GET,
+                createHttpEntity(),
+                Project.class,
                 id
         ));
         return response.getBody();
     }
 
-    public Product persist(Product product) {
-        ResponseEntity<Product> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/product",
+    public Project persist(Project project) {
+        ResponseEntity<Project> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/project",
                 HttpMethod.POST,
-                createHttpEntity(product),
-                Product.class
+                createHttpEntity(project),
+                Project.class
         ));
         return response.getBody();
     }
 
-    public void update(Product product) {
+    public void update(Project project) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/product",
+                getBaseUrl() + "/project",
                 HttpMethod.PUT,
-                createHttpEntity(product),
+                createHttpEntity(project),
                 Void.class
         ));
     }

@@ -17,11 +17,11 @@
 
 package de.bushnaq.abdalla.projecthub.util;
 
+import de.bushnaq.abdalla.projecthub.ui.LoginView;
 import de.bushnaq.abdalla.projecthub.ui.ProductListView;
 import de.bushnaq.abdalla.projecthub.ui.UserListView;
 import de.bushnaq.abdalla.projecthub.ui.common.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.common.UserDialog;
-import de.bushnaq.abdalla.projecthub.ui.login.LoginView;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import org.junit.jupiter.api.Assertions;
 import org.openqa.selenium.By;

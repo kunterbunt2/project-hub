@@ -18,7 +18,7 @@
 package de.bushnaq.abdalla.projecthub.security;
 
 import com.vaadin.flow.spring.security.VaadinWebSecurity;
-import de.bushnaq.abdalla.projecthub.ui.login.LoginView;
+import de.bushnaq.abdalla.projecthub.ui.LoginView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

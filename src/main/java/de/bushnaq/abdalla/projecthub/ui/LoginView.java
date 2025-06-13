@@ -15,7 +15,7 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.ui.login;
+package de.bushnaq.abdalla.projecthub.ui;
 
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.login.LoginForm;

@@ -15,10 +15,10 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.api;
+package de.bushnaq.abdalla.projecthub.rest.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.bushnaq.abdalla.projecthub.dto.Sprint;
+import de.bushnaq.abdalla.projecthub.dto.Worklog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -29,24 +29,24 @@ import java.util.Arrays;
 import java.util.List;
 
 @Service
-public class SprintApi extends AbstractApi {
+public class WorklogApi extends AbstractApi {
 
-    @Autowired
-    public SprintApi(RestTemplate restTemplate, ObjectMapper objectMapper) {
-        super(restTemplate, objectMapper);
-    }
-
-    public SprintApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
+    public WorklogApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
         super(restTemplate, objectMapper, baseUrl);
     }
 
-    public SprintApi() {
+    @Autowired
+    public WorklogApi(RestTemplate restTemplate, ObjectMapper objectMapper) {
+        super(restTemplate, objectMapper);
+    }
+
+    public WorklogApi() {
 
     }
 
-    public void deleteById(long id) {
+    public void deleteById(Long id) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/sprint/{id}",
+                getBaseUrl() + "/worklog/{id}",
                 HttpMethod.DELETE,
                 createHttpEntity(),
                 Void.class,
@@ -54,53 +54,53 @@ public class SprintApi extends AbstractApi {
         ));
     }
 
-    public List<Sprint> getAll() {
-        ResponseEntity<Sprint[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/sprint",
+    public List<Worklog> getAll() {
+        ResponseEntity<Worklog[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/worklog",
                 HttpMethod.GET,
                 createHttpEntity(),
-                Sprint[].class
+                Worklog[].class
         ));
         return Arrays.asList(response.getBody());
     }
 
-    public List<Sprint> getAll(Long projectId) {
-        ResponseEntity<Sprint[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/sprint/project/{projectId}",
+    public List<Worklog> getAll(Long sprintId) {
+        ResponseEntity<Worklog[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/worklog/sprint/{sprintId}",
                 HttpMethod.GET,
                 createHttpEntity(),
-                Sprint[].class,
-                projectId
+                Worklog[].class,
+                sprintId
         ));
         return Arrays.asList(response.getBody());
     }
 
-    public Sprint getById(Long id) {
-        ResponseEntity<Sprint> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/sprint/{id}",
+    public Worklog getById(Long id) {
+        ResponseEntity<Worklog> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/worklog/{id}",
                 HttpMethod.GET,
                 createHttpEntity(),
-                Sprint.class,
+                Worklog.class,
                 id
         ));
         return response.getBody();
     }
 
-    public Sprint persist(Sprint sprint) {
-        ResponseEntity<Sprint> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/sprint",
+    public Worklog persist(Worklog worklog) {
+        ResponseEntity<Worklog> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/worklog",
                 HttpMethod.POST,
-                createHttpEntity(sprint),
-                Sprint.class
+                createHttpEntity(worklog),
+                Worklog.class
         ));
         return response.getBody();
     }
 
-    public void update(Sprint sprint) {
+    public void update(Worklog worklog) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/sprint",
+                getBaseUrl() + "/worklog",
                 HttpMethod.PUT,
-                createHttpEntity(sprint),
+                createHttpEntity(worklog),
                 Void.class
         ));
     }
