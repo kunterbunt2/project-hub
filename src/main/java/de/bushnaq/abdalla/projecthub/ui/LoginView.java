@@ -85,24 +85,18 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
             authContainer.add(separator);
 
             // Create OIDC login button
-//            Button button = new Button("Click Me", e -> {
-//                UI.getCurrent().getPage().open("oauth2/authorization/keycloak", "_self");
-//            });
-//            button.setId(OIDC_LOGIN_BUTTON);
-//            authContainer.add(button);
-//            Anchor loginWithOidcButton = new Anchor("http://localhost:8080/oauth2/authorization/keycloak", "Login with SSO");
             Anchor loginWithOidcButton = new Anchor("/oauth2/authorization/keycloak", "Login with SSO");
             loginWithOidcButton.setRouterIgnore(true); // Prevent Vaadin from intercepting the link
             loginWithOidcButton.setId(OIDC_LOGIN_BUTTON);
-//            loginWithOidcButton.getStyle().set("background-color", "var(--lumo-primary-color)");
-//            loginWithOidcButton.getStyle().set("color", "var(--lumo-primary-contrast-color)");
-//            loginWithOidcButton.getStyle().set("padding", "10px 20px");
-//            loginWithOidcButton.getStyle().set("border-radius", "4px");
-//            loginWithOidcButton.getStyle().set("cursor", "pointer");
-//            loginWithOidcButton.getStyle().set("text-decoration", "none");
-//            loginWithOidcButton.getStyle().set("display", "block");
-//            loginWithOidcButton.getStyle().set("text-align", "center");
-//            loginWithOidcButton.getStyle().set("margin-top", "20px");
+            loginWithOidcButton.getStyle().set("background-color", "var(--lumo-primary-color)");
+            loginWithOidcButton.getStyle().set("color", "var(--lumo-primary-contrast-color)");
+            loginWithOidcButton.getStyle().set("padding", "10px 20px");
+            loginWithOidcButton.getStyle().set("border-radius", "4px");
+            loginWithOidcButton.getStyle().set("cursor", "pointer");
+            loginWithOidcButton.getStyle().set("text-decoration", "none");
+            loginWithOidcButton.getStyle().set("display", "block");
+            loginWithOidcButton.getStyle().set("text-align", "center");
+            loginWithOidcButton.getStyle().set("margin-top", "20px");
 
             authContainer.add(loginWithOidcButton);
         }

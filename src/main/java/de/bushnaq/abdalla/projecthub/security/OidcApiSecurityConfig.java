@@ -59,7 +59,7 @@ public class OidcApiSecurityConfig {
     @Bean
     @Order(1) // Higher precedence than the Vaadin security filter chain
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
-        logger.info("Configuring JWT security for REST API endpoints");
+        logger.info(">>> Configuring security chain (1/4) JWT security for REST API endpoints");
 
         // Configure security for REST API endpoints
         http

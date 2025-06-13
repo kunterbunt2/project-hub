@@ -76,6 +76,7 @@ public class SecurityConfig extends VaadinWebSecurity {
     @Bean
     @Order(2) // Lower precedence than the OAuth2 API security filter chain
     public SecurityFilterChain basicAuthApiSecurityFilterChain(HttpSecurity http) throws Exception {
+        logger.info(">>> Configuring security chain (3/4) basic authentication for REST API endpoints");
         return http
                 .securityMatcher("/api/**") // Apply this configuration only to API endpoints
                 .authorizeHttpRequests(authorize -> authorize
@@ -102,6 +103,7 @@ public class SecurityConfig extends VaadinWebSecurity {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+        logger.info(">>> Configuring security chain (4/4) basic authentication for vaadin");
         // Configure for all non-API endpoints (Vaadin UI)
 
         // Allow for H2 console

@@ -64,7 +64,7 @@ public class OidcSecurityConfig extends VaadinWebSecurity {
      */
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        logger.info("Configuring OAuth2/OIDC security for Vaadin UI");
+        logger.info(">>> Configuring security chain (2/4) OAuth2/OIDC security for Vaadin UI");
 
         // Check if client registration repository is available
         if (clientRegistrationRepository == null) {
