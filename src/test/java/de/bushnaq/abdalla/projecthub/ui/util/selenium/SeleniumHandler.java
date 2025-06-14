@@ -21,6 +21,7 @@ import io.github.bonigarcia.wdm.WebDriverManager;
 import jakarta.annotation.PreDestroy;
 import lombok.Getter;
 import org.openqa.selenium.*;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.CapabilityType;
@@ -32,9 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
@@ -56,6 +55,7 @@ public class SeleniumHandler {
     private final VideoRecorder videoRecorder;
     private       WebDriverWait wait;
     private       Duration      waitDuration;
+    private       Dimension     windowSize;  // Added field to store custom window size
 
     public SeleniumHandler() {
         this(Duration.ofSeconds(10), Duration.ofSeconds(30));
@@ -194,6 +194,18 @@ public class SeleniumHandler {
     }
 
     /**
+     * Gets the current browser window size.
+     *
+     * @return the current window size as a Dimension object, or null if the browser is not yet initialized
+     */
+    public Dimension getCurrentWindowSize() {
+        if (driver != null) {
+            return driver.manage().window().getSize();
+        }
+        return windowSize;
+    }
+
+    /**
      * Gets the current value from a date picker component.
      * <p>
      * This method retrieves the date value from a Vaadin DatePicker component
@@ -231,8 +243,13 @@ public class SeleniumHandler {
             wait   = new WebDriverWait(getDriver(), waitDuration);
             //Applied wait time
             setImplicit(implicitWaitDuration);
-            //maximize window
-            getDriver().manage().window().maximize();
+
+            if (windowSize != null) {
+                getDriver().manage().window().setSize(windowSize);
+            } else {
+                //maximize window by default
+                getDriver().manage().window().maximize();
+            }
             //firefox
             {
                 //            WebDriverManager.firefoxdriver().setup();
@@ -312,6 +329,19 @@ public class SeleniumHandler {
         WebElement button = findElement(By.xpath("//vaadin-button[@slot='submit' and contains(@theme, 'submit')]"));
         button.click();
         waitForPageLoaded();
+    }
+
+    /**
+     * Resets the window size setting to use default maximized window.
+     * If the browser is already running, it will maximize the current window.
+     */
+    public void resetWindowSize() {
+        windowSize = null;
+
+        // If driver is already initialized, maximize the current window
+        if (driver != null) {
+            driver.manage().window().maximize();
+        }
     }
 
     public void selectGridRow(String gridRowBaseId, Class<?> viewClass, String rowName) {
@@ -574,6 +604,23 @@ public class SeleniumHandler {
     }
 
     /**
+     * Sets the browser window to a specific size.
+     * This must be called before the browser is initialized.
+     * If the browser is already running, it will resize the current window.
+     *
+     * @param width  the width of the browser window in pixels
+     * @param height the height of the browser window in pixels
+     */
+    public void setWindowSize(int width, int height) {
+        windowSize = new Dimension(width, height);
+
+        // If driver is already initialized, resize the current window
+        if (driver != null) {
+            driver.manage().window().setSize(windowSize);
+        }
+    }
+
+    /**
      * Start recording screen activities for the current test
      *
      * @param testName Name of the test for the video file name
@@ -611,60 +658,11 @@ public class SeleniumHandler {
         return null;
     }
 
-    /**
-     * Takes a screenshot of a specific element identified by its ID
-     *
-     * @param overlayElement The element to capture
-     * @param fileName       The filename where the screenshot should be saved
-     */
-    public void takeElementScreenshot(WebElement overlayElement, String dialogId, String fileName) {
-        try {
-            if (overlayElement != null) {
-                // Get the location and size of the element
-                org.openqa.selenium.Point     location = overlayElement.getLocation();
-                org.openqa.selenium.Dimension size     = overlayElement.getSize();
-
-                // Make sure width and height are positive
-                if (size.getWidth() <= 0 || size.getHeight() <= 0) {
-                    logger.warn("Dialog overlay has invalid dimensions: {}x{}", size.getWidth(), size.getHeight());
-                    // Fallback to taking a full screenshot
-                    takeScreenshot(fileName);
-                    return;
-                }
-
-                // Take screenshot of the entire page
-                File screenshot = ((TakesScreenshot) getDriver()).getScreenshotAs(OutputType.FILE);
-
-                // Read the screenshot file into a BufferedImage
-                BufferedImage fullImg = ImageIO.read(screenshot);
-
-                // Crop the image to only include the dialog
-                BufferedImage elementImg = fullImg.getSubimage(
-                        location.getX(),
-                        location.getY(),
-                        size.getWidth(),
-                        size.getHeight()
-                );
-
-                // Save the cropped image
-                ImageIO.write(elementImg, "png", new File(fileName));
-                logger.info("Dialog screenshot saved to: {}", fileName);
-            } else {
-                logger.warn("Could not find overlay element for dialog: {}", dialogId);
-                takeScreenshot(fileName);
-            }
-        } catch (Exception e) {
-            logger.error("Failed to capture dialog screenshot", e);
-            // Fallback to taking a full screenshot
-            try {
-                takeScreenshot(fileName);
-            } catch (Exception ex) {
-                logger.error("Failed to take fallback screenshot", ex);
-            }
-        }
+    public void takeElementScreenShot(WebElement overlayElement, String dialogId, String fileName) {
+        ScreenShotCreator.takeElementScreenshot(getDriver(), overlayElement, dialogId, fileName);
     }
 
-    public void takeScreenshot(String fileName) {
+    public void takeScreenShot(String fileName) {
         ScreenShotCreator.takeScreenShot(getDriver(), fileName);
     }
 

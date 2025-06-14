@@ -18,13 +18,12 @@
 package de.bushnaq.abdalla.projecthub.ui.util.selenium;
 
 import org.apache.commons.io.FileUtils;
-import org.openqa.selenium.NoSuchSessionException;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
-import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
@@ -41,16 +40,71 @@ public class ScreenShotCreator {
         return "target" + File.separator + "externalFiles" + File.separator + "screenshots" + File.separator;
     }
 
-    public static void takeScreenShot(WebDriver driver, String displayName, String testMethod) {
-        String fileName = fileNameGenerator(displayName, testMethod);
+    /**
+     * Takes a screenshot of a specific element identified by its ID
+     *
+     * @param driver
+     * @param overlayElement The element to capture
+     * @param fileName       The filename where the screenshot should be saved
+     */
+    public static void takeElementScreenshot(WebDriver driver, WebElement overlayElement, String dialogId, String fileName) {
         try {
-            File screenshotFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
-            FileUtils.copyFile(screenshotFile, new File(fileName));
-            logger.info("Screenshot saved to: {}", fileName);
-        } catch (IOException | NoSuchSessionException e) {
-            throw new RuntimeException("Could not make screenshot {}" + fileName, e);
+            if (overlayElement != null) {
+
+                // Take screenshot of the entire page
+                File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+
+                // Read the screenshot file into a BufferedImage
+                BufferedImage fullImg = ImageIO.read(screenshot);
+
+                // Get the location and size of the element
+                org.openqa.selenium.Point     location = overlayElement.getLocation();
+                org.openqa.selenium.Dimension size     = overlayElement.getSize();
+
+                logger.info("Taking screenshot of dialog overlay: {} at x: {}, y: {}, width: {}, height: {}", dialogId, location.x, location.y, size.getWidth(), size.getHeight());
+                // Make sure width and height are positive
+                if (size.getWidth() <= 0 || size.getHeight() <= 0) {
+                    logger.warn("Dialog overlay has invalid dimensions: {}x{}", size.getWidth(), size.getHeight());
+                    // Fallback to taking a full screenshot
+                    takeScreenShot(driver, fileName);
+                    return;
+                }
+                // Crop the image to only include the dialog
+                BufferedImage elementImg = fullImg.getSubimage(
+                        location.getX(),
+                        location.getY(),
+                        size.getWidth(),
+                        size.getHeight()
+                );
+
+                // Save the cropped image
+                ImageIO.write(elementImg, "png", new File(fileName));
+                logger.info("Dialog screenshot saved to: {}", fileName);
+            } else {
+                logger.warn("Could not find overlay element for dialog: {}", dialogId);
+                takeScreenShot(driver, fileName);
+            }
+        } catch (Exception e) {
+            logger.error("Failed to capture dialog screenshot", e);
+            // Fallback to taking a full screenshot
+            try {
+                takeScreenShot(driver, fileName);
+            } catch (Exception ex) {
+                logger.error("Failed to take fallback screenshot", ex);
+            }
         }
     }
+
+//    public static void takeScreenShot(WebDriver driver, String displayName, String testMethod) {
+//        String fileName = fileNameGenerator(displayName, testMethod);
+//        try {
+//            File screenshotFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+//            FileUtils.copyFile(screenshotFile, new File(fileName));
+//            logger.info("Screenshot saved to: {}", fileName);
+//        } catch (IOException | NoSuchSessionException e) {
+//            throw new RuntimeException("Could not make screenshot {}" + fileName, e);
+//        }
+//    }
 
     public static void takeScreenShot(WebDriver driver, String fileName) {
         try {
