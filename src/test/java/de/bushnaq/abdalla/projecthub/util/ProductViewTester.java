@@ -193,7 +193,7 @@ public class ProductViewTester {
         seleniumHandler.setLoginUser("admin-user");
         seleniumHandler.setLoginPassword("test-password");
         if (screenshotFileName != null) {
-            seleniumHandler.takeElementScreenshot(seleniumHandler.findLoginOverlayElement(LoginView.LOGIN_VIEW), LoginView.LOGIN_VIEW, "../project-hub.wiki/screenshots/login-view.png");
+            seleniumHandler.takeElementScreenShot(seleniumHandler.findLoginOverlayElement(LoginView.LOGIN_VIEW), LoginView.LOGIN_VIEW, "../project-hub.wiki/screenshots/login-view.png");
         }
         seleniumHandler.loginSubmit();
         seleniumHandler.waitUntil(ExpectedConditions.elementToBeClickable(By.id(ProductListView.PRODUCT_LIST_PAGE_TITLE)));

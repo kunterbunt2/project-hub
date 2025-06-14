@@ -52,8 +52,9 @@ public class ScreenShotCreator {
             if (overlayElement != null) {
 
                 // Take screenshot of the entire page
+                wait(1000);
                 File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
-
+                wait(1000);
                 // Read the screenshot file into a BufferedImage
                 BufferedImage fullImg = ImageIO.read(screenshot);
 
@@ -95,6 +96,16 @@ public class ScreenShotCreator {
         }
     }
 
+    public static void takeScreenShot(WebDriver driver, String fileName) {
+        try {
+            File screenshotFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+            FileUtils.copyFile(screenshotFile, new File(fileName));
+            logger.info("Screenshot saved to: {}", fileName);
+        } catch (IOException | NoSuchSessionException e) {
+            throw new RuntimeException("Could not make screenshot {}" + fileName, e);
+        }
+    }
+
 //    public static void takeScreenShot(WebDriver driver, String displayName, String testMethod) {
 //        String fileName = fileNameGenerator(displayName, testMethod);
 //        try {
@@ -106,13 +117,12 @@ public class ScreenShotCreator {
 //        }
 //    }
 
-    public static void takeScreenShot(WebDriver driver, String fileName) {
+    static void wait(int milliseconds) {
         try {
-            File screenshotFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
-            FileUtils.copyFile(screenshotFile, new File(fileName));
-            logger.info("Screenshot saved to: {}", fileName);
-        } catch (IOException | NoSuchSessionException e) {
-            throw new RuntimeException("Could not make screenshot {}" + fileName, e);
+            Thread.sleep(milliseconds);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.error("Thread interrupted while waiting", e);
         }
     }
 }

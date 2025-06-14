@@ -30,6 +30,7 @@ import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.Layout;
@@ -78,9 +79,6 @@ public final class MainLayout extends AppLayout {
         navbarLayout.add(logoLayout, tabs, themeToggle, userMenu);
         navbarLayout.expand(tabs);
 
-        addToNavbar(true, navbarLayout);
-
-        // Add breadcrumbs below the navbar
         Div breadcrumbContainer = new Div(breadcrumbs);
         breadcrumbContainer.addClassNames(
                 Padding.Horizontal.MEDIUM,
@@ -88,8 +86,16 @@ public final class MainLayout extends AppLayout {
                 Width.FULL,
                 Background.CONTRAST_5
         );
-        // Add as first component before any content
-        getElement().insertChild(0, breadcrumbContainer.getElement());
+
+        var navAndBreadcrumbs = new VerticalLayout();
+        navAndBreadcrumbs.setPadding(false);
+        navAndBreadcrumbs.setSpacing(false);
+        navAndBreadcrumbs.setMargin(false);
+
+        navAndBreadcrumbs.add(breadcrumbContainer, navbarLayout);
+
+        // Add the combined layout to the navbar area
+        addToNavbar(true, navAndBreadcrumbs);
     }
 
     private HorizontalLayout createHeader() {
@@ -175,3 +181,4 @@ public final class MainLayout extends AppLayout {
         getUI().ifPresent(ui -> ui.getPage().setLocation("/login"));
     }
 }
+

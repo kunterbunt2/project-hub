@@ -37,6 +37,12 @@ public final class MainView extends Main {
 
     MainView() {
         addClassName(LumoUtility.Padding.NONE);
+        // Add these classes to prevent horizontal scrollbar
+        addClassNames(
+                LumoUtility.BoxSizing.BORDER,
+                LumoUtility.Width.FULL,
+                LumoUtility.Overflow.HIDDEN
+        );
         add(new ViewToolbar("Main"));
         add(new Div("Please select a view from the menu on the left."));
     }
@@ -48,3 +54,4 @@ public final class MainView extends Main {
         UI.getCurrent().navigate(MainView.class);
     }
 }
+

@@ -10,7 +10,7 @@ import com.vaadin.flow.dom.ThemeList;
 import com.vaadin.flow.theme.lumo.Lumo;
 
 public class ThemeToggle extends Button {
-    private boolean darkTheme = false;
+    private boolean darkTheme = true; // Default to dark theme
 
     public ThemeToggle() {
         setIcon(new Icon(VaadinIcon.ADJUST));
@@ -27,7 +27,8 @@ public class ThemeToggle extends Button {
                         "return localStorage.getItem('theme')")
                 .then(String.class, theme -> {
                     ThemeList themeList = UI.getCurrent().getElement().getThemeList();
-                    if ("dark".equals(theme)) {
+                    if (theme == null || "dark".equals(theme)) {
+                        // Default to dark theme if no preference is set
                         themeList.add(Lumo.DARK);
                         darkTheme = true;
                     } else {
