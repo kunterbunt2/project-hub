@@ -32,6 +32,7 @@ public class AbstractUiTestUtil extends AbstractGanttTestUtil {
         System.setProperty("java.awt.headless", "false");
     }
 
+
     @BeforeEach
     public void setupTest(TestInfo testInfo) {
         seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), testInfo.getDisplayName());
@@ -40,9 +41,9 @@ public class AbstractUiTestUtil extends AbstractGanttTestUtil {
     @AfterEach
     public void tearDownTest() throws InterruptedException {
         if (seleniumHandler.isRecording())
-            Thread.sleep(1000); // Wait for any pending actions to complete for the recording
+            seleniumHandler.wait(1000); // Wait for any pending actions to complete for the recording
         seleniumHandler.destroy();
-//        // Stop and save the recording
-//        seleniumHandler.stopRecording();
     }
+
+
 }

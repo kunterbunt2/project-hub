@@ -61,7 +61,8 @@ public class GanttTest extends AbstractGanttTestUtil {
         initializeInstances();
 
         //create tasks
-        Sprint sprint         = expectedSprints.getFirst();
+        Sprint savedSprint    = expectedSprints.getFirst();
+        Sprint sprint         = sprintApi.getById(savedSprint.getId());
         User   resource1      = expectedUsers.stream().toList().getFirst();
         User   resource2      = expectedUsers.stream().toList().get(1);
         Task   startMilestone = addTask(sprint, null, "Start", LocalDateTime.parse(TestInfoUtil.getTestStart(testInfo)), Duration.ZERO, null, null, TaskMode.MANUALLY_SCHEDULED, true);
@@ -69,10 +70,13 @@ public class GanttTest extends AbstractGanttTestUtil {
         Task   task2          = addTask("[2] Child Task", "5d", resource1, sprint, task1, null);
         Task   task3          = addTask("[3] Child Task", "5d", resource2, sprint, task1, task2);
         TestInfoUtil.setTestCaseIndex(testInfo, 1);
-        levelResources(testInfo, null);
-        generateWorklogs(ParameterOptions.getLocalNow());
-        generateGanttChart(testInfo, null);
-        generateBurndownChart(testInfo);
+        sprint.initialize();
+        sprint.initUserMap(userApi.getAll(sprint.getId()));
+        sprint.initTaskMap(taskApi.getAll(sprint.getId()), worklogApi.getAll(sprint.getId()));
+        levelResources(testInfo, sprint, null);
+        generateWorklogs(sprint, ParameterOptions.getLocalNow());
+        generateGanttChart(testInfo, sprint.getId(), null);
+        generateBurndownChart(testInfo, sprint.getId());
     }
 
     /**
@@ -105,10 +109,13 @@ public class GanttTest extends AbstractGanttTestUtil {
         Task task6 = addTask("[6] Child Task ", "5d", resource2, sprint, task4, task5);
 
         TestInfoUtil.setTestCaseIndex(testInfo, 2);
-        levelResources(testInfo, null);
-        generateWorklogs(ParameterOptions.getLocalNow());
-        generateGanttChart(testInfo, null);
-        generateBurndownChart(testInfo);
+        sprint.initialize();
+        sprint.initUserMap(userApi.getAll(sprint.getId()));
+        sprint.initTaskMap(taskApi.getAll(sprint.getId()), worklogApi.getAll(sprint.getId()));
+        levelResources(testInfo, sprint, null);
+        generateWorklogs(sprint, ParameterOptions.getLocalNow());
+        generateGanttChart(testInfo, sprint.getId(), null);
+        generateBurndownChart(testInfo, sprint.getId());
     }
 
     /**
@@ -146,10 +153,13 @@ public class GanttTest extends AbstractGanttTestUtil {
         Task task9 = addTask("[9] Child Task ", "5d", resource2, sprint, task7, null);
 
         TestInfoUtil.setTestCaseIndex(testInfo, 3);
-        levelResources(testInfo, null);
-        generateWorklogs(ParameterOptions.getLocalNow());
-        generateGanttChart(testInfo, null);
-        generateBurndownChart(testInfo);
+        sprint.initialize();
+        sprint.initUserMap(userApi.getAll(sprint.getId()));
+        sprint.initTaskMap(taskApi.getAll(sprint.getId()), worklogApi.getAll(sprint.getId()));
+        levelResources(testInfo, sprint, null);
+        generateWorklogs(sprint, ParameterOptions.getLocalNow());
+        generateGanttChart(testInfo, sprint.getId(), null);
+        generateBurndownChart(testInfo, sprint.getId());
     }
 
 }

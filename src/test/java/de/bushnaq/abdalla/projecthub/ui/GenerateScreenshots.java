@@ -17,8 +17,6 @@
 
 package de.bushnaq.abdalla.projecthub.ui;
 
-import de.bushnaq.abdalla.projecthub.ParameterOptions;
-import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.ui.common.*;
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
@@ -37,8 +35,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -61,46 +57,12 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
     @Autowired
     private VersionViewTester versionViewTester;
 
-    private static String generateFeatureName(int t) {
-        return String.format("Feature-%d", t);
-    }
-
-    private void generateTasks(RandomCase randomCase) {
-        random.setSeed(randomCase.getSeed());
-        int numberOfUsers    = random.nextInt(randomCase.getMaxNumberOfUsers()) + 2;
-        int numberOfFeatures = random.nextInt(randomCase.getMaxNumberOfFeatures()) + 1;
-        int numberOfTasks    = random.nextInt(randomCase.getMaxNumberOfWork()) + 1;
-        {
-            printAuthentication();
-            addRandomUsers(numberOfUsers);
-            Product product = addProduct("Product-" + 1);
-            Version version = addVersion(product, String.format("1.%d.0", 0));
-            Project project = addRandomProject(version);
-            sprint = addRandomSprint(project);
-        }
-
-        Task startMilestone = addTask(sprint, null, "Start", LocalDateTime.parse("2024-12-15T08:00:00"), Duration.ZERO, null, null, TaskMode.MANUALLY_SCHEDULED, true);
-        for (int f = 0; f < numberOfFeatures; f++) {
-            String featureName = generateFeatureName(f);
-            Task   feature     = addParentTask(featureName, sprint, null, startMilestone);
-            for (int t = 0; t < numberOfTasks; t++) {
-                User   user     = expectedUsers.stream().toList().get(random.nextInt(numberOfUsers));
-                String duration = String.format("%dd", random.nextInt(randomCase.getMaxDurationDays()) + 1);
-                String workName = generateWorkName(featureName, t);
-                addTask(workName, duration, user, sprint, feature, null);
-            }
-        }
-    }
-
-    private static String generateWorkName(String featureName, int t) {
-        String[] workNames = new String[]{"pre-planning", "planning", "analysis", "design", "implementation", "module test", "Functional Test", "System Test", "debugging", "deployment"};
-        return String.format("%s-%s", featureName, workNames[t]);
-    }
 
     private static List<RandomCase> listRandomCases() {
         RandomCase[] randomCases = new RandomCase[]{//
-                new RandomCase(1, 10, 2, 1, 2, 1),//
+//                new RandomCase(1, 10, 2, 1, 2, 1),//
 //                new RandomCase(2, 10, 3, 2, 3, 1)//
+                new RandomCase(2, 4, 4, 4, 4, 10, 3, 4, 3, 1)//
         };
         return Arrays.stream(randomCases).toList();
     }
@@ -171,20 +133,18 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
     @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void takeScreenshots(RandomCase randomCase, TestInfo testInfo) throws Exception {
         // Set browser window to a fixed size for consistent screenshots
-        seleniumHandler.setWindowSize(1280, 800);
+        seleniumHandler.setWindowSize(1280, 1024);
 
-        printAuthentication();
+//        printAuthentication();
         TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
-        generateTasks(randomCase);
-        levelResources(testInfo, null);
-        generateWorklogs(ParameterOptions.getLocalNow());
+        generateProducts(testInfo, randomCase);
 
         productViewTester.switchToProductListView("../project-hub.wiki/screenshots/login.png");
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/product-list-view.png");
         takeProductDialogScreenshots();
-        productViewTester.selectProduct("Product-1");
+        productViewTester.selectProduct("Product-0");
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/version-list-view.png");
         takeVersionDialogScreenshots();
         versionViewTester.selectVersion("1.0.0");
@@ -194,8 +154,8 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/sprint-list-view.png");
         takeSprintDialogScreenshots();
         sprintViewTester.selectSprint("sprint-0");
-        seleniumHandler.waitForElementToBeClickable(SprintView.GANTT_CHART);
-        seleniumHandler.waitForElementToBeClickable(SprintView.BURNDOWN_CHART);
+        seleniumHandler.waitForElementToBeClickable(SprintQualityBoard.GANTT_CHART);
+        seleniumHandler.waitForElementToBeClickable(SprintQualityBoard.BURNDOWN_CHART);
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/sprint-view.png");
 
         userViewTester.switchToUserListView();

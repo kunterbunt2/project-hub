@@ -25,13 +25,34 @@ import lombok.ToString;
 public class RandomCase {
     private final int  maxDurationDays;
     private final int  maxNumberOfFeatures;
+    private final int  maxNumberOfProducts;
+    private final int  maxNumberOfProjects;
+    private final int  maxNumberOfSprints;
     private final int  maxNumberOfUsers;
+    private final int  maxNumberOfVersions;
     private final int  maxNumberOfWork;
     private final long seed;
     private final int  testCaseIndex;
 
     public RandomCase(int testCaseIndex, int maxDurationDays, int maxNumberOfFeatures, int maxNumberOfUsers, int maxNumberOfWork, int seed) {
         this.testCaseIndex       = testCaseIndex;
+        this.maxNumberOfProducts = 1;
+        this.maxNumberOfVersions = 1;
+        this.maxNumberOfProjects = 1;
+        this.maxNumberOfSprints  = 1;
+        this.maxDurationDays     = maxDurationDays;
+        this.maxNumberOfFeatures = maxNumberOfFeatures;
+        this.maxNumberOfUsers    = maxNumberOfUsers;
+        this.maxNumberOfWork     = maxNumberOfWork;
+        this.seed                = seed;
+    }
+
+    public RandomCase(int testCaseIndex, int maxNumberOfProducts, int maxNumberOfVersions, int maxNumberOfProjects, int maxNumberOfSprints, int maxDurationDays, int maxNumberOfFeatures, int maxNumberOfUsers, int maxNumberOfWork, int seed) {
+        this.testCaseIndex       = testCaseIndex;
+        this.maxNumberOfProducts = maxNumberOfProducts;
+        this.maxNumberOfVersions = maxNumberOfVersions;
+        this.maxNumberOfProjects = maxNumberOfProjects;
+        this.maxNumberOfSprints  = maxNumberOfSprints;
         this.maxDurationDays     = maxDurationDays;
         this.maxNumberOfFeatures = maxNumberOfFeatures;
         this.maxNumberOfUsers    = maxNumberOfUsers;

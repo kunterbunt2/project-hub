@@ -18,6 +18,7 @@
 package de.bushnaq.abdalla.projecthub.report.gantt;
 
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
+import de.bushnaq.abdalla.projecthub.dto.Sprint;
 import de.bushnaq.abdalla.projecthub.dto.Task;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.util.AbstractLegacyGanttTestUtil;
@@ -72,6 +73,7 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
         TestInfoUtil.setDaysAfterStart(testInfo, random.nextInt(20) + 2);
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName());
         generateOneProduct(testInfo);
+        Sprint sprint = expectedSprints.getFirst();
         testCaseIndex++;
 
         File file = new File(String.valueOf(mppFileName.toAbsolutePath()));
@@ -179,12 +181,18 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
                 taskApi.persist(value);
             }
             sprint.setUserId(userMap.values().stream().findFirst().get().getId());
-            sprintApi.persist(sprint);
-            levelResources(testInfo, projectFile);
-            ParameterOptions.now = ParameterOptions.now.plusDays(TestInfoUtil.getDaysAfterStart(testInfo));
-            generateWorklogs(ParameterOptions.getLocalNow());
-            generateGanttChart(testInfo, projectFile);
-            generateBurndownChart(testInfo);
+            Sprint savedSprint = sprintApi.persist(sprint);
+            {
+                Sprint readSprint = sprintApi.getById(savedSprint.getId());
+                readSprint.initialize();
+                readSprint.initUserMap(userApi.getAll(readSprint.getId()));
+                readSprint.initTaskMap(taskApi.getAll(readSprint.getId()), worklogApi.getAll(readSprint.getId()));
+                levelResources(testInfo, readSprint, projectFile);
+                ParameterOptions.now = ParameterOptions.now.plusDays(TestInfoUtil.getDaysAfterStart(testInfo));
+                generateWorklogs(readSprint, ParameterOptions.getLocalNow());
+                generateGanttChart(testInfo, readSprint.getId(), projectFile);
+                generateBurndownChart(testInfo, readSprint.getId());
+            }
         }
     }
 

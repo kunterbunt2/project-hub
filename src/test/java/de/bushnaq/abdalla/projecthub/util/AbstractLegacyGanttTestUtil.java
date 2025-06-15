@@ -70,7 +70,7 @@ public class AbstractLegacyGanttTestUtil extends AbstractGanttTestUtil {
             }
         }
         gc.initialize();
-
+        Sprint sprint = expectedSprints.getFirst();
         logTasks(sprint, gc.allSprints.getFirst());
         for (net.sf.mpxj.Task mpxjTask : projectFile.getTasks()) {
             if (isValidTask(mpxjTask)) {
@@ -100,7 +100,7 @@ public class AbstractLegacyGanttTestUtil extends AbstractGanttTestUtil {
         for (User allUser : gc.allUsers) {
             userMap.put(allUser.getName(), allUser);
         }
-        sprint = gc.allSprints.getFirst();
+//        sprint = gc.allSprints.getFirst();
         return gc;
     }
 

@@ -45,7 +45,7 @@ import java.util.List;
 @AutoConfigureMockMvc
 @Transactional
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-public class SprintViewTest extends AbstractUiTestUtil {
+public class SprintQualityBoardTest extends AbstractUiTestUtil {
     @Autowired
     private ProductViewTester productViewTester;
     @Autowired
@@ -71,8 +71,9 @@ public class SprintViewTest extends AbstractUiTestUtil {
             Product product = addProduct("Product-" + 1);
             Version version = addVersion(product, String.format("1.%d.0", 0));
             Project project = addRandomProject(version);
-            sprint = addRandomSprint(project);
+            addRandomSprint(project);
         }
+        Sprint sprint = expectedSprints.getFirst();
 
         Task startMilestone = addTask(sprint, null, "Start", LocalDateTime.parse("2024-12-15T08:00:00"), Duration.ZERO, null, null, TaskMode.MANUALLY_SCHEDULED, true);
         for (int f = 0; f < numberOfFeatures; f++) {
@@ -108,8 +109,13 @@ public class SprintViewTest extends AbstractUiTestUtil {
         TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         generateTasks(randomCase);
-        levelResources(testInfo, null);
-        generateWorklogs(ParameterOptions.getLocalNow());
+        Sprint sprint = expectedSprints.getFirst();
+        sprint.initialize();
+        sprint.initUserMap(userApi.getAll(sprint.getId()));
+        sprint.initTaskMap(taskApi.getAll(sprint.getId()), worklogApi.getAll(sprint.getId()));
+
+        levelResources(testInfo, sprint, null);
+        generateWorklogs(sprint, ParameterOptions.getLocalNow());
         productViewTester.switchToProductListView();
         productViewTester.selectProduct("Product-1");
         versionViewTester.selectVersion("1.0.0");

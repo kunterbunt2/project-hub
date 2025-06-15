@@ -47,8 +47,7 @@ import java.util.Map;
 public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
 
     @JsonIgnore
-    private ProjectCalendar calendar;
-
+    private       ProjectCalendar calendar;
     private       LocalDateTime   end;
     @JsonIgnore
     public        List<Throwable> exceptions  = new ArrayList<>();
@@ -231,14 +230,6 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
             calendar = getUser().getCalendar();
         }
     }
-
-//    public void initWorklogs(List<Worklog> allWorklogs) {
-//        allWorklogs.forEach(worklog -> {
-//            if (worklog.getSprintId().equals(id)) {
-//                worklogs.add(worklog);
-//            }
-//        });
-//    }
 
     public void initialize() {
         setProjectProperties();

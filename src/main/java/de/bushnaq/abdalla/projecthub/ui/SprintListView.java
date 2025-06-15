@@ -149,7 +149,7 @@ public class SprintListView extends Main implements AfterNavigationObserver {
             params.put("sprint", String.valueOf(selectedSprint.getId()));
             //- Navigate with query parameters
             UI.getCurrent().navigate(
-                    SprintView.class,
+                    SprintQualityBoard.class,
                     QueryParameters.simple(params)
             );
         });

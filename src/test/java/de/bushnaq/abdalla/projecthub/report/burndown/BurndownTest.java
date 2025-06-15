@@ -17,8 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.report.burndown;
 
-import de.bushnaq.abdalla.projecthub.ParameterOptions;
-import de.bushnaq.abdalla.projecthub.dto.*;
+import de.bushnaq.abdalla.projecthub.dto.Sprint;
 import de.bushnaq.abdalla.projecthub.rest.debug.DebugUtil;
 import de.bushnaq.abdalla.projecthub.util.AbstractGanttTestUtil;
 import de.bushnaq.abdalla.projecthub.util.RandomCase;
@@ -35,8 +34,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -57,54 +54,13 @@ public class BurndownTest extends AbstractGanttTestUtil {
         TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
-        generateOneProduct(testInfo);
-        generateTasks(randomCase);
-        levelResources(testInfo, null);
-        generateWorklogs(ParameterOptions.getLocalNow());
-        generateGanttChart(testInfo, null);
-        generateBurndownChart(testInfo);
-    }
-
-    private static String generateFeatureName(int t) {
-        return String.format("Feature-%d", t);
-    }
-
-    @Override
-    protected void generateOneProduct(TestInfo testInfo) throws Exception {
-        //no need to create default product and user
-    }
-
-    private void generateTasks(RandomCase randomCase) {
-        random.setSeed(randomCase.getSeed());
-        int numberOfUsers    = random.nextInt(randomCase.getMaxNumberOfUsers()) + 2;
-        int numberOfFeatures = random.nextInt(randomCase.getMaxNumberOfFeatures()) + 1;
-        int numberOfTasks    = random.nextInt(randomCase.getMaxNumberOfWork()) + 1;
+        generateProducts(testInfo, randomCase);
+        Sprint savedSprint = expectedSprints.getFirst();
         {
-            addRandomUsers(numberOfUsers);
-            Product product = addProduct("Product-" + 1);
-            Version version = addVersion(product, String.format("1.%d.0", 0));
-            Project project = addRandomProject(version);
-            sprint = addRandomSprint(project);
-        }
-
-        Task startMilestone = addTask(sprint, null, "Start", LocalDateTime.parse("2024-12-15T08:00:00"), Duration.ZERO, null, null, TaskMode.MANUALLY_SCHEDULED, true);
-        for (int f = 0; f < numberOfFeatures; f++) {
-            String featureName = generateFeatureName(f);
-            Task   feature     = addParentTask(featureName, sprint, null, startMilestone);
-            for (int t = 0; t < numberOfTasks; t++) {
-                User   user     = expectedUsers.stream().toList().get(random.nextInt(numberOfUsers));
-                String duration = String.format("%dd", random.nextInt(randomCase.getMaxDurationDays()) + 1);
-                String workName = generateWorkName(featureName, t);
-                addTask(workName, duration, user, sprint, feature, null);
-            }
+            generateBurndownChart(testInfo, savedSprint.getId());
+            generateGanttChart(testInfo, savedSprint.getId(), null);
         }
     }
-
-    private static String generateWorkName(String featureName, int t) {
-        String[] workNames = new String[]{"pre-planning", "planning", "analysis", "design", "implementation", "module test", "Functional Test", "System Test", "debugging", "deployment"};
-        return String.format("%s-%s", featureName, workNames[t]);
-    }
-
 
     private static List<RandomCase> listRandomCases() {
         RandomCase[] randomCases = new RandomCase[]{//

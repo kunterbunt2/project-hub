@@ -18,7 +18,7 @@
 package de.bushnaq.abdalla.projecthub.util;
 
 import de.bushnaq.abdalla.projecthub.ui.SprintListView;
-import de.bushnaq.abdalla.projecthub.ui.SprintView;
+import de.bushnaq.abdalla.projecthub.ui.SprintQualityBoard;
 import de.bushnaq.abdalla.projecthub.ui.common.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.common.SprintDialog;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
@@ -158,6 +158,6 @@ public class SprintViewTester {
      * @param name the name of the sprint to select
      */
     public void selectSprint(String name) {
-        seleniumHandler.selectGridRow(SPRINT_GRID_NAME_PREFIX, SprintView.class, name);
+        seleniumHandler.selectGridRow(SPRINT_GRID_NAME_PREFIX, SprintQualityBoard.class, name);
     }
 }

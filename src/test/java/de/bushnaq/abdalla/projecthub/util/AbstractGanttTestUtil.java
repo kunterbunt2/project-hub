@@ -73,7 +73,6 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
     protected            Context           context;
     public final         DateTimeFormatter dtfymdhmss                = DateTimeFormatter.ofPattern("yyyy.MMM.dd HH:mm:ss.SSS");
     protected final      List<Throwable>   exceptions                = new ArrayList<>();
-    protected            Sprint            sprint;
     protected            String            testReferenceResultFolder = "test-reference-results";
     protected            String            testResultFolder          = "test-results";
 
@@ -84,7 +83,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
             Product product = addProduct("Product-" + i);
             Version version = addVersion(product, String.format("1.%d.0", i));
             Project project = addProject(version, String.format("Project-%d", i));
-            sprint = addSprint(project, sprintName);
+            addSprint(project, sprintName);
         }
         testProducts();
     }
@@ -182,19 +181,37 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         return dao;
     }
 
-    protected void generateBurndownChart(TestInfo testInfo) throws Exception {
-        generateBurndownChart(testInfo, 0, 36 * 20);
+    protected void generateBurndownChart(TestInfo testInfo, long sprintId) throws Exception {
+        generateBurndownChart(testInfo, sprintId, 0, 36 * 20);
     }
 
-    protected void generateBurndownChart(TestInfo testInfo, int width, int height) throws Exception {
-        initializeInstances();
+    protected void generateBurndownChart(TestInfo testInfo, long sprintId, int width, int height) throws Exception {
+//        initializeInstances();
+//        sprint.initialize();
+//        sprint.initUserMap(userApi.getAll(sprint.getId()));
+//        sprint.initTaskMap(taskApi.getAll(sprint.getId()), worklogApi.getAll(sprint.getId()));
+        Sprint sprint = sprintApi.getById(sprintId);
+        sprint.initialize();
+        sprint.initUserMap(userApi.getAll(sprintId));
+        sprint.initTaskMap(taskApi.getAll(sprintId), worklogApi.getAll(sprintId));
+        sprint.recalculate(ParameterOptions.getLocalNow());
+//        sprint.recalculate(ParameterOptions.getLocalNow());
         RenderDao     dao         = createRenderDao(context, sprint, TestInfoUtil.getTestMethodName(testInfo), ParameterOptions.getLocalNow(), width, height,  /*urlPrefix +*/ "sprint-" + sprint.getId() + "/sprint.html");
         BurnDownChart chart       = new BurnDownChart("/", dao);
         String        description = testInfo.getDisplayName().replace("_", "-");
         chart.render(Util.generateCopyrightString(ParameterOptions.getLocalNow()), description, testResultFolder);
     }
 
-    protected void generateGanttChart(TestInfo testInfo, ProjectFile projectFile) throws Exception {
+    private String generateFeatureName(int t) {
+        return String.format("Feature-%d", t);
+    }
+
+    protected void generateGanttChart(TestInfo testInfo, long sprintId, ProjectFile projectFile) throws Exception {
+        Sprint sprint = sprintApi.getById(sprintId);
+        sprint.initialize();
+        sprint.initUserMap(userApi.getAll(sprintId));
+        sprint.initTaskMap(taskApi.getAll(sprintId), worklogApi.getAll(sprintId));
+        sprint.recalculate(ParameterOptions.getLocalNow());
         GanttChart chart = new GanttChart(context, "", "/", "Gantt Chart", TestInfoUtil.getTestMethodName(testInfo) + "-gant-chart", exceptions, ParameterOptions.getLocalNow(), false, sprint/*, 1887, 1000*/, "scheduleWithMargin", context.parameters.graphicsTheme);
 //        String     description = testCaseInfo.getDisplayName().replace("_", "-");
         String description = TestInfoUtil.getTestMethodName(testInfo);
@@ -205,6 +222,54 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
     protected void generateOneProduct(TestInfo testInfo) throws Exception {
         ParameterOptions.now = OffsetDateTime.parse("2025-01-01T08:00:00+01:00");
         addOneProduct(generateTestCaseName(testInfo));
+    }
+
+    protected void generateProducts(TestInfo testInfo, RandomCase randomCase) throws Exception {
+        random.setSeed(randomCase.getSeed());
+        expectedUsers.clear();
+        addRandomUsers(randomCase.getMaxNumberOfUsers());
+        {
+            int numberOfProducts = random.nextInt(randomCase.getMaxNumberOfProducts()) + 1;
+            for (int productIndex = 0; productIndex < numberOfProducts; productIndex++) {
+                Product product          = addProduct(nameGenerator.generateProductName(productIndex));
+                int     numberOfVersions = random.nextInt(randomCase.getMaxNumberOfVersions()) + 1;
+                for (int versionIndex = 0; versionIndex < numberOfVersions; versionIndex++) {
+                    Version version          = addVersion(product, String.format("1.%d.0", 0));
+                    int     numberOfProjects = random.nextInt(randomCase.getMaxNumberOfProjects()) + 1;
+                    for (int projectIndex = 0; projectIndex < numberOfProjects; projectIndex++) {
+                        Project project         = addProject(version, nameGenerator.generateProjectName(projectIndex));
+                        int     numberOfSprints = random.nextInt(randomCase.getMaxNumberOfSprints()) + 1;
+                        for (int sprintIndex = 0; sprintIndex < numberOfSprints; sprintIndex++) {
+                            generateSprint(testInfo, randomCase, project);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void generateSprint(TestInfo testInfo, RandomCase randomCase, Project project) throws Exception {
+        int    numberOfUsers    = random.nextInt(randomCase.getMaxNumberOfUsers()) + 1;
+        int    numberOfFeatures = random.nextInt(randomCase.getMaxNumberOfFeatures()) + 1;
+        int    numberOfTasks    = random.nextInt(randomCase.getMaxNumberOfWork()) + 1;
+        Sprint savedSprint      = addRandomSprint(project);
+        Sprint sprint           = sprintApi.getById(savedSprint.getId());
+        Task   startMilestone   = addTask(sprint, null, "Start", LocalDateTime.parse("2024-12-15T08:00:00"), Duration.ZERO, null, null, TaskMode.MANUALLY_SCHEDULED, true);
+        for (int f = 0; f < numberOfFeatures; f++) {
+            String featureName = generateFeatureName(f);
+            Task   feature     = addParentTask(featureName, sprint, null, startMilestone);
+            for (int t = 0; t < numberOfTasks; t++) {
+                User   user     = expectedUsers.stream().toList().get(random.nextInt(numberOfUsers));
+                String duration = String.format("%dd", random.nextInt(randomCase.getMaxDurationDays()) + 1);
+                String workName = generateWorkName(featureName, t);
+                addTask(workName, duration, user, sprint, feature, null);
+            }
+        }
+        sprint.initialize();
+        sprint.initUserMap(userApi.getAll(sprint.getId()));
+        sprint.initTaskMap(taskApi.getAll(sprint.getId()), worklogApi.getAll(sprint.getId()));
+        levelResources(testInfo, sprint, null);
+        generateWorklogs(sprint, ParameterOptions.getLocalNow());
     }
 
     protected String generateTestCaseName(TestInfo testInfo) {
@@ -228,7 +293,12 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         }
     }
 
-    protected void generateWorklogs(LocalDateTime now) {
+    private static String generateWorkName(String featureName, int t) {
+        String[] workNames = new String[]{"pre-planning", "planning", "analysis", "design", "implementation", "module test", "Functional Test", "System Test", "debugging", "deployment"};
+        return String.format("%s-%s", featureName, workNames[t]);
+    }
+
+    protected void generateWorklogs(Sprint sprint, LocalDateTime now) {
         final long SECONDS_PER_WORKING_DAY = 75 * 6 * 60;
         final long SECONDS_PER_HOUR        = 60 * 60;
         long       oneDay                  = 75 * SECONDS_PER_HOUR / 10;
@@ -298,8 +368,6 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         gc.allWorklogs = worklogApi.getAll();
         gc.initialize();
 
-        sprint = gc.allProducts.getFirst().getVersions().getFirst().getProjects().getFirst().getSprints().getFirst();
-        sprint.recalculate(ParameterOptions.getLocalNow());
         return gc;
     }
 
@@ -310,7 +378,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         return task.getID() != 0 && task.getUniqueID() != null && task.getName() != null && task.getStart() != null && task.getFinish() != null && (task.getID() != 1);
     }
 
-    protected void levelResources(TestInfo testInfo, ProjectFile projectFile) throws Exception {
+    protected void levelResources(TestInfo testInfo, Sprint sprint, ProjectFile projectFile) throws Exception {
         initializeInstances();
         GanttUtil         ganttUtil = new GanttUtil(context);
         GanttErrorHandler eh        = new GanttErrorHandler();
@@ -321,11 +389,11 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
             taskApi.update(task);
         });
         sprintApi.update(sprint);
-        printTables();
+//        printTables();
         initializeInstances();
         if (projectFile == null) {
-            storeExpectedResult(testInfo);
-            storeResult(testInfo);
+            storeExpectedResult(testInfo, sprint);
+            storeResult(testInfo, sprint);
         }
     }
 
@@ -438,7 +506,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         new File(testReferenceResultFolder).mkdirs();
     }
 
-    private void store(String directory, TestInfo testInfo, boolean overwrite) throws IOException {
+    private void store(String directory, TestInfo testInfo, Sprint sprint, boolean overwrite) throws IOException {
         Path filePath = Paths.get(directory, TestInfoUtil.getTestMethodName(testInfo) + ".json");
         if (overwrite || !Files.exists(filePath)) {
             Map<String, Object> container = new LinkedHashMap<>();
@@ -451,12 +519,12 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         }
     }
 
-    private void storeExpectedResult(TestInfo testCaseInfo) throws IOException {
-        store(testResultFolder, testCaseInfo, true);
+    private void storeExpectedResult(TestInfo testCaseInfo, Sprint sprint) throws IOException {
+        store(testResultFolder, testCaseInfo, sprint, true);
     }
 
-    private void storeResult(TestInfo testCaseInfo) throws IOException {
-        store(testReferenceResultFolder, testCaseInfo, false);
+    private void storeResult(TestInfo testCaseInfo, Sprint sprint) throws IOException {
+        store(testReferenceResultFolder, testCaseInfo, sprint, false);
     }
 
     @Override

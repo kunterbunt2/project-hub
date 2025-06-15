@@ -27,9 +27,6 @@ import de.bushnaq.abdalla.util.date.DateUtil;
 import jakarta.annotation.PostConstruct;
 import net.sf.mpxj.ProjectCalendar;
 import net.sf.mpxj.ProjectCalendarException;
-import org.ajbrown.namemachine.Name;
-import org.ajbrown.namemachine.NameGenerator;
-import org.ajbrown.namemachine.NameGeneratorOptions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
@@ -65,7 +62,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     protected           List<Version>         expectedVersions          = new ArrayList<>();
     protected           List<Worklog>         expectedWorklogs          = new ArrayList<>();
     protected           LocationApi           locationApi;
-    private             List<Name>            names;
+    protected           NameGenerator         nameGenerator             = new NameGenerator();
     @Autowired
     protected           ObjectMapper          objectMapper;
     protected           OffDayApi             offDayApi;
@@ -249,7 +246,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         User user1 = addRandomUser();
 
         for (int i = 0; i < count; i++) {
-            Product product = addProduct(generateProductName(productIndex));
+            Product product = addProduct(nameGenerator.generateProductName(productIndex));
             Version version = addVersion(product, String.format("1.%d.0", i));
             Project project = addRandomProject(version);
             Sprint  sprint  = addRandomSprint(project);
@@ -261,7 +258,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     }
 
     protected Project addRandomProject(Version version) {
-        return addProject(version, generateProjectName(projectIndex));
+        return addProject(version, nameGenerator.generateProjectName(projectIndex));
     }
 
     protected Sprint addRandomSprint(Project project) {
@@ -276,7 +273,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
      * @return the created User object
      */
     protected User addRandomUser(LocalDate firstDate) {
-        String       name  = generateUserName(userIndex);
+        String       name  = nameGenerator.generateUserName(userIndex);
         String       email = name + PROJECT_HUB_ORG;
         User         saved = addUser(name, email, "de", "nw", firstDate, generateUserColor(userIndex), 0.7f);
         GanttContext gc    = new GanttContext();
@@ -294,7 +291,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
      * @return the created User object
      */
     protected User addRandomUser() {
-        String    name      = generateUserName(userIndex);
+        String    name      = nameGenerator.generateUserName(userIndex);
         String    email     = name + PROJECT_HUB_ORG;
         LocalDate firstDate = ParameterOptions.now.toLocalDate();
 
@@ -316,7 +313,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
      * @return the created User object
      */
     protected User addRandomUser(int index, float availability) {
-        String       name      = generateUserName(index);
+        String       name      = nameGenerator.generateUserName(index);
         String       email     = name + PROJECT_HUB_ORG;
         LocalDate    firstDate = ParameterOptions.now.toLocalDate().minusYears(1);
         User         saved     = addUser(name, email, "de", "nw", firstDate, generateUserColor(userIndex), availability);
@@ -337,7 +334,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
      */
     protected void addRandomUsers(int count) {
         for (int i = 0; i < count; i++) {
-            String       name      = generateUserName(userIndex);
+            String       name      = nameGenerator.generateUserName(userIndex);
             String       email     = name + PROJECT_HUB_ORG;
             LocalDate    firstDate = ParameterOptions.now.toLocalDate().minusYears(1);
             User         saved     = addUser(name, email, "de", "nw", firstDate, generateUserColor(userIndex), 0.5f);
@@ -357,7 +354,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
      * @return the created Version object
      */
     protected Version addRandomVersion(Product product) {
-        return addVersion(product, generateVersionName());
+        return addVersion(product, nameGenerator.generateVersionName(versionIndex));
     }
 
     protected Sprint addSprint(Project project, String sprintName) {
@@ -502,14 +499,6 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         versionIndex = 0;
     }
 
-    protected static String generateProductName(int index) {
-        return String.format("Product-%d", index);
-    }
-
-    private static String generateProjectName(int index) {
-        return String.format("Project-%d", index);
-    }
-
     private void generateRandomOffDays(User saved, LocalDate employmentDate) {
         int employmentYear = employmentDate.getYear();
         for (int yearIndex = 0; yearIndex < 2; yearIndex++) {
@@ -526,16 +515,8 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         return GraphicsLightTheme.KELLY_COLORS[index];
     }
 
-    private String generateUserName(int userIndex) {
-        return names.get(userIndex).getFirstName() + " " + names.get(userIndex).getLastName();
-    }
-
     private static int generateUserYearSeed(User saved, int year) {
         return (saved.getName() + year).hashCode();
-    }
-
-    private static String generateVersionName() {
-        return String.format("1.%d.0", versionIndex);
     }
 
     private LocalDate getNextWorkingDay(ProjectCalendar calendar, LocalDate start, int workingDays) {
@@ -573,11 +554,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
 
     @PostConstruct
     protected void postConstruct() {
-        NameGeneratorOptions options = new NameGeneratorOptions();
         ParameterOptions.now = OffsetDateTime.parse("2025-01-01T08:00:00+01:00");
-        options.setRandomSeed(123L);//Get deterministic results by setting a random seed.
-        NameGenerator generator = new NameGenerator(options);
-        names = generator.generateNames(1000);
 
         // Set the correct port after injection
         String baseUrl = "http://localhost:" + port + "/api";

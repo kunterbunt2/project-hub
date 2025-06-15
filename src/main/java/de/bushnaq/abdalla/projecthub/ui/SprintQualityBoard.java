@@ -56,11 +56,11 @@ import java.util.function.Function;
 // Create a utility method for generating two-part cells
 
 
-@Route("sprint")
-@PageTitle("Sprint Page")
+@Route("sprint-quality-board")
+@PageTitle("Sprint Quality Board")
 //@Menu(order = 1, icon = "vaadin:factory", title = "project List")
 @PermitAll // When security is enabled, allow all authenticated users
-public class SprintView extends Main implements AfterNavigationObserver {
+public class SprintQualityBoard extends Main implements AfterNavigationObserver {
     public static final String        BURNDOWN_CHART          = "burndown-chart";
     public static final String        GANTT_CHART             = "gantt-chart";
     public static final String        SPRINT_GRID_NAME_PREFIX = "sprint-grid-name-";
@@ -81,7 +81,7 @@ public class SprintView extends Main implements AfterNavigationObserver {
     private             Long          versionId;
     private final       WorklogApi    worklogApi;
 
-    public SprintView(WorklogApi worklogApi, TaskApi taskApi, SprintApi sprintApi, UserApi userApi, Clock clock) {
+    public SprintQualityBoard(WorklogApi worklogApi, TaskApi taskApi, SprintApi sprintApi, UserApi userApi, Clock clock) {
         created         = LocalDateTime.now(clock);
         this.worklogApi = worklogApi;
         this.taskApi    = taskApi;
@@ -90,7 +90,7 @@ public class SprintView extends Main implements AfterNavigationObserver {
         this.clock      = clock;
         this.now        = LocalDateTime.now(clock);
 
-        pageTitle = new H2("Projects");
+        pageTitle = new H2("Sprint Quality Board");
         pageTitle.addClassNames(
                 LumoUtility.Margin.Top.MEDIUM,
                 LumoUtility.Margin.Bottom.SMALL
@@ -122,6 +122,7 @@ public class SprintView extends Main implements AfterNavigationObserver {
         sprint.initialize();
         sprint.initUserMap(userApi.getAll(sprintId));
         sprint.initTaskMap(taskApi.getAll(sprintId), worklogApi.getAll(sprintId));
+        sprint.recalculate(ParameterOptions.getLocalNow());
 
         pageTitle.setText(sprint.getName());
         //- update breadcrumbs

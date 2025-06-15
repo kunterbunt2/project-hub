@@ -688,6 +688,15 @@ public class SeleniumHandler {
         i.click();
     }
 
+    public void wait(int milliseconds) {
+        try {
+            Thread.sleep(milliseconds);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.error("Thread interrupted while waiting", e);
+        }
+    }
+
     public void waitForElementToBeClickable(String id) {
         waitUntil(ExpectedConditions.elementToBeClickable(By.id(id)));
     }
