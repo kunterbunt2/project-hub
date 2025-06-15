@@ -51,17 +51,17 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
     private       LocalDateTime   end;
     @JsonIgnore
     public        List<Throwable> exceptions  = new ArrayList<>();
+    @JsonIgnore
+    @ToString.Exclude//help intellij debugger not to go into a loop
+    private       Feature         feature;
+    private       Long            featureId;
     private       Long            id;
     private       String          name;
     @JsonSerialize(using = DurationSerializer.class)
     @JsonDeserialize(using = DurationDeserializer.class)
     private       Duration        originalEstimation;
     @JsonIgnore
-    @ToString.Exclude//help intellij debugger not to go into a loop
-    private       Project         project;
-    @JsonIgnore
     private final ProjectFile     projectFile = new ProjectFile();
-    private       Long            projectId;
     private       LocalDateTime   releaseDate;//calculated from the task work, worklogs and remaining work
     @JsonSerialize(using = DurationSerializer.class)
     @JsonDeserialize(using = DurationDeserializer.class)

@@ -30,7 +30,7 @@ import java.util.Objects;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
-public class Project extends AbstractTimeAware implements Comparable<Project> {
+public class Feature extends AbstractTimeAware implements Comparable<Feature> {
     private Long   id;
     private String name;
 
@@ -45,12 +45,12 @@ public class Project extends AbstractTimeAware implements Comparable<Project> {
     private Long versionId;
 
     public void addSprint(Sprint sprint) {
-        sprint.setProject(this);
+        sprint.setFeature(this);
         sprints.add(sprint);
     }
 
     @Override
-    public int compareTo(Project other) {
+    public int compareTo(Feature other) {
         return this.id.compareTo(other.id);
     }
 
@@ -62,7 +62,7 @@ public class Project extends AbstractTimeAware implements Comparable<Project> {
     public void initialize(GanttContext gc) {
         sprints.clear();
         gc.allSprints.forEach(sprint -> {
-            if (Objects.equals(sprint.getProjectId(), id)) {
+            if (Objects.equals(sprint.getFeatureId(), id)) {
                 addSprint(sprint);
             }
         });

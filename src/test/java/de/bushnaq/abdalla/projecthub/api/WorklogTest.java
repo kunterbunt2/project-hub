@@ -51,8 +51,8 @@ public class WorklogTest extends AbstractEntityGenerator {
         for (int i = 0; i < 1; i++) {
             Product product = addProduct("Product " + i);
             Version version = addVersion(product, String.format("1.%d.0", i));
-            Project project = addRandomProject(version);
-            Sprint  sprint  = addRandomSprint(project);
+            Feature feature = addRandomFeature(version);
+            Sprint  sprint  = addRandomSprint(feature);
 
             Task    task1    = addTask(sprint, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
             Task    task2    = addTask(sprint, task1, "Design", LocalDateTime.now(), Duration.ofDays(4), user1, null);
@@ -76,8 +76,8 @@ public class WorklogTest extends AbstractEntityGenerator {
         for (int i = 0; i < 1; i++) {
             Product product  = addProduct("Product " + i);
             Version version  = addVersion(product, String.format("1.%d.0", i));
-            Project project  = addRandomProject(version);
-            Sprint  sprint   = addRandomSprint(project);
+            Feature feature  = addRandomFeature(version);
+            Sprint  sprint   = addRandomSprint(feature);
             Task    task1    = addTask(sprint, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
             Task    task2    = addTask(sprint, task1, "Design", LocalDateTime.now(), Duration.ofDays(4), user1, null);
             Worklog worklog1 = addWorklog(task2, user1, OffsetDateTime.now(), Duration.ofHours(2), "Design work 1");

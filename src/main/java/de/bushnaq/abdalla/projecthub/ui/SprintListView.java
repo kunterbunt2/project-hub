@@ -59,10 +59,10 @@ public class SprintListView extends Main implements AfterNavigationObserver {
     public static final String       SPRINT_GRID_NAME_PREFIX          = "sprint-grid-name-";
     public static final String       SPRINT_LIST_PAGE_TITLE           = "sprint-list-page-title";
     private final       Clock        clock;
+    private             Long         featureId;
     private final       Grid<Sprint> grid;
     private final       H2           pageTitle;
     private             Long         productId;
-    private             Long         projectId;
     private final       SprintApi    sprintApi;
     private             Long         versionId;
 
@@ -145,7 +145,7 @@ public class SprintListView extends Main implements AfterNavigationObserver {
             Map<String, String> params = new HashMap<>();
             params.put("product", String.valueOf(productId));
             params.put("version", String.valueOf(versionId));
-            params.put("project", String.valueOf(projectId));
+            params.put("feature", String.valueOf(featureId));
             params.put("sprint", String.valueOf(selectedSprint.getId()));
             //- Navigate with query parameters
             UI.getCurrent().navigate(
@@ -171,9 +171,9 @@ public class SprintListView extends Main implements AfterNavigationObserver {
         if (queryParameters.getParameters().containsKey("version")) {
             this.versionId = Long.parseLong(queryParameters.getParameters().get("version").getFirst());
         }
-        if (queryParameters.getParameters().containsKey("project")) {
-            this.projectId = Long.parseLong(queryParameters.getParameters().get("project").getFirst());
-            pageTitle.setText("Sprints of Project ID: " + projectId);
+        if (queryParameters.getParameters().containsKey("feature")) {
+            this.featureId = Long.parseLong(queryParameters.getParameters().get("feature").getFirst());
+            pageTitle.setText("Sprints of Feature ID: " + featureId);
         }
         //- update breadcrumbs
         getElement().getParent().getComponent()
@@ -190,13 +190,13 @@ public class SprintListView extends Main implements AfterNavigationObserver {
                             Map<String, String> params = new HashMap<>();
                             params.put("product", String.valueOf(productId));
                             params.put("version", String.valueOf(versionId));
-                            mainLayout.getBreadcrumbs().addItem("Projects", ProjectListView.class, params);
+                            mainLayout.getBreadcrumbs().addItem("Projects", FeatureListView.class, params);
                         }
                         {
                             Map<String, String> params = new HashMap<>();
                             params.put("product", String.valueOf(productId));
                             params.put("version", String.valueOf(versionId));
-                            params.put("project", String.valueOf(projectId));
+                            params.put("feature", String.valueOf(featureId));
                             mainLayout.getBreadcrumbs().addItem("Sprints", SprintListView.class, params);
                         }
                     }
@@ -228,7 +228,7 @@ public class SprintListView extends Main implements AfterNavigationObserver {
                 Notification.show("Sprint updated", 3000, Notification.Position.BOTTOM_START);
             } else {
                 // Create mode
-                savedSprint.setProjectId(projectId);
+                savedSprint.setFeatureId(featureId);
                 sprintApi.persist(savedSprint);
                 Notification.show("Sprint created", 3000, Notification.Position.BOTTOM_START);
             }
@@ -239,8 +239,8 @@ public class SprintListView extends Main implements AfterNavigationObserver {
 
     private void refreshGrid() {
         // Only show sprints for the selected project
-        if (projectId != null) {
-            grid.setItems(sprintApi.getAll(projectId));
+        if (featureId != null) {
+            grid.setItems(sprintApi.getAll(featureId));
         } else {
             grid.setItems(sprintApi.getAll());
         }

@@ -35,16 +35,16 @@ public class MpxjUtil {
         return factor;
     }
 
-    public static java.time.Duration toJavaDuration(Duration projectDuration) {
-        if (projectDuration == null) {
+    public static java.time.Duration toJavaDuration(Duration duration) {
+        if (duration == null) {
             return null;
         }
-        long secondsDuration = Math.round(projectDuration.getDuration() * timeUnitToSeconds(projectDuration.getUnits()));
+        long secondsDuration = Math.round(duration.getDuration() * timeUnitToSeconds(duration.getUnits()));
         return java.time.Duration.ofSeconds(secondsDuration);
     }
 
-    public static Duration toMpjxDuration(java.time.Duration projectDuration) {
-        return Duration.getInstance(((double) projectDuration.getSeconds()) / 60, TimeUnit.MINUTES);
+    public static Duration toMpjxDuration(java.time.Duration duration) {
+        return Duration.getInstance(((double) duration.getSeconds()) / 60, TimeUnit.MINUTES);
     }
 
 }

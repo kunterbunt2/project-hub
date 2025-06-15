@@ -33,10 +33,10 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-import de.bushnaq.abdalla.projecthub.dto.Project;
-import de.bushnaq.abdalla.projecthub.rest.api.ProjectApi;
+import de.bushnaq.abdalla.projecthub.dto.Feature;
+import de.bushnaq.abdalla.projecthub.rest.api.FeatureApi;
 import de.bushnaq.abdalla.projecthub.ui.common.ConfirmDialog;
-import de.bushnaq.abdalla.projecthub.ui.common.ProjectDialog;
+import de.bushnaq.abdalla.projecthub.ui.common.FeatureDialog;
 import de.bushnaq.abdalla.projecthub.ui.view.MainLayout;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
@@ -47,27 +47,26 @@ import java.time.format.FormatStyle;
 import java.util.HashMap;
 import java.util.Map;
 
-@Route("project-list")
-@PageTitle("Project List Page")
-//@Menu(order = 1, icon = "vaadin:factory", title = "project List")
+@Route("feature-list")
+@PageTitle("Feature List Page")
 @PermitAll // When security is enabled, allow all authenticated users
 @RolesAllowed({"USER", "ADMIN"}) // Restrict access to users with specific roles
-public class ProjectListView extends Main implements AfterNavigationObserver {
-    public static final String        CREATE_PROJECT_BUTTON_ID          = "create-project-button";
-    public static final String        DELETE_PROJECT_BUTTON_ID          = "delete-project-button";
-    public static final String        EDIT_PROJECT_BUTTON_ID            = "edit-project-button";
-    public static final String        PROJECT_GRID_ACTION_BUTTON_PREFIX = "project-grid-action-button-prefix-";
-    public static final String        PROJECT_GRID_DELETE_BUTTON_PREFIX = "project-grid-delete-button-prefix-";
-    public static final String        PROJECT_GRID_EDIT_BUTTON_PREFIX   = "project-grid-edit-button-prefix-";
-    public static final String        PROJECT_GRID_NAME_PREFIX          = "project-grid-name-";
-    private final       Grid<Project> grid;
+public class FeatureListView extends Main implements AfterNavigationObserver {
+    public static final String        CREATE_FEATURE_BUTTON_ID          = "create-feature-button";
+    public static final String        DELETE_FEATURE_BUTTON_ID          = "delete-feature-button";
+    public static final String        EDIT_FEATURE_BUTTON_ID            = "edit-feature-button";
+    public static final String        FEATURE_GRID_ACTION_BUTTON_PREFIX = "feature-grid-action-button-prefix-";
+    public static final String        FEATURE_GRID_DELETE_BUTTON_PREFIX = "feature-grid-delete-button-prefix-";
+    public static final String        FEATURE_GRID_EDIT_BUTTON_PREFIX   = "feature-grid-edit-button-prefix-";
+    public static final String        FEATURE_GRID_NAME_PREFIX          = "feature-grid-name-";
+    private final       FeatureApi    featureApi;
+    private final       Grid<Feature> grid;
     private final       H2            pageTitle;
     private             Long          productId;
-    private final       ProjectApi    projectApi;
     private             Long          versionId;
 
-    public ProjectListView(ProjectApi projectApi, Clock clock) {
-        this.projectApi = projectApi;
+    public FeatureListView(FeatureApi featureApi, Clock clock) {
+        this.featureApi = featureApi;
 
         // Create header layout with title and create button
         HorizontalLayout headerLayout = new HorizontalLayout();
@@ -76,46 +75,46 @@ public class ProjectListView extends Main implements AfterNavigationObserver {
         headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
         headerLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
 
-        pageTitle = new H2("Projects");
+        pageTitle = new H2("Features");
         pageTitle.addClassNames(
                 LumoUtility.Margin.Top.MEDIUM,
                 LumoUtility.Margin.Bottom.SMALL
         );
 
-        // Create button for adding new projects
+        // Create button for adding new Features
         Button createButton = new Button("Create", new Icon(VaadinIcon.PLUS));
-        createButton.setId(CREATE_PROJECT_BUTTON_ID);
+        createButton.setId(CREATE_FEATURE_BUTTON_ID);
         createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        createButton.addClickListener(e -> openProjectDialog(null));
+        createButton.addClickListener(e -> openFeatureDialog(null));
 
         headerLayout.add(pageTitle, createButton);
 
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
         grid = new Grid<>();
-        grid.addColumn(Project::getKey).setHeader("Key");
-        grid.addColumn(new ComponentRenderer<>(project -> {
+        grid.addColumn(Feature::getKey).setHeader("Key");
+        grid.addColumn(new ComponentRenderer<>(feature -> {
             Div div    = new Div();
             Div square = new Div();
             square.setMinHeight("16px");
             square.setMaxHeight("16px");
             square.setMinWidth("16px");
             square.setMaxWidth("16px");
-//            square.getStyle().set("background-color", "#" + ColorUtil.colorToHtmlColor(project.getColor()));
+//            square.getStyle().set("background-color", "#" + ColorUtil.colorToHtmlColor(feature.getColor()));
             square.getStyle().set("float", "left");
             square.getStyle().set("margin", "1px");
             div.add(square);
-            div.add(project.getName());
-            div.setId(PROJECT_GRID_NAME_PREFIX + project.getName());
+            div.add(feature.getName());
+            div.setId(FEATURE_GRID_NAME_PREFIX + feature.getName());
             return div;
         })).setHeader("Name");
         grid.addColumn(version -> dateTimeFormatter.format(version.getCreated())).setHeader("Created");
         grid.addColumn(version -> dateTimeFormatter.format(version.getUpdated())).setHeader("Updated");
 
         // Add actions column with context menu
-        grid.addColumn(new ComponentRenderer<>(project -> {
+        grid.addColumn(new ComponentRenderer<>(feature -> {
             Button actionButton = new Button(new Icon(VaadinIcon.ELLIPSIS_DOTS_V));
-            actionButton.setId(PROJECT_GRID_ACTION_BUTTON_PREFIX + project.getName());
+            actionButton.setId(FEATURE_GRID_ACTION_BUTTON_PREFIX + feature.getName());
             actionButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
             actionButton.getElement().setAttribute("aria-label", "More options");
 
@@ -127,8 +126,8 @@ public class ProjectListView extends Main implements AfterNavigationObserver {
             contextMenu.setOpenOnClick(true);
             contextMenu.setTarget(actionButton);
 
-            contextMenu.addItem("Edit...", e -> openProjectDialog(project)).setId(PROJECT_GRID_EDIT_BUTTON_PREFIX + project.getName());
-            contextMenu.addItem("Delete...", e -> confirmDelete(project)).setId(PROJECT_GRID_DELETE_BUTTON_PREFIX + project.getName());
+            contextMenu.addItem("Edit...", e -> openFeatureDialog(feature)).setId(FEATURE_GRID_EDIT_BUTTON_PREFIX + feature.getName());
+            contextMenu.addItem("Delete...", e -> confirmDelete(feature)).setId(FEATURE_GRID_DELETE_BUTTON_PREFIX + feature.getName());
 
             return actionButton;
         })).setWidth("70px").setFlexGrow(0);
@@ -137,12 +136,12 @@ public class ProjectListView extends Main implements AfterNavigationObserver {
 
         //- Add click listener to navigate to SprintView with the selected version ID
         grid.addItemClickListener(event -> {
-            Project selectedProject = event.getItem();
+            Feature selectedFeature = event.getItem();
             //- Create parameters map
             Map<String, String> params = new HashMap<>();
             params.put("product", String.valueOf(productId));
             params.put("version", String.valueOf(versionId));
-            params.put("project", String.valueOf(selectedProject.getId()));
+            params.put("feature", String.valueOf(selectedFeature.getId()));
             //- Navigate with query parameters
             UI.getCurrent().navigate(
                     SprintListView.class,
@@ -166,7 +165,7 @@ public class ProjectListView extends Main implements AfterNavigationObserver {
         }
         if (queryParameters.getParameters().containsKey("version")) {
             this.versionId = Long.parseLong(queryParameters.getParameters().get("version").getFirst());
-            pageTitle.setText("Projects of Version " + versionId);
+            pageTitle.setText("Features of Version " + versionId);
         }
         //- update breadcrumbs
         getElement().getParent().getComponent()
@@ -183,7 +182,7 @@ public class ProjectListView extends Main implements AfterNavigationObserver {
                             Map<String, String> params = new HashMap<>();
                             params.put("product", String.valueOf(productId));
                             params.put("version", String.valueOf(versionId));
-                            mainLayout.getBreadcrumbs().addItem("Projects", ProjectListView.class, params);
+                            mainLayout.getBreadcrumbs().addItem("Features", FeatureListView.class, params);
                         }
                     }
                 });
@@ -192,46 +191,46 @@ public class ProjectListView extends Main implements AfterNavigationObserver {
         refreshGrid();
     }
 
-    private void confirmDelete(Project project) {
-        String message = "Are you sure you want to delete project \"" + project.getName() + "\"?";
+    private void confirmDelete(Feature feature) {
+        String message = "Are you sure you want to delete feature \"" + feature.getName() + "\"?";
         ConfirmDialog dialog = new ConfirmDialog(
                 "Confirm Delete",
                 message,
                 "Delete",
                 () -> {
-                    projectApi.deleteById(project.getId());
+                    featureApi.deleteById(feature.getId());
                     refreshGrid();
-                    Notification.show("Project deleted", 3000, Notification.Position.BOTTOM_START);
+                    Notification.show("Feature deleted", 3000, Notification.Position.BOTTOM_START);
                 }
         );
         dialog.open();
     }
 
-    private void openProjectDialog(Project project) {
-        new ProjectDialog(project, this::saveProject).open();
+    private void openFeatureDialog(Feature feature) {
+        new FeatureDialog(feature, this::saveFeature).open();
     }
 
     private void refreshGrid() {
         if (versionId != null) {
-            grid.setItems(projectApi.getAll(versionId));
+            grid.setItems(featureApi.getAll(versionId));
         } else {
-            grid.setItems(projectApi.getAll());
+            grid.setItems(featureApi.getAll());
         }
     }
 
-    private void saveProject(Project project) {
+    private void saveFeature(Feature feature) {
         try {
-            if (project.getId() == null) {
-                project.setVersionId(versionId);
-                projectApi.persist(project);
-                Notification.show("Project created", 3000, Notification.Position.BOTTOM_START);
+            if (feature.getId() == null) {
+                feature.setVersionId(versionId);
+                featureApi.persist(feature);
+                Notification.show("Feature created", 3000, Notification.Position.BOTTOM_START);
             } else {
-                projectApi.update(project);
-                Notification.show("Project updated", 3000, Notification.Position.BOTTOM_START);
+                featureApi.update(feature);
+                Notification.show("Feature updated", 3000, Notification.Position.BOTTOM_START);
             }
             refreshGrid();
         } catch (Exception e) {
-            Notification.show("Error saving project: " + e.getMessage(),
+            Notification.show("Error saving feature: " + e.getMessage(),
                     3000, Notification.Position.MIDDLE);
         }
     }

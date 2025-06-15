@@ -17,8 +17,8 @@
 
 package de.bushnaq.abdalla.projecthub.rest.controller;
 
-import de.bushnaq.abdalla.projecthub.dao.ProjectDAO;
-import de.bushnaq.abdalla.projecthub.repository.ProjectRepository;
+import de.bushnaq.abdalla.projecthub.dao.FeatureDAO;
+import de.bushnaq.abdalla.projecthub.repository.FeatureRepository;
 import de.bushnaq.abdalla.projecthub.repository.VersionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -28,51 +28,51 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/project")
-public class ProjectController {
+@RequestMapping("/api/feature")
+public class FeatureController {
 
     @Autowired
-    private ProjectRepository projectRepository;
+    private FeatureRepository featureRepository;
     @Autowired
     private VersionRepository versionRepository;
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public void delete(@PathVariable Long id) {
-        projectRepository.deleteById(id);
+        featureRepository.deleteById(id);
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    public ResponseEntity<ProjectDAO> get(@PathVariable Long id) {
-        return projectRepository.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<FeatureDAO> get(@PathVariable Long id) {
+        return featureRepository.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/version/{versionId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    public List<ProjectDAO> getAll(@PathVariable Long versionId) {
-        return projectRepository.findByVersionId(versionId);
+    public List<FeatureDAO> getAll(@PathVariable Long versionId) {
+        return featureRepository.findByVersionId(versionId);
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    public List<ProjectDAO> getAll() {
-        return projectRepository.findAll();
+    public List<FeatureDAO> getAll() {
+        return featureRepository.findAll();
     }
 
     @PostMapping()
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ProjectDAO> save(@RequestBody ProjectDAO project) {
+    public ResponseEntity<FeatureDAO> save(@RequestBody FeatureDAO project) {
         return versionRepository.findById(project.getVersionId()).map(version -> {
-            ProjectDAO save = projectRepository.save(project);
+            FeatureDAO save = featureRepository.save(project);
             return ResponseEntity.ok(save);
         }).orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping()
     @PreAuthorize("hasRole('ADMIN')")
-    public ProjectDAO update(@RequestBody ProjectDAO project) {
-        return projectRepository.save(project);
+    public FeatureDAO update(@RequestBody FeatureDAO project) {
+        return featureRepository.save(project);
     }
 }
 

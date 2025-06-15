@@ -44,20 +44,18 @@ import java.time.LocalDateTime;
 public class SprintDAO extends AbstractTimeAwareDAO {
     @Column(name = "end_date", nullable = true)  // renamed from 'end' as it is reserved in H2 databases
     private LocalDateTime end;
-
+    @Column(nullable = false)
+    private Long          featureId;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
-
     @Column(nullable = false)
     private String        name;
     @JsonSerialize(using = DurationSerializer.class)
     @JsonDeserialize(using = DurationDeserializer.class)
     @Column(nullable = true)
     private Duration      originalEstimation = Duration.ZERO;
-    @Column(nullable = false)
-    private Long          projectId;
     private LocalDateTime releaseDate;//calculated from the task work, worklogs and remaining work
     @JsonSerialize(using = DurationSerializer.class)
     @JsonDeserialize(using = DurationDeserializer.class)

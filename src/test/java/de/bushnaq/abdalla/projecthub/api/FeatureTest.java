@@ -17,7 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.api;
 
-import de.bushnaq.abdalla.projecthub.dto.Project;
+import de.bushnaq.abdalla.projecthub.dto.Feature;
 import de.bushnaq.abdalla.projecthub.util.AbstractEntityGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Transactional
-public class ProjectTest extends AbstractEntityGenerator {
+public class FeatureTest extends AbstractEntityGenerator {
     private static final long   FAKE_ID     = 999999L;
     private static final String SECOND_NAME = "SECOND_NAME";
 
@@ -55,33 +55,33 @@ public class ProjectTest extends AbstractEntityGenerator {
         }
 
         assertThrows(AuthenticationCredentialsNotFoundException.class, () -> {
-            addRandomProject(expectedVersions.getFirst());
+            addRandomFeature(expectedVersions.getFirst());
         });
 
         assertThrows(AuthenticationCredentialsNotFoundException.class, () -> {
-            List<Project> allProjects = projectApi.getAll();
+            List<Feature> allFeatures = featureApi.getAll();
         });
 
         {
-            Project project = expectedProjects.getFirst();
-            Long    id      = project.getId();
-            String  name    = project.getName();
-            project.setName(SECOND_NAME);
+            Feature feature = expectedFeatures.getFirst();
+            Long    id      = feature.getId();
+            String  name    = feature.getName();
+            feature.setName(SECOND_NAME);
             try {
-                updateProject(project);
+                updateFeature(feature);
                 fail("should not be able to update");
             } catch (AuthenticationCredentialsNotFoundException e) {
                 //restore fields to match db for later tests in @AfterEach
-                project.setName(name);
+                feature.setName(name);
             }
         }
 
         assertThrows(AuthenticationCredentialsNotFoundException.class, () -> {
-            removeProject(expectedProjects.get(0).getId());
+            removeFeature(expectedFeatures.get(0).getId());
         });
 
         assertThrows(AuthenticationCredentialsNotFoundException.class, () -> {
-            Project project = projectApi.getById(expectedProjects.getFirst().getId());
+            Feature feature = featureApi.getById(expectedFeatures.getFirst().getId());
         });
     }
 
@@ -96,7 +96,7 @@ public class ProjectTest extends AbstractEntityGenerator {
     public void delete() throws Exception {
         //create the users
         addRandomProducts(2);
-        removeProject(expectedProjects.getFirst().getId());
+        removeFeature(expectedFeatures.getFirst().getId());
     }
 
     @Test
@@ -104,7 +104,7 @@ public class ProjectTest extends AbstractEntityGenerator {
     public void deleteUsingFakeId() throws Exception {
         addRandomProducts(2);
         try {
-            removeProject(FAKE_ID);
+            removeFeature(FAKE_ID);
         } catch (ServerErrorException e) {
             //expected
         }
@@ -117,15 +117,15 @@ public class ProjectTest extends AbstractEntityGenerator {
             addRandomProducts(3);
             setUser("user", "ROLE_USER");
         }
-        List<Project> allProjects = projectApi.getAll();
-        assertEquals(3, allProjects.size());
+        List<Feature> allFeatures = featureApi.getAll();
+        assertEquals(3, allFeatures.size());
     }
 
     @Test
     @WithMockUser(roles = "USER")
     public void getAllEmpty() throws Exception {
-        List<Project> allProjects = projectApi.getAll();
-        assertEquals(0, allProjects.size());
+        List<Feature> allFeatures = featureApi.getAll();
+        assertEquals(0, allFeatures.size());
     }
 
     @Test
@@ -136,8 +136,8 @@ public class ProjectTest extends AbstractEntityGenerator {
             setUser("user", "ROLE_USER");
         }
         try {
-            projectApi.getById(FAKE_ID);
-            fail("Project should not exist");
+            featureApi.getById(FAKE_ID);
+            fail("Feature should not exist");
         } catch (ServerErrorException e) {
             //expected
         }
@@ -150,35 +150,35 @@ public class ProjectTest extends AbstractEntityGenerator {
             addRandomProducts(1);
             setUser("user", "ROLE_USER");
         }
-        Project project = projectApi.getById(expectedProjects.getFirst().getId());
-        assertProjectEquals(expectedProjects.getFirst(), project, true); // shallow test
+        Feature feature = featureApi.getById(expectedFeatures.getFirst().getId());
+        assertFeatureEquals(expectedFeatures.getFirst(), feature, true); // shallow test
     }
 
     @Test
     @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void update() throws Exception {
         addRandomProducts(2);
-        Project project = expectedProjects.getFirst();
-        project.setName(SECOND_NAME);
-        updateProject(project);
+        Feature feature = expectedFeatures.getFirst();
+        feature.setName(SECOND_NAME);
+        updateFeature(feature);
     }
 
     @Test
     @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void updateUsingFakeId() throws Exception {
         addRandomProducts(2);
-        Project project = expectedProjects.getFirst();
-        Long    id      = project.getId();
-        String  name    = project.getName();
-        project.setId(FAKE_ID);
-        project.setName(SECOND_NAME);
+        Feature feature = expectedFeatures.getFirst();
+        Long    id      = feature.getId();
+        String  name    = feature.getName();
+        feature.setId(FAKE_ID);
+        feature.setName(SECOND_NAME);
         try {
-            updateProject(project);
+            updateFeature(feature);
             fail("should not be able to update");
         } catch (ServerErrorException e) {
             //expected
-            project.setId(id);
-            project.setName(name);
+            feature.setId(id);
+            feature.setName(name);
         }
     }
 
@@ -191,24 +191,24 @@ public class ProjectTest extends AbstractEntityGenerator {
         }
 
         assertThrows(AccessDeniedException.class, () -> {
-            addRandomProject(expectedVersions.getFirst());
+            addRandomFeature(expectedVersions.getFirst());
         });
 
         {
-            Project project = expectedProjects.getFirst();
-            String  name    = project.getName();
-            project.setName(SECOND_NAME);
+            Feature feature = expectedFeatures.getFirst();
+            String  name    = feature.getName();
+            feature.setName(SECOND_NAME);
             try {
-                updateProject(project);
+                updateFeature(feature);
                 fail("should not be able to update");
             } catch (AccessDeniedException e) {
                 //restore fields to match db for later tests in @AfterEach
-                project.setName(name);
+                feature.setName(name);
             }
         }
 
         assertThrows(AccessDeniedException.class, () -> {
-            removeProject(expectedProjects.get(0).getId());
+            removeFeature(expectedFeatures.get(0).getId());
         });
     }
 }

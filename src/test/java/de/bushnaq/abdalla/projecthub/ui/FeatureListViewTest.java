@@ -18,8 +18,8 @@
 package de.bushnaq.abdalla.projecthub.ui;
 
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
+import de.bushnaq.abdalla.projecthub.util.FeatureViewTester;
 import de.bushnaq.abdalla.projecthub.util.ProductViewTester;
-import de.bushnaq.abdalla.projecthub.util.ProjectViewTester;
 import de.bushnaq.abdalla.projecthub.util.VersionViewTester;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Integration test for the ProjectListView UI component.
  * Tests create, edit, and delete operations for projects in the UI.
  * <p>
- * These tests use {@link ProjectViewTester} to interact with the UI elements
+ * These tests use {@link FeatureViewTester} to interact with the UI elements
  * and verify the expected behavior. Each test requires a product and version
  * to be created first, as projects exist within the context of a version.
  */
@@ -43,7 +43,9 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Transactional
-public class ProjectListViewTest extends AbstractUiTestUtil {
+public class FeatureListViewTest extends AbstractUiTestUtil {
+    @Autowired
+    private       FeatureViewTester featureViewTester;
     private final String            newProjectName = "NewProject-2";
     @LocalServerPort
     private       int               port;
@@ -51,8 +53,6 @@ public class ProjectListViewTest extends AbstractUiTestUtil {
     @Autowired
     private       ProductViewTester productViewTester;
     private final String            projectName    = "Project-2";
-    @Autowired
-    private       ProjectViewTester projectViewTester;
     private final String            versionName    = "Version-2";
     @Autowired
     private       VersionViewTester versionViewTester;
@@ -88,7 +88,7 @@ public class ProjectListViewTest extends AbstractUiTestUtil {
      */
     @Test
     public void testCreateCancel() throws Exception {
-        projectViewTester.createProjectCancel(projectName);
+        featureViewTester.createFeatureCancel(projectName);
     }
 
     /**
@@ -101,7 +101,7 @@ public class ProjectListViewTest extends AbstractUiTestUtil {
      */
     @Test
     public void testCreateConfirm() throws Exception {
-        projectViewTester.createProjectConfirm(projectName);
+        featureViewTester.createFeatureConfirm(projectName);
     }
 
     /**
@@ -114,8 +114,8 @@ public class ProjectListViewTest extends AbstractUiTestUtil {
      */
     @Test
     public void testDeleteCancel() throws Exception {
-        projectViewTester.createProjectConfirm(projectName);
-        projectViewTester.deleteProjectCancel(projectName);
+        featureViewTester.createFeatureConfirm(projectName);
+        featureViewTester.deleteFeatureCancel(projectName);
     }
 
     /**
@@ -128,8 +128,8 @@ public class ProjectListViewTest extends AbstractUiTestUtil {
      */
     @Test
     public void testDeleteConfirm() throws Exception {
-        projectViewTester.createProjectConfirm(projectName);
-        projectViewTester.deleteProjectConfirm(projectName);
+        featureViewTester.createFeatureConfirm(projectName);
+        featureViewTester.deleteFeatureConfirm(projectName);
     }
 
     /**
@@ -142,8 +142,8 @@ public class ProjectListViewTest extends AbstractUiTestUtil {
      */
     @Test
     public void testEditCancel() throws Exception {
-        projectViewTester.createProjectConfirm(projectName);
-        projectViewTester.editProjectCancel(projectName, newProjectName);
+        featureViewTester.createFeatureConfirm(projectName);
+        featureViewTester.editFeatureCancel(projectName, newProjectName);
     }
 
     /**
@@ -156,7 +156,7 @@ public class ProjectListViewTest extends AbstractUiTestUtil {
      */
     @Test
     public void testEditConfirm() throws Exception {
-        projectViewTester.createProjectConfirm(projectName);
-        projectViewTester.editProjectConfirm(projectName, newProjectName);
+        featureViewTester.createFeatureConfirm(projectName);
+        featureViewTester.editFeatureConfirm(projectName, newProjectName);
     }
 }

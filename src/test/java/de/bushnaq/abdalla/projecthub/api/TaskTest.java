@@ -55,8 +55,8 @@ public class TaskTest extends AbstractEntityGenerator {
             User    user1   = addRandomUser();
             Product product = addProduct("Product");
             Version version = addVersion(product, "1.0.0");
-            Project project = addRandomProject(version);
-            Sprint  sprint  = addRandomSprint(project);
+            Feature feature = addRandomFeature(version);
+            Sprint  sprint  = addRandomSprint(feature);
             Task    task    = addTask(sprint, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
 
             SecurityContextHolder.clearContext();
@@ -99,8 +99,8 @@ public class TaskTest extends AbstractEntityGenerator {
         for (int i = 0; i < 1; i++) {
             Product product = addProduct("Product " + i);
             Version version = addVersion(product, String.format("1.%d.0", i));
-            Project project = addRandomProject(version);
-            Sprint  sprint  = addRandomSprint(project);
+            Feature feature = addRandomFeature(version);
+            Sprint  sprint  = addRandomSprint(feature);
 
             Task task1 = addTask(sprint, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
             Task task2 = addTask(sprint, task1, "Design", LocalDateTime.now(), Duration.ofDays(4), user1, null);
@@ -119,8 +119,8 @@ public class TaskTest extends AbstractEntityGenerator {
         for (int i = 0; i < 1; i++) {
             Product product = addProduct("Product " + i);
             Version version = addVersion(product, String.format("1.%d.0", i));
-            Project project = addRandomProject(version);
-            Sprint  sprint  = addRandomSprint(project);
+            Feature feature = addRandomFeature(version);
+            Sprint  sprint  = addRandomSprint(feature);
             Task    task1   = addTask(sprint, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
             Task    task2   = addTask(sprint, task1, "Design", LocalDateTime.now(), Duration.ofDays(4), user1, null);
             Task    task3   = addTask(sprint, task1, "Implementation", LocalDateTime.now().plusDays(4), Duration.ofDays(6), user1, task1);
@@ -145,8 +145,8 @@ public class TaskTest extends AbstractEntityGenerator {
             User    user1   = addRandomUser();
             Product product = addProduct("Product");
             Version version = addVersion(product, "1.0.0");
-            Project project = addRandomProject(version);
-            Sprint  sprint  = addRandomSprint(project);
+            Feature feature = addRandomFeature(version);
+            Sprint  sprint  = addRandomSprint(feature);
             Task    task    = addTask(sprint, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
 
             setUser("user", "ROLE_USER");

@@ -64,26 +64,28 @@ import static org.junit.jupiter.api.Assertions.*;
 @Transactional
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class AbstractGanttTestUtil extends AbstractEntityGenerator {
-    private static final String            ANSI_BLUE                 = "\u001B[36m";
-    private static final String            ANSI_GREEN                = "\u001B[32m";
-    private static final String            ANSI_RED                  = "\u001B[31m";
-    private static final String            ANSI_RESET                = "\u001B[0m";    // Declaring ANSI_RESET so that we can reset the color
-    private static final String            ANSI_YELLOW               = "\u001B[33m";
+    private static final String                 ANSI_BLUE                 = "\u001B[36m";
+    private static final String                 ANSI_GREEN                = "\u001B[32m";
+    private static final String                 ANSI_RED                  = "\u001B[31m";
+    private static final String                 ANSI_RESET                = "\u001B[0m";    // Declaring ANSI_RESET so that we can reset the color
+    private static final String                 ANSI_YELLOW               = "\u001B[33m";
     @Autowired
-    protected            Context           context;
-    public final         DateTimeFormatter dtfymdhmss                = DateTimeFormatter.ofPattern("yyyy.MMM.dd HH:mm:ss.SSS");
-    protected final      List<Throwable>   exceptions                = new ArrayList<>();
-    protected            String            testReferenceResultFolder = "test-reference-results";
-    protected            String            testResultFolder          = "test-results";
+    protected            Context                context;
+    @Autowired
+    private              H2DatabaseStateManager databaseStateManager;
+    public final         DateTimeFormatter      dtfymdhmss                = DateTimeFormatter.ofPattern("yyyy.MMM.dd HH:mm:ss.SSS");
+    protected final      List<Throwable>        exceptions                = new ArrayList<>();
+    protected            String                 testReferenceResultFolder = "test-reference-results";
+    protected            String                 testResultFolder          = "test-results";
 
     protected void addOneProduct(String sprintName) {
         int count = 1;
 
         for (int i = 0; i < count; i++) {
-            Product product = addProduct("Product-" + i);
-            Version version = addVersion(product, String.format("1.%d.0", i));
-            Project project = addProject(version, String.format("Project-%d", i));
-            addSprint(project, sprintName);
+            Product product = addProduct(nameGenerator.generateProductName(i));
+            Version version = addVersion(product, nameGenerator.generateVersionName(i));
+            Feature feature = addFeature(version, nameGenerator.generateFeatureName(i));
+            addSprint(feature, sprintName);
         }
         testProducts();
     }
@@ -224,23 +226,23 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         addOneProduct(generateTestCaseName(testInfo));
     }
 
-    protected void generateProducts(TestInfo testInfo, RandomCase randomCase) throws Exception {
+    private void generateProductsI(TestInfo testInfo, RandomCase randomCase) throws Exception {
         random.setSeed(randomCase.getSeed());
         expectedUsers.clear();
         addRandomUsers(randomCase.getMaxNumberOfUsers());
         {
             int numberOfProducts = random.nextInt(randomCase.getMaxNumberOfProducts()) + 1;
-            for (int productIndex = 0; productIndex < numberOfProducts; productIndex++) {
+            for (int p = 0; p < numberOfProducts; p++) {
                 Product product          = addProduct(nameGenerator.generateProductName(productIndex));
                 int     numberOfVersions = random.nextInt(randomCase.getMaxNumberOfVersions()) + 1;
-                for (int versionIndex = 0; versionIndex < numberOfVersions; versionIndex++) {
-                    Version version          = addVersion(product, String.format("1.%d.0", 0));
-                    int     numberOfProjects = random.nextInt(randomCase.getMaxNumberOfProjects()) + 1;
-                    for (int projectIndex = 0; projectIndex < numberOfProjects; projectIndex++) {
-                        Project project         = addProject(version, nameGenerator.generateProjectName(projectIndex));
+                for (int v = 0; v < numberOfVersions; v++) {
+                    Version version          = addVersion(product, nameGenerator.generateVersionName(v));
+                    int     numberOfFeatures = random.nextInt(randomCase.getMaxNumberOfFeatures()) + 1;
+                    for (int f = 0; f < numberOfFeatures; f++) {
+                        Feature feature         = addFeature(version, nameGenerator.generateFeatureName(featureIndex));
                         int     numberOfSprints = random.nextInt(randomCase.getMaxNumberOfSprints()) + 1;
-                        for (int sprintIndex = 0; sprintIndex < numberOfSprints; sprintIndex++) {
-                            generateSprint(testInfo, randomCase, project);
+                        for (int s = 0; s < numberOfSprints; s++) {
+                            generateSprint(testInfo, randomCase, feature);
                         }
                     }
                 }
@@ -248,9 +250,31 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         }
     }
 
-    private void generateSprint(TestInfo testInfo, RandomCase randomCase, Project project) throws Exception {
+    protected void generateProductsIfNeeded(TestInfo testInfo, RandomCase randomCase) throws Exception {
+        String testCaseName = this.getClass().getName() + "-" + testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex();
+        // Create a snapshot name based on the test case
+        String snapshotName = "Demo-" + randomCase.getTestCaseIndex();
+        // Try to find and load an existing database snapshot
+        String  latestSnapshot = databaseStateManager.findLatestSnapshot(snapshotName);
+        boolean dataLoaded     = false;
+        if (latestSnapshot != null) {
+            logger.info("Found existing database snapshot: {}. Attempting to load...", latestSnapshot);
+            dataLoaded = databaseStateManager.importDatabaseSnapshot(latestSnapshot);
+        }
+        // If no snapshot was found or loading failed, generate data the regular way
+        if (!dataLoaded) {
+            logger.info("Generating fresh test data (this might take a few minutes)...");
+            generateProductsI(testInfo, randomCase);
+            // After successful data generation, export a snapshot for future test runs
+            databaseStateManager.exportDatabaseSnapshot(snapshotName);
+        } else {
+            logger.info("Successfully loaded test data from snapshot. Skipping data generation.");
+        }
+    }
+
+    private void generateSprint(TestInfo testInfo, RandomCase randomCase, Feature project) throws Exception {
         int    numberOfUsers    = random.nextInt(randomCase.getMaxNumberOfUsers()) + 1;
-        int    numberOfFeatures = random.nextInt(randomCase.getMaxNumberOfFeatures()) + 1;
+        int    numberOfFeatures = random.nextInt(randomCase.getMaxNumberOfStories()) + 1;
         int    numberOfTasks    = random.nextInt(randomCase.getMaxNumberOfWork()) + 1;
         Sprint savedSprint      = addRandomSprint(project);
         Sprint sprint           = sprintApi.getById(savedSprint.getId());
@@ -362,7 +386,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         gc.allUsers    = userApi.getAll();
         gc.allProducts = productApi.getAll();
         gc.allVersions = versionApi.getAll();
-        gc.allProjects = projectApi.getAll();
+        gc.allFeatures = featureApi.getAll();
         gc.allSprints  = sprintApi.getAll();
         gc.allTasks    = taskApi.getAll();
         gc.allWorklogs = worklogApi.getAll();

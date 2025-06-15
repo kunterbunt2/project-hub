@@ -58,7 +58,6 @@ import java.util.function.Function;
 
 @Route("sprint-quality-board")
 @PageTitle("Sprint Quality Board")
-//@Menu(order = 1, icon = "vaadin:factory", title = "project List")
 @PermitAll // When security is enabled, allow all authenticated users
 public class SprintQualityBoard extends Main implements AfterNavigationObserver {
     public static final String        BURNDOWN_CHART          = "burndown-chart";
@@ -68,11 +67,11 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
     @Autowired
     protected           Context       context;
     private final       LocalDateTime created;
+    private             Long          featureId;
     final               Logger        logger                  = LoggerFactory.getLogger(this.getClass());
     private final       LocalDateTime now;
     private final       H2            pageTitle;
     private             Long          productId;
-    private             Long          projectId;
     private             Sprint        sprint;
     private final       SprintApi     sprintApi;
     private             Long          sprintId;
@@ -111,8 +110,8 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
         if (queryParameters.getParameters().containsKey("version")) {
             this.versionId = Long.parseLong(queryParameters.getParameters().get("version").getFirst());
         }
-        if (queryParameters.getParameters().containsKey("project")) {
-            this.projectId = Long.parseLong(queryParameters.getParameters().get("project").getFirst());
+        if (queryParameters.getParameters().containsKey("feature")) {
+            this.featureId = Long.parseLong(queryParameters.getParameters().get("feature").getFirst());
         }
         if (queryParameters.getParameters().containsKey("sprint")) {
             this.sprintId = Long.parseLong(queryParameters.getParameters().get("sprint").getFirst());
@@ -140,20 +139,20 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
                             Map<String, String> params = new HashMap<>();
                             params.put("product", String.valueOf(productId));
                             params.put("version", String.valueOf(versionId));
-                            mainLayout.getBreadcrumbs().addItem("Projects", ProjectListView.class, params);
+                            mainLayout.getBreadcrumbs().addItem("Features", FeatureListView.class, params);
                         }
                         {
                             Map<String, String> params = new HashMap<>();
                             params.put("product", String.valueOf(productId));
                             params.put("version", String.valueOf(versionId));
-                            params.put("project", String.valueOf(projectId));
+                            params.put("FEATURE", String.valueOf(featureId));
                             mainLayout.getBreadcrumbs().addItem("Sprints", SprintListView.class, params);
                         }
                         {
                             Map<String, String> params = new HashMap<>();
                             params.put("product", String.valueOf(productId));
                             params.put("version", String.valueOf(versionId));
-                            params.put("project", String.valueOf(projectId));
+                            params.put("FEATURE", String.valueOf(featureId));
                             params.put("sprint", String.valueOf(sprintId));
                             mainLayout.getBreadcrumbs().addItem("Tasks", TaskListView.class, params);
                         }

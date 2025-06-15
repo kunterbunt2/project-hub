@@ -47,9 +47,9 @@ import java.util.List;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class SprintQualityBoardTest extends AbstractUiTestUtil {
     @Autowired
-    private ProductViewTester productViewTester;
+    private FeatureViewTester featureViewTester;
     @Autowired
-    private ProjectViewTester projectViewTester;
+    private ProductViewTester productViewTester;
     @Autowired
     private SeleniumHandler   seleniumHandler;
     @Autowired
@@ -64,14 +64,14 @@ public class SprintQualityBoardTest extends AbstractUiTestUtil {
     private void generateTasks(RandomCase randomCase) {
         random.setSeed(randomCase.getSeed());
         int numberOfUsers    = random.nextInt(randomCase.getMaxNumberOfUsers()) + 2;
-        int numberOfFeatures = random.nextInt(randomCase.getMaxNumberOfFeatures()) + 1;
+        int numberOfFeatures = random.nextInt(randomCase.getMaxNumberOfStories()) + 1;
         int numberOfTasks    = random.nextInt(randomCase.getMaxNumberOfWork()) + 1;
         {
             addRandomUsers(numberOfUsers);
-            Product product = addProduct("Product-" + 1);
-            Version version = addVersion(product, String.format("1.%d.0", 0));
-            Project project = addRandomProject(version);
-            addRandomSprint(project);
+            Product product = addProduct(nameGenerator.generateProductName(0));
+            Version version = addVersion(product, nameGenerator.generateVersionName(0));
+            Feature feature = addFeature(version, nameGenerator.generateFeatureName(0));
+            addSprint(feature, nameGenerator.generateSprintName(0));
         }
         Sprint sprint = expectedSprints.getFirst();
 
@@ -117,10 +117,10 @@ public class SprintQualityBoardTest extends AbstractUiTestUtil {
         levelResources(testInfo, sprint, null);
         generateWorklogs(sprint, ParameterOptions.getLocalNow());
         productViewTester.switchToProductListView();
-        productViewTester.selectProduct("Product-1");
-        versionViewTester.selectVersion("1.0.0");
-        projectViewTester.selectProject("Project-0");
-        sprintViewTester.selectSprint("sprint-0");
+        productViewTester.selectProduct(nameGenerator.generateProductName(0));
+        versionViewTester.selectVersion(nameGenerator.generateVersionName(0));
+        featureViewTester.selectFeature(nameGenerator.generateFeatureName(0));
+        sprintViewTester.selectSprint(nameGenerator.generateSprintName(0));
         if (DebugUtil.DEBUG) {
             seleniumHandler.waitUntilBrowserClosed(0);
         } else {

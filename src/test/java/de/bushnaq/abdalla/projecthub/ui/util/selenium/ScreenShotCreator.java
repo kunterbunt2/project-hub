@@ -78,8 +78,15 @@ public class ScreenShotCreator {
                         size.getHeight()
                 );
 
+                // Ensure the directory exists
+                File file = new File(fileName);
+                File dir  = file.getParentFile();
+                if (dir != null && !dir.exists()) {
+                    dir.mkdirs();
+                }
+
                 // Save the cropped image
-                ImageIO.write(elementImg, "png", new File(fileName));
+                ImageIO.write(elementImg, "png", file);
                 logger.info("Dialog screenshot saved to: {}", fileName);
             } else {
                 logger.warn("Could not find overlay element for dialog: {}", dialogId);

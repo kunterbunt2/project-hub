@@ -15,13 +15,30 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.repository;
+package de.bushnaq.abdalla.projecthub.dao;
 
-import de.bushnaq.abdalla.projecthub.dao.ProjectDAO;
-import org.springframework.data.repository.ListCrudRepository;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.Proxy;
 
-import java.util.List;
+@Entity
+@Table(name = "feature")
+@Getter
+@Setter
+@NoArgsConstructor
+@ToString(callSuper = true)
+@EqualsAndHashCode(of = {"id"}, callSuper = false)
+@Proxy(lazy = false)
+public class FeatureDAO extends AbstractTimeAwareDAO {
 
-public interface ProjectRepository extends ListCrudRepository<ProjectDAO, Long> {
-    List<ProjectDAO> findByVersionId(Long versionId);
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false)
+    private Long versionId;
 }

@@ -63,7 +63,7 @@ public class CalendarTest extends AbstractGanttTestUtil {
         gc.allUsers    = userApi.getAll();
         gc.allProducts = productApi.getAll();
         gc.allVersions = versionApi.getAll();
-        gc.allProjects = projectApi.getAll();
+        gc.allFeatures = featureApi.getAll();
         gc.allSprints  = sprintApi.getAll();
         gc.allTasks    = taskApi.getAll();
         gc.allWorklogs = worklogApi.getAll();

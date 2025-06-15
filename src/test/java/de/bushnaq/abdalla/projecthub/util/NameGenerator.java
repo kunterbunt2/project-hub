@@ -20,28 +20,70 @@ package de.bushnaq.abdalla.projecthub.util;
 import org.ajbrown.namemachine.Name;
 import org.ajbrown.namemachine.NameGeneratorOptions;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class NameGenerator {
-    private final String[]   productNames = new String[]{};
-    private final List<Name> userNames;
+    private static final Logger       logger = Logger.getLogger(NameGenerator.class.getName().toLowerCase());
+    private final        List<String> productNames;
+    private final        List<String> projectNames;
+    private final        List<String> sprintNames;
+    private final        List<Name>   userNames;
+    private final        List<String> versionNames;
 
     NameGenerator() {
         NameGeneratorOptions options = new NameGeneratorOptions();
         options.setRandomSeed(123L);//Get deterministic results by setting a random seed.
         org.ajbrown.namemachine.NameGenerator generator = new org.ajbrown.namemachine.NameGenerator(options);
-        userNames = generator.generateNames(1000);
+        userNames    = generator.generateNames(1000);
+        productNames = new ArrayList<>();
+        versionNames = new ArrayList<>();
+        projectNames = new ArrayList<>();
+        sprintNames  = new ArrayList<>();
+        try {
+            productNames.addAll(Files.readAllLines(Paths.get("src/test/resources/product-names.txt")));
+        } catch (IOException e) {
+            logger.severe("Error reading product-names.txt: " + e.getMessage());
+        }
+        try {
+            versionNames.addAll(Files.readAllLines(Paths.get("src/test/resources/version-names.txt")));
+        } catch (IOException e) {
+            logger.severe("Error reading version-names.txt: " + e.getMessage());
+        }
+        try {
+            projectNames.addAll(Files.readAllLines(Paths.get("src/test/resources/feature-names.txt")));
+        } catch (IOException e) {
+            logger.severe("Error reading feature-names.txt: " + e.getMessage());
+        }
+        try {
+            sprintNames.addAll(Files.readAllLines(Paths.get("src/test/resources/sprint-names.txt")));
+        } catch (IOException e) {
+            logger.severe("Error reading sprint-names.txt: " + e.getMessage());
+        }
+    }
+
+    public String generateFeatureName(int index) {
+        if (index >= 0 && index < projectNames.size()) {
+            return projectNames.get(index);
+        }
+        return String.format("Feature-%d", index);
     }
 
     public String generateProductName(int index) {
+        if (index >= 0 && index < productNames.size()) {
+            return productNames.get(index);
+        }
         return String.format("Product-%d", index);
     }
 
-    public String generateProjectName(int index) {
-        return String.format("Project-%d", index);
-    }
-
     public String generateSprintName(int index) {
+        if (index >= 0 && index < sprintNames.size()) {
+            return sprintNames.get(index);
+        }
         return String.format("Sprint-%d", index);
     }
 
@@ -50,6 +92,9 @@ public class NameGenerator {
     }
 
     public String generateVersionName(int index) {
+        if (index >= 0 && index < versionNames.size()) {
+            return versionNames.get(index);
+        }
         return String.format("1.%d.0", index);
     }
 }

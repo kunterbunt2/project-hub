@@ -25,66 +25,64 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
-import de.bushnaq.abdalla.projecthub.dto.Project;
+import de.bushnaq.abdalla.projecthub.dto.Feature;
 
 import java.util.function.Consumer;
 
 /**
- * A reusable dialog for creating and editing projects.
+ * A reusable dialog for creating and editing features.
  */
-public class ProjectDialog extends Dialog {
+public class FeatureDialog extends Dialog {
 
-    public static final String  CANCEL_BUTTON      = "cancel-project-button";
-    public static final String  CONFIRM_BUTTON     = "save-project-button";
-    public static final String  PROJECT_DIALOG     = "project-dialog";
-    public static final String  PROJECT_NAME_FIELD = "project-name-field";
+    public static final String  CANCEL_BUTTON      = "cancel-feature-button";
+    public static final String  CONFIRM_BUTTON     = "save-feature-button";
+    public static final String  FEATURE_DIALOG     = "feature-dialog";
+    public static final String  FEATURE_NAME_FIELD = "feature-name-field";
     private final       boolean isEditMode;
 
     /**
-     * Creates a dialog for creating or editing a project.
+     * Creates a dialog for creating or editing a feature.
      *
-     * @param project      The project to edit, or null for creating a new project
-     * @param saveCallback Callback that receives the project with updated values
+     * @param feature      The feature to edit, or null for creating a new feature
+     * @param saveCallback Callback that receives the feature with updated values
      */
-    public ProjectDialog(Project project, Consumer<Project> saveCallback) {
-        isEditMode = project != null;
+    public FeatureDialog(Feature feature, Consumer<Feature> saveCallback) {
+        isEditMode = feature != null;
 
-        setHeaderTitle(isEditMode ? "Edit Project" : "Create Project");
-        setId(PROJECT_DIALOG);
+        setHeaderTitle(isEditMode ? "Edit Feature" : "Create Feature");
+        setId(FEATURE_DIALOG);
 
         VerticalLayout dialogLayout = new VerticalLayout();
         dialogLayout.setPadding(false);
         dialogLayout.setSpacing(true);
 
-        TextField nameField = new TextField("Project Name");
-        nameField.setId(PROJECT_NAME_FIELD);
+        TextField nameField = new TextField("Feature Name");
+        nameField.setId(FEATURE_NAME_FIELD);
         nameField.setWidthFull();
         nameField.setRequired(true);
 
         if (isEditMode) {
-            nameField.setValue(project.getName());
+            nameField.setValue(feature.getName());
         }
 
         dialogLayout.add(nameField);
 
         Button saveButton = new Button("Save", e -> {
             if (nameField.getValue().trim().isEmpty()) {
-                Notification.show("Please enter a project name", 3000, Notification.Position.MIDDLE);
+                Notification.show("Please enter a feature name", 3000, Notification.Position.MIDDLE);
                 return;
             }
 
-            Project projectToSave;
+            Feature featureToSave;
             if (isEditMode) {
-                projectToSave = project;
-                projectToSave.setName(nameField.getValue().trim());
-//                projectToSave.setRequester(requesterField.getValue().trim());
+                featureToSave = feature;
+                featureToSave.setName(nameField.getValue().trim());
             } else {
-                projectToSave = new Project();
-                projectToSave.setName(nameField.getValue().trim());
-//                projectToSave.setRequester(requesterField.getValue().trim());
+                featureToSave = new Feature();
+                featureToSave.setName(nameField.getValue().trim());
             }
 
-            saveCallback.accept(projectToSave);
+            saveCallback.accept(featureToSave);
             close();
         });
         saveButton.setId(CONFIRM_BUTTON);

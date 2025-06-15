@@ -32,24 +32,20 @@ import java.util.List;
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 public class Version extends AbstractTimeAware implements Comparable<Version> {
 
+    @JsonIgnore
+    @ToString.Exclude//help intellij debugger not to go into a loop
+    private List<Feature> features = new ArrayList<>();
     private Long id;
-
     private String name;
-
     @JsonIgnore
     @ToString.Exclude//help intellij debugger not to go into a loop
     private Product product;
-
     private Long productId;
 
-    @JsonIgnore
-    @ToString.Exclude//help intellij debugger not to go into a loop
-    private List<Project> projects = new ArrayList<>();
-
-    public Project addProject(Project project) {
-        projects.add(project);
-        project.setVersion(this);
-        return project;
+    public Feature addFeature(Feature feature) {
+        features.add(feature);
+        feature.setVersion(this);
+        return feature;
     }
 
     @Override
@@ -63,16 +59,16 @@ public class Version extends AbstractTimeAware implements Comparable<Version> {
     }
 
     public void initialize(GanttContext gc) {
-        projects.clear();
-        gc.allProjects.forEach(project -> {
+        features.clear();
+        gc.allFeatures.forEach(project -> {
             if (project.getVersionId() == id) {
-                addProject(project);
+                addFeature(project);
             }
         });
-        projects.forEach(project -> project.initialize(gc));
+        features.forEach(project -> project.initialize(gc));
     }
 
-    public void removeProject(Project project) {
-        projects.remove(project);
+    public void removeProject(Feature feature) {
+        features.remove(feature);
     }
 }

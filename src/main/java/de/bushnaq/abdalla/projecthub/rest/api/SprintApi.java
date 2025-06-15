@@ -64,13 +64,13 @@ public class SprintApi extends AbstractApi {
         return Arrays.asList(response.getBody());
     }
 
-    public List<Sprint> getAll(Long projectId) {
+    public List<Sprint> getAll(Long featureId) {
         ResponseEntity<Sprint[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/sprint/project/{projectId}",
+                getBaseUrl() + "/sprint/feature/{featureId}",
                 HttpMethod.GET,
                 createHttpEntity(),
                 Sprint[].class,
-                projectId
+                featureId
         ));
         return Arrays.asList(response.getBody());
     }

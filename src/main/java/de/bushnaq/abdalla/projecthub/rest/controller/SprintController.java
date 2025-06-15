@@ -18,7 +18,7 @@
 package de.bushnaq.abdalla.projecthub.rest.controller;
 
 import de.bushnaq.abdalla.projecthub.dao.SprintDAO;
-import de.bushnaq.abdalla.projecthub.repository.ProjectRepository;
+import de.bushnaq.abdalla.projecthub.repository.FeatureRepository;
 import de.bushnaq.abdalla.projecthub.repository.SprintRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,7 +31,7 @@ import java.util.List;
 public class SprintController {
 
     @Autowired
-    private ProjectRepository projectRepository;
+    private FeatureRepository featureRepository;
     @Autowired
     private SprintRepository  sprintRepository;
 
@@ -54,10 +54,10 @@ public class SprintController {
         return sprintRepository.findAll();
     }
 
-    @GetMapping("/project/{projectId}")
+    @GetMapping("/feature/{featureId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    public List<SprintDAO> getAll(@PathVariable Long projectId) {
-        return sprintRepository.findByProjectId(projectId);
+    public List<SprintDAO> getAll(@PathVariable Long featureId) {
+        return sprintRepository.findByFeatureId(featureId);
     }
 
     @PostMapping()

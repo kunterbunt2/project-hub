@@ -36,6 +36,23 @@ public class DTOAsserts {
         assertEquals(expected.getStart(), actual.getStart(), "Availability start dates do not match");
     }
 
+    protected static void assertFeatureEquals(Feature expected, Feature actual) {
+        assertFeatureEquals(expected, actual, false);
+    }
+
+    protected static void assertFeatureEquals(Feature expected, Feature actual, boolean shallow) {
+        assertEquals(expected.getCreated(), actual.getCreated(), String.format("Feature '%s' created date does not match", actual.getName()));
+//        assertEquals(expected.getUpdated(), actual.getUpdated(), String.format("Project '%s' updated date does not match", actual.getName()));
+        assertEquals(expected.getId(), actual.getId(), "Feature IDs do not match");
+        assertEquals(expected.getName(), actual.getName(), "Feature names do not match");
+        if (!shallow) {
+            assertEquals(expected.getSprints().size(), actual.getSprints().size(), String.format("Number of sprints in feature '%s' do not match", actual.getName()));
+            for (int i = 0; i < expected.getSprints().size(); i++) {
+                assertSprintEquals(expected.getSprints().get(i), actual.getSprints().get(i));
+            }
+        }
+    }
+
     protected static void assertLocalDateTimeEquals(LocalDateTime expected, LocalDateTime actual, String name) {
         if (expected == null && actual == null) {
             return;
@@ -75,23 +92,6 @@ public class DTOAsserts {
             assertEquals(expected.getVersions().size(), actual.getVersions().size(), "Number of versions in product do not match");
             for (int i = 0; i < expected.getVersions().size(); i++) {
                 assertVersionEquals(expected.getVersions().get(i), actual.getVersions().get(i));
-            }
-        }
-    }
-
-    protected static void assertProjectEquals(Project expected, Project actual) {
-        assertProjectEquals(expected, actual, false);
-    }
-
-    protected static void assertProjectEquals(Project expected, Project actual, boolean shallow) {
-        assertEquals(expected.getCreated(), actual.getCreated(), String.format("Project '%s' created date does not match", actual.getName()));
-//        assertEquals(expected.getUpdated(), actual.getUpdated(), String.format("Project '%s' updated date does not match", actual.getName()));
-        assertEquals(expected.getId(), actual.getId(), "Project IDs do not match");
-        assertEquals(expected.getName(), actual.getName(), "Project names do not match");
-        if (!shallow) {
-            assertEquals(expected.getSprints().size(), actual.getSprints().size(), String.format("Number of sprints in project '%s' do not match", actual.getName()));
-            for (int i = 0; i < expected.getSprints().size(); i++) {
-                assertSprintEquals(expected.getSprints().get(i), actual.getSprints().get(i));
             }
         }
     }
@@ -180,9 +180,9 @@ public class DTOAsserts {
         assertEquals(expected.getId(), actual.getId(), "Version IDs do not match");
         assertEquals(expected.getName(), actual.getName(), "Version names do not match");
         if (!shallow) {
-            assertEquals(expected.getProjects().size(), actual.getProjects().size(), "Number of projects in version do not match");
-            for (int i = 0; i < expected.getProjects().size(); i++) {
-                assertProjectEquals(expected.getProjects().get(i), actual.getProjects().get(i));
+            assertEquals(expected.getFeatures().size(), actual.getFeatures().size(), "Number of features in version do not match");
+            for (int i = 0; i < expected.getFeatures().size(); i++) {
+                assertFeatureEquals(expected.getFeatures().get(i), actual.getFeatures().get(i));
             }
         }
     }

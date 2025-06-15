@@ -29,9 +29,9 @@ import java.util.List;
 
 @Getter
 public class GanttContext {
-    public        List<Product>   allProducts = new ArrayList<>();
-    public        List<Project>   allProjects = new ArrayList<>();
-    public        List<Sprint>    allSprints  = new ArrayList<>();
+    public        List<Product> allProducts = new ArrayList<>();
+    public        List<Feature> allFeatures = new ArrayList<>();
+    public        List<Sprint>  allSprints  = new ArrayList<>();
     public        List<Task>      allTasks    = new ArrayList<>();
     public        List<User>      allUsers    = new ArrayList<>();
     public        List<Version>   allVersions = new ArrayList<>();
@@ -76,8 +76,8 @@ public class GanttContext {
             allProducts.forEach(product -> product.initialize(this));
         else if (!allVersions.isEmpty())
             allVersions.forEach(version -> version.initialize(this));
-        else if (!allProjects.isEmpty())
-            allProjects.forEach(project -> project.initialize(this));
+        else if (!allFeatures.isEmpty())
+            allFeatures.forEach(project -> project.initialize(this));
         else if (!allSprints.isEmpty())
             allSprints.forEach(sprint -> sprint.initialize(this));
     }

@@ -129,7 +129,7 @@ public class TaskListView extends Main implements AfterNavigationObserver {
                             Map<String, String> params = new HashMap<>();
                             params.put("product", String.valueOf(productId));
                             params.put("version", String.valueOf(versionId));
-                            mainLayout.getBreadcrumbs().addItem("Projects", ProjectListView.class, params);
+                            mainLayout.getBreadcrumbs().addItem("Projects", FeatureListView.class, params);
                         }
                         {
                             Map<String, String> params = new HashMap<>();

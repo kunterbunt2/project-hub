@@ -55,7 +55,7 @@ public class CalcualteWorkDaysMiliseconsDelayTest {
 
         logger.info(String.format("Effort Estimate = %s", DateUtil.createWorkDayDurationString(worked.plus(remaining), false, true, false)));
 
-        logger.info(String.format("Current project delay = %s", DateUtil.createDurationString(calcualteWorkDaysMiliseconsDelay, false, true, false)));
+        logger.info(String.format("Current sprint delay = %s", DateUtil.createDurationString(calcualteWorkDaysMiliseconsDelay, false, true, false)));
 
         assertEquals("4d 03h 46m", DateUtil.createDurationString(calcualteWorkDaysMiliseconsDelay, false, true, false));
     }

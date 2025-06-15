@@ -18,8 +18,8 @@
 package de.bushnaq.abdalla.projecthub.ui;
 
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
+import de.bushnaq.abdalla.projecthub.util.FeatureViewTester;
 import de.bushnaq.abdalla.projecthub.util.ProductViewTester;
-import de.bushnaq.abdalla.projecthub.util.ProjectViewTester;
 import de.bushnaq.abdalla.projecthub.util.SprintViewTester;
 import de.bushnaq.abdalla.projecthub.util.VersionViewTester;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,13 +44,13 @@ import org.springframework.transaction.annotation.Transactional;
 @AutoConfigureMockMvc
 @Transactional
 public class SprintListViewTest extends AbstractUiTestUtil {
+    @Autowired
+    private       FeatureViewTester featureViewTester;
     private final String            newSprintName = "NewSprint-3";
-    private final String            productName   = "Product-3";
+    private final String            productName   = "Feature-3";
     @Autowired
     private       ProductViewTester productViewTester;
-    private final String            projectName   = "Project-3";
-    @Autowired
-    private       ProjectViewTester projectViewTester;
+    private final String            projectName   = "Feature-3";
     private final String            sprintName    = "Sprint-3";
     @Autowired
     private       SprintViewTester  sprintViewTester;
@@ -80,8 +80,8 @@ public class SprintListViewTest extends AbstractUiTestUtil {
         versionViewTester.selectVersion(versionName);
 
         // Create a project
-        projectViewTester.createProjectConfirm(projectName);
-        projectViewTester.selectProject(projectName);
+        featureViewTester.createFeatureConfirm(projectName);
+        featureViewTester.selectFeature(projectName);
     }
 
     /**

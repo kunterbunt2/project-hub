@@ -17,7 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.util;
 
-import de.bushnaq.abdalla.projecthub.ui.ProjectListView;
+import de.bushnaq.abdalla.projecthub.ui.FeatureListView;
 import de.bushnaq.abdalla.projecthub.ui.VersionListView;
 import de.bushnaq.abdalla.projecthub.ui.common.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.common.VersionDialog;
@@ -33,7 +33,7 @@ import static de.bushnaq.abdalla.projecthub.ui.VersionListView.VERSION_GRID_NAME
  * creating, editing, deleting versions and navigating between views. It uses
  * {@link SeleniumHandler} to interact with UI elements and validate results.
  * <p>
- * Versions represent a specific release of a product and contain multiple projects.
+ * Versions represent a specific release of a product and contain multiple features.
  */
 @Component
 public class VersionViewTester {
@@ -148,14 +148,14 @@ public class VersionViewTester {
     }
 
     /**
-     * Selects a version from the version grid and navigates to its projects.
+     * Selects a version from the version grid and navigates to its features.
      * <p>
      * Clicks on the specified version row in the version grid, which should
-     * navigate to the ProjectListView for that version.
+     * navigate to the FeatureListView for that version.
      *
      * @param name the name of the version to select
      */
     public void selectVersion(String name) {
-        seleniumHandler.selectGridRow(VERSION_GRID_NAME_PREFIX, ProjectListView.class, name);
+        seleniumHandler.selectGridRow(VERSION_GRID_NAME_PREFIX, FeatureListView.class, name);
     }
 }

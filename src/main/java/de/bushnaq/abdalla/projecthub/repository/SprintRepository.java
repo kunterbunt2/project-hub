@@ -23,5 +23,5 @@ import org.springframework.data.repository.ListCrudRepository;
 import java.util.List;
 
 public interface SprintRepository extends ListCrudRepository<SprintDAO, Long> {
-    List<SprintDAO> findByProjectId(Long projectId);
+    List<SprintDAO> findByFeatureId(Long featureId);
 }

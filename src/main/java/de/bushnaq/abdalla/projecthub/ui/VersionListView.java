@@ -142,7 +142,7 @@ public class VersionListView extends Main implements AfterNavigationObserver {
             params.put("version", String.valueOf(selectedVersion.getId()));
             //- Navigate with query parameters
             UI.getCurrent().navigate(
-                    ProjectListView.class,
+                    FeatureListView.class,
                     QueryParameters.simple(params)
             );
         });

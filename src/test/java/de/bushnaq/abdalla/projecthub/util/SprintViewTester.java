@@ -33,8 +33,8 @@ import static de.bushnaq.abdalla.projecthub.ui.SprintListView.SPRINT_GRID_NAME_P
  * creating, editing, deleting sprints and navigating between views. It uses
  * {@link SeleniumHandler} to interact with UI elements and validate results.
  * <p>
- * Sprints represent time-boxed work periods within a project and contain tasks.
- * In the hierarchy: Products contain Versions, Versions contain Projects, Projects contain Sprints,
+ * Sprints represent time-boxed work periods within a feature and contain tasks.
+ * In the hierarchy: Products contain Versions, Versions contain Features, Features contain Sprints,
  * and Sprints contain Tasks.
  */
 @Component

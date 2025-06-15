@@ -52,15 +52,17 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     public static final String                PROJECT_HUB_ORG           = "@project-hub.org";
     protected           AvailabilityApi       availabilityApi;
     protected final     TreeSet<Availability> expectedAvailabilities    = new TreeSet<>();
+    protected           List<Feature>         expectedFeatures          = new ArrayList<>();
     protected final     TreeSet<Location>     expectedLocations         = new TreeSet<>();
     protected           TreeSet<OffDay>       expectedOffDays           = new TreeSet<>();
     protected           List<Product>         expectedProducts          = new ArrayList<>();
-    protected           List<Project>         expectedProjects          = new ArrayList<>();
     protected           List<Sprint>          expectedSprints           = new ArrayList<>();
     protected           List<Task>            expectedTasks             = new ArrayList<>();
     protected           TreeSet<User>         expectedUsers             = new TreeSet<>();
     protected           List<Version>         expectedVersions          = new ArrayList<>();
     protected           List<Worklog>         expectedWorklogs          = new ArrayList<>();
+    protected           FeatureApi            featureApi;
+    protected static    int                   featureIndex              = 0;
     protected           LocationApi           locationApi;
     protected           NameGenerator         nameGenerator             = new NameGenerator();
     @Autowired
@@ -69,9 +71,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     @LocalServerPort
     private             int                   port;
     protected           ProductApi            productApi;
-    private static      int                   productIndex              = 0;
-    protected           ProjectApi            projectApi;
-    private static      int                   projectIndex              = 0;
+    protected static    int                   productIndex              = 0;
     protected final     Random                random                    = new Random();
     protected           SprintApi             sprintApi;
     private static      int                   sprintIndex               = 0;
@@ -81,7 +81,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     protected           UserApi               userApi;
     protected static    int                   userIndex                 = 0;
     protected           VersionApi            versionApi;
-    private static      int                   versionIndex              = 0;
+    protected static    int                   versionIndex              = 0;
     protected           WorklogApi            worklogApi;
 
     protected void addAvailability(User user, float availability, LocalDate start) {
@@ -92,6 +92,23 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         Availability saved = availabilityApi.persist(a, user.getId());
         user.addAvailability(saved);
         expectedAvailabilities.add(saved);
+    }
+
+    protected Feature addFeature(Version version, String name) {
+        Feature feature = new Feature();
+        feature.setName(name);
+
+        feature.setVersion(version);
+        feature.setVersionId(version.getId());
+        feature.setCreated(ParameterOptions.now);
+        feature.setUpdated(ParameterOptions.now);
+        Feature saved = featureApi.persist(feature);
+        expectedFeatures.add(saved);
+
+        version.addFeature(saved);
+
+        featureIndex++;
+        return saved;
     }
 
     protected void addLocation(User user, String country, String state, LocalDate start) {
@@ -225,21 +242,8 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         return saved;
     }
 
-    protected Project addProject(Version version, String name) {
-        Project project = new Project();
-        project.setName(name);
-
-        project.setVersion(version);
-        project.setVersionId(version.getId());
-        project.setCreated(ParameterOptions.now);
-        project.setUpdated(ParameterOptions.now);
-        Project saved = projectApi.persist(project);
-        expectedProjects.add(saved);
-
-        version.addProject(saved);
-
-        projectIndex++;
-        return saved;
+    protected Feature addRandomFeature(Version version) {
+        return addFeature(version, nameGenerator.generateFeatureName(featureIndex));
     }
 
     protected void addRandomProducts(int count) {
@@ -248,8 +252,8 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         for (int i = 0; i < count; i++) {
             Product product = addProduct(nameGenerator.generateProductName(productIndex));
             Version version = addVersion(product, String.format("1.%d.0", i));
-            Project project = addRandomProject(version);
-            Sprint  sprint  = addRandomSprint(project);
+            Feature feature = addRandomFeature(version);
+            Sprint  sprint  = addRandomSprint(feature);
             Task    task1   = addTask(sprint, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
             Task    task2   = addTask(sprint, task1, "Design", LocalDateTime.now(), Duration.ofDays(4), user1, null);
             Task    task3   = addTask(sprint, task2, "Implementation", LocalDateTime.now().plusDays(4), Duration.ofDays(6), user1, task1);
@@ -257,12 +261,8 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         testProducts();
     }
 
-    protected Project addRandomProject(Version version) {
-        return addProject(version, nameGenerator.generateProjectName(projectIndex));
-    }
-
-    protected Sprint addRandomSprint(Project project) {
-        return addSprint(project, String.format("sprint-%d", sprintIndex));
+    protected Sprint addRandomSprint(Feature feature) {
+        return addSprint(feature, nameGenerator.generateSprintName(sprintIndex));
     }
 
     /**
@@ -357,17 +357,17 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         return addVersion(product, nameGenerator.generateVersionName(versionIndex));
     }
 
-    protected Sprint addSprint(Project project, String sprintName) {
+    protected Sprint addSprint(Feature feature, String sprintName) {
         Sprint sprint = new Sprint();
         sprint.setName(sprintName);
         sprint.setStatus(Status.STARTED);
-        sprint.setProject(project);
-        sprint.setProjectId(project.getId());
+        sprint.setFeature(feature);
+        sprint.setFeatureId(feature.getId());
         sprint.setCreated(ParameterOptions.now);
         sprint.setUpdated(ParameterOptions.now);
         Sprint saved = sprintApi.persist(sprint);
         expectedSprints.add(saved);
-        project.addSprint(saved);
+        feature.addSprint(saved);
 
         sprintIndex++;
         return saved;
@@ -493,7 +493,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     protected void beforeEach(TestInfo testInfo) {
         super.beforeEach(testInfo);
         productIndex = 0;
-        projectIndex = 0;
+        featureIndex = 0;
         sprintIndex  = 0;
         userIndex    = 0;
         versionIndex = 0;
@@ -559,7 +559,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         // Set the correct port after injection
         String baseUrl = "http://localhost:" + port + "/api";
         productApi      = new ProductApi(testRestTemplate.getRestTemplate(), objectMapper, baseUrl);
-        projectApi      = new ProjectApi(testRestTemplate.getRestTemplate(), objectMapper, baseUrl);
+        featureApi      = new FeatureApi(testRestTemplate.getRestTemplate(), objectMapper, baseUrl);
         userApi         = new UserApi(testRestTemplate.getRestTemplate(), objectMapper, baseUrl);
         availabilityApi = new AvailabilityApi(testRestTemplate.getRestTemplate(), objectMapper, baseUrl);
         locationApi     = new LocationApi(testRestTemplate.getRestTemplate(), objectMapper, baseUrl);
@@ -574,6 +574,23 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         availabilityApi.deleteById(user, availability);
         user.removeAvailability(availability);
         expectedAvailabilities.remove(availability);
+    }
+
+    protected void removeFeature(Long id) {
+        Feature featureToRemove = expectedFeatures.stream().filter(project -> project.getId().equals(id)).findFirst().orElse(null);
+        featureApi.deleteById(id);
+        if (featureToRemove != null) {
+            //remove this project from its parent version
+            featureToRemove.getVersion().removeProject(featureToRemove);
+            // Remove all sprints and their tasks
+            for (Sprint sprint : featureToRemove.getSprints()) {
+                for (Task task : sprint.getTasks()) {
+                    expectedTasks.remove(task);
+                }
+                expectedSprints.remove(sprint);
+            }
+            expectedFeatures.remove(featureToRemove);
+        }
     }
 
     protected void removeLocation(Location location, User user) {
@@ -595,35 +612,18 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         if (productToRemove != null) {
             // Remove all versions and their projects, sprints, and tasks
             for (Version version : productToRemove.getVersions()) {
-                for (Project project : version.getProjects()) {
-                    for (Sprint sprint : project.getSprints()) {
+                for (Feature feature : version.getFeatures()) {
+                    for (Sprint sprint : feature.getSprints()) {
                         for (Task task : sprint.getTasks()) {
                             expectedTasks.remove(task);
                         }
                         expectedSprints.remove(sprint);
                     }
-                    expectedProjects.remove(project);
+                    expectedFeatures.remove(feature);
                 }
                 expectedVersions.remove(version);
             }
             expectedProducts.remove(productToRemove);
-        }
-    }
-
-    protected void removeProject(Long id) {
-        Project projectToRemove = expectedProjects.stream().filter(project -> project.getId().equals(id)).findFirst().orElse(null);
-        projectApi.deleteById(id);
-        if (projectToRemove != null) {
-            //remove this project from its parent version
-            projectToRemove.getVersion().removeProject(projectToRemove);
-            // Remove all sprints and their tasks
-            for (Sprint sprint : projectToRemove.getSprints()) {
-                for (Task task : sprint.getTasks()) {
-                    expectedTasks.remove(task);
-                }
-                expectedSprints.remove(sprint);
-            }
-            expectedProjects.remove(projectToRemove);
         }
     }
 
@@ -632,7 +632,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         sprintApi.deleteById(id);
         if (sprintToRemove != null) {
             //remove this sprint from its parent project
-            sprintToRemove.getProject().removePrint(sprintToRemove);
+            sprintToRemove.getFeature().removePrint(sprintToRemove);
             for (Task task : sprintToRemove.getTasks()) {
                 expectedTasks.remove(task);
             }
@@ -673,14 +673,14 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
             //remove this version from its parent product
             versionToRemove.getProduct().removeVersion(versionToRemove);
             // Remove all projects, sprints, and tasks
-            for (Project project : versionToRemove.getProjects()) {
-                for (Sprint sprint : project.getSprints()) {
+            for (Feature feature : versionToRemove.getFeatures()) {
+                for (Sprint sprint : feature.getSprints()) {
                     for (Task task : sprint.getTasks()) {
                         expectedTasks.remove(task);
                     }
                     expectedSprints.remove(sprint);
                 }
-                expectedProjects.remove(project);
+                expectedFeatures.remove(feature);
             }
             expectedVersions.remove(versionToRemove);
         }
@@ -715,7 +715,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         gc.allUsers    = userApi.getAll().stream().sorted().toList();
         gc.allProducts = productApi.getAll().stream().sorted().toList();
         gc.allVersions = versionApi.getAll().stream().sorted().toList();
-        gc.allProjects = projectApi.getAll().stream().sorted().toList();
+        gc.allFeatures = featureApi.getAll().stream().sorted().toList();
         gc.allSprints  = sprintApi.getAll().stream().sorted().toList();
         for (Sprint sprint : gc.allSprints) {
             sprint.setWorklogs(worklogApi.getAll(sprint.getId()).stream().sorted().toList());
@@ -724,7 +724,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         gc.initialize();
 
         expectedProducts.sort(Comparator.naturalOrder());
-        expectedProjects.sort(Comparator.naturalOrder());
+        expectedFeatures.sort(Comparator.naturalOrder());
         expectedSprints.sort(Comparator.naturalOrder());
         expectedTasks.sort(Comparator.naturalOrder());
         expectedVersions.sort(Comparator.naturalOrder());
@@ -753,6 +753,12 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         expectedAvailabilities.add(availability);
     }
 
+    protected void updateFeature(Feature feature) {
+        featureApi.update(feature);
+        expectedFeatures.remove(feature);
+        expectedFeatures.add(feature);//replace old products with the updated one
+    }
+
     protected void updateLocation(Location location, User user) throws ServerErrorException {
         locationApi.update(location, user.getId());
         expectedLocations.remove(location);
@@ -769,12 +775,6 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         productApi.update(product);
         expectedProducts.remove(product);
         expectedProducts.add(product);//replace old products with the updated one
-    }
-
-    protected void updateProject(Project project) {
-        projectApi.update(project);
-        expectedProjects.remove(project);
-        expectedProjects.add(project);//replace old products with the updated one
     }
 
     protected void updateSprint(Sprint sprint) throws ServerErrorException {

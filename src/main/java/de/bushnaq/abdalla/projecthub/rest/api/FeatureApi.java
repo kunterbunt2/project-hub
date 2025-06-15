@@ -18,7 +18,7 @@
 package de.bushnaq.abdalla.projecthub.rest.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.bushnaq.abdalla.projecthub.dto.Project;
+import de.bushnaq.abdalla.projecthub.dto.Feature;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -29,24 +29,24 @@ import java.util.Arrays;
 import java.util.List;
 
 @Service
-public class ProjectApi extends AbstractApi {
+public class FeatureApi extends AbstractApi {
 
-    public ProjectApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
+    public FeatureApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
         super(restTemplate, objectMapper, baseUrl);
     }
 
     @Autowired
-    public ProjectApi(RestTemplate restTemplate, ObjectMapper objectMapper) {
+    public FeatureApi(RestTemplate restTemplate, ObjectMapper objectMapper) {
         super(restTemplate, objectMapper);
     }
 
-    public ProjectApi() {
+    public FeatureApi() {
 
     }
 
     public void deleteById(long id) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/project/{id}",
+                getBaseUrl() + "/feature/{id}",
                 HttpMethod.DELETE,
                 createHttpEntity(),
                 Void.class,
@@ -54,53 +54,53 @@ public class ProjectApi extends AbstractApi {
         ));
     }
 
-    public List<Project> getAll() {
-        ResponseEntity<Project[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/project",
+    public List<Feature> getAll() {
+        ResponseEntity<Feature[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/feature",
                 HttpMethod.GET,
                 createHttpEntity(),
-                Project[].class
+                Feature[].class
         ));
         return Arrays.asList(response.getBody());
     }
 
-    public List<Project> getAll(Long versionId) {
-        ResponseEntity<Project[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/project/version/{versionId}",
+    public List<Feature> getAll(Long versionId) {
+        ResponseEntity<Feature[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/feature/version/{versionId}",
                 HttpMethod.GET,
                 createHttpEntity(),
-                Project[].class,
+                Feature[].class,
                 versionId
         ));
         return Arrays.asList(response.getBody());
     }
 
-    public Project getById(Long id) {
-        ResponseEntity<Project> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/project/{id}",
+    public Feature getById(Long id) {
+        ResponseEntity<Feature> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/feature/{id}",
                 HttpMethod.GET,
                 createHttpEntity(),
-                Project.class,
+                Feature.class,
                 id
         ));
         return response.getBody();
     }
 
-    public Project persist(Project project) {
-        ResponseEntity<Project> response = executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/project",
+    public Feature persist(Feature feature) {
+        ResponseEntity<Feature> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/feature",
                 HttpMethod.POST,
-                createHttpEntity(project),
-                Project.class
+                createHttpEntity(feature),
+                Feature.class
         ));
         return response.getBody();
     }
 
-    public void update(Project project) {
+    public void update(Feature feature) {
         executeWithErrorHandling(() -> restTemplate.exchange(
-                getBaseUrl() + "/project",
+                getBaseUrl() + "/feature",
                 HttpMethod.PUT,
-                createHttpEntity(project),
+                createHttpEntity(feature),
                 Void.class
         ));
     }

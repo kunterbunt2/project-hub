@@ -27,6 +27,8 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -45,15 +47,16 @@ import java.util.List;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @Disabled
 public class Demo extends AbstractUiTestUtil {
+    private static final Logger            logger = LoggerFactory.getLogger(Demo.class);
     @Autowired
-    private ProductViewTester productViewTester;
+    private              ProductViewTester productViewTester;
     @Autowired
-    private SeleniumHandler   seleniumHandler;
+    private              SeleniumHandler   seleniumHandler;
 
     private static List<RandomCase> listRandomCases() {
         RandomCase[] randomCases = new RandomCase[]{//
-                new RandomCase(1, 10, 2, 1, 2, 1),//
-//                new RandomCase(2, 4, 4, 4, 4, 10, 3, 4, 3, 1)//
+//                new RandomCase(1, 10, 2, 1, 2, 1),//
+                new RandomCase(2, 4, 4, 4, 4, 10, 3, 4, 3, 1)//
         };
         return Arrays.stream(randomCases).toList();
     }
@@ -66,11 +69,8 @@ public class Demo extends AbstractUiTestUtil {
         TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
-        generateProducts(testInfo, randomCase);
+        generateProductsIfNeeded(testInfo, randomCase);
         productViewTester.switchToProductListView();
         seleniumHandler.waitUntilBrowserClosed(0);
     }
-
 }
-
-
