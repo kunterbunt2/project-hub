@@ -22,6 +22,9 @@ import org.monte.media.Format;
 import org.monte.media.FormatKeys;
 import org.monte.media.math.Rational;
 import org.monte.screenrecorder.ScreenRecorder;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Point;
+import org.openqa.selenium.WebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +41,7 @@ import static org.monte.media.VideoFormatKeys.*;
  */
 
 public class VideoRecorder {
+    private       Rectangle      captureArea;  // Added field to store the capture area
     private       String         currentTestName;
     @Getter
     private       boolean        isRecording = false;
@@ -45,6 +49,7 @@ public class VideoRecorder {
     private       File           outputDirectory;
     private final File           rootDirectory;
     private       ScreenRecorder screenRecorder;
+    private       WebDriver      webDriver;    // Added field to access browser content
 
     public VideoRecorder() {
         this(new File("test-recordings"));
@@ -57,6 +62,27 @@ public class VideoRecorder {
     }
 
     /**
+     * Sets the area to be captured during recording
+     *
+     * @param x      X coordinate of the top-left corner
+     * @param y      Y coordinate of the top-left corner
+     * @param width  Width of the area to capture
+     * @param height Height of the area to capture
+     */
+    public void setCaptureArea(int x, int y, int width, int height) {
+        this.captureArea = new Rectangle(x, y, width, height);
+    }
+
+    /**
+     * Sets the WebDriver to use for content capture
+     *
+     * @param driver The Selenium WebDriver instance
+     */
+    public void setWebDriver(WebDriver driver) {
+        this.webDriver = driver;
+    }
+
+    /**
      * Start recording with the given test name
      *
      * @param testName Name to use for the video file
@@ -65,6 +91,20 @@ public class VideoRecorder {
      * @throws AWTException If there's an issue with AWT
      */
     public boolean startRecording(String subFolderName, String testName) throws IOException, AWTException {
+        return startRecording(subFolderName, testName, false);
+    }
+
+    /**
+     * Start recording with the given test name
+     *
+     * @param subFolderName Name of the subfolder to store the video
+     * @param testName      Name to use for the video file
+     * @param contentOnly   If true, will attempt to capture only the webpage content
+     * @return true if recording started successfully, false if in headless mode
+     * @throws IOException  If there's an IO error
+     * @throws AWTException If there's an issue with AWT
+     */
+    public boolean startRecording(String subFolderName, String testName, boolean contentOnly) throws IOException, AWTException {
         this.outputDirectory = new File(rootDirectory, subFolderName);
         outputDirectory.mkdirs();
         if (GraphicsEnvironment.isHeadless()) {
@@ -76,9 +116,50 @@ public class VideoRecorder {
         this.currentTestName = testName;
         GraphicsConfiguration gc = GraphicsEnvironment.getLocalGraphicsEnvironment()
                 .getDefaultScreenDevice().getDefaultConfiguration();
+
+        // Determine the area to record
+        Rectangle recordingArea;
+
+        if (contentOnly && webDriver != null) {
+            try {
+                // Try to get the dimensions of the content area only
+                JavascriptExecutor jsExecutor = (JavascriptExecutor) webDriver;
+
+                // Calculate viewport position and size
+                Point browserPosition = webDriver.manage().window().getPosition();
+//                Long  outerWidth      = (Long) jsExecutor.executeScript("return window.outerWidth;");
+//                Long  innerWidth      = (Long) jsExecutor.executeScript("return window.innerWidth;");
+//                Long  outerHeight     = (Long) jsExecutor.executeScript("return window.outerHeight;");
+//                Long  innerHeight     = (Long) jsExecutor.executeScript("return window.innerHeight;");
+
+                Long viewportX      = (Long) jsExecutor.executeScript("return window.pageXOffset + (window.outerWidth - window.innerWidth);");
+                Long viewportY      = (Long) jsExecutor.executeScript("return window.pageYOffset + (window.outerHeight - window.innerHeight);");
+                Long viewportWidth  = (Long) jsExecutor.executeScript("return window.innerWidth;");
+                Long viewportHeight = (Long) jsExecutor.executeScript("return window.innerHeight;");
+
+//                Long screenX = (Long) jsExecutor.executeScript("return window.screenX;");
+//                Long screenY = (Long) jsExecutor.executeScript("return window.screenY;");
+
+
+                // Calculate absolute screen coordinates of the content area
+                int contentX = browserPosition.getX() + viewportX.intValue() - 8;
+                int contentY = browserPosition.getY() + viewportY.intValue() - 8;
+
+                recordingArea = new Rectangle(contentX, contentY, viewportWidth.intValue(), viewportHeight.intValue());
+                logger.info("Recording browser content area: x={}, y={}, width={}, height={}", contentX, contentY, viewportWidth.intValue(), viewportHeight.intValue());
+
+            } catch (Exception e) {
+                logger.warn("Failed to determine browser content dimensions, falling back to browser window", e);
+                recordingArea = captureArea != null ? captureArea : new Rectangle(gc.getBounds());
+            }
+        } else {
+            // Use the specified capture area if set, otherwise capture the entire screen
+            recordingArea = captureArea != null ? captureArea : new Rectangle(gc.getBounds());
+        }
+
         this.screenRecorder = new NamedScreenRecorder(
                 gc,
-                new Rectangle(gc.getBounds()),
+                recordingArea,
                 new Format(FormatKeys.MediaTypeKey, FormatKeys.MediaType.FILE,
                         MimeTypeKey, MIME_AVI),
                 new Format(MediaTypeKey, MediaType.VIDEO,

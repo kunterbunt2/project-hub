@@ -22,6 +22,7 @@ import jakarta.annotation.PreDestroy;
 import lombok.Getter;
 import org.openqa.selenium.*;
 import org.openqa.selenium.Dimension;
+import org.openqa.selenium.Point;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.CapabilityType;
@@ -246,6 +247,7 @@ public class SeleniumHandler {
 
             if (windowSize != null) {
                 getDriver().manage().window().setSize(windowSize);
+                getDriver().manage().window().setPosition(new Point(33, 22));
             } else {
                 //maximize window by default
                 getDriver().manage().window().maximize();
@@ -623,13 +625,25 @@ public class SeleniumHandler {
     /**
      * Start recording screen activities for the current test
      *
-     * @param testName Name of the test for the video file name
+     * @param folderName Subfolder name for storing the video
+     * @param testName   Name of the test for the video file name
      */
     public void startRecording(String folderName, String testName) {
         if (!videoRecorder.isRecording()) {
             try {
-                getDriver();// Ensure the driver is initialized and browser is open
-                if (videoRecorder.startRecording(folderName, testName)) {
+                getDriver(); // Ensure the driver is initialized and browser is open
+
+                // Pass the WebDriver to VideoRecorder to access browser content
+                videoRecorder.setWebDriver(driver);
+
+                // Option 1: Record the entire browser window
+                Point     position = driver.manage().window().getPosition();
+                Dimension size     = driver.manage().window().getSize();
+                videoRecorder.setCaptureArea(position.getX(), position.getY(), size.getWidth(), size.getHeight());
+
+                // Start the recording with content-only mode, which will use JavaScript to determine
+                // the exact content area within the browser window
+                if (videoRecorder.startRecording(folderName, testName, true)) {
                     logger.info("Started video recording for test: {}", testName);
                 }
             } catch (IOException | AWTException e) {
@@ -763,6 +777,9 @@ public class SeleniumHandler {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
+                    if (videoRecorder.isRecording()) {
+                        stopRecording();
+                    }
                     driver.quit();//quit the driver
                     driver = null;
                     return false;
@@ -770,6 +787,9 @@ public class SeleniumHandler {
 
                 // Check for timeout if specified
                 if (timeoutMillis > 0 && System.currentTimeMillis() - startTime > timeoutMillis) {
+                    if (videoRecorder.isRecording()) {
+                        stopRecording();
+                    }
                     driver.quit();//quit the driver
                     driver = null;
                     return false;
@@ -779,6 +799,9 @@ public class SeleniumHandler {
                     // Browser has been closed if we get a NoSuchSessionException
                 } else {
                     throw e;
+                }
+                if (videoRecorder.isRecording()) {
+                    stopRecording();
                 }
                 driver.quit();//quit the driver
                 driver = null;
