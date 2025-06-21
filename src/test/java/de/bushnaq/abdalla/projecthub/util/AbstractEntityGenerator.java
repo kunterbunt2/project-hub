@@ -18,6 +18,8 @@
 package de.bushnaq.abdalla.projecthub.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.bushnaq.abdalla.profiler.Profiler;
+import de.bushnaq.abdalla.profiler.SampleType;
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.report.dao.GraphicsLightTheme;
@@ -68,6 +70,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     @Autowired
     protected           ObjectMapper          objectMapper;
     protected           OffDayApi             offDayApi;
+    private             int                   offDaysIterations;
     @LocalServerPort
     private             int                   port;
     protected           ProductApi            productApi;
@@ -126,9 +129,13 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         offDay.setUser(user);
         offDay.setCreated(user.getCreated());
         offDay.setUpdated(user.getUpdated());
-        OffDay saved = offDayApi.persist(offDay, user.getId());
-        user.addOffday(saved);
-        expectedOffDays.add(saved);
+        try (Profiler pc = new Profiler(SampleType.JPA)) {
+            long   time  = System.currentTimeMillis();
+            OffDay saved = offDayApi.persist(offDay, user.getId());
+            user.addOffday(saved);
+            expectedOffDays.add(saved);
+            System.out.println("Adding off day: " + saved.getFirstDay() + " to user: " + user.getName() + " took " + (System.currentTimeMillis() - time) + " ms");
+        }
         ProjectCalendarException vacation = user.getCalendar().addCalendarException(offDayStart, offDayFinish);
         switch (type) {
             case VACATION -> vacation.setName("vacation");
@@ -210,6 +217,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
 
         // Distribute remaining days throughout the year in smaller blocks
         while (remainingDays > 0) {
+            offDaysIterations++;
             int       blockDuration = Math.min(remainingDays, random.nextInt(4) + 3); // 3-6 days blocks
             LocalDate startDate;
 
@@ -334,14 +342,20 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
      */
     protected void addRandomUsers(int count) {
         for (int i = 0; i < count; i++) {
-            String       name      = nameGenerator.generateUserName(userIndex);
-            String       email     = name + PROJECT_HUB_ORG;
-            LocalDate    firstDate = ParameterOptions.now.toLocalDate().minusYears(1);
-            User         saved     = addUser(name, email, "de", "nw", firstDate, generateUserColor(userIndex), 0.5f);
-            GanttContext gc        = new GanttContext();
-            gc.initialize();
-            saved.initialize(gc);
+            long      time      = System.currentTimeMillis();
+            String    name      = nameGenerator.generateUserName(userIndex);
+            String    email     = name + PROJECT_HUB_ORG;
+            LocalDate firstDate = ParameterOptions.now.toLocalDate().minusYears(1);
+            User      saved     = addUser(name, email, "de", "nw", firstDate, generateUserColor(userIndex), 0.5f);
+            System.out.println("Adding user: " + saved.getName() + " took " + (System.currentTimeMillis() - time) + " ms");
+//            GanttContext gc        = new GanttContext();
+//            gc.initialize();
+//            saved.initialize(gc);
+            saved.initialize();
+            time = System.currentTimeMillis();
             generateRandomOffDays(saved, firstDate);
+            Profiler.log("generateRandomOffDays");
+            System.out.println("Adding off days for user: " + saved.getName() + " took " + (System.currentTimeMillis() - time) + " ms, and %d" + offDaysIterations + "iterations");
         }
 
         testUsers();
@@ -500,13 +514,17 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     }
 
     private void generateRandomOffDays(User saved, LocalDate employmentDate) {
-        int employmentYear = employmentDate.getYear();
-        for (int yearIndex = 0; yearIndex < 2; yearIndex++) {
-            int year = employmentYear + yearIndex;
-            random.setSeed(generateUserYearSeed(saved, year));
-            addOffDays(saved, employmentDate, 30, year, OffDayType.VACATION, 10, 20);
-            addOffDays(saved, employmentDate, random.nextInt(20), year, OffDayType.SICK, 1, 5);
-            addOffDays(saved, employmentDate, random.nextInt(5), year, OffDayType.TRIP, 1, 5);
+        try (Profiler pc = new Profiler(SampleType.CPU)) {
+
+            int employmentYear = employmentDate.getYear();
+            offDaysIterations = 0;
+            for (int yearIndex = 0; yearIndex < 2; yearIndex++) {
+                int year = employmentYear + yearIndex;
+                random.setSeed(generateUserYearSeed(saved, year));
+                addOffDays(saved, employmentDate, 30, year, OffDayType.VACATION, 10, 20);
+                addOffDays(saved, employmentDate, random.nextInt(20), year, OffDayType.SICK, 1, 5);
+                addOffDays(saved, employmentDate, random.nextInt(5), year, OffDayType.TRIP, 1, 5);
+            }
         }
     }
 

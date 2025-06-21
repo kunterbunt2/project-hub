@@ -51,7 +51,7 @@ class NestedLoggingTest extends BaseUtils {
                 mockupNetAccess(200);
             }
             test(new TestResult[]{//
-                    new TestResult(SampleType.SQL, 500),//
+                    new TestResult(SampleType.JPA, 500),//
                     new TestResult(SampleType.TCP, 500)//
             });
 
@@ -64,7 +64,7 @@ class NestedLoggingTest extends BaseUtils {
             });
         }
         test(new TestResult[]{//
-                new TestResult(SampleType.SQL, 500),//
+                new TestResult(SampleType.JPA, 500),//
                 new TestResult(SampleType.CPU, 100),//
                 new TestResult(SampleType.TCP, 500),//
                 new TestResult(SampleType.SMB, 300)//
@@ -98,7 +98,7 @@ class NestedLoggingTest extends BaseUtils {
     }
 
     private void sqlMethod() throws Exception {
-        try (Profiler pc = new Profiler(SampleType.SQL)) {
+        try (Profiler pc = new Profiler(SampleType.JPA)) {
             mockupSqlAccess(500);
         }
     }

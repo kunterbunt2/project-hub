@@ -19,6 +19,8 @@ package de.bushnaq.abdalla.projecthub.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import de.bushnaq.abdalla.profiler.Profiler;
+import de.bushnaq.abdalla.profiler.SampleType;
 import de.bushnaq.abdalla.projecthub.Context;
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
@@ -95,10 +97,10 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         String actualJson   = Files.readString(Paths.get(testResultFolder, TestInfoUtil.getTestMethodName(testInfo) + ".json"));
 
         try {
-            TypeReference<Map<String, Object>> typeRef = new TypeReference<>() {
+            TypeReference<Map<String, Object>> typeRef      = new TypeReference<>() {
             };
-            Map<String, Object> referenceMap = objectMapper.readValue(expectedJson, typeRef);
-            Map<String, Object> map          = objectMapper.readValue(actualJson, typeRef);
+            Map<String, Object>                referenceMap = objectMapper.readValue(expectedJson, typeRef);
+            Map<String, Object>                map          = objectMapper.readValue(actualJson, typeRef);
 
             // Compare users
             Map<String, User> referenceUsers = objectMapper.convertValue(referenceMap.get("users"), new TypeReference<Map<String, User>>() {
@@ -204,10 +206,6 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         chart.render(Util.generateCopyrightString(ParameterOptions.getLocalNow()), description, testResultFolder);
     }
 
-    private String generateFeatureName(int t) {
-        return String.format("Feature-%d", t);
-    }
-
     protected void generateGanttChart(TestInfo testInfo, long sprintId, ProjectFile projectFile) throws Exception {
         Sprint sprint = sprintApi.getById(sprintId);
         sprint.initialize();
@@ -226,34 +224,10 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         addOneProduct(generateTestCaseName(testInfo));
     }
 
-    private void generateProductsI(TestInfo testInfo, RandomCase randomCase) throws Exception {
-        random.setSeed(randomCase.getSeed());
-        expectedUsers.clear();
-        addRandomUsers(randomCase.getMaxNumberOfUsers());
-        {
-            int numberOfProducts = random.nextInt(randomCase.getMaxNumberOfProducts()) + 1;
-            for (int p = 0; p < numberOfProducts; p++) {
-                Product product          = addProduct(nameGenerator.generateProductName(productIndex));
-                int     numberOfVersions = random.nextInt(randomCase.getMaxNumberOfVersions()) + 1;
-                for (int v = 0; v < numberOfVersions; v++) {
-                    Version version          = addVersion(product, nameGenerator.generateVersionName(v));
-                    int     numberOfFeatures = random.nextInt(randomCase.getMaxNumberOfFeatures()) + 1;
-                    for (int f = 0; f < numberOfFeatures; f++) {
-                        Feature feature         = addFeature(version, nameGenerator.generateFeatureName(featureIndex));
-                        int     numberOfSprints = random.nextInt(randomCase.getMaxNumberOfSprints()) + 1;
-                        for (int s = 0; s < numberOfSprints; s++) {
-                            generateSprint(testInfo, randomCase, feature);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     protected void generateProductsIfNeeded(TestInfo testInfo, RandomCase randomCase) throws Exception {
         String testCaseName = this.getClass().getName() + "-" + testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex();
         // Create a snapshot name based on the test case
-        String snapshotName = "Demo-" + randomCase.getTestCaseIndex();
+        String snapshotName = testInfo.getTestClass().get().getSimpleName() + "-" + randomCase.getTestCaseIndex();
         // Try to find and load an existing database snapshot
         String  latestSnapshot = databaseStateManager.findLatestSnapshot(snapshotName);
         boolean dataLoaded     = false;
@@ -264,7 +238,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         // If no snapshot was found or loading failed, generate data the regular way
         if (!dataLoaded) {
             logger.info("Generating fresh test data (this might take a few minutes)...");
-            generateProductsI(testInfo, randomCase);
+            generateProductsInternal(testInfo, randomCase);
             // After successful data generation, export a snapshot for future test runs
             databaseStateManager.exportDatabaseSnapshot(snapshotName);
         } else {
@@ -272,28 +246,82 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         }
     }
 
-    private void generateSprint(TestInfo testInfo, RandomCase randomCase, Feature project) throws Exception {
-        int    numberOfUsers    = random.nextInt(randomCase.getMaxNumberOfUsers()) + 1;
-        int    numberOfFeatures = random.nextInt(randomCase.getMaxNumberOfStories()) + 1;
-        int    numberOfTasks    = random.nextInt(randomCase.getMaxNumberOfWork()) + 1;
-        Sprint savedSprint      = addRandomSprint(project);
-        Sprint sprint           = sprintApi.getById(savedSprint.getId());
-        Task   startMilestone   = addTask(sprint, null, "Start", LocalDateTime.parse("2024-12-15T08:00:00"), Duration.ZERO, null, null, TaskMode.MANUALLY_SCHEDULED, true);
-        for (int f = 0; f < numberOfFeatures; f++) {
-            String featureName = generateFeatureName(f);
-            Task   feature     = addParentTask(featureName, sprint, null, startMilestone);
-            for (int t = 0; t < numberOfTasks; t++) {
-                User   user     = expectedUsers.stream().toList().get(random.nextInt(numberOfUsers));
-                String duration = String.format("%dd", random.nextInt(randomCase.getMaxDurationDays()) + 1);
-                String workName = generateWorkName(featureName, t);
-                addTask(workName, duration, user, sprint, feature, null);
-            }
+    private void generateProductsInternal(TestInfo testInfo, RandomCase randomCase) throws Exception {
+        random.setSeed(randomCase.getSeed());
+        expectedUsers.clear();
+        try (Profiler pc = new Profiler(SampleType.JPA)) {
+            addRandomUsers(randomCase.getMaxNumberOfUsers());
         }
-        sprint.initialize();
-        sprint.initUserMap(userApi.getAll(sprint.getId()));
-        sprint.initTaskMap(taskApi.getAll(sprint.getId()), worklogApi.getAll(sprint.getId()));
-        levelResources(testInfo, sprint, null);
-        generateWorklogs(sprint, ParameterOptions.getLocalNow());
+        Profiler.log("generating users for test case " + randomCase.getTestCaseIndex());
+        {
+            int numberOfProducts = random.nextInt(randomCase.getMaxNumberOfProducts()) + 1;
+            try (Profiler pc = new Profiler(SampleType.JPA)) {
+                for (int p = 0; p < numberOfProducts; p++) {
+                    Product product          = addProduct(nameGenerator.generateProductName(productIndex));
+                    int     numberOfVersions = random.nextInt(randomCase.getMaxNumberOfVersions()) + 1;
+                    for (int v = 0; v < numberOfVersions; v++) {
+                        Version version          = addVersion(product, nameGenerator.generateVersionName(v));
+                        int     numberOfFeatures = random.nextInt(randomCase.getMaxNumberOfFeatures()) + 1;
+                        for (int f = 0; f < numberOfFeatures; f++) {
+                            Feature feature         = addFeature(version, nameGenerator.generateFeatureName(featureIndex));
+                            int     numberOfSprints = random.nextInt(randomCase.getMaxNumberOfSprints()) + 1;
+                            for (int s = 0; s < numberOfSprints; s++) {
+                                generateSprint(testInfo, randomCase, feature);
+                            }
+                        }
+                    }
+                }
+            }
+            Profiler.log("generate Products for test case -" + randomCase.getTestCaseIndex());
+        }
+    }
+
+    private void generateSprint(TestInfo testInfo, RandomCase randomCase, Feature project) throws Exception {
+        int numberOfUsers = randomCase.getMaxNumberOfUsers();
+//        System.out.println("Number of users=" + numberOfUsers);
+        int           numberOfStories = random.nextInt(randomCase.getMaxNumberOfStories()) + 1;
+        LocalDateTime startDateTime   = randomCase.getMinStartDate().plusDays(random.nextInt((int) randomCase.getMaxStartDateShift().toDays())).atStartOfDay().plusHours(8);
+        try (Profiler pc1 = new Profiler(SampleType.JPA)) {
+            Sprint savedSprint    = addRandomSprint(project);
+            Sprint sprint         = sprintApi.getById(savedSprint.getId());
+            Task   startMilestone = addTask(sprint, null, "Start", startDateTime, Duration.ZERO, null, null, TaskMode.MANUALLY_SCHEDULED, true);
+            for (int f = 0; f < numberOfStories; f++) {
+                String storyName     = nameGenerator.generateStoryName(f);
+                Task   story         = addParentTask(storyName, sprint, null, startMilestone);
+                int    numberOfTasks = random.nextInt(randomCase.getMaxNumberOfTasks()) + 1;
+                for (int t = 0; t < numberOfTasks; t++) {
+                    int userIndex = random.nextInt(numberOfUsers);
+//                    System.out.println("User index=" + userIndex);
+                    User   user             = expectedUsers.stream().toList().get(userIndex);
+                    String duration         = String.format("%dh", (int) (random.nextFloat(randomCase.getMaxDurationDays() * 7.5f) + 1));
+                    String workName         = NameGenerator.generateWorkName(storyName, t);
+                    Task   depenedenycyTask = null;
+                    if (random.nextFloat(1) > 0.5f) {
+                        int tries = 8;
+                        do {
+                            depenedenycyTask = sprint.getTasks().get(random.nextInt(sprint.getTasks().size()));
+                            //make sure this task is not a parent of our parent and not a milestone
+                            if (depenedenycyTask.isMilestone() || depenedenycyTask.isAncestor(story)) {
+                                depenedenycyTask = null;
+                                tries--;
+                            }
+                        }
+                        while (depenedenycyTask == null && tries > 0);
+                    }
+                    addTask(workName, duration, user, sprint, story, depenedenycyTask);
+                }
+            }
+            try (Profiler pc2 = new Profiler(SampleType.CPU)) {
+                sprint.initialize();
+            }
+            sprint.initUserMap(userApi.getAll(sprint.getId()));
+            sprint.initTaskMap(taskApi.getAll(sprint.getId()), worklogApi.getAll(sprint.getId()));
+            try (Profiler pc3 = new Profiler(SampleType.CPU)) {
+                levelResources(testInfo, sprint, null);
+            }
+            generateWorklogs(sprint, ParameterOptions.getLocalNow());
+        }
+        Profiler.log("generateProductsIfNeeded-" + randomCase.getTestCaseIndex());
     }
 
     protected String generateTestCaseName(TestInfo testInfo) {
@@ -317,58 +345,66 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         }
     }
 
-    private static String generateWorkName(String featureName, int t) {
-        String[] workNames = new String[]{"pre-planning", "planning", "analysis", "design", "implementation", "module test", "Functional Test", "System Test", "debugging", "deployment"};
-        return String.format("%s-%s", featureName, workNames[t]);
-    }
-
+    /**
+     * Generates worklogs for the tasks in the sprint simulating a team of people working.
+     *
+     * @param sprint
+     * @param now
+     */
     protected void generateWorklogs(Sprint sprint, LocalDateTime now) {
-        final long SECONDS_PER_WORKING_DAY = 75 * 6 * 60;
-        final long SECONDS_PER_HOUR        = 60 * 60;
-        long       oneDay                  = 75 * SECONDS_PER_HOUR / 10;
-        Duration   rest                    = Duration.ofSeconds(1);
-        for (LocalDate day = sprint.getStart().toLocalDate(); !rest.equals(Duration.ZERO) && now.toLocalDate().isAfter(day); day = day.plusDays(1)) {
-            LocalDateTime startOfDay     = day.atStartOfDay().plusHours(8);
-            LocalDateTime endOfDay       = day.atStartOfDay().plusHours(16).plusMinutes(30);
-            LocalDateTime lunchStartTime = DateUtil.calculateLunchStartTime(day.atStartOfDay());
-            LocalDateTime lunchStopTime  = DateUtil.calculateLunchStopTime(day.atStartOfDay());
-            rest = Duration.ZERO;
-            for (Task task : sprint.getTasks()) {
-                if (task.getChildTasks().isEmpty() && task.getOriginalEstimate() != null && !task.getOriginalEstimate().isZero()) {
-                    Number availability = task.getAssignedUser().getAvailabilities().getLast().getAvailability();
-                    if (task.getChildTasks().isEmpty()) {
-                        if (!day.isBefore(task.getStart().toLocalDate()) /*&& !day.isAfter(task.getFinish().toLocalDate())*/) {
-                            // Day is within task start/finish date range
+        try (Profiler pc = new Profiler(SampleType.CPU)) {
 
-                            if (task.getEffectiveCalendar().isWorkingDate(day)) {
-                                if (task.getStart().isBefore(startOfDay) || task.getStart().isEqual(startOfDay)) {
-                                    if (!task.getRemainingEstimate().isZero()) {
-                                        // we have the whole day
-                                        double   fraction = 0.8f + random.nextFloat() / 5;
-                                        Duration maxWork  = Duration.ofSeconds((long) ((fraction * availability.doubleValue() * SECONDS_PER_WORKING_DAY)));
-                                        Duration w        = maxWork;
-                                        Duration delta    = task.getRemainingEstimate().minus(w);
-                                        if (delta.isZero() || delta.isPositive()) {
-                                        } else {
-                                            w = task.getRemainingEstimate();
+            final long SECONDS_PER_WORKING_DAY = 75 * 6 * 60;
+            final long SECONDS_PER_HOUR        = 60 * 60;
+            long       oneDay                  = 75 * SECONDS_PER_HOUR / 10;
+            Duration   rest                    = Duration.ofSeconds(1);
+            //- iterate over the days of the sprint
+            for (LocalDate day = sprint.getStart().toLocalDate(); !rest.equals(Duration.ZERO) && now.toLocalDate().isAfter(day); day = day.plusDays(1)) {
+                LocalDateTime startOfDay     = day.atStartOfDay().plusHours(8);
+                LocalDateTime endOfDay       = day.atStartOfDay().plusHours(16).plusMinutes(30);
+                LocalDateTime lunchStartTime = DateUtil.calculateLunchStartTime(day.atStartOfDay());
+                LocalDateTime lunchStopTime  = DateUtil.calculateLunchStopTime(day.atStartOfDay());
+                rest = Duration.ZERO;
+                for (Task task : sprint.getTasks()) {
+                    if (task.getChildTasks().isEmpty() && task.getOriginalEstimate() != null && !task.getOriginalEstimate().isZero()) {
+                        Number availability = task.getAssignedUser().getAvailabilities().getLast().getAvailability();
+                        if (task.getChildTasks().isEmpty()) {
+                            if (!day.isBefore(task.getStart().toLocalDate()) /*&& !day.isAfter(task.getFinish().toLocalDate())*/) {
+                                // Day is within task start/finish date range
+
+                                if (task.getEffectiveCalendar().isWorkingDate(day)) {
+                                    if (task.getStart().isBefore(startOfDay) || task.getStart().isEqual(startOfDay)) {
+                                        if (!task.getRemainingEstimate().isZero()) {
+                                            // we have the whole day
+                                            double   minPerformance = 0.6f;
+                                            double   fraction       = minPerformance + random.nextFloat() * (1 - minPerformance) * 1.2;
+                                            Duration maxWork        = Duration.ofSeconds((long) ((fraction * availability.doubleValue() * SECONDS_PER_WORKING_DAY)));
+                                            Duration w              = maxWork;
+                                            Duration delta          = task.getRemainingEstimate().minus(w);
+                                            if (delta.isZero() || delta.isPositive()) {
+                                            } else {
+                                                w = task.getRemainingEstimate();
+                                            }
+                                            Worklog worklog = addWorklog(task, task.getAssignedUser(), DateUtil.localDateTimeToOffsetDateTime(day.atStartOfDay()), w, task.getName());
+                                            task.addTimeSpent(w);
+                                            task.removeRemainingEstimate(w);
+                                            task.recalculate();
                                         }
-                                        Worklog worklog = addWorklog(task, task.getAssignedUser(), DateUtil.localDateTimeToOffsetDateTime(day.atStartOfDay()), w, task.getName());
-                                        task.addTimeSpent(w);
-                                        task.removeRemainingEstimate(w);
-                                        task.recalculate();
                                     }
                                 }
                             }
                         }
                     }
+                    rest = rest.plus(task.getRemainingEstimate());//accumulate the rest
                 }
-                rest = rest.plus(task.getRemainingEstimate());//accumulate the rest
             }
         }
-        sprint.getTasks().forEach(task -> {
-            taskApi.update(task);
-        });
-        sprintApi.update(sprint);
+        try (Profiler pc = new Profiler(SampleType.JPA)) {
+            sprint.getTasks().forEach(task -> {
+                taskApi.update(task);
+            });
+            sprintApi.update(sprint);
+        }
     }
 
     private int getMaxTaskNameLength(List<Task> taskList) {
@@ -409,15 +445,19 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         ganttUtil.levelResources(eh, sprint, "", ParameterOptions.getLocalNow());
 
         //save back to the database
-        sprint.getTasks().forEach(task -> {
-            taskApi.update(task);
-        });
-        sprintApi.update(sprint);
+        try (Profiler pc = new Profiler(SampleType.JPA)) {
+            sprint.getTasks().forEach(task -> {
+                taskApi.update(task);
+            });
+            sprintApi.update(sprint);
 //        printTables();
-        initializeInstances();
+//            initializeInstances();
+        }
         if (projectFile == null) {
-            storeExpectedResult(testInfo, sprint);
-            storeResult(testInfo, sprint);
+            try (Profiler pc = new Profiler(SampleType.FILE)) {
+                storeExpectedResult(testInfo, sprint);
+                storeResult(testInfo, sprint);
+            }
         }
     }
 

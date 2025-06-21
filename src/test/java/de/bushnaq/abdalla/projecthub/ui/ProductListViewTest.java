@@ -18,8 +18,11 @@
 package de.bushnaq.abdalla.projecthub.ui;
 
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import de.bushnaq.abdalla.projecthub.util.ProductViewTester;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -43,6 +46,13 @@ public class ProductListViewTest extends AbstractUiTestUtil {
     private final String            newName = "NewProduct-2";
     @Autowired
     private       ProductViewTester productViewTester;
+    @Autowired
+    private       SeleniumHandler   seleniumHandler;
+
+    @BeforeEach
+    public void setupTest(TestInfo testInfo) {
+        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+    }
 
     /**
      * Tests the behavior when creating a product but canceling the operation.

@@ -70,8 +70,13 @@ public class AbstractLegacyGanttTestUtil extends AbstractGanttTestUtil {
             }
         }
         gc.initialize();
-        Sprint sprint = expectedSprints.getFirst();
-        logTasks(sprint, gc.allSprints.getFirst());
+        Sprint readSprint = sprintApi.getById(expectedSprints.getFirst().getId());
+        readSprint.initialize();
+        readSprint.initUserMap(userApi.getAll(readSprint.getId()));
+        readSprint.initTaskMap(taskApi.getAll(readSprint.getId()), worklogApi.getAll(readSprint.getId()));
+
+//        Sprint sprint = expectedSprints.getFirst();
+        logTasks(readSprint, gc.allSprints.getFirst());
         for (net.sf.mpxj.Task mpxjTask : projectFile.getTasks()) {
             if (isValidTask(mpxjTask)) {
                 Task            task     = taskMap.get(mpxjTask.getName());

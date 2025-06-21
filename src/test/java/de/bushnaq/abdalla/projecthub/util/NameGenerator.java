@@ -87,6 +87,10 @@ public class NameGenerator {
         return String.format("Sprint-%d", index);
     }
 
+    public String generateStoryName(int t) {
+        return String.format("Story-%d", t);
+    }
+
     public String generateUserName(int userIndex) {
         return userNames.get(userIndex).getFirstName() + " " + userNames.get(userIndex).getLastName();
     }
@@ -96,5 +100,10 @@ public class NameGenerator {
             return versionNames.get(index);
         }
         return String.format("1.%d.0", index);
+    }
+
+    public static String generateWorkName(String featureName, int t) {
+        String[] workNames = new String[]{"pre-planning", "planning", "analysis", "design", "implementation", "module test", "Functional Test", "System Test", "debugging", "deployment"};
+        return String.format("%s-%s", featureName, workNames[t]);
     }
 }

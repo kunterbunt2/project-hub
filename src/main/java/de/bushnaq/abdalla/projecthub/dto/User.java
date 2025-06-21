@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
+import de.bushnaq.abdalla.projecthub.report.calendar.CalendarUtil;
 import de.bushnaq.abdalla.projecthub.report.gantt.GanttContext;
 import de.focus_shift.jollyday.core.Holiday;
 import de.focus_shift.jollyday.core.HolidayManager;
@@ -29,6 +30,7 @@ import de.focus_shift.jollyday.core.parameter.UrlManagerParameter;
 import lombok.*;
 import net.sf.mpxj.ProjectCalendar;
 import net.sf.mpxj.ProjectCalendarException;
+import net.sf.mpxj.ProjectFile;
 
 import java.awt.*;
 import java.net.URL;
@@ -101,35 +103,7 @@ public class User extends AbstractTimeAware implements Comparable<User> {
             setCalendar(resourceCalendar);
         }
 
-        //TODO rethink employee leaving company and coming back
-        ProjectCalendar pc = getCalendar();
-        LocalDate       endDateInclusive;
-        for (int i = 0; i < locations.size(); i++) {
-            Location  location           = locations.get(i);
-            LocalDate startDateInclusive = location.getStart();
-            if (i + 1 < locations.size())
-                endDateInclusive = locations.get(i + 1).getStart();//end of this location is start of next location
-            else
-                endDateInclusive = ParameterOptions.now.plusYears(MAX_PROJECT_LENGTH).toLocalDate();
-            HolidayManager holidayManager = HolidayManager.getInstance(ManagerParameters.create(location.getCountry()));
-            List<Holiday>  holidays       = holidayManager.getHolidays(startDateInclusive, endDateInclusive, location.getState()).stream().sorted().collect(Collectors.toList());
-            URL            url            = getClass().getClassLoader().getResource("holidays/carnival-holidays.xml");
-            if (url != null && "nw".equals(location.getState())) {
-                UrlManagerParameter urlManParam        = new UrlManagerParameter(url, new Properties());
-                HolidayManager      customManager      = HolidayManager.getInstance(urlManParam);
-                Set<Holiday>        additionalHolidays = customManager.getHolidays(startDateInclusive, endDateInclusive, location.getState());
-                holidays.addAll(additionalHolidays.stream().toList());
-            }
-            for (Holiday holiday : holidays) {
-                ProjectCalendarException pce = pc.addCalendarException(holiday.getDate());
-                pce.setName(holiday.getDescription());
-            }
-        }
-        for (OffDay offDay : getOffDays()) {
-            ProjectCalendarException pce = pc.addCalendarException(offDay.getFirstDay(), offDay.getLastDay());
-            pce.setName(offDay.getType().name());
-        }
-
+        initializeLocationsAndOffdays();
     }
 
     public void initialize(Sprint sprint) {
@@ -141,6 +115,29 @@ public class User extends AbstractTimeAware implements Comparable<User> {
             setCalendar(resourceCalendar);
         }
 
+        initializeLocationsAndOffdays();
+    }
+
+    public void initialize() {
+        long            time             = System.currentTimeMillis();
+        ProjectCalendar resourceCalendar = getCalendar();
+        if (resourceCalendar == null) {
+            ProjectFile projectFile = new ProjectFile();
+            CalendarUtil.initializeProjectProperties(projectFile);
+            ProjectCalendar calendar = CalendarUtil.initializeCalendar(projectFile);
+            resourceCalendar = projectFile.addDefaultDerivedCalendar();
+            resourceCalendar.setParent(calendar);
+            resourceCalendar.setName(getName());
+            setCalendar(resourceCalendar);
+        }
+        System.out.println("User.initialize() took " + (System.currentTimeMillis() - time) + " ms for user: " + getName());
+
+        time = System.currentTimeMillis();
+        initializeLocationsAndOffdays();
+        System.out.println("User.initializeLocationsAndOffdays() took " + (System.currentTimeMillis() - time) + " ms for user: " + getName());
+    }
+
+    private void initializeLocationsAndOffdays() {
         //TODO rethink employee leaving company and coming back
         ProjectCalendar pc = getCalendar();
         LocalDate       endDateInclusive;
@@ -169,7 +166,6 @@ public class User extends AbstractTimeAware implements Comparable<User> {
             ProjectCalendarException pce = pc.addCalendarException(offDay.getFirstDay(), offDay.getLastDay());
             pce.setName(offDay.getType().name());
         }
-
     }
 
     public void removeAvailability(Availability availability) {
@@ -183,4 +179,5 @@ public class User extends AbstractTimeAware implements Comparable<User> {
     public void removeOffDay(OffDay offDay) {
         offDays.remove(offDay);
     }
+
 }

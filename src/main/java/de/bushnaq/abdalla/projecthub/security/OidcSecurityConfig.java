@@ -87,15 +87,13 @@ public class OidcSecurityConfig extends VaadinWebSecurity {
                 .requestMatchers(new AntPathRequestMatcher("/")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/" + LoginView.ROUTE)).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/VAADIN/**")).permitAll()
-                .requestMatchers(new AntPathRequestMatcher("/icons/**")).permitAll()
-                .requestMatchers(new AntPathRequestMatcher("/images/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/ui/icons/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/ui/images/**")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/frontend/**")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/frontend-es5/**")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/frontend-es6/**")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/oauth2/**")).permitAll()
-                .requestMatchers(new AntPathRequestMatcher("/login/oauth2/**")).permitAll())
-        // Note: We no longer configure API endpoints here, as they're handled by ApiSecurityConfig
-        ;
+                .requestMatchers(new AntPathRequestMatcher("/login/oauth2/**")).permitAll());
 
         // Configure OAuth2 login support for Vaadin UI
         if (clientRegistrationRepository != null) {

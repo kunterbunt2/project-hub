@@ -65,7 +65,7 @@ public class SprintQualityBoardTest extends AbstractUiTestUtil {
         random.setSeed(randomCase.getSeed());
         int numberOfUsers    = random.nextInt(randomCase.getMaxNumberOfUsers()) + 2;
         int numberOfFeatures = random.nextInt(randomCase.getMaxNumberOfStories()) + 1;
-        int numberOfTasks    = random.nextInt(randomCase.getMaxNumberOfWork()) + 1;
+        int numberOfTasks    = random.nextInt(randomCase.getMaxNumberOfTasks()) + 1;
         {
             addRandomUsers(numberOfUsers);
             Product product = addProduct(nameGenerator.generateProductName(0));
@@ -116,6 +116,7 @@ public class SprintQualityBoardTest extends AbstractUiTestUtil {
 
         levelResources(testInfo, sprint, null);
         generateWorklogs(sprint, ParameterOptions.getLocalNow());
+        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
         productViewTester.switchToProductListView();
         productViewTester.selectProduct(nameGenerator.generateProductName(0));
         versionViewTester.selectVersion(nameGenerator.generateVersionName(0));

@@ -22,10 +22,9 @@ import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.avatar.AvatarVariant;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -64,9 +63,10 @@ public final class MainLayout extends AppLayout {
         navbarLayout.setWidthFull();
         navbarLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
         navbarLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+        navbarLayout.addClassName("navbar-custom");
 
         // Add logo and app name to the left
-        HorizontalLayout logoLayout = createHeader();
+        Image logoLayout = createLogo();
 
         // Add navigation tabs to the center
         createNavTabs();
@@ -98,20 +98,10 @@ public final class MainLayout extends AppLayout {
         addToNavbar(true, navAndBreadcrumbs);
     }
 
-    private HorizontalLayout createHeader() {
-        // App logo
-        var appLogo = VaadinIcon.CUBES.create();
-        appLogo.addClassNames(TextColor.PRIMARY, IconSize.MEDIUM);
-
-        // App name
-        var appName = new H1("Project Hub");
-        appName.addClassNames(FontWeight.SEMIBOLD, FontSize.MEDIUM, Margin.NONE);
-
-        // Combine in a layout
-        var logoLayout = new HorizontalLayout(appLogo, appName);
-        logoLayout.addClassNames(Padding.SMALL, Gap.SMALL, AlignItems.CENTER);
-
-        return logoLayout;
+    private Image createLogo() {
+        Image logo = new Image("images/logo.svg", "Kassándra Logo");
+        logo.setHeight("32px");
+        return logo;
     }
 
     private void createNavTabs() {
@@ -178,7 +168,7 @@ public final class MainLayout extends AppLayout {
     private void logout() {
         SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
         logoutHandler.logout(SecurityUtils.getHttpServletRequest(), SecurityUtils.getHttpServletResponse(), SecurityContextHolder.getContext().getAuthentication());
-        getUI().ifPresent(ui -> ui.getPage().setLocation("/login"));
+        getUI().ifPresent(ui -> ui.getPage().setLocation("/ui/login"));
     }
 }
 

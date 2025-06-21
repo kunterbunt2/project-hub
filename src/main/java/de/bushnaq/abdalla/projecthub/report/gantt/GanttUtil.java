@@ -51,12 +51,20 @@ public class GanttUtil {
     private final        DateUtil  localDateTimeUtil                                                       = new DateUtil();
     private final        Logger    logger                                                                  = LoggerFactory.getLogger(this.getClass());
     private final        Set<Task> manualSet                                                               = new HashSet<>();
+    int maxLoop;
     //    private              ProjectProperties projectProperties                                                       = null;
-    private final        Set<Task> startSet                                                                = new HashSet<>();
+    private final Set<Task> startSet = new HashSet<>();
+    int testCriticalCounter;
 
     public GanttUtil(Context context) {
         this.context = context;
     }
+
+//    private Duration calculateDeliveryBuffer(Sprint projectFile) throws ProjectsDashboardException {
+//        Duration deliveryBuffer = Duration.ZERO;
+//        int      i              = 0;
+//        for (Task task : projectFile.getTasks()) {
+//            for (ResourceAssignment resourceAssignment : task.getResourceAssignments()) {
 
     /// /                Number   units = resourceAssignment.getUnits();
 //                Duration work = task.getWork();
@@ -130,12 +138,6 @@ public class GanttUtil {
         }
     }
 
-//    private Duration calculateDeliveryBuffer(Sprint projectFile) throws ProjectsDashboardException {
-//        Duration deliveryBuffer = Duration.ZERO;
-//        int      i              = 0;
-//        for (Task task : projectFile.getTasks()) {
-//            for (ResourceAssignment resourceAssignment : task.getResourceAssignments()) {
-
     /**
      * Creates missing dependencies between tasks that are assigned to the same resource,
      * to allow critical path calculation by just taking dependencies into consideration
@@ -198,26 +200,6 @@ public class GanttUtil {
         return DateUtil.createDurationString(duration, true, true, true).equals(DateUtil.createDurationString(duration2, true, true, true));
     }
 
-    public static ProjectCalendar getCalendar(Task task) {
-//        if (task.getAssignedUser() != null) {
-//            return task.getAssignedUser().getCalendar();
-//        }
-//        for (ResourceAssignment ra : task.getResourceAssignments()) {
-//            Resource resource = ra.getResource();
-//            if (resource != null) {
-//                ProjectCalendar resourceCalendar = resource.getCalendar();
-//                if (resourceCalendar != null) {
-//                    return resourceCalendar;
-//                }
-//            }
-//        }
-        return task.getEffectiveCalendar();
-    }
-
-    public Task getDeliveryBufferTask() {
-        return deliveryBufferTask;
-    }
-
 //    /**
 //     * equal timestamps even if there is a out of office duration in between
 //     *
@@ -253,12 +235,14 @@ public class GanttUtil {
 //        }
 //    }
 
-//    private Resource gerResourceAssignee(Task task) {
-//        if (task.getResourceAssignments().size() > 0) {
-//            return task.getResourceAssignments().get(0).getResource();
-//        }
-//        return null;
-//    }
+    public static ProjectCalendar getCalendar(Task task) {
+        return task.getEffectiveCalendar();
+    }
+
+
+    public Task getDeliveryBufferTask() {
+        return deliveryBufferTask;
+    }
 
     private Duration getDurationFromWork(GanttErrorHandler eh, Task task) {
         float availability = 1;//tasks without resources have 100% availability
@@ -279,19 +263,6 @@ public class GanttUtil {
             return Duration.ZERO;
         }
     }
-
-//    private static Resource getDummyResource(ProjectFile projectFile) {
-//        for (Resource r : projectFile.getResources()) {
-//            if (r.getName() == null) {
-//                return r;
-//            }
-//        }
-//        return null;
-//    }
-
-    //    private boolean hasWork(Task task) {
-    //        return task.getResourceAssignments().size() != 0;
-    //    }
 
     public static LocalDateTime getEarliestStartDate(Sprint projectFile) {
         LocalDateTime earliestDate = null;
@@ -432,257 +403,245 @@ public class GanttUtil {
     }
 
     public void levelResources(GanttErrorHandler eh, Sprint sprint, String projectRequestKey, LocalDateTime currentStartTime) {
-
-        long checks     = 0;
-        int  iterations = 0;
-        logger.trace(String.format("Calculating critical path for %d tasks.", sprint.getTasks().size()));
-        int     maxLoop         = Math.max(sprint.getTasks().size() * sprint.getTasks().size(), sprint.getTasks().size() * 5);
-        boolean anythingChanged = false;
-        printCase("#", "ID", "Task Name", "Method", "Start", "Finish", "Duration");
-        //        logger.trace(String.format("[#] [ID][Task Name           ][ Method__ start_______________ finish_______________"));
-        do {
-            anythingChanged = false;
+        try {
+            long checks     = 0;
+            int  iterations = 0;
+            logger.trace(String.format("Calculating critical path for %d tasks.", sprint.getTasks().size()));
+            maxLoop = Math.max(sprint.getTasks().size() * sprint.getTasks().size(), sprint.getTasks().size() * 5);
+            boolean anythingChanged = false;
+            printCase("#", "ID", "Task Name", "Method", "Start", "Finish", "Duration");
+            //        logger.trace(String.format("[#] [ID][Task Name           ][ Method__ start_______________ finish_______________"));
             do {
-                logger.trace(String.format("Iteration %d/%d.", iterations, maxLoop));
                 anythingChanged = false;
-                //[M] manual
-                //+manual
-                //-milestone
-                //-duration
-                //-children, this means +work
-                for (Task task : sprint.getTasks()) {
-                    checks++;
-                    if (isManual(task) /*&& !task.isMilestone()*/ && (task.getDuration() == null || task.getDuration().isZero())
-                            && !hasChildTasks(task)) {
-                        Duration duration = getDurationFromWork(eh, task);
-                        task.setDuration(duration);
-                        if (task.getStart() != null && duration != null) {
-                            //TODO reintroduce calendar fixed
-                            ProjectCalendar calendar = getCalendar(task);
-                            LocalDateTime   finish   = calendar.getDate(task.getStart(), MpxjUtil.toMpjxDuration(duration));
-//                            LocalDateTime finish = task.getStart().plus(duration);
-                            task.setFinish(finish);
-                        }
-                        anythingChanged = true;
-                        printCase("M", "setFinish", task);
-                    }
-                }
-
-                //[2]
-                for (Task task : sprint.getTasks()) {
-                    checks++;
-                    //-manual
-                    //-children
-                    //-dependencies
-                    //-parent with start
-                    //TODO reintroduce calendar fixed
-                    ProjectCalendar calendar = getCalendar(task);
-                    if (!isManual(task) && !hasChildTasks(task) && !hasHierarchicalDependencies(task) && !hasStart(task.getParentTask())
-                            && !equals(calendar, currentStartTime, task.getStart())) {
-                        setStart(eh, task, currentStartTime);
-                        anythingChanged = true;
-                        printCase("2", "setStart", task);
-                    }
-                }
-
-                //[3]
-                {
+                do {
+//                    logger.trace(String.format("Iteration %d/%d.", iterations, maxLoop));
+                    anythingChanged = false;
+                    //[M] manual
+                    //+manual
+                    //-milestone
+                    //-duration
+                    //-children, this means +work
                     for (Task task : sprint.getTasks()) {
                         checks++;
-                        LocalDateTime start = getLastStartConstraint(task);
+                        if (isManual(task) /*&& !task.isMilestone()*/ && (task.getDuration() == null || (task.getDuration().isZero() && !task.isMilestone())) && !hasChildTasks(task)) {
+                            Duration duration = getDurationFromWork(eh, task);
+                            task.setDuration(duration);
+                            if (task.getStart() != null && duration != null) {
+                                //TODO reintroduce calendar fixed
+                                ProjectCalendar calendar = getCalendar(task);
+                                LocalDateTime   finish   = calendar.getDate(task.getStart(), MpxjUtil.toMpjxDuration(duration));
+//                            LocalDateTime finish = task.getStart().plus(duration);
+                                task.setFinish(finish);
+                            }
+                            anythingChanged = true;
+                            printCase("M", "setFinish", task);
+                        }
+                    }
+
+                    //[2]
+                    for (Task task : sprint.getTasks()) {
+                        checks++;
                         //-manual
                         //-children
-                        //+dependency with finish
-                        if (!isManual(task) && !hasChildTasks(task)) {
+                        //-dependencies
+                        //-parent with start
+                        //TODO reintroduce calendar fixed
+                        ProjectCalendar calendar = getCalendar(task);
+                        if (!isManual(task) && !hasChildTasks(task) && !hasHierarchicalDependencies(task) && !hasStart(task.getParentTask())
+                                && !equals(calendar, currentStartTime, task.getStart())) {
+                            setStart(eh, task, currentStartTime);
+                            anythingChanged = true;
+                            printCase("2", "setStart", task);
+                        }
+                    }
+
+                    //[3]
+                    {
+                        for (Task task : sprint.getTasks()) {
+                            checks++;
+                            LocalDateTime start = getLastStartConstraint(task);
+                            //-manual
+                            //-children
+                            //+dependency with finish
+                            if (!isManual(task) && !hasChildTasks(task)) {
+                                if (start != null) {
+                                    //TODO reintroduce calendar fixed
+                                    ProjectCalendar calendar = getCalendar(task);
+                                    start = calendar.getNextWorkStart(start);//ensure we are not starting on a none-working-day
+                                    if (!equals(getCalendar(task), start, task.getStart())) {
+                                        setStart(eh, task, start);
+                                        anythingChanged = true;
+                                        printCase("3", "setStart", task);
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+
+                    //[1]
+                    {
+                        for (Task task : sprint.getTasks()) {
+                            checks++;
+                            boolean depends = hasHierarchicalDependencies(task);
+                            //-manual
+                            //+children
+                            //-dependency
+                            LocalDateTime start = getFirstChildStart(task);
+                            //TODO reintroduce calendar fixed
+                            ProjectCalendar calendar = getCalendar(task);
+                            if (!isManual(task) && hasChildTasks(task) && !depends) {
+                                if (start != null && !equals(calendar, start, task.getStart())) {
+                                    setStart(eh, task, start);
+                                    anythingChanged = true;
+                                    printCase("1", "setStart", task);
+                                }
+                            }
+                            LocalDateTime finish = getLastChildFinish(task);
+                            if (!isManual(task) && hasChildTasks(task) && !depends) {
+                                if (finish != null && !equals(calendar, finish, task.getFinish())) {
+                                    setFinish(task, finish);
+                                    anythingChanged = true;
+                                    printCase("1", "setFinish", task);
+                                }
+                            }
+
+                        }
+                    }
+
+                    //[4]
+                    {
+                        for (Task task : sprint.getTasks()) {
+                            checks++;
+                            //-manual
+                            //+children
+                            //+dependencies
+                            //+dependency with finish
+                            //TBD +children without start
+                            //TODO should also check if children have constraints for start
+                            if (!isManual(task) && hasChildTasks(task) && hasDirectDependencies(task)) {
+                                LocalDateTime lastStartConstraint   = getLastStartConstraint(task);
+                                LocalDateTime firstManualChildStart = getFirstManualChildStart(task);
+                                LocalDateTime firstChildStart       = getFirstChildStart(task);
+                                //we have to start at least after the constraints and before the children
+                                LocalDateTime start;
+                                if (firstChildStart != null && lastStartConstraint != null
+                                        && (lastStartConstraint.isBefore(firstChildStart) || lastStartConstraint.isEqual(firstChildStart))) {
+                                    start = firstChildStart;
+                                } else if (firstManualChildStart != null) {
+                                    start = firstManualChildStart;
+                                } else {
+                                    start = lastStartConstraint;
+                                }
+                                LocalDateTime finish = getLastChildFinish(task);
+                                //TODO reintroduce calendar fixed
+                                ProjectCalendar calendar = getCalendar(task);
+                                if (start != null) {
+                                    start = calendar.getNextWorkStart(start);
+                                    if (!equals(calendar, start, task.getStart())) {
+                                        setStart(eh, task, start);
+                                        anythingChanged = true;
+                                        printCase("4", "setStart", task);
+                                    }
+                                }
+                                if (finish != null && !equals(calendar, finish, task.getFinish())) {
+                                    setFinish(task, finish);
+                                    anythingChanged = true;
+                                    printCase("4", "setFinish", task);
+                                }
+                            }
+                        }
+                    }
+                    //[5]
+                    for (Task task : sprint.getTasks()) {
+                        checks++;
+                        //-manual
+                        //-children
+                        //-dependencies
+                        //+parent with dependencies
+                        LocalDateTime start = getStart(task.getParentTask());
+                        if (!isManual(task) && !hasChildTasks(task) && !hasDirectDependencies(task) && hasHierarchicalDependencies(task.getParentTask())) {
                             if (start != null) {
                                 //TODO reintroduce calendar fixed
                                 ProjectCalendar calendar = getCalendar(task);
-                                start = calendar.getNextWorkStart(start);//ensure we are not starting on a none-working-day
-                                if (!equals(getCalendar(task), start, task.getStart())) {
-                                    setStart(eh, task, start);
-                                    anythingChanged = true;
-                                    printCase("3", "setStart", task);
-                                }
-                            }
-                        }
-
-                    }
-                }
-
-                //[1]
-                {
-                    for (Task task : sprint.getTasks()) {
-                        checks++;
-                        boolean depends = hasHierarchicalDependencies(task);
-                        //-manual
-                        //+children
-                        //-dependency
-                        LocalDateTime start = getFirstChildStart(task);
-                        //TODO reintroduce calendar fixed
-                        ProjectCalendar calendar = getCalendar(task);
-                        if (!isManual(task) && hasChildTasks(task) && !depends) {
-                            if (start != null && !equals(calendar, start, task.getStart())) {
-                                setStart(eh, task, start);
-                                anythingChanged = true;
-                                printCase("1", "setStart", task);
-                            }
-                        }
-                        LocalDateTime finish = getLastChildFinish(task);
-                        if (!isManual(task) && hasChildTasks(task) && !depends) {
-                            if (finish != null && !equals(calendar, finish, task.getFinish())) {
-                                setFinish(task, finish);
-                                anythingChanged = true;
-                                printCase("1", "setFinish", task);
-                            }
-                        }
-
-                    }
-                }
-
-                //[4]
-                {
-                    for (Task task : sprint.getTasks()) {
-                        checks++;
-                        //-manual
-                        //+children
-                        //+dependencies
-                        //+dependency with finish
-                        //TBD +children without start
-                        //TODO should also check if children have constraints for start
-                        if (!isManual(task) && hasChildTasks(task) && hasDirectDependencies(task)) {
-                            LocalDateTime lastStartConstraint   = getLastStartConstraint(task);
-                            LocalDateTime firstManualChildStart = getFirstManualChildStart(task);
-                            LocalDateTime firstChildStart       = getFirstChildStart(task);
-                            //we have to start at least after the constraints and before the children
-                            LocalDateTime start;
-                            if (firstChildStart != null && lastStartConstraint != null
-                                    && (lastStartConstraint.isBefore(firstChildStart) || lastStartConstraint.isEqual(firstChildStart))) {
-                                start = firstChildStart;
-                            } else if (firstManualChildStart != null) {
-                                start = firstManualChildStart;
-                            } else {
-                                start = lastStartConstraint;
-                            }
-                            LocalDateTime finish = getLastChildFinish(task);
-                            //TODO reintroduce calendar fixed
-                            ProjectCalendar calendar = getCalendar(task);
-                            if (start != null) {
                                 start = calendar.getNextWorkStart(start);
                                 if (!equals(calendar, start, task.getStart())) {
+
                                     setStart(eh, task, start);
                                     anythingChanged = true;
-                                    printCase("4", "setStart", task);
+                                    printCase("5", "setStart", task);
                                 }
                             }
-                            if (finish != null && !equals(calendar, finish, task.getFinish())) {
-                                setFinish(task, finish);
-                                anythingChanged = true;
-                                printCase("4", "setFinish", task);
-                            }
                         }
                     }
-                }
-                //[5]
-                for (Task task : sprint.getTasks()) {
-                    checks++;
-                    //-manual
-                    //-children
-                    //-dependencies
-                    //+parent with dependencies
-                    LocalDateTime start = getStart(task.getParentTask());
-                    if (!isManual(task) && !hasChildTasks(task) && !hasDirectDependencies(task) && hasHierarchicalDependencies(task.getParentTask())) {
-                        if (start != null) {
-                            //TODO reintroduce calendar fixed
-                            ProjectCalendar calendar = getCalendar(task);
-                            start = calendar.getNextWorkStart(start);
-                            if (!equals(calendar, start, task.getStart())) {
+                    iterations++;
 
-                                setStart(eh, task, start);
-                                anythingChanged = true;
-                                printCase("5", "setStart", task);
-                            }
+                    //TODO debugging code
+                    {
+                        Duration days = Duration.between(sprint.getEarliestStartDate(), sprint.getLatestFinishDate());
+                        if (days.minus(Duration.ofDays(365)).isPositive()) {
+                            throw new LevelingResourcesException(String.format("Could not level resources after %d days, assuming dependency loop.", days.toDays()));
                         }
                     }
-                }
-                iterations++;
 
-                if (!eh.isTrue("Error #040. We have detected a dependency loop involving tasks and Categories. Please check the generated team planner chart and fix the dependency loop in your Excel sheet.",
-                        iterations < maxLoop)) {
-                    try {
-                        logger.info(String.format("Could not resolve critical path after %d iterations.", iterations));
-                        //TODO reintroduce intermediate results
-//                        String ganttFileName = FileUtil.removeExtension(xlsxFile);
-//                        ReportUtil.drawTeamPlannerChart(context, projectRequestKey, "/", ganttFileName, projectFile, ganttFileName);
-                    } catch (Exception e) {
-                        logger.error(String.format(e.getMessage(), e));
+
+                    if (!eh.isTrue("Error #040. We have detected a dependency loop involving tasks and Categories. Please check the generated team planner chart and fix the dependency loop in your Excel sheet.", iterations < maxLoop)) {
+                        throw new LevelingResourcesException(String.format("Could not level resources after %d iterations, assuming dependency loop.", iterations));
                     }
-                    anythingChanged = false;
-                }
+                    if (checks % sprint.getTasks().size() == 0) {
+                        System.out.print(".");
+                    }
+                } while (anythingChanged);
+                anythingChanged = createResourceDependencies(sprint, anythingChanged);
             } while (anythingChanged);
-            anythingChanged = createResourceDependencies(sprint, anythingChanged);
-        } while (anythingChanged);
-        checks = testForNull(/*eh,*/ sprint, checks);
-//        String ganttFileName = FileUtil.removeExtension(xlsxFile);
-        checks = testRelationsAreHonored(eh, sprint, checks, "");
-        markCriticalPath(/*eh,*/ sprint, currentStartTime);
+            checks = testForNull(/*eh,*/ sprint, checks);
+            checks = testRelationsAreHonored(eh, sprint, checks, "");
+            markCriticalPath(eh, sprint, currentStartTime);
+            logger.trace(String.format("executed %d checks to level resources.", checks));
+        } catch (LevelingResourcesException e) {
+            logger.error("Error leveling resources: " + e.getMessage());
+        }
         sprint.setStart(sprint.getEarliestStartDate());
+        logger.trace("Setting start date of sprint to earliest start date: {}", sprint.getStart());
         sprint.setEnd(sprint.getLatestFinishDate());
-        logger.trace(String.format("executed %d checks.", checks));
+        logger.trace("Setting end date of sprint to latest finish date: {}", sprint.getEnd());
     }
 
-    private void markCriticalPath(/*GanttErrorHandler eh,*/ Sprint projectFile, LocalDateTime currentStartTime) {
-        LocalDateTime startDate  = projectFile.getEarliestStartDate();
-        LocalDateTime finishDate = projectFile.getLatestFinishDate();
-        for (Task task : projectFile.getTasks()) {
+    private void markCriticalPath(GanttErrorHandler eh, Sprint sprint, LocalDateTime currentStartTime) throws LevelingResourcesException {
+        LocalDateTime startDate  = sprint.getEarliestStartDate();
+        LocalDateTime finishDate = sprint.getLatestFinishDate();
+        for (Task task : sprint.getTasks()) {
             task.setCritical(false);
         }
         startSet.clear();
 
-        long    checks          = 0;
-        boolean anythingChanged = false;
+        long    checks = 0;
+        boolean anythingChanged;
+//        do {
+        anythingChanged = false;
         do {
-            anythingChanged = false;
-            do {
-                anythingChanged = false;
-                for (Task task : projectFile.getTasks()) {
-                    anythingChanged = testCritical(startDate, finishDate, anythingChanged, task);
-                    checks++;
-                }
-            } while (anythingChanged);
+            anythingChanged     = false;
+            testCriticalCounter = 0;
+            for (Task task : sprint.getTasks()) {
+                anythingChanged = testCritical(eh, startDate, finishDate, anythingChanged, task);
+                checks++;
+            }
+            if (!eh.isTrue("Error #040. We have detected a dependency loop involving tasks and Categories. Please check the generated team planner chart and fix the dependency loop in your Excel sheet.", checks < maxLoop)) {
+                throw new LevelingResourcesException(String.format("Could not mark critical path  after %d iterations, assuming dependency loop.", checks));
+            }
+            if (checks % sprint.getTasks().size() == 0) {
+                System.out.print(".");
+            }
         } while (anythingChanged);
+//        } while (anythingChanged);
 
-        //        {
-        //            System.out.println("----------");
-        //            Iterator<Task> iterator = startSet.iterator();
-        //            while (iterator.hasNext()) {
-        //                Task task = iterator.next();
-        //                System.out.println("S=" + task.getName());
-        //            }
-        //            System.out.println("----------");
-        //        }
-        //        {
-        //            Iterator<Task> iterator = finishSet.iterator();
-        //            while (iterator.hasNext()) {
-        //                Task task = iterator.next();
-        //                System.out.println("F=" + task.getName());
-        //            }
-        //            System.out.println("----------");
-        //        }
-        //        {
-        //            Iterator<Task> iterator = manualSet.iterator();
-        //            while (iterator.hasNext()) {
-        //                Task task = iterator.next();
-        //                System.out.println("M=" + task.getName());
-        //            }
-        //            System.out.println("----------");
-        //        }
-        for (Task task : projectFile.getTasks()) {
+        for (Task task : sprint.getTasks()) {
             if (task.getChildTasks().isEmpty() && (startSet.contains(task) || manualSet.contains(task)) && finishSet.contains(task)) {
                 task.setCritical(true);
             }
         }
 
-        logger.trace(String.format("executed %d checks.", checks));
+        logger.trace(String.format("executed %d checks to mark critical path.", checks));
     }
 
     private boolean overlap(Task task1, Task task2) {
@@ -702,265 +661,6 @@ public class GanttUtil {
         return false;
     }
 
-//    public void prepareAfterReadingExcel(/*GanttErrorHandler eh,*/ Sprint projectFile, String projectRequestKey, LocalDateTime date, String xlsxFile)
-//            throws Exception {
-//        try (Profiler pc = new Profiler(SampleType.CPU)) {
-//            //        ResourceContainer resources = projectFile.getResources();
-//            //        ResourceAssignmentContainer resourceAssignments = projectFile.getResourceAssignments();
-//            //        for (Task task : projectFile.getTasks()) {
-//            //            System.out.print(task.getName() + "  ");
-//            //            for (Task child : task.getChildTasks()) {
-//            //                System.out.print(child.getName() + " ");
-//            //
-//            //            }
-//            //            System.out.println();
-//            //        }
-//            for (Task task : projectFile.getTasks()) {
-////                eh.isTrue("We only support one resource assignment per task", task, task.getResourceAssignments().size() < 2);
-//            }
-//            //            Calendar cs = new GregorianCalendar(TimeZone.getTimeZone("CET"));
-//            {
-//                projectProperties = projectFile.getProjectProperties();
-//                //TODO JAVA21 start
-//                //                cs.setTime(projectProperties.getDefaultStartTime());
-//                //                projectProperties.setDefaultStartTime(new Date(83, 11, 31, cs.get(Calendar.HOUR_OF_DAY), cs.get(Calendar.MINUTE)));
-//                //                Calendar ce = new GregorianCalendar(TimeZone.getTimeZone("CET"));
-//                //                ce.setTime(projectProperties.getDefaultEndTime());
-//                //                projectProperties.setDefaultEndTime(new Date(83, 11, 31, ce.get(Calendar.HOUR_OF_DAY), ce.get(Calendar.MINUTE)));
-//                //TODO JAVA21 end
-//
-//                ProjectCalendar projectCalendar = projectFile.getCalendarByName(ProjectCalendar.DEFAULT_BASE_CALENDAR_NAME);
-//                if (projectCalendar == null) {
-//                    projectCalendar = projectFile.getDefaultCalendar();
-//                }
-//                if (projectCalendar == null) {
-//                    projectCalendar = projectFile.addDefaultBaseCalendar();
-//                    for (DayOfWeek day : DayOfWeek.values()) {
-//                        if (projectCalendar.getCalendarDayType(day) == DayType.WORKING) {
-//                            ProjectCalendarHours hours = projectCalendar.getCalendarHours(day);
-//                            hours.clear();
-//                            hours.add(new LocalTimeRange(LocalTime.of(8, 0), LocalTime.of(12, 0)));
-//                            hours.add(new LocalTimeRange(LocalTime.of(13, 0), LocalTime.of(16, 30)));
-//                        }
-//                    }
-//                    BankHolidayReader bhr = new BankHolidayReader();
-//                    context.bankHolidays = bhr.read(context.parameters.smbParameters, ParameterOptions.now.toLocalDate());
-//                    for (LocalDate ld : context.bankHolidays.keySet()) {
-//                        // System.out.println(ld.toString() + " " + bankHolidays.get(ld));
-//                        ProjectCalendarException calendarException = projectCalendar.addCalendarException(ld, ld);
-//                        calendarException.setName(context.bankHolidays.get(ld));
-//                    }
-//
-//                }
-//                ProjectCalendar projectPropertiesCalendar = projectProperties.getDefaultCalendar();
-//                if (projectPropertiesCalendar == null) {
-//                    projectProperties.setDefaultCalendar(projectCalendar);
-//                }
-//
-//                //        projectProperties.setDefaultDurationUnits(TimeUnit.HOURS);
-//                //        projectProperties.setDefaultWorkUnits(TimeUnit.HOURS);
-//                //        <DurationFormat>7</DurationFormat>
-//                //        <StartDate>2019-05-13T08:00:00</StartDate>
-//                //        <FinishDate>2019-05-22T15:25:48</FinishDate>
-//                //        <CurrencySymbol>$</CurrencySymbol>
-//                //        <CurrencyCode>GBP</CurrencyCode>
-//                //        if (projectFile.getStartDate() == null)
-//            }
-//
-//            //---Assign dummy resource
-//            for (Task task : projectFile.getTasks()) {
-//                List<ResourceAssignment> resourceAssignments = task.getResourceAssignments();
-//                for (ResourceAssignment resourceAssignment : resourceAssignments) {
-//                    if (resourceAssignment.getResource() == null) {
-//                        Resource r = GanttUtil.getDummyResource(projectFile);
-//                        if (r != null) {
-//                            resourceAssignment.setResourceUniqueID(r.getUniqueID());
-//                            //                            resourceAssignment.setResourceUniqueID(r.getID());
-//                        }
-//                    }
-//                }
-//            }
-//
-//            {
-//                //TODO JAVA21
-//                //                Calendar c = new GregorianCalendar(TimeZone.getTimeZone("CET"));
-//                //                c.setTime(date);
-//                //                c.set(Calendar.HOUR_OF_DAY, cs.get(Calendar.HOUR_OF_DAY));
-//                //                c.set(Calendar.MINUTE, cs.get(Calendar.MINUTE));
-//                //                c.set(Calendar.SECOND, 0);
-//                //                c.set(Calendar.MILLISECOND, 0);
-//                LocalDateTime c = date;
-//                calculateCriticalPath(/*eh,*/ projectFile, projectRequestKey, c, xlsxFile);
-//                //---we calculate delivery buffer only first time.
-//                Map<String, Object> customProperties = projectProperties.getCustomProperties();
-//                if (customProperties != null) {
-//                    logger.info("Calculate delivery buffer start");
-//                    Duration deliveryBuffer = calculateDeliveryBuffer(projectFile);
-//                    //add delivery buffer to the correct task
-//                    if (deliveryBuffer.getDuration() > 0) {
-//                        boolean foundBuffer = false;
-//                        //use 6 seconds accuracy
-////                        eh.isTrue("Error #050: found unit of work that is not HOUR.", deliveryBuffer.getUnits() == TimeUnit.HOURS);
-//                        if (deliveryBuffer.getUnits() == TimeUnit.HOURS) {
-//                            double duration = (((int) (deliveryBuffer.getDuration() * 60 * 10)) * 6) / (60 * 10 * 6.0);
-//                            deliveryBuffer = Duration.getInstance(duration, deliveryBuffer.getUnits());
-//                        }
-//                        for (Task task : projectFile.getTasks()) {
-//                            if (isDeliveryBufferTask(task)) {
-//                                ResourceAssignment resourceAssignment = task.getResourceAssignments().get(0);
-//                                resourceAssignment.setWork(deliveryBuffer);
-//                                resourceAssignment.setRemainingWork(deliveryBuffer);
-//                                resourceAssignment.setRegularWork(deliveryBuffer);
-//                                if (task.getStart() != null && deliveryBuffer != null) {
-//                                    task.setDuration(deliveryBuffer);
-//                                    ProjectCalendar calendar = getCalendar(task);
-//                                    LocalDateTime   finish   = calendar.getDate(task.getStart(), deliveryBuffer);
-//                                    task.setFinish(finish);
-//                                    foundBuffer        = true;
-//                                    deliveryBufferTask = task;
-//                                    logger.info(String.format("Delivery buffer found and set to %s.",
-//                                            DateUtil.createWorkDayDurationString(DateUtil.toJavaDuration(deliveryBuffer), false, true, false)));
-//                                }
-//                            }
-//                        }
-
-    /// /                        eh.isTrue("Error #050: Missing task 'Delivery Buffer'. Cannot calculate delivery buffer for this porject.", foundBuffer);
-//                    }
-//                    logger.info("Calculate delivery buffer end");
-//                }
-//            }
-//        }
-//    }
-
-//    public void prepareAfterReadingXml(/*GanttErrorHandler eh,*/ Sprint projectFile, String projectRequestKey, LocalDateTime date, String xlsxFile)
-//            throws Exception {
-//        printTasks(projectFile);
-//        try (Profiler pc = new Profiler(SampleType.CPU)) {
-//            //        ResourceContainer resources = projectFile.getResources();
-//            //        ResourceAssignmentContainer resourceAssignments = projectFile.getResourceAssignments();
-//            //        for (Task task : projectFile.getTasks()) {
-//            //            System.out.print(task.getName() + "  ");
-//            //            for (Task child : task.getChildTasks()) {
-//            //                System.out.print(child.getName() + " ");
-//            //
-//            //            }
-//            //            System.out.println();
-//            //        }
-//            for (Task task : projectFile.getTasks()) {
-//                eh.isTrue("We only support one resource assignment per task", task, task.getResourceAssignments().size() < 2);
-//            }
-//            //            Calendar cs = new GregorianCalendar(TimeZone.getTimeZone("CET"));
-//            {
-//                projectProperties = projectFile.getProjectProperties();
-//                //TODO JAVA21 start
-//                //                cs.setTime(projectProperties.getDefaultStartTime());
-//                //                projectProperties.setDefaultStartTime(new Date(83, 11, 31, cs.get(Calendar.HOUR_OF_DAY), cs.get(Calendar.MINUTE)));
-//                //                Calendar ce = new GregorianCalendar(TimeZone.getTimeZone("CET"));
-//                //                ce.setTime(projectProperties.getDefaultEndTime());
-//                //                projectProperties.setDefaultEndTime(new Date(83, 11, 31, ce.get(Calendar.HOUR_OF_DAY), ce.get(Calendar.MINUTE)));
-//                //TODO JAVA21 end
-//
-//                ProjectCalendar projectCalendar = projectFile.getCalendarByName(ProjectCalendar.DEFAULT_BASE_CALENDAR_NAME);
-//                if (projectCalendar == null) {
-//                    projectCalendar = projectFile.getDefaultCalendar();
-//                }
-//                if (projectCalendar == null) {
-//                    projectCalendar = projectFile.addDefaultBaseCalendar();
-//                    for (DayOfWeek day : DayOfWeek.values()) {
-//                        if (projectCalendar.getCalendarDayType(day) == DayType.WORKING) {
-//                            ProjectCalendarHours hours = projectCalendar.getCalendarHours(day);
-//                            hours.clear();
-//                            hours.add(new LocalTimeRange(LocalTime.of(8, 0), LocalTime.of(12, 0)));
-//                            hours.add(new LocalTimeRange(LocalTime.of(13, 0), LocalTime.of(16, 30)));
-//                        }
-//                    }
-//                    BankHolidayReader bhr = new BankHolidayReader();
-//                    context.bankHolidays = bhr.read(context.parameters.smbParameters, ParameterOptions.now.toLocalDate());
-//                    for (LocalDate ld : context.bankHolidays.keySet()) {
-//                        // System.out.println(ld.toString() + " " + bankHolidays.get(ld));
-//                        ProjectCalendarException calendarException = projectCalendar.addCalendarException(ld, ld);
-//                        calendarException.setName(context.bankHolidays.get(ld));
-//                    }
-//
-//                }
-//                ProjectCalendar projectPropertiesCalendar = projectProperties.getDefaultCalendar();
-//                if (projectPropertiesCalendar == null) {
-//                    projectProperties.setDefaultCalendar(projectCalendar);
-//                }
-//
-//                //        projectProperties.setDefaultDurationUnits(TimeUnit.HOURS);
-//                //        projectProperties.setDefaultWorkUnits(TimeUnit.HOURS);
-//                //        <DurationFormat>7</DurationFormat>
-//                //        <StartDate>2019-05-13T08:00:00</StartDate>
-//                //        <FinishDate>2019-05-22T15:25:48</FinishDate>
-//                //        <CurrencySymbol>$</CurrencySymbol>
-//                //        <CurrencyCode>GBP</CurrencyCode>
-//                //        if (projectFile.getStartDate() == null)
-//            }
-//
-//            //---Assign dummy resource
-//            for (Task task : projectFile.getTasks()) {
-//                List<ResourceAssignment> resourceAssignments = task.getResourceAssignments();
-//                for (ResourceAssignment resourceAssignment : resourceAssignments) {
-//                    if (resourceAssignment.getResource() == null) {
-//                        Resource r = GanttUtil.getDummyResource(projectFile);
-//                        if (r != null) {
-//                            resourceAssignment.setResourceUniqueID(r.getUniqueID());
-//                            //                            resourceAssignment.setResourceUniqueID(r.getID());
-//                        }
-//                    }
-//                }
-//            }
-//
-//            {
-//                //TODO JAVA21
-//                //                Calendar c = new GregorianCalendar(TimeZone.getTimeZone("CET"));
-//                //                c.setTime(date);
-//                //                c.set(Calendar.HOUR_OF_DAY, cs.get(Calendar.HOUR_OF_DAY));
-//                //                c.set(Calendar.MINUTE, cs.get(Calendar.MINUTE));
-//                //                c.set(Calendar.SECOND, 0);
-//                //                c.set(Calendar.MILLISECOND, 0);
-//                LocalDateTime c = date;
-//                calculateCriticalPath(eh, projectFile, projectRequestKey, c, xlsxFile);
-//                //---we calculate delivery buffer only first time.
-//                Map<String, Object> customProperties = projectProperties.getCustomProperties();
-//                if (customProperties != null) {
-//                    logger.info("Calculate delivery buffer start");
-//                    Duration deliveryBuffer = calculateDeliveryBuffer(projectFile);
-//                    //add delivery buffer to the correct task
-//                    if (deliveryBuffer.getDuration() > 0) {
-//                        boolean foundBuffer = false;
-//                        //use 6 seconds accuracy
-//                        eh.isTrue("Error #050: found unit of work that is not HOUR.", deliveryBuffer.getUnits() == TimeUnit.HOURS);
-//                        if (deliveryBuffer.getUnits() == TimeUnit.HOURS) {
-//                            double duration = (((int) (deliveryBuffer.getDuration() * 60 * 10)) * 6) / (60 * 10 * 6.0);
-//                            deliveryBuffer = Duration.getInstance(duration, deliveryBuffer.getUnits());
-//                        }
-//                        for (Task task : projectFile.getTasks()) {
-//                            if (isDeliveryBufferTask(task)) {
-//                                ResourceAssignment resourceAssignment = task.getResourceAssignments().get(0);
-//                                resourceAssignment.setWork(deliveryBuffer);
-//                                resourceAssignment.setRemainingWork(deliveryBuffer);
-//                                resourceAssignment.setRegularWork(deliveryBuffer);
-//                                if (task.getStart() != null && deliveryBuffer != null) {
-//                                    task.setDuration(deliveryBuffer);
-//                                    ProjectCalendar calendar = getCalendar(task);
-//                                    LocalDateTime   finish   = calendar.getDate(task.getStart(), deliveryBuffer);
-//                                    task.setFinish(finish);
-//                                    foundBuffer        = true;
-//                                    deliveryBufferTask = task;
-//                                    logger.info(String.format("Delivery buffer found and set to %s.",
-//                                            DateUtil.createWorkDayDurationString(MpxjUtil.toJavaDuration(deliveryBuffer), false, true, false)));
-//                                }
-//                            }
-//                        }
-//                        eh.isTrue("Error #050: Missing task 'Delivery Buffer'. Cannot calculate delivery buffer for this porject.", foundBuffer);
-//                    }
-//                    logger.info("Calculate delivery buffer end");
-//                }
-//            }
-//        }
-//    }
     private void printCase(String caseName, String id, String taskName, String methodName, String start, String finish, String duration) {
         logger.trace(String.format("[%s] [%2s][%-20s][%-9s][%20s][%20s][%19s]", caseName, id, taskName, methodName, start, finish, duration));
     }
@@ -1029,7 +729,12 @@ public class GanttUtil {
      * @param task
      * @return
      */
-    private boolean testCritical(LocalDateTime startDate, LocalDateTime finishDate, boolean anythingChanged, Task task) {
+    private boolean testCritical(GanttErrorHandler eh, LocalDateTime startDate, LocalDateTime finishDate, boolean anythingChanged, Task task) throws LevelingResourcesException {
+        if (!eh.isTrue("Error #040. We have detected a dependency loop involving tasks and Categories. Please check the generated team planner chart and fix the dependency loop in your Excel sheet.",
+                testCriticalCounter < maxLoop * 10)) {
+            throw new LevelingResourcesException(String.format("Could not test critical path  after %d iterations, assuming dependency loop.", testCriticalCounter));
+        }
+        testCriticalCounter++;
         if (!startSet.contains(task)) {
             //are we starting at the beginning of the project?
             ProjectCalendar calendar = getCalendar(task);
@@ -1167,7 +872,7 @@ public class GanttUtil {
         }
         for (Relation r : task.getPredecessors()) {
             Task predecessor = task.getSprint().getTaskById(r.getPredecessorId());
-            anythingChanged = testCritical(startDate, finishDate, anythingChanged, predecessor);
+            anythingChanged = testCritical(eh, startDate, finishDate, anythingChanged, predecessor);
         }
         return anythingChanged;
     }

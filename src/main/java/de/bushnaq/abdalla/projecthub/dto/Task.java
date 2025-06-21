@@ -30,6 +30,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * represents a task in a Gantt chart.
@@ -130,6 +131,16 @@ public class Task implements Comparable<Task> {
     }
 
     public void initialize() {
+    }
+
+    public boolean isAncestor(Task story) {
+        if (Objects.equals(story.getId(), getId()))
+            return true;
+        for (Task childTask : childTasks) {
+            if (childTask.isAncestor(story))
+                return true;
+        }
+        return false;
     }
 
     public void recalculate() {

@@ -37,6 +37,8 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
@@ -55,8 +57,10 @@ public class Demo extends AbstractUiTestUtil {
 
     private static List<RandomCase> listRandomCases() {
         RandomCase[] randomCases = new RandomCase[]{//
-//                new RandomCase(1, 10, 2, 1, 2, 1),//
-                new RandomCase(2, 4, 4, 4, 4, 10, 3, 4, 3, 1)//
+//                new RandomCase(1, LocalDate.parse("2024-12-01"), Duration.ofDays(10), 10, 2, 1, 2, 1),//
+//                new RandomCase(2, LocalDate.parse("2024-12-01"), Duration.ofDays(10), 1, 1, 1, 6, 6, 8, 8, 6, 7)//
+                new RandomCase(3, LocalDate.parse("2024-12-01"), Duration.ofDays(10), 3, 1, 1, 6, 6, 8, 8, 6, 7)//
+//                new RandomCase(3, LocalDate.parse("2024-12-01"), Duration.ofDays(10), 4, 3, 3, 3, 10, 5, 8, 5, 1)//
         };
         return Arrays.stream(randomCases).toList();
     }
@@ -70,6 +74,7 @@ public class Demo extends AbstractUiTestUtil {
         TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         generateProductsIfNeeded(testInfo, randomCase);
+        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
         productViewTester.switchToProductListView();
         seleniumHandler.waitUntilBrowserClosed(0);
     }

@@ -19,8 +19,11 @@ package de.bushnaq.abdalla.projecthub.ui;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import de.bushnaq.abdalla.projecthub.util.ProductViewTester;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -76,6 +79,8 @@ public class ProductListViewOidcTest extends AbstractUiTestUtil {
 
     @Autowired
     private ProductViewTester productViewTester;
+    @Autowired
+    private SeleniumHandler   seleniumHandler;
 
     // Method to get the public-facing URL, fixing potential redirect issues
     private static String getPublicFacingUrl(KeycloakContainer container) {
@@ -122,6 +127,11 @@ public class ProductListViewOidcTest extends AbstractUiTestUtil {
 
         // Register all properties
         props.forEach((key, value) -> registry.add(key, () -> value));
+    }
+
+    @BeforeEach
+    public void setupTest(TestInfo testInfo) {
+        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
     }
 
     /**

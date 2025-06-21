@@ -17,6 +17,8 @@
 
 package de.bushnaq.abdalla.projecthub.util;
 
+import de.bushnaq.abdalla.profiler.Profiler;
+import de.bushnaq.abdalla.profiler.SampleType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,14 +48,14 @@ public class H2DatabaseStateManager {
     private static final String            SNAPSHOTS_DIR  = "test-database-snapshots";
     private static final Logger            logger         = LoggerFactory.getLogger(H2DatabaseStateManager.class);
     @Autowired
-    private DataSource dataSource;
+    private              DataSource        dataSource;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
     @Value("${spring.datasource.password}")
-    private String password;
+    private String       password;
     @Value("${spring.datasource.username}")
-    private String username;
+    private String       username;
 
     /**
      * Properly drops all user tables from the database
@@ -101,30 +103,32 @@ public class H2DatabaseStateManager {
      * @return Path to the created snapshot file
      */
     public String exportDatabaseSnapshot(String snapshotName) {
-        try {
-            // Ensure directory exists
-            File snapshotsDir = new File(SNAPSHOTS_DIR);
-            if (!snapshotsDir.exists()) {
-                snapshotsDir.mkdirs();
+        try (Profiler pc = new Profiler(SampleType.FILE)) {
+            try {
+                // Ensure directory exists
+                File snapshotsDir = new File(SNAPSHOTS_DIR);
+                if (!snapshotsDir.exists()) {
+                    snapshotsDir.mkdirs();
+                }
+
+                // Create a timestamped filename for the snapshot
+                String timestamp = LocalDateTime.now().format(DATE_FORMATTER);
+                String filename  = SNAPSHOTS_DIR + File.separator + snapshotName + "_" + timestamp + ".zip";
+
+                // Execute the SCRIPT command
+                try (Connection conn = dataSource.getConnection()) {
+                    String scriptCommand = "SCRIPT TO '" + Paths.get(filename).toAbsolutePath() + "' COMPRESSION ZIP";
+
+                    logger.info("Exporting database snapshot to: {}", filename);
+                    conn.createStatement().execute(scriptCommand);
+                    logger.info("Database snapshot exported successfully");
+
+                    return filename;
+                }
+            } catch (Exception e) {
+                logger.error("Failed to export database snapshot", e);
+                throw new RuntimeException("Failed to export database snapshot", e);
             }
-
-            // Create a timestamped filename for the snapshot
-            String timestamp = LocalDateTime.now().format(DATE_FORMATTER);
-            String filename  = SNAPSHOTS_DIR + File.separator + snapshotName + "_" + timestamp + ".zip";
-
-            // Execute the SCRIPT command
-            try (Connection conn = dataSource.getConnection()) {
-                String scriptCommand = "SCRIPT TO '" + Paths.get(filename).toAbsolutePath() + "' COMPRESSION ZIP";
-
-                logger.info("Exporting database snapshot to: {}", filename);
-                conn.createStatement().execute(scriptCommand);
-                logger.info("Database snapshot exported successfully");
-
-                return filename;
-            }
-        } catch (Exception e) {
-            logger.error("Failed to export database snapshot", e);
-            throw new RuntimeException("Failed to export database snapshot", e);
         }
     }
 

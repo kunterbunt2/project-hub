@@ -20,8 +20,6 @@ package de.bushnaq.abdalla.projecthub.ui.util;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import de.bushnaq.abdalla.projecthub.util.AbstractGanttTestUtil;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.TestInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class AbstractUiTestUtil extends AbstractGanttTestUtil {
@@ -33,10 +31,10 @@ public class AbstractUiTestUtil extends AbstractGanttTestUtil {
     }
 
 
-    @BeforeEach
-    public void setupTest(TestInfo testInfo) {
-        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), testInfo.getDisplayName());
-    }
+//    @BeforeEach
+//    public void setupTest(TestInfo testInfo) {
+//        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+//    }
 
     @AfterEach
     public void tearDownTest() throws InterruptedException {

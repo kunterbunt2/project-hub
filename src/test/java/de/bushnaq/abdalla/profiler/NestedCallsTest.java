@@ -70,7 +70,7 @@ class NestedCallsTest extends BaseUtils {
         }
         Profiler.log("nestedCallsTest");
         test(new TestResult[]{//
-                new TestResult(SampleType.SQL, 500),//
+                new TestResult(SampleType.JPA, 500),//
                 new TestResult(SampleType.CPU, 500),//
                 new TestResult(SampleType.TCP, 500),//
                 new TestResult(SampleType.SMB, 300)//
@@ -80,7 +80,7 @@ class NestedCallsTest extends BaseUtils {
     }
 
     private void sqlMethod() throws Exception {
-        try (Profiler pc = new Profiler(SampleType.SQL)) {
+        try (Profiler pc = new Profiler(SampleType.JPA)) {
             Profiler.incrementCounter("counter-2", 333);
             mockupSqlAccess(500);
         }

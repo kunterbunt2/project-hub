@@ -69,7 +69,7 @@ public class GanttTest extends AbstractGanttTestUtil {
         Task   task1          = addParentTask("[1] Parent Task", sprint, null, startMilestone);
         Task   task2          = addTask("[2] Child Task", "5d", resource1, sprint, task1, null);
         Task   task3          = addTask("[3] Child Task", "5d", resource2, sprint, task1, task2);
-        TestInfoUtil.setTestCaseIndex(testInfo, 1);
+//        TestInfoUtil.setTestCaseIndex(testInfo, 1);
         sprint.initialize();
         sprint.initUserMap(userApi.getAll(sprint.getId()));
         sprint.initTaskMap(taskApi.getAll(sprint.getId()), worklogApi.getAll(sprint.getId()));
@@ -108,7 +108,7 @@ public class GanttTest extends AbstractGanttTestUtil {
         Task task5 = addTask("[5] Child Task ", "5d", resource1, sprint, task4, null);
         Task task6 = addTask("[6] Child Task ", "5d", resource2, sprint, task4, task5);
 
-        TestInfoUtil.setTestCaseIndex(testInfo, 2);
+//        TestInfoUtil.setTestCaseIndex(testInfo, 2);
         sprint.initialize();
         sprint.initUserMap(userApi.getAll(sprint.getId()));
         sprint.initTaskMap(taskApi.getAll(sprint.getId()), worklogApi.getAll(sprint.getId()));
@@ -152,7 +152,7 @@ public class GanttTest extends AbstractGanttTestUtil {
         Task task8 = addTask("[8] Child Task ", "5d", resource1, sprint, task7, null);
         Task task9 = addTask("[9] Child Task ", "5d", resource2, sprint, task7, null);
 
-        TestInfoUtil.setTestCaseIndex(testInfo, 3);
+//        TestInfoUtil.setTestCaseIndex(testInfo, 3);
         sprint.initialize();
         sprint.initUserMap(userApi.getAll(sprint.getId()));
         sprint.initTaskMap(taskApi.getAll(sprint.getId()), worklogApi.getAll(sprint.getId()));

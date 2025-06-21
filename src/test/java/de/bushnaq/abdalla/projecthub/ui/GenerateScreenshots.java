@@ -35,6 +35,8 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
@@ -65,7 +67,8 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
 
     private static List<RandomCase> listRandomCases() {
         RandomCase[] randomCases = new RandomCase[]{//
-                new RandomCase(1, 5, 8, 8, 8, 1),//
+//                new RandomCase(1, 5, 8, 8, 8, 1),//
+                new RandomCase(1, LocalDate.parse("2024-12-01"), Duration.ofDays(10), 1, 1, 1, 1, 6, 8, 8, 6, 13)//
 //                new RandomCase(2, 10, 3, 2, 3, 1)//
 //                new RandomCase(2, 4, 4, 4, 4, 10, 7, 8, 5, 1)//
         };
@@ -138,13 +141,14 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
     @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void takeScreenshots(RandomCase randomCase, TestInfo testInfo) throws Exception {
         // Set browser window to a fixed size for consistent screenshots
-        seleniumHandler.setWindowSize(1280, 1024);
+        seleniumHandler.setWindowSize(1800, 1200);
 
 //        printAuthentication();
         TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         generateProductsIfNeeded(testInfo, randomCase);
+        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
         userName    = nameGenerator.generateUserName(0);
         productName = nameGenerator.generateProductName(0);
         versionName = nameGenerator.generateVersionName(0);

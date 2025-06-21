@@ -18,12 +18,14 @@
 package de.bushnaq.abdalla.projecthub.ui;
 
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import de.bushnaq.abdalla.projecthub.util.FeatureViewTester;
 import de.bushnaq.abdalla.projecthub.util.ProductViewTester;
 import de.bushnaq.abdalla.projecthub.util.SprintViewTester;
 import de.bushnaq.abdalla.projecthub.util.VersionViewTester;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -51,6 +53,8 @@ public class SprintListViewTest extends AbstractUiTestUtil {
     @Autowired
     private       ProductViewTester productViewTester;
     private final String            projectName   = "Feature-3";
+    @Autowired
+    private       SeleniumHandler   seleniumHandler;
     private final String            sprintName    = "Sprint-3";
     @Autowired
     private       SprintViewTester  sprintViewTester;
@@ -69,7 +73,8 @@ public class SprintListViewTest extends AbstractUiTestUtil {
      * @throws Exception if any error occurs during setup
      */
     @BeforeEach
-    public void createPrerequisites() throws Exception {
+    public void createPrerequisites(TestInfo testInfo) throws Exception {
+        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
         // Navigate to the product list and create a product
         productViewTester.switchToProductListView();
         productViewTester.createProductConfirm(productName);

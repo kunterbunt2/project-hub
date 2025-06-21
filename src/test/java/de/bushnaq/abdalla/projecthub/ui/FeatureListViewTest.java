@@ -18,11 +18,13 @@
 package de.bushnaq.abdalla.projecthub.ui;
 
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import de.bushnaq.abdalla.projecthub.util.FeatureViewTester;
 import de.bushnaq.abdalla.projecthub.util.ProductViewTester;
 import de.bushnaq.abdalla.projecthub.util.VersionViewTester;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -53,6 +55,8 @@ public class FeatureListViewTest extends AbstractUiTestUtil {
     @Autowired
     private       ProductViewTester productViewTester;
     private final String            projectName    = "Project-2";
+    @Autowired
+    private       SeleniumHandler   seleniumHandler;
     private final String            versionName    = "Version-2";
     @Autowired
     private       VersionViewTester versionViewTester;
@@ -67,7 +71,8 @@ public class FeatureListViewTest extends AbstractUiTestUtil {
      * @throws Exception if any error occurs during setup
      */
     @BeforeEach
-    public void setupEnvironment() throws Exception {
+    public void setupTest(TestInfo testInfo) throws Exception {
+        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
         // Navigate to product list and create a product
         productViewTester.switchToProductListView();
         productViewTester.createProductConfirm(productName);

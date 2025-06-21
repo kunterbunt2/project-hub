@@ -69,7 +69,8 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
     @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void legacyTest(Path mppFileName, TestInfo testInfo) throws Exception {
         TestInfoUtil.setTestCaseIndex(testInfo, testCaseIndex);
-        TestInfoUtil.setTestMethod(testInfo, generateTestCaseName(testInfo));
+        TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + testCaseIndex);
+//        TestInfoUtil.setTestMethod(testInfo, generateTestCaseName(testInfo));
         TestInfoUtil.setDaysAfterStart(testInfo, random.nextInt(20) + 2);
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName());
         generateOneProduct(testInfo);
@@ -190,6 +191,7 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
                 levelResources(testInfo, readSprint, projectFile);
                 ParameterOptions.now = ParameterOptions.now.plusDays(TestInfoUtil.getDaysAfterStart(testInfo));
                 generateWorklogs(readSprint, ParameterOptions.getLocalNow());
+                initializeInstances();//reload from db for our test comparison
                 generateGanttChart(testInfo, readSprint.getId(), projectFile);
                 generateBurndownChart(testInfo, readSprint.getId());
             }

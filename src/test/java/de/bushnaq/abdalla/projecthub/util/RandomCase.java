@@ -20,22 +20,29 @@ package de.bushnaq.abdalla.projecthub.util;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.time.Duration;
+import java.time.LocalDate;
+
 @Getter
 @ToString(callSuper = false)
 public class RandomCase {
-    private final int  maxDurationDays;
-    private final int  maxNumberOfFeatures;
-    private final int  maxNumberOfProducts;
-    private final int  maxNumberOfSprints;
-    private final int  maxNumberOfStories;
-    private final int  maxNumberOfUsers;
-    private final int  maxNumberOfVersions;
-    private final int  maxNumberOfWork;
-    private final long seed;
-    private final int  testCaseIndex;
+    private final int       maxDurationDays;
+    private final int       maxNumberOfFeatures;
+    private final int       maxNumberOfProducts;
+    private final int       maxNumberOfSprints;
+    private final int       maxNumberOfStories;
+    private final int       maxNumberOfTasks;
+    private final int       maxNumberOfUsers;
+    private final int       maxNumberOfVersions;
+    private final Duration  maxStartDateShift;
+    private final LocalDate minStartDate;
+    private final long      seed;
+    private final int       testCaseIndex;
 
-    public RandomCase(int testCaseIndex, int maxDurationDays, int maxNumberOfStories, int maxNumberOfUsers, int maxNumberOfWork, int seed) {
+    public RandomCase(int testCaseIndex, int maxDurationDays, int maxNumberOfStories, int maxNumberOfUsers, int maxNumberOfTasks, int seed) {
         this.testCaseIndex       = testCaseIndex;
+        this.minStartDate        = LocalDate.parse("2024-12-15");
+        this.maxStartDateShift   = Duration.ofDays(1);
         this.maxNumberOfProducts = 1;
         this.maxNumberOfVersions = 1;
         this.maxNumberOfFeatures = 1;
@@ -43,12 +50,14 @@ public class RandomCase {
         this.maxDurationDays     = maxDurationDays;
         this.maxNumberOfStories  = maxNumberOfStories;
         this.maxNumberOfUsers    = maxNumberOfUsers;
-        this.maxNumberOfWork     = maxNumberOfWork;
+        this.maxNumberOfTasks    = maxNumberOfTasks;
         this.seed                = seed;
     }
 
-    public RandomCase(int testCaseIndex, int maxNumberOfProducts, int maxNumberOfVersions, int maxNumberOfFeatures, int maxNumberOfSprints, int maxDurationDays, int maxNumberOfStories, int maxNumberOfUsers, int maxNumberOfWork, int seed) {
+    public RandomCase(int testCaseIndex, LocalDate minStartDate, Duration maxStartDateShift, int maxNumberOfProducts, int maxNumberOfVersions, int maxNumberOfFeatures, int maxNumberOfSprints, int maxDurationDays, int maxNumberOfStories, int maxNumberOfUsers, int maxNumberOfTasks, int seed) {
         this.testCaseIndex       = testCaseIndex;
+        this.minStartDate        = minStartDate;
+        this.maxStartDateShift   = maxStartDateShift;
         this.maxNumberOfProducts = maxNumberOfProducts;
         this.maxNumberOfVersions = maxNumberOfVersions;
         this.maxNumberOfFeatures = maxNumberOfFeatures;
@@ -56,7 +65,7 @@ public class RandomCase {
         this.maxDurationDays     = maxDurationDays;
         this.maxNumberOfStories  = maxNumberOfStories;
         this.maxNumberOfUsers    = maxNumberOfUsers;
-        this.maxNumberOfWork     = maxNumberOfWork;
+        this.maxNumberOfTasks    = maxNumberOfTasks;
         this.seed                = seed;
     }
 

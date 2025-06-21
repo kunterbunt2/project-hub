@@ -118,11 +118,25 @@ public class SecurityConfig extends VaadinWebSecurity {
                         .frameOptions(frameOptions -> frameOptions.sameOrigin())
                 );
 
-        // Call the parent configuration to handle Vaadin-specific security
-        super.configure(http);
 
         // Set the login view
         setLoginView(http, LoginView.class);
+
+        http.authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers(new AntPathRequestMatcher("/")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/" + LoginView.ROUTE)).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/VAADIN/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/ui/icons/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/ui/images/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/frontend/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/frontend-es5/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/frontend-es6/**")).permitAll()
+//                .requestMatchers(new AntPathRequestMatcher("/oauth2/**")).permitAll()
+//                .requestMatchers(new AntPathRequestMatcher("/login/oauth2/**")).permitAll()
+        );
+
+        // Call the parent configuration to handle Vaadin-specific security
+        super.configure(http);
 
         // Set the default success URL after login to ProductListView
         http.formLogin(formLogin -> formLogin.defaultSuccessUrl("/ui/product-list", true));
