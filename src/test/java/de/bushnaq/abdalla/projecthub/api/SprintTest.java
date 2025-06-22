@@ -34,8 +34,7 @@ import org.springframework.web.server.ServerErrorException;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.fail;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -83,6 +82,25 @@ public class SprintTest extends AbstractEntityGenerator {
     @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void create() throws Exception {
         addRandomProducts(1);
+    }
+
+    @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
+    public void createDuplicateNameFails() throws Exception {
+        // Create product, version, and feature first
+        addRandomProducts(1);
+
+        // Create first sprint
+        Sprint sprint1 = addSprint(expectedFeatures.get(0), "Sprint1");
+
+        try {
+            // Try to create a second sprint with the same name
+            Sprint sprint2 = addSprint(expectedFeatures.get(0), "Sprint1");
+            fail("Should not be able to create a sprint with duplicate name");
+        } catch (Exception e) {
+            // Expected exception for duplicate name
+            assertTrue(e.getMessage().contains("CONFLICT") || e.getMessage().contains("already exists"));
+        }
     }
 
     @Test
@@ -156,6 +174,32 @@ public class SprintTest extends AbstractEntityGenerator {
         Sprint sprint = expectedSprints.getFirst();
         sprint.setName(SECOND_NAME);
         updateSprint(sprint);
+    }
+
+    @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
+    public void updateToDuplicateNameFails() throws Exception {
+        // Create product, version, and feature first
+        addRandomProducts(1);
+
+        // Create two sprints
+        Sprint sprint1 = addSprint(expectedFeatures.get(0), "Sprint1");
+        Sprint sprint2 = addSprint(expectedFeatures.get(0), "Sprint2");
+
+        // Try to update sprint2 to have the same name as sprint1
+        String originalName = sprint2.getName();
+        sprint2.setName(sprint1.getName());
+
+        try {
+            updateSprint(sprint2);
+            fail("Should not be able to update a sprint to have a duplicate name");
+        } catch (Exception e) {
+            // Expected exception for duplicate name
+            assertTrue(e.getMessage().contains("CONFLICT") || e.getMessage().contains("already exists"));
+        }
+
+        // Restore original name for cleanup
+        sprint2.setName(originalName);
     }
 
     @Test

@@ -25,6 +25,8 @@ import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import org.springframework.stereotype.Component;
 
 import static de.bushnaq.abdalla.projecthub.ui.SprintListView.SPRINT_GRID_NAME_PREFIX;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test helper class for interacting with the Sprint UI components.
@@ -78,6 +80,29 @@ public class SprintViewTester {
         seleniumHandler.setTextField(SprintDialog.SPRINT_NAME_FIELD, name);
         seleniumHandler.click(SprintDialog.CONFIRM_BUTTON);
         seleniumHandler.ensureIsInList(SprintListView.SPRINT_GRID_NAME_PREFIX, name);
+    }
+
+    /**
+     * Tests the attempt to create a sprint with a name that already exists.
+     * <p>
+     * Opens the sprint creation dialog, enters a name that already exists,
+     * clicks the save button, and verifies that an error message is displayed
+     * indicating the name is already in use.
+     *
+     * @param name the duplicate name to attempt to use
+     */
+    public void createSprintWithDuplicateName(String name) {
+        seleniumHandler.click(SprintListView.CREATE_SPRINT_BUTTON);
+        seleniumHandler.setTextField(SprintDialog.SPRINT_NAME_FIELD, name);
+        seleniumHandler.click(SprintDialog.CONFIRM_BUTTON);
+
+        // Check for field error message instead of notification
+        String errorMessage = seleniumHandler.getFieldErrorMessage(SprintDialog.SPRINT_NAME_FIELD);
+        assertNotNull(errorMessage, "Error message should be present on the name field");
+        assertTrue(errorMessage.contains("already exists"), "Error message should indicate sprint already exists");
+
+        seleniumHandler.click(SprintDialog.CANCEL_BUTTON);
+        seleniumHandler.ensureElementCountInGrid(SprintListView.SPRINT_GRID, SPRINT_GRID_NAME_PREFIX, name, 1);
     }
 
     /**
@@ -147,6 +172,32 @@ public class SprintViewTester {
         seleniumHandler.click(SprintDialog.CONFIRM_BUTTON);
         seleniumHandler.ensureIsInList(SprintListView.SPRINT_GRID_NAME_PREFIX, newName);
         seleniumHandler.ensureIsNotInList(SprintListView.SPRINT_GRID_NAME_PREFIX, name);
+    }
+
+    /**
+     * Tests the attempt to edit a sprint to have a name that already exists.
+     * <p>
+     * Opens the context menu for the specified sprint, selects the edit option,
+     * changes the name to one that already exists, clicks the save button, and verifies
+     * that an error message is displayed indicating the name is already in use.
+     *
+     * @param originalName  the name of the sprint to edit
+     * @param duplicateName the duplicate name that already exists
+     */
+    public void editSprintWithDuplicateName(String originalName, String duplicateName) {
+        seleniumHandler.click(SprintListView.SPRINT_GRID_ACTION_BUTTON_PREFIX + originalName);
+        seleniumHandler.click(SprintListView.SPRINT_GRID_EDIT_BUTTON_PREFIX + originalName);
+        seleniumHandler.setTextField(SprintDialog.SPRINT_NAME_FIELD, duplicateName);
+        seleniumHandler.click(SprintDialog.CONFIRM_BUTTON);
+
+        // Check for field error message instead of notification
+        String errorMessage = seleniumHandler.getFieldErrorMessage(SprintDialog.SPRINT_NAME_FIELD);
+        assertNotNull(errorMessage, "Error message should be present on the name field");
+        assertTrue(errorMessage.contains("already exists"), "Error message should indicate sprint already exists");
+
+        seleniumHandler.click(SprintDialog.CANCEL_BUTTON);
+        seleniumHandler.ensureIsInList(SPRINT_GRID_NAME_PREFIX, originalName);
+        seleniumHandler.ensureIsInList(SPRINT_GRID_NAME_PREFIX, duplicateName);
     }
 
     /**

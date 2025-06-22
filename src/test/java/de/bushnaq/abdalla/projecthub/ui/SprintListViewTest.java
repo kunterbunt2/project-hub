@@ -116,6 +116,22 @@ public class SprintListViewTest extends AbstractUiTestUtil {
     }
 
     /**
+     * Tests the behavior when attempting to create a sprint with a name that already exists.
+     * <p>
+     * Creates a sprint, then tries to create another sprint with the same name.
+     * Verifies that the system displays an error and prevents the creation of the duplicate sprint.
+     *
+     * @throws Exception if any error occurs during the test
+     */
+    @Test
+    public void testCreateDuplicateNameFails() throws Exception {
+        // First, create a sprint
+        sprintViewTester.createSprintConfirm(sprintName);
+        // Then try to create another sprint with the same name
+        sprintViewTester.createSprintWithDuplicateName(sprintName);
+    }
+
+    /**
      * Tests the behavior when attempting to delete a sprint but canceling the operation.
      * <p>
      * Creates a sprint, then attempts to delete it but cancels the confirmation dialog.
@@ -169,5 +185,23 @@ public class SprintListViewTest extends AbstractUiTestUtil {
     public void testEditConfirm() throws Exception {
         sprintViewTester.createSprintConfirm(sprintName);
         sprintViewTester.editSprintConfirm(sprintName, newSprintName);
+    }
+
+    /**
+     * Tests the behavior when attempting to edit a sprint to have a name that already exists.
+     * <p>
+     * Creates two sprints, then tries to update the second sprint to have the same name as the first.
+     * Verifies that the system displays an error and prevents the update.
+     *
+     * @throws Exception if any error occurs during the test
+     */
+    @Test
+    public void testEditDuplicateNameFails() throws Exception {
+        // First, create two sprints with different names
+        sprintViewTester.createSprintConfirm(sprintName);
+        sprintViewTester.createSprintConfirm(newSprintName);
+
+        // Then try to edit the second sprint to have the same name as the first
+        sprintViewTester.editSprintWithDuplicateName(newSprintName, sprintName);
     }
 }

@@ -40,6 +40,8 @@ import de.bushnaq.abdalla.projecthub.ui.common.SprintDialog;
 import de.bushnaq.abdalla.projecthub.ui.view.MainLayout;
 import de.bushnaq.abdalla.util.date.DateUtil;
 import jakarta.annotation.security.PermitAll;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Clock;
 import java.time.format.DateTimeFormatter;
@@ -53,6 +55,7 @@ import java.util.Map;
 @PermitAll // When security is enabled, allow all authenticated users
 public class SprintListView extends Main implements AfterNavigationObserver {
     public static final String       CREATE_SPRINT_BUTTON             = "create-sprint-button";
+    public static final String       SPRINT_GRID                      = "sprint-grid";
     public static final String       SPRINT_GRID_ACTION_BUTTON_PREFIX = "sprint-grid-action-button-prefix-";
     public static final String       SPRINT_GRID_DELETE_BUTTON_PREFIX = "sprint-grid-delete-button-prefix-";
     public static final String       SPRINT_GRID_EDIT_BUTTON_PREFIX   = "sprint-grid-edit-button-prefix-";
@@ -94,6 +97,7 @@ public class SprintListView extends Main implements AfterNavigationObserver {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
         grid = new Grid<>();
+        grid.setId(SPRINT_GRID);
         grid.addColumn(Sprint::getKey).setHeader("Key");
         grid.addColumn(new ComponentRenderer<>(sprint -> {
             Div div    = new Div();
@@ -221,18 +225,34 @@ public class SprintListView extends Main implements AfterNavigationObserver {
     }
 
     private void openSprintDialog(Sprint sprint) {
-        SprintDialog dialog = new SprintDialog(sprint, savedSprint -> {
-            if (sprint != null) {
-                // Edit mode
-                sprintApi.update(savedSprint);
-                Notification.show("Sprint updated", 3000, Notification.Position.BOTTOM_START);
-            } else {
-                // Create mode
-                savedSprint.setFeatureId(featureId);
-                sprintApi.persist(savedSprint);
-                Notification.show("Sprint created", 3000, Notification.Position.BOTTOM_START);
+        SprintDialog dialog = new SprintDialog(sprint, (savedSprint, sprintDialog) -> {
+            try {
+                if (sprint != null) {
+                    // Edit mode
+                    sprintApi.update(savedSprint);
+                    Notification.show("Sprint updated", 3000, Notification.Position.BOTTOM_START);
+                    sprintDialog.close();
+                } else {
+                    // Create mode
+                    savedSprint.setFeatureId(featureId);
+                    sprintApi.persist(savedSprint);
+                    Notification.show("Sprint created", 3000, Notification.Position.BOTTOM_START);
+                    sprintDialog.close();
+                }
+                refreshGrid();
+            } catch (ResponseStatusException ex) {
+                if (ex.getStatusCode() == HttpStatus.CONFLICT) {
+                    // This is a name uniqueness violation
+                    sprintDialog.setErrorMessage("A sprint with this name already exists");
+                } else {
+                    // Some other error
+                    Notification.show("Error: " + ex.getMessage(), 3000, Notification.Position.MIDDLE);
+                    sprintDialog.close();
+                }
+            } catch (Exception ex) {
+                Notification.show("Unexpected error: " + ex.getMessage(), 3000, Notification.Position.MIDDLE);
+                sprintDialog.close();
             }
-            refreshGrid();
         });
         dialog.open();
     }

@@ -49,8 +49,8 @@ public class SprintDAO extends AbstractTimeAwareDAO {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Long id;
-    @Column(nullable = false)
+    private Long          id;
+    @Column(nullable = false, unique = true)
     private String        name;
     @JsonSerialize(using = DurationSerializer.class)
     @JsonDeserialize(using = DurationDeserializer.class)

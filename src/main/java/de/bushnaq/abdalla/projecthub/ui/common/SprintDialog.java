@@ -27,26 +27,25 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
 
-import java.util.function.Consumer;
-
 /**
  * A reusable dialog for creating and editing sprints.
  */
 public class SprintDialog extends Dialog {
 
-    public static final String  CANCEL_BUTTON     = "cancel-sprint-button";
-    public static final String  CONFIRM_BUTTON    = "save-sprint-button";
-    public static final String  SPRINT_DIALOG     = "sprint-dialog";
-    public static final String  SPRINT_NAME_FIELD = "sprint-name-field";
-    private final       boolean isEditMode;
+    public static final String    CANCEL_BUTTON     = "cancel-sprint-button";
+    public static final String    CONFIRM_BUTTON    = "save-sprint-button";
+    public static final String    SPRINT_DIALOG     = "sprint-dialog";
+    public static final String    SPRINT_NAME_FIELD = "sprint-name-field";
+    private final       boolean   isEditMode;
+    private final       TextField nameField;
 
     /**
      * Creates a dialog for creating or editing a sprint.
      *
      * @param sprint       The sprint to edit, or null for creating a new sprint
-     * @param saveCallback Callback that receives the sprint with updated values
+     * @param saveCallback Callback that receives the sprint with updated values and a reference to this dialog
      */
-    public SprintDialog(Sprint sprint, Consumer<Sprint> saveCallback) {
+    public SprintDialog(Sprint sprint, SaveCallback saveCallback) {
         isEditMode = sprint != null;
 
         setHeaderTitle(isEditMode ? "Edit Sprint" : "Create Sprint");
@@ -56,10 +55,12 @@ public class SprintDialog extends Dialog {
         dialogLayout.setPadding(false);
         dialogLayout.setSpacing(true);
 
-        TextField nameField = new TextField("Sprint Name");
+        nameField = new TextField("Sprint Name");
         nameField.setId(SPRINT_NAME_FIELD);
         nameField.setWidthFull();
         nameField.setRequired(true);
+        // Add helper text explaining the uniqueness requirement
+        nameField.setHelperText("Sprint name must be unique");
 
         if (isEditMode) {
             nameField.setValue(sprint.getName());
@@ -82,8 +83,8 @@ public class SprintDialog extends Dialog {
                 sprintToSave.setName(nameField.getValue().trim());
             }
 
-            saveCallback.accept(sprintToSave);
-            close();
+            // Call the save callback with the sprint and a reference to this dialog
+            saveCallback.save(sprintToSave, this);
         });
         saveButton.setId(CONFIRM_BUTTON);
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -98,5 +99,23 @@ public class SprintDialog extends Dialog {
 
         dialogLayout.add(buttonLayout);
         add(dialogLayout);
+    }
+
+    /**
+     * Sets an error message on the name field to indicate uniqueness violation
+     *
+     * @param errorMessage The error message to show
+     */
+    public void setErrorMessage(String errorMessage) {
+        nameField.setErrorMessage(errorMessage);
+        nameField.setInvalid(true);
+    }
+
+    /**
+     * Functional interface for the save callback that receives the edited sprint and a reference to this dialog
+     */
+    @FunctionalInterface
+    public interface SaveCallback {
+        void save(Sprint sprint, SprintDialog dialog);
     }
 }
