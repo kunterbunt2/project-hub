@@ -34,8 +34,7 @@ import org.springframework.web.server.ServerErrorException;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.fail;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 @ExtendWith(SpringExtension.class)
@@ -89,6 +88,25 @@ public class FeatureTest extends AbstractEntityGenerator {
     @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void create() throws Exception {
         addRandomProducts(1);
+    }
+
+    @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
+    public void createDuplicateNameFails() throws Exception {
+        // Create product and version first
+        addRandomProducts(1);
+
+        // Create first feature
+        Feature feature1 = addFeature(expectedVersions.get(0), "Feature1");
+
+        try {
+            // Try to create a second feature with the same name
+            Feature feature2 = addFeature(expectedVersions.get(0), "Feature1");
+            fail("Should not be able to create a feature with duplicate name");
+        } catch (Exception e) {
+            // Expected exception for duplicate name
+            assertTrue(e.getMessage().contains("CONFLICT") || e.getMessage().contains("already exists"));
+        }
     }
 
     @Test
@@ -161,6 +179,32 @@ public class FeatureTest extends AbstractEntityGenerator {
         Feature feature = expectedFeatures.getFirst();
         feature.setName(SECOND_NAME);
         updateFeature(feature);
+    }
+
+    @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
+    public void updateToDuplicateNameFails() throws Exception {
+        // Create product and version first
+        addRandomProducts(1);
+
+        // Create two features
+        Feature feature1 = addFeature(expectedVersions.get(0), "Feature1");
+        Feature feature2 = addFeature(expectedVersions.get(0), "Feature2");
+
+        // Try to update feature2 to have the same name as feature1
+        String originalName = feature2.getName();
+        feature2.setName(feature1.getName());
+
+        try {
+            updateFeature(feature2);
+            fail("Should not be able to update a feature to have a duplicate name");
+        } catch (Exception e) {
+            // Expected exception for duplicate name
+            assertTrue(e.getMessage().contains("CONFLICT") || e.getMessage().contains("already exists"));
+        }
+
+        // Restore original name for cleanup
+        feature2.setName(originalName);
     }
 
     @Test

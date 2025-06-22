@@ -21,9 +21,11 @@ import de.bushnaq.abdalla.projecthub.dao.FeatureDAO;
 import de.bushnaq.abdalla.projecthub.repository.FeatureRepository;
 import de.bushnaq.abdalla.projecthub.repository.VersionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -62,17 +64,25 @@ public class FeatureController {
 
     @PostMapping()
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<FeatureDAO> save(@RequestBody FeatureDAO project) {
-        return versionRepository.findById(project.getVersionId()).map(version -> {
-            FeatureDAO save = featureRepository.save(project);
+    public ResponseEntity<FeatureDAO> save(@RequestBody FeatureDAO feature) {
+        return versionRepository.findById(feature.getVersionId()).map(version -> {
+            // Check if a feature with the same name already exists
+            if (featureRepository.existsByName(feature.getName())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "A feature with name '" + feature.getName() + "' already exists");
+            }
+            FeatureDAO save = featureRepository.save(feature);
             return ResponseEntity.ok(save);
         }).orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping()
     @PreAuthorize("hasRole('ADMIN')")
-    public FeatureDAO update(@RequestBody FeatureDAO project) {
-        return featureRepository.save(project);
+    public FeatureDAO update(@RequestBody FeatureDAO feature) {
+        // Check if another feature with the same name exists (excluding the current feature)
+        FeatureDAO existingFeature = featureRepository.findByName(feature.getName());
+        if (existingFeature != null && !existingFeature.getId().equals(feature.getId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Another feature with name '" + feature.getName() + "' already exists");
+        }
+        return featureRepository.save(feature);
     }
 }
-

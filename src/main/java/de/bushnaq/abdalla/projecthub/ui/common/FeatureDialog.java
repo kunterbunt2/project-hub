@@ -27,26 +27,25 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import de.bushnaq.abdalla.projecthub.dto.Feature;
 
-import java.util.function.Consumer;
-
 /**
  * A reusable dialog for creating and editing features.
  */
 public class FeatureDialog extends Dialog {
 
-    public static final String  CANCEL_BUTTON      = "cancel-feature-button";
-    public static final String  CONFIRM_BUTTON     = "save-feature-button";
-    public static final String  FEATURE_DIALOG     = "feature-dialog";
-    public static final String  FEATURE_NAME_FIELD = "feature-name-field";
-    private final       boolean isEditMode;
+    public static final String    CANCEL_BUTTON      = "cancel-feature-button";
+    public static final String    CONFIRM_BUTTON     = "save-feature-button";
+    public static final String    FEATURE_DIALOG     = "feature-dialog";
+    public static final String    FEATURE_NAME_FIELD = "feature-name-field";
+    private final       boolean   isEditMode;
+    private final       TextField nameField;
 
     /**
      * Creates a dialog for creating or editing a feature.
      *
      * @param feature      The feature to edit, or null for creating a new feature
-     * @param saveCallback Callback that receives the feature with updated values
+     * @param saveCallback Callback that receives the feature with updated values and a reference to this dialog
      */
-    public FeatureDialog(Feature feature, Consumer<Feature> saveCallback) {
+    public FeatureDialog(Feature feature, SaveCallback saveCallback) {
         isEditMode = feature != null;
 
         setHeaderTitle(isEditMode ? "Edit Feature" : "Create Feature");
@@ -56,10 +55,12 @@ public class FeatureDialog extends Dialog {
         dialogLayout.setPadding(false);
         dialogLayout.setSpacing(true);
 
-        TextField nameField = new TextField("Feature Name");
+        nameField = new TextField("Feature Name");
         nameField.setId(FEATURE_NAME_FIELD);
         nameField.setWidthFull();
         nameField.setRequired(true);
+        // Add helper text explaining the uniqueness requirement
+        nameField.setHelperText("Feature name must be unique");
 
         if (isEditMode) {
             nameField.setValue(feature.getName());
@@ -82,8 +83,8 @@ public class FeatureDialog extends Dialog {
                 featureToSave.setName(nameField.getValue().trim());
             }
 
-            saveCallback.accept(featureToSave);
-            close();
+            // Call the save callback with the feature and a reference to this dialog
+            saveCallback.save(featureToSave, this);
         });
         saveButton.setId(CONFIRM_BUTTON);
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -98,5 +99,23 @@ public class FeatureDialog extends Dialog {
 
         dialogLayout.add(buttonLayout);
         add(dialogLayout);
+    }
+
+    /**
+     * Sets an error message on the name field to indicate uniqueness violation
+     *
+     * @param errorMessage The error message to show
+     */
+    public void setErrorMessage(String errorMessage) {
+        nameField.setErrorMessage(errorMessage);
+        nameField.setInvalid(true);
+    }
+
+    /**
+     * Functional interface for the save callback that receives the edited feature and a reference to this dialog
+     */
+    @FunctionalInterface
+    public interface SaveCallback {
+        void save(Feature feature, FeatureDialog dialog);
     }
 }

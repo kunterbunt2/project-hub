@@ -110,6 +110,22 @@ public class FeatureListViewTest extends AbstractUiTestUtil {
     }
 
     /**
+     * Tests the behavior when attempting to create a feature with a name that already exists.
+     * <p>
+     * Creates a feature, then tries to create another feature with the same name.
+     * Verifies that the system displays an error and prevents the creation of the duplicate feature.
+     *
+     * @throws Exception if any error occurs during the test
+     */
+    @Test
+    public void testCreateDuplicateNameFails() throws Exception {
+        // First, create a feature
+        featureViewTester.createFeatureConfirm(projectName);
+        // Then try to create another feature with the same name
+        featureViewTester.createFeatureWithDuplicateName(projectName);
+    }
+
+    /**
      * Tests the behavior when attempting to delete a project but canceling the operation.
      * <p>
      * Creates a project, then attempts to delete it but cancels the confirmation dialog.
@@ -163,5 +179,23 @@ public class FeatureListViewTest extends AbstractUiTestUtil {
     public void testEditConfirm() throws Exception {
         featureViewTester.createFeatureConfirm(projectName);
         featureViewTester.editFeatureConfirm(projectName, newProjectName);
+    }
+
+    /**
+     * Tests the behavior when attempting to edit a feature to have a name that already exists.
+     * <p>
+     * Creates two features, then tries to update the second feature to have the same name as the first.
+     * Verifies that the system displays an error and prevents the update.
+     *
+     * @throws Exception if any error occurs during the test
+     */
+    @Test
+    public void testEditDuplicateNameFails() throws Exception {
+        // First, create two features with different names
+        featureViewTester.createFeatureConfirm(projectName);
+        featureViewTester.createFeatureConfirm(newProjectName);
+
+        // Then try to edit the second feature to have the same name as the first
+        featureViewTester.editFeatureWithDuplicateName(newProjectName, projectName);
     }
 }

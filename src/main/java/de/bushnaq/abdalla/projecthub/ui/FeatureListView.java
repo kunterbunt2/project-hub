@@ -40,6 +40,8 @@ import de.bushnaq.abdalla.projecthub.ui.common.FeatureDialog;
 import de.bushnaq.abdalla.projecthub.ui.view.MainLayout;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Clock;
 import java.time.format.DateTimeFormatter;
@@ -55,6 +57,7 @@ public class FeatureListView extends Main implements AfterNavigationObserver {
     public static final String        CREATE_FEATURE_BUTTON_ID          = "create-feature-button";
     public static final String        DELETE_FEATURE_BUTTON_ID          = "delete-feature-button";
     public static final String        EDIT_FEATURE_BUTTON_ID            = "edit-feature-button";
+    public static final String        FEATURE_GRID                      = "feature-grid";
     public static final String        FEATURE_GRID_ACTION_BUTTON_PREFIX = "feature-grid-action-button-prefix-";
     public static final String        FEATURE_GRID_DELETE_BUTTON_PREFIX = "feature-grid-delete-button-prefix-";
     public static final String        FEATURE_GRID_EDIT_BUTTON_PREFIX   = "feature-grid-edit-button-prefix-";
@@ -92,6 +95,7 @@ public class FeatureListView extends Main implements AfterNavigationObserver {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
         grid = new Grid<>();
+        grid.setId(FEATURE_GRID);
         grid.addColumn(Feature::getKey).setHeader("Key");
         grid.addColumn(new ComponentRenderer<>(feature -> {
             Div div    = new Div();
@@ -207,7 +211,34 @@ public class FeatureListView extends Main implements AfterNavigationObserver {
     }
 
     private void openFeatureDialog(Feature feature) {
-        new FeatureDialog(feature, this::saveFeature).open();
+        FeatureDialog dialog = new FeatureDialog(feature, (savedFeature, featureDialog) -> {
+            try {
+                if (savedFeature.getId() == null) {
+                    savedFeature.setVersionId(versionId);
+                    featureApi.persist(savedFeature);
+                    Notification.show("Feature created", 3000, Notification.Position.BOTTOM_START);
+                    featureDialog.close();
+                } else {
+                    featureApi.update(savedFeature);
+                    Notification.show("Feature updated", 3000, Notification.Position.BOTTOM_START);
+                    featureDialog.close();
+                }
+                refreshGrid();
+            } catch (ResponseStatusException ex) {
+                if (ex.getStatusCode() == HttpStatus.CONFLICT) {
+                    // This is a name uniqueness violation
+                    featureDialog.setErrorMessage("A feature with this name already exists");
+                } else {
+                    // Some other error
+                    Notification.show("Error: " + ex.getMessage(), 3000, Notification.Position.MIDDLE);
+                    featureDialog.close();
+                }
+            } catch (Exception ex) {
+                Notification.show("Unexpected error: " + ex.getMessage(), 3000, Notification.Position.MIDDLE);
+                featureDialog.close();
+            }
+        });
+        dialog.open();
     }
 
     private void refreshGrid() {
@@ -217,22 +248,4 @@ public class FeatureListView extends Main implements AfterNavigationObserver {
             grid.setItems(featureApi.getAll());
         }
     }
-
-    private void saveFeature(Feature feature) {
-        try {
-            if (feature.getId() == null) {
-                feature.setVersionId(versionId);
-                featureApi.persist(feature);
-                Notification.show("Feature created", 3000, Notification.Position.BOTTOM_START);
-            } else {
-                featureApi.update(feature);
-                Notification.show("Feature updated", 3000, Notification.Position.BOTTOM_START);
-            }
-            refreshGrid();
-        } catch (Exception e) {
-            Notification.show("Error saving feature: " + e.getMessage(),
-                    3000, Notification.Position.MIDDLE);
-        }
-    }
 }
-

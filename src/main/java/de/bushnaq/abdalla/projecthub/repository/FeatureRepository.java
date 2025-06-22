@@ -23,5 +23,9 @@ import org.springframework.data.repository.ListCrudRepository;
 import java.util.List;
 
 public interface FeatureRepository extends ListCrudRepository<FeatureDAO, Long> {
+    boolean existsByName(String name);
+
+    FeatureDAO findByName(String name);
+
     List<FeatureDAO> findByVersionId(Long versionId);
 }

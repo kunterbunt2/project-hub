@@ -25,6 +25,8 @@ import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import org.springframework.stereotype.Component;
 
 import static de.bushnaq.abdalla.projecthub.ui.FeatureListView.FEATURE_GRID_NAME_PREFIX;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test helper class for interacting with the Feature UI components.
@@ -77,6 +79,29 @@ public class FeatureViewTester {
         seleniumHandler.setTextField(FeatureDialog.FEATURE_NAME_FIELD, name);
         seleniumHandler.click(FeatureDialog.CONFIRM_BUTTON);
         seleniumHandler.ensureIsInList(FEATURE_GRID_NAME_PREFIX, name);
+    }
+
+    /**
+     * Tests the attempt to create a feature with a name that already exists.
+     * <p>
+     * Opens the feature creation dialog, enters a name that already exists,
+     * clicks the save button, and verifies that an error message is displayed
+     * indicating the name is already in use.
+     *
+     * @param name the duplicate name to attempt to use
+     */
+    public void createFeatureWithDuplicateName(String name) {
+        seleniumHandler.click(FeatureListView.CREATE_FEATURE_BUTTON_ID);
+        seleniumHandler.setTextField(FeatureDialog.FEATURE_NAME_FIELD, name);
+        seleniumHandler.click(FeatureDialog.CONFIRM_BUTTON);
+
+        // Check for field error message instead of notification
+        String errorMessage = seleniumHandler.getFieldErrorMessage(FeatureDialog.FEATURE_NAME_FIELD);
+        assertNotNull(errorMessage, "Error message should be present on the name field");
+        assertTrue(errorMessage.contains("already exists"), "Error message should indicate feature already exists");
+
+        seleniumHandler.click(FeatureDialog.CANCEL_BUTTON);
+        seleniumHandler.ensureElementCountInGrid(FeatureListView.FEATURE_GRID, FEATURE_GRID_NAME_PREFIX, name, 1);
     }
 
     /**
@@ -148,6 +173,32 @@ public class FeatureViewTester {
         seleniumHandler.click(FeatureDialog.CONFIRM_BUTTON);
         seleniumHandler.ensureIsInList(FEATURE_GRID_NAME_PREFIX, newName);
         seleniumHandler.ensureIsNotInList(FEATURE_GRID_NAME_PREFIX, name);
+    }
+
+    /**
+     * Tests the attempt to edit a feature to have a name that already exists.
+     * <p>
+     * Opens the context menu for the specified feature, selects the edit option,
+     * changes the name to one that already exists, clicks the save button, and verifies
+     * that an error message is displayed indicating the name is already in use.
+     *
+     * @param originalName  the name of the feature to edit
+     * @param duplicateName the duplicate name that already exists
+     */
+    public void editFeatureWithDuplicateName(String originalName, String duplicateName) {
+        seleniumHandler.click(FeatureListView.FEATURE_GRID_ACTION_BUTTON_PREFIX + originalName);
+        seleniumHandler.click(FeatureListView.FEATURE_GRID_EDIT_BUTTON_PREFIX + originalName);
+        seleniumHandler.setTextField(FeatureDialog.FEATURE_NAME_FIELD, duplicateName);
+        seleniumHandler.click(FeatureDialog.CONFIRM_BUTTON);
+
+        // Check for field error message instead of notification
+        String errorMessage = seleniumHandler.getFieldErrorMessage(FeatureDialog.FEATURE_NAME_FIELD);
+        assertNotNull(errorMessage, "Error message should be present on the name field");
+        assertTrue(errorMessage.contains("already exists"), "Error message should indicate feature already exists");
+
+        seleniumHandler.click(FeatureDialog.CANCEL_BUTTON);
+        seleniumHandler.ensureIsInList(FEATURE_GRID_NAME_PREFIX, originalName);
+        seleniumHandler.ensureIsInList(FEATURE_GRID_NAME_PREFIX, duplicateName);
     }
 
     /**
