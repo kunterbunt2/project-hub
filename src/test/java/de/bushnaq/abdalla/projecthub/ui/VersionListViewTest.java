@@ -64,8 +64,7 @@ public class VersionListViewTest extends AbstractUiTestUtil {
      */
     @BeforeEach
     public void createProduct(TestInfo testInfo) throws Exception {
-        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
-        productViewTester.switchToProductListView();
+        productViewTester.switchToProductListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
         productViewTester.createProductConfirm(productName);
         productViewTester.selectProduct(productName);
     }

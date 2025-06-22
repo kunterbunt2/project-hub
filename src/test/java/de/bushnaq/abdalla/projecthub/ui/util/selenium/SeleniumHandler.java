@@ -176,15 +176,15 @@ public class SeleniumHandler {
         waitUntil(ExpectedConditions.presenceOfElementLocated(By.id(colorPickerId)));
 
         // Access the color input element through the shadow DOM, similar to the set method
-        String colorScript =
-                "var picker = document.getElementById('" + colorPickerId + "');" +
-                        "if (picker) {" +
-                        "  var inputElement = picker.shadowRoot.querySelector('input[type=\"color\"]');" +
-                        "  if (inputElement) {" +
-                        "    return inputElement.value;" +
-                        "  }" +
+        String colorScript =//
+                "var picker = document.getElementById('" + colorPickerId + "');" +//
+                        "if (picker) {" +//
+                        "  var inputElement = picker.shadowRoot.querySelector('input[type=\"color\"]');" +//
+                        "  if (inputElement) {" +//
+                        "    return inputElement.value;" +//
+                        "  }" +//
                         "  return picker.value;" + // Fallback to component's value if input not found
-                        "}" +
+                        "}" +//
                         "return null;";
 
         return (String) executeJavaScript(colorScript);
@@ -219,11 +219,11 @@ public class SeleniumHandler {
         // Wait for the date picker element to be present
         waitUntil(ExpectedConditions.presenceOfElementLocated(By.id(datePickerId)));
 
-        String dateScript =
-                "var datePicker = document.getElementById('" + datePickerId + "');" +
-                        "if (datePicker && datePicker.value) {" +
-                        "  return datePicker.value;" +
-                        "}" +
+        String dateScript =//
+                "var datePicker = document.getElementById('" + datePickerId + "');" +//
+                        "if (datePicker && datePicker.value) {" +//
+                        "  return datePicker.value;" +//
+                        "}" +//
                         "return null;";
 
         String dateStr = (String) executeJavaScript(dateScript);
@@ -466,21 +466,21 @@ public class SeleniumHandler {
         waitUntil(ExpectedConditions.presenceOfElementLocated(By.id(colorPickerId)));
 
         // First attempt: set the value and trigger necessary events
-        String colorScript =
-                "var picker = document.getElementById('" + colorPickerId + "');" +
-                        "if (picker) {" +
-                        "  picker.value = '" + colorValue + "';" +
-                        "  if (typeof picker._valueChanged === 'function') {" +
-                        "    picker._valueChanged('" + colorValue + "');" +
-                        "  }" +
-                        "  var inputElement = picker.shadowRoot.querySelector('input[type=\"color\"]');" +
-                        "  if (inputElement) {" +
-                        "    inputElement.value = '" + colorValue + "';" +
-                        "    inputElement.dispatchEvent(new Event('input', {bubbles: true}));" +
-                        "    inputElement.dispatchEvent(new Event('change', {bubbles: true}));" +
-                        "  }" +
-                        "  return picker.value === '" + colorValue + "';" +
-                        "}" +
+        String colorScript =//
+                "var picker = document.getElementById('" + colorPickerId + "');" +//
+                        "if (picker) {" +//
+                        "  picker.value = '" + colorValue + "';" +//
+                        "  if (typeof picker._valueChanged === 'function') {" +//
+                        "    picker._valueChanged('" + colorValue + "');" +//
+                        "  }" +//
+                        "  var inputElement = picker.shadowRoot.querySelector('input[type=\"color\"]');" +//
+                        "  if (inputElement) {" +//
+                        "    inputElement.value = '" + colorValue + "';" +//
+                        "    inputElement.dispatchEvent(new Event('input', {bubbles: true}));" +//
+                        "    inputElement.dispatchEvent(new Event('change', {bubbles: true}));" +//
+                        "  }" +//
+                        "  return picker.value === '" + colorValue + "';" +//
+                        "}" +//
                         "return false;";
 
         Boolean result = (Boolean) executeJavaScript(colorScript);
@@ -489,8 +489,8 @@ public class SeleniumHandler {
         //TODO do we ned this?
         if (result == null || !result) {
             // Direct method as fallback: use the component's public API
-            executeJavaScript(
-                    "document.getElementById('" + colorPickerId + "').value = '" + colorValue + "';" +
+            executeJavaScript(//
+                    "document.getElementById('" + colorPickerId + "').value = '" + colorValue + "';" +//
                             "document.getElementById('" + colorPickerId + "').dispatchEvent(new Event('change'));"
             );
 
@@ -522,27 +522,27 @@ public class SeleniumHandler {
 
         if (date == null) {
             // Clear the date picker
-            String clearScript =
-                    "var datePicker = document.getElementById('" + datePickerId + "');" +
-                            "if (datePicker) {" +
-                            "  datePicker.value = '';" +
-                            "  datePicker.dispatchEvent(new CustomEvent('change', { bubbles: true }));" +
-                            "  return true;" +
-                            "}" +
-                            "return false;";
+            String clearScript =//
+                    "var datePicker = document.getElementById('" + datePickerId + "');" +//
+                            "if (datePicker) {" +//
+                            "  datePicker.value = '';" +//
+                            "  datePicker.dispatchEvent(new CustomEvent('change', { bubbles: true }));" +//
+                            "  return true;" +//
+                            "}" +//
+                            "return false;";//
 
             return Boolean.TRUE.equals(executeJavaScript(clearScript));
         } else {
             // Format the date in ISO format (YYYY-MM-DD) as expected by the date picker
             String dateStr = date.format(DateTimeFormatter.ISO_LOCAL_DATE);
 
-            String dateScript =
-                    "var datePicker = document.getElementById('" + datePickerId + "');" +
-                            "if (datePicker) {" +
-                            "  datePicker.value = '" + dateStr + "';" +
-                            "  datePicker.dispatchEvent(new CustomEvent('change', { bubbles: true }));" +
-                            "  return true;" +
-                            "}" +
+            String dateScript =//
+                    "var datePicker = document.getElementById('" + datePickerId + "');" +//
+                            "if (datePicker) {" +//
+                            "  datePicker.value = '" + dateStr + "';" +//
+                            "  datePicker.dispatchEvent(new CustomEvent('change', { bubbles: true }));" +//
+                            "  return true;" +//
+                            "}" +//
                             "return false;";
 
             return Boolean.TRUE.equals(executeJavaScript(dateScript));

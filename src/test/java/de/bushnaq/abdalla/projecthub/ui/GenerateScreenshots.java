@@ -148,14 +148,14 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         generateProductsIfNeeded(testInfo, randomCase);
-        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+//        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
         userName    = nameGenerator.generateUserName(0);
         productName = nameGenerator.generateProductName(0);
         versionName = nameGenerator.generateVersionName(0);
         featureName = nameGenerator.generateFeatureName(0);
         sprintName  = nameGenerator.generateSprintName(0);
 
-        productViewTester.switchToProductListView("../project-hub.wiki/screenshots/login.png");
+        productViewTester.switchToProductListView("../project-hub.wiki/screenshots/login.png", testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/product-list-view.png");
         takeProductDialogScreenshots();
         productViewTester.selectProduct(productName);
@@ -172,7 +172,7 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         seleniumHandler.waitForElementToBeClickable(SprintQualityBoard.BURNDOWN_CHART);
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/sprint-quality-board.png");
 
-        userViewTester.switchToUserListView();
+        userViewTester.switchToUserListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/user-list-view.png");
         takeUserDialogScreenshots();
 

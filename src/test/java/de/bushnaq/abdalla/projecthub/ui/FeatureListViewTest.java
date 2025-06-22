@@ -72,9 +72,9 @@ public class FeatureListViewTest extends AbstractUiTestUtil {
      */
     @BeforeEach
     public void setupTest(TestInfo testInfo) throws Exception {
-        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
         // Navigate to product list and create a product
-        productViewTester.switchToProductListView();
+        productViewTester.switchToProductListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+//        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
         productViewTester.createProductConfirm(productName);
         productViewTester.selectProduct(productName);
 

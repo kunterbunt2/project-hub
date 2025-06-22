@@ -222,8 +222,9 @@ public class UserViewTester {
      * Opens the user list URL directly and waits for the page to load
      * by checking for the presence of the page title element.
      */
-    public void switchToUserListView() {
+    public void switchToUserListView(String recordingFolderName, String testName) {
         seleniumHandler.getAndCheck("http://localhost:" + port + "/ui/" + LoginView.ROUTE);
+        seleniumHandler.startRecording(recordingFolderName, testName);
         seleniumHandler.setLoginUser("admin-user");
         seleniumHandler.setLoginPassword("test-password");
         seleniumHandler.loginSubmit();

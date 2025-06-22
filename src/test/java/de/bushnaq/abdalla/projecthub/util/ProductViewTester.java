@@ -17,7 +17,6 @@
 
 package de.bushnaq.abdalla.projecthub.util;
 
-import dasniko.testcontainers.keycloak.KeycloakContainer;
 import de.bushnaq.abdalla.projecthub.ui.LoginView;
 import de.bushnaq.abdalla.projecthub.ui.ProductListView;
 import de.bushnaq.abdalla.projecthub.ui.VersionListView;
@@ -176,8 +175,8 @@ public class ProductViewTester {
      * Opens the product list URL directly and waits for the page to load
      * by checking for the presence of the page title element.
      */
-    public void switchToProductListView() {
-        switchToProductListView(null);
+    public void switchToProductListView(String recordingFolderName, String testName) {
+        switchToProductListView(null, recordingFolderName, testName);
     }
 
     /**
@@ -188,8 +187,9 @@ public class ProductViewTester {
      *
      * @param screenshotFileName optional filename to save a screenshot of the login view
      */
-    public void switchToProductListView(String screenshotFileName) {
+    public void switchToProductListView(String screenshotFileName, String recordingFolderName, String testName) {
         seleniumHandler.getAndCheck("http://localhost:" + port + "/ui/" + LoginView.ROUTE);
+        seleniumHandler.startRecording(recordingFolderName, testName);
         seleniumHandler.setLoginUser("admin-user");
         seleniumHandler.setLoginPassword("test-password");
         if (screenshotFileName != null) {
@@ -204,77 +204,76 @@ public class ProductViewTester {
      * <p>
      * Opens the product list URL and handles the OIDC login redirect to Keycloak.
      *
-     * @param keycloakContainer the running Keycloak container to authenticate against
-     * @param username          the username to use for OIDC authentication
-     * @param password          the password to use for OIDC authentication
+     * @param username the username to use for OIDC authentication
+     * @param password the password to use for OIDC authentication
      */
-    public void switchToProductListViewWithOidc(KeycloakContainer keycloakContainer, String username, String password) {
+    public void switchToProductListViewWithOidc(String username, String password, String screenshotFileName, String recordingFolderName, String testName) throws Exception {
         try {
-            System.out.println("OIDC Login: Starting OIDC login flow");
-            System.out.println("OIDC Login: Keycloak auth server URL: " + keycloakContainer.getAuthServerUrl());
 
             // Navigate to the application login page
-            System.out.println("OIDC Login: Navigating to login page");
+//            System.out.println("OIDC Login: Navigating to login page");
             seleniumHandler.getAndCheck("http://localhost:" + port + "/ui/" + LoginView.ROUTE);
-            System.out.println("OIDC Login: Current URL after navigation: " + seleniumHandler.getCurrentUrl());
+            seleniumHandler.startRecording(recordingFolderName, testName);
+//            System.out.println("OIDC Login: Current URL after navigation: " + seleniumHandler.getCurrentUrl());
 
             // Check if the OIDC login button is present
-            System.out.println("OIDC Login: Checking for OIDC login button with ID: " + LoginView.OIDC_LOGIN_BUTTON);
+//            System.out.println("OIDC Login: Checking for OIDC login button with ID: " + LoginView.OIDC_LOGIN_BUTTON);
             if (seleniumHandler.isElementPresent(By.id(LoginView.OIDC_LOGIN_BUTTON))) {
-                System.out.println("OIDC Login: OIDC login button found, clicking it now");
+//                System.out.println("OIDC Login: OIDC login button found, clicking it now");
 
                 // Click with JavaScript for more reliability
-                seleniumHandler.executeJavaScript(
-                        "document.getElementById('" + LoginView.OIDC_LOGIN_BUTTON + "').click();"
-                );
+                seleniumHandler.executeJavaScript("document.getElementById('" + LoginView.OIDC_LOGIN_BUTTON + "').click();");
                 System.out.println("OIDC Login: Clicked login button via JavaScript");
 
                 // Wait a moment and check the current URL
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-                System.out.println("OIDC Login: URL after clicking button: " + seleniumHandler.getCurrentUrl());
+//                try {
+//                    Thread.sleep(1000);
+//                } catch (InterruptedException e) {
+//                    Thread.currentThread().interrupt();
+//                }
+//                System.out.println("OIDC Login: URL after clicking button: " + seleniumHandler.getCurrentUrl());
 
                 // Wait longer for Keycloak redirect (up to 10 seconds)
-                System.out.println("OIDC Login: Waiting for Keycloak login page");
+//                System.out.println("OIDC Login: Waiting for Keycloak login page");
                 seleniumHandler.waitForPageLoaded(10);
                 System.out.println("OIDC Login: Current URL after waiting: " + seleniumHandler.getCurrentUrl());
                 // Check for username field
-                System.out.println("OIDC Login: Looking for username field");
+//                System.out.println("OIDC Login: Looking for username field");
                 try {
                     seleniumHandler.waitUntil(ExpectedConditions.presenceOfElementLocated(By.id("username")));
-                    System.out.println("OIDC Login: Username field found");
+//                    System.out.println("OIDC Login: Username field found");
 
                     // Fill in credentials
-                    System.out.println("OIDC Login: Filling in credentials");
+//                    System.out.println("OIDC Login: Filling in credentials");
                     seleniumHandler.findElement(By.id("username")).sendKeys(username);
                     seleniumHandler.findElement(By.id("password")).sendKeys(password);
+                    if (screenshotFileName != null) {
+                        seleniumHandler.takeElementScreenShot(seleniumHandler.findLoginOverlayElement(LoginView.LOGIN_VIEW), LoginView.LOGIN_VIEW, "../project-hub.wiki/screenshots/login-view.png");
+                    }
 
                     // Click login button
-                    System.out.println("OIDC Login: Clicking Keycloak login button");
+//                    System.out.println("OIDC Login: Clicking Keycloak login button");
                     WebElement loginButton = seleniumHandler.findElement(By.id("kc-login"));
                     loginButton.click();
 
                     // Wait for redirect back
-                    System.out.println("OIDC Login: Waiting for redirect back to application");
-                    seleniumHandler.waitUntil(ExpectedConditions.elementToBeClickable(
-                            By.id(ProductListView.PRODUCT_LIST_PAGE_TITLE)));
+//                    System.out.println("OIDC Login: Waiting for redirect back to application");
+                    seleniumHandler.waitUntil(ExpectedConditions.elementToBeClickable(By.id(ProductListView.PRODUCT_LIST_PAGE_TITLE)));
                     System.out.println("OIDC Login: Successfully logged in with OIDC");
                 } catch (Exception e) {
                     System.out.println("OIDC Login: Error during Keycloak login: " + e.getMessage());
                     throw e;
                 }
             } else {
-                System.out.println("OIDC Login: OIDC login button NOT found, falling back to basic auth");
-                // Fallback to basic authentication if OIDC button isn't present
-                seleniumHandler.setLoginUser(username);
-                seleniumHandler.setLoginPassword(password);
-                seleniumHandler.loginSubmit();
-                seleniumHandler.waitUntil(ExpectedConditions.elementToBeClickable(
-                        By.id(ProductListView.PRODUCT_LIST_PAGE_TITLE)));
-                System.out.println("OIDC Login: Successfully logged in with basic auth");
+//                System.out.println("OIDC Login: OIDC login button NOT found, falling back to basic auth");
+//                // Fallback to basic authentication if OIDC button isn't present
+//                seleniumHandler.setLoginUser(username);
+//                seleniumHandler.setLoginPassword(password);
+//                seleniumHandler.loginSubmit();
+//                seleniumHandler.waitUntil(ExpectedConditions.elementToBeClickable(
+//                        By.id(ProductListView.PRODUCT_LIST_PAGE_TITLE)));
+//                System.out.println("OIDC Login: Successfully logged in with basic auth");
+                throw new Exception("OIDC Login: Fatal error in login process: ");
             }
         } catch (Exception e) {
             System.out.println("OIDC Login: Fatal error in login process: " + e.getMessage());

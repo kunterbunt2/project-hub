@@ -130,8 +130,9 @@ public class ProductListViewOidcTest extends AbstractUiTestUtil {
     }
 
     @BeforeEach
-    public void setupTest(TestInfo testInfo) {
-        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+    public void setupTest(TestInfo testInfo) throws Exception {
+        productViewTester.switchToProductListViewWithOidc("admin", "admin", null, testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+//        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
     }
 
     /**
@@ -145,11 +146,7 @@ public class ProductListViewOidcTest extends AbstractUiTestUtil {
     @Test
     public void testCreateCancel() throws Exception {
         // Login using OIDC with Keycloak - use admin user for elevated privileges
-        productViewTester.switchToProductListViewWithOidc(
-                keycloak,
-                "admin",
-                "admin"
-        );
+//        productViewTester.switchToProductListViewWithOidc("admin", "admin");
         productViewTester.createProductCancel(name);
     }
 
@@ -164,11 +161,7 @@ public class ProductListViewOidcTest extends AbstractUiTestUtil {
     @Test
     public void testCreateConfirm() throws Exception {
         // Login using OIDC with Keycloak - use admin user for elevated privileges
-        productViewTester.switchToProductListViewWithOidc(
-                keycloak,
-                "admin",
-                "admin"
-        );
+//        productViewTester.switchToProductListViewWithOidc("admin", "admin");
         productViewTester.createProductConfirm(name);
     }
 
@@ -183,11 +176,7 @@ public class ProductListViewOidcTest extends AbstractUiTestUtil {
     @Test
     public void testDeleteCancel() throws Exception {
         // Login using OIDC with Keycloak - use admin user for elevated privileges
-        productViewTester.switchToProductListViewWithOidc(
-                keycloak,
-                "admin",
-                "admin"
-        );
+//        productViewTester.switchToProductListViewWithOidc("admin", "admin");
         productViewTester.createProductConfirm(name);
         productViewTester.deleteProductCancel(name);
     }
@@ -203,11 +192,7 @@ public class ProductListViewOidcTest extends AbstractUiTestUtil {
     @Test
     public void testDeleteConfirm() throws Exception {
         // Login using OIDC with Keycloak - use admin user for elevated privileges
-        productViewTester.switchToProductListViewWithOidc(
-                keycloak,
-                "admin",
-                "admin"
-        );
+//        productViewTester.switchToProductListViewWithOidc("admin", "admin");
         productViewTester.createProductConfirm(name);
         productViewTester.deleteProductConfirm(name);
     }
@@ -223,11 +208,7 @@ public class ProductListViewOidcTest extends AbstractUiTestUtil {
     @Test
     public void testEditCancel() throws Exception {
         // Login using OIDC with Keycloak - use admin user for elevated privileges
-        productViewTester.switchToProductListViewWithOidc(
-                keycloak,
-                "admin",
-                "admin"
-        );
+//        productViewTester.switchToProductListViewWithOidc("admin", "admin");
         productViewTester.createProductConfirm(name);
         productViewTester.editProductCancel(name, newName);
     }
@@ -243,11 +224,6 @@ public class ProductListViewOidcTest extends AbstractUiTestUtil {
     @Test
     public void testEditConfirm() throws Exception {
         // Login using OIDC with Keycloak - use admin user for elevated privileges
-        productViewTester.switchToProductListViewWithOidc(
-                keycloak,
-                "admin",
-                "admin"
-        );
         productViewTester.createProductConfirm(name);
         productViewTester.editProductConfirm(name, newName);
     }

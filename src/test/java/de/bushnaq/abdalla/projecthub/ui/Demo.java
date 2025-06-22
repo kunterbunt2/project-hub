@@ -74,8 +74,8 @@ public class Demo extends AbstractUiTestUtil {
         TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         generateProductsIfNeeded(testInfo, randomCase);
-        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
-        productViewTester.switchToProductListView();
+//        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+        productViewTester.switchToProductListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
         seleniumHandler.waitUntilBrowserClosed(0);
     }
 }

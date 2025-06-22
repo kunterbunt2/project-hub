@@ -116,8 +116,8 @@ public class SprintQualityBoardTest extends AbstractUiTestUtil {
 
         levelResources(testInfo, sprint, null);
         generateWorklogs(sprint, ParameterOptions.getLocalNow());
-        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
-        productViewTester.switchToProductListView();
+//        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+        productViewTester.switchToProductListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
         productViewTester.selectProduct(nameGenerator.generateProductName(0));
         versionViewTester.selectVersion(nameGenerator.generateVersionName(0));
         featureViewTester.selectFeature(nameGenerator.generateFeatureName(0));

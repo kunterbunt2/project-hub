@@ -51,7 +51,8 @@ public class ProductListViewTest extends AbstractUiTestUtil {
 
     @BeforeEach
     public void setupTest(TestInfo testInfo) {
-        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+        productViewTester.switchToProductListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+//        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
     }
 
     /**
@@ -64,7 +65,6 @@ public class ProductListViewTest extends AbstractUiTestUtil {
      */
     @Test
     public void testCreateCancel() throws Exception {
-        productViewTester.switchToProductListView();
         productViewTester.createProductCancel(name);
     }
 
@@ -78,7 +78,6 @@ public class ProductListViewTest extends AbstractUiTestUtil {
      */
     @Test
     public void testCreateConfirm() throws Exception {
-        productViewTester.switchToProductListView();
         productViewTester.createProductConfirm(name);
     }
 
@@ -92,7 +91,6 @@ public class ProductListViewTest extends AbstractUiTestUtil {
      */
     @Test
     public void testDeleteCancel() throws Exception {
-        productViewTester.switchToProductListView();
         productViewTester.createProductConfirm(name);
         productViewTester.deleteProductCancel(name);
     }
@@ -107,7 +105,6 @@ public class ProductListViewTest extends AbstractUiTestUtil {
      */
     @Test
     public void testDeleteConfirm() throws Exception {
-        productViewTester.switchToProductListView();
         productViewTester.createProductConfirm(name);
         productViewTester.deleteProductConfirm(name);
     }
@@ -122,7 +119,6 @@ public class ProductListViewTest extends AbstractUiTestUtil {
      */
     @Test
     public void testEditCancel() throws Exception {
-        productViewTester.switchToProductListView();
         productViewTester.createProductConfirm(name);
         productViewTester.editProductCancel(name, newName);
     }
@@ -137,7 +133,6 @@ public class ProductListViewTest extends AbstractUiTestUtil {
      */
     @Test
     public void testEditConfirm() throws Exception {
-        productViewTester.switchToProductListView();
         productViewTester.createProductConfirm(name);
         productViewTester.editProductConfirm(name, newName);
     }

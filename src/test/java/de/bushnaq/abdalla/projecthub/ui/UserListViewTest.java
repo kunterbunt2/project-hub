@@ -68,7 +68,8 @@ public class UserListViewTest extends AbstractUiTestUtil {
 
     @BeforeEach
     public void setupTest(TestInfo testInfo) {
-        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+        userViewTester.switchToUserListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+//        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
     }
 
     /**
@@ -81,7 +82,6 @@ public class UserListViewTest extends AbstractUiTestUtil {
      */
     @Test
     public void testCreateCancel() throws Exception {
-        userViewTester.switchToUserListView();
         userViewTester.createUserCancel(name, email, color, firstWorkingDay, lastWorkingDay);
         userViewTester.verifyFormIsReset();
     }
@@ -96,7 +96,6 @@ public class UserListViewTest extends AbstractUiTestUtil {
      */
     @Test
     public void testCreateConfirm() throws Exception {
-        userViewTester.switchToUserListView();
         userViewTester.createUserConfirm(name, email, color, firstWorkingDay, lastWorkingDay);
         userViewTester.verifyUserDialogFields(name, email, color, firstWorkingDay, lastWorkingDay);
     }
@@ -111,7 +110,6 @@ public class UserListViewTest extends AbstractUiTestUtil {
      */
     @Test
     public void testDeleteCancel() throws Exception {
-        userViewTester.switchToUserListView();
         userViewTester.createUserConfirm(name, email, color, firstWorkingDay, lastWorkingDay);
         userViewTester.deleteUserCancel(name);
     }
@@ -126,7 +124,6 @@ public class UserListViewTest extends AbstractUiTestUtil {
      */
     @Test
     public void testDeleteConfirm() throws Exception {
-        userViewTester.switchToUserListView();
         userViewTester.createUserConfirm(name, email, color, firstWorkingDay, lastWorkingDay);
         userViewTester.deleteUserConfirm(name);
     }
@@ -142,7 +139,6 @@ public class UserListViewTest extends AbstractUiTestUtil {
      */
     @Test
     public void testEditCancel() throws Exception {
-        userViewTester.switchToUserListView();
         userViewTester.createUserConfirm(name, email, color, firstWorkingDay, lastWorkingDay);
         userViewTester.editUserCancel(name, newName, email, newEmail, color, newColor, firstWorkingDay, newFirstWorkingDay, lastWorkingDay, newLastWorkingDay);
         userViewTester.verifyUserDialogFields(name, email, color, firstWorkingDay, lastWorkingDay);
@@ -158,7 +154,6 @@ public class UserListViewTest extends AbstractUiTestUtil {
      */
     @Test
     public void testEditConfirm() throws Exception {
-        userViewTester.switchToUserListView();
         userViewTester.createUserConfirm(name, email, color, firstWorkingDay, lastWorkingDay);
         userViewTester.editUserConfirm(name, newName, newEmail, newColor, newFirstWorkingDay, newLastWorkingDay);
         userViewTester.verifyUserDialogFields(newName, newEmail, newColor, newFirstWorkingDay, newLastWorkingDay);
