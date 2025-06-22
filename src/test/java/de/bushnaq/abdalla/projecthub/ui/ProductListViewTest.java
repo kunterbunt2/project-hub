@@ -90,7 +90,7 @@ public class ProductListViewTest extends AbstractUiTestUtil {
      * @throws Exception if any error occurs during the test
      */
     @Test
-    public void testCreateDuplicateName() throws Exception {
+    public void testCreateDuplicateNameFails() throws Exception {
         // First, create a product
         productViewTester.createProductConfirm(name);
         // Then try to create another product with the same name
@@ -153,4 +153,10 @@ public class ProductListViewTest extends AbstractUiTestUtil {
         productViewTester.editProductConfirm(name, newName);
     }
 
+    @Test
+    public void testEditDuplicateNameFails() throws Exception {
+        productViewTester.createProductConfirm(name);
+        productViewTester.createProductConfirm(newName);
+        productViewTester.editProductWithDuplicateNameFails(name, newName);
+    }
 }

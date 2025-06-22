@@ -183,6 +183,24 @@ public class ProductViewTester {
         seleniumHandler.ensureIsNotInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, name);
     }
 
+    public void editProductWithDuplicateNameFails(String name, String newName) {
+        seleniumHandler.click(ProductListView.PRODUCT_GRID_ACTION_BUTTON_PREFIX + name);
+        seleniumHandler.click(ProductListView.PRODUCT_GRID_EDIT_BUTTON_PREFIX + name);
+        seleniumHandler.setTextField(ProductDialog.PRODUCT_NAME_FIELD, newName);
+        seleniumHandler.click(ProductDialog.CONFIRM_BUTTON);
+
+        // Check for field error message instead of notification
+        String errorMessage = seleniumHandler.getFieldErrorMessage(ProductDialog.PRODUCT_NAME_FIELD);
+        assertNotNull(errorMessage, "Error message should be present on the name field");
+        assertTrue(errorMessage.contains("409 CONFLICT"), "Error message should indicate a conflict");
+        assertTrue(errorMessage.contains("already exists"), "Error message should indicate product already exists");
+
+        seleniumHandler.click(ProductDialog.CANCEL_BUTTON);
+        seleniumHandler.ensureElementCountInGrid(ProductListView.PRODUCT_GRID, PRODUCT_GRID_NAME_PREFIX, name, 1);
+//        seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, newName);
+//        seleniumHandler.ensureIsNotInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, name);
+    }
+
     /**
      * Selects a product from the product grid and navigates to its versions.
      * <p>
