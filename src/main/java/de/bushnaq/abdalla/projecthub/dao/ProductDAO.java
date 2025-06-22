@@ -36,7 +36,7 @@ public class ProductDAO extends AbstractTimeAwareDAO {
     @Column(name = "id")
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
 
 }

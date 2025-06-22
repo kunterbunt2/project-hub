@@ -32,6 +32,8 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import static de.bushnaq.abdalla.projecthub.ui.ProductListView.PRODUCT_GRID_NAME_PREFIX;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test helper class for interacting with the Product UI components.
@@ -86,6 +88,30 @@ public class ProductViewTester {
         seleniumHandler.setTextField(ProductDialog.PRODUCT_NAME_FIELD, name);
         seleniumHandler.click(ProductDialog.CONFIRM_BUTTON);
         seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, name);
+    }
+
+    /**
+     * Tests the behavior when attempting to create a product with a name that already exists.
+     * <p>
+     * Opens the product creation dialog, enters a name that already exists in the product list,
+     * and attempts to confirm the dialog. Verifies that an error message appears on the name field
+     * and the duplicate product is not created.
+     *
+     * @param name the duplicate name to attempt to use for the product
+     */
+    public void createProductWithDuplicateName(String name) {
+        seleniumHandler.click(ProductListView.CREATE_PRODUCT_BUTTON);
+        seleniumHandler.setTextField(ProductDialog.PRODUCT_NAME_FIELD, name);
+        seleniumHandler.click(ProductDialog.CONFIRM_BUTTON);
+
+        // Check for field error message instead of notification
+        String errorMessage = seleniumHandler.getFieldErrorMessage(ProductDialog.PRODUCT_NAME_FIELD);
+        assertNotNull(errorMessage, "Error message should be present on the name field");
+        assertTrue(errorMessage.contains("409 CONFLICT"), "Error message should indicate a conflict");
+        assertTrue(errorMessage.contains("already exists"), "Error message should indicate product already exists");
+
+        seleniumHandler.click(ProductDialog.CANCEL_BUTTON);
+        seleniumHandler.ensureElementCountInGrid(ProductListView.PRODUCT_GRID, PRODUCT_GRID_NAME_PREFIX, name, 1);
     }
 
     /**

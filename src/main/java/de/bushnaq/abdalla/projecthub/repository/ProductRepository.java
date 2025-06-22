@@ -21,4 +21,7 @@ import de.bushnaq.abdalla.projecthub.dao.ProductDAO;
 import org.springframework.data.repository.ListCrudRepository;
 
 public interface ProductRepository extends ListCrudRepository<ProductDAO, Long> {
+    boolean existsByName(String name);
+
+    ProductDAO findByName(String name);
 }

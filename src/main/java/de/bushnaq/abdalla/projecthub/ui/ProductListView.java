@@ -40,6 +40,8 @@ import de.bushnaq.abdalla.projecthub.ui.common.ProductDialog;
 import de.bushnaq.abdalla.projecthub.ui.view.MainLayout;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Clock;
 import java.time.format.DateTimeFormatter;
@@ -54,6 +56,7 @@ import java.util.Map;
 @RolesAllowed({"USER", "ADMIN"})
 public class ProductListView extends Main implements AfterNavigationObserver {
     public static final String        CREATE_PRODUCT_BUTTON             = "create-product-button";
+    public static final String        PRODUCT_GRID                      = "product-grid";
     public static final String        PRODUCT_GRID_ACTION_BUTTON_PREFIX = "product-grid-action-button-prefix-";
     public static final String        PRODUCT_GRID_DELETE_BUTTON_PREFIX = "product-grid-delete-button-prefix-";
     public static final String        PRODUCT_GRID_EDIT_BUTTON_PREFIX   = "product-grid-edit-button-prefix-";
@@ -92,6 +95,7 @@ public class ProductListView extends Main implements AfterNavigationObserver {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
         grid = new Grid<>();
+        grid.setId(PRODUCT_GRID);
         refreshGrid();
         {
             Grid.Column<Product> column = grid.addColumn(Product::getKey).setHeader("Key");
@@ -192,17 +196,34 @@ public class ProductListView extends Main implements AfterNavigationObserver {
     }
 
     private void openProductDialog(Product product) {
-        ProductDialog dialog = new ProductDialog(product, savedProduct -> {
-            if (product != null) {
-                // Edit mode
-                productApi.update(savedProduct);
-                Notification.show("Product updated", 3000, Notification.Position.BOTTOM_START);
-            } else {
-                // Create mode
-                productApi.persist(savedProduct);
-                Notification.show("Product created", 3000, Notification.Position.BOTTOM_START);
+        // Use the new SaveCallback interface that passes both the product and the dialog
+        ProductDialog dialog = new ProductDialog(product, (savedProduct, dialogReference) -> {
+            try {
+                if (product != null) {
+                    // Edit mode
+                    productApi.update(savedProduct);
+                    Notification.show("Product updated", 3000, Notification.Position.BOTTOM_START);
+                } else {
+                    // Create mode
+                    productApi.persist(savedProduct);
+                    Notification.show("Product created", 3000, Notification.Position.BOTTOM_START);
+                }
+                refreshGrid();
+                dialogReference.close();
+            } catch (Exception e) {
+                if (e instanceof ResponseStatusException && ((ResponseStatusException) e).getStatusCode().equals(HttpStatus.CONFLICT)) {
+
+                    dialogReference.setNameFieldError(((ResponseStatusException) e).getReason());
+                    // Keep the dialog open so the user can correct the name
+                } else {
+                    // For other errors, show generic message and close dialog
+                    Notification notification = new Notification("An error occurred: " + e.getMessage(), 5000, Notification.Position.MIDDLE);
+                    notification.addThemeVariants(com.vaadin.flow.component.notification.NotificationVariant.LUMO_ERROR);
+                    notification.open();
+                    // dialogReference.close();
+                    // Keep the dialog open so the user can correct the name
+                }
             }
-            refreshGrid();
         });
         dialog.open();
     }

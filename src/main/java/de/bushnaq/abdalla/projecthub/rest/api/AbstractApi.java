@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -38,6 +39,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerErrorException;
 
 import java.nio.charset.StandardCharsets;
@@ -189,7 +191,7 @@ public class AbstractApi {
             handleExceptions(e);
             return null;
         } catch (Exception e) {
-            logger.error("Unexpected error in REST API call", e);
+            logger.error(e.getMessage(), e);
             throw new ServerErrorException("Failed to execute REST API call", e);
         }
     }
@@ -201,7 +203,7 @@ public class AbstractApi {
             logger.error("REST API call failed with status: {} and response: {}", e.getStatusCode(), e.getResponseBodyAsString());
             handleExceptions(e);
         } catch (Exception e) {
-            logger.error("Unexpected error in REST API call", e);
+            logger.error(e.getMessage(), e);
             throw new ServerErrorException("Failed to execute REST API call", e);
         }
     }
@@ -242,12 +244,14 @@ public class AbstractApi {
                 // Convert 403 Forbidden to AccessDeniedException
                 throw new org.springframework.security.access.AccessDeniedException("Access denied when accessing API");
             } else if (e instanceof HttpClientErrorException.BadRequest) {
+                // all other exception
                 throw new ServerErrorException(e.getMessage(), e.getCause());
             } else if (e instanceof HttpClientErrorException.NotFound) {
                 throw new ServerErrorException(e.getMessage(), e.getCause());
             } else {
-                ErrorResponse error = objectMapper.readValue(e.getResponseBodyAsString(), ErrorResponse.class);
-                throw new ServerErrorException(error.getMessage(), error.getException());
+                ErrorResponse error      = objectMapper.readValue(e.getResponseBodyAsString(), ErrorResponse.class);
+                HttpStatus    httpStatus = error.getHttpStatus();
+                throw new ResponseStatusException(httpStatus != null ? httpStatus : HttpStatus.INTERNAL_SERVER_ERROR, error.getMessage(), error.reconstructException());
             }
         } catch (JsonProcessingException ex) {
             throw new IllegalArgumentException(String.format("Error processing server response '%s'.", e.getResponseBodyAsString()));

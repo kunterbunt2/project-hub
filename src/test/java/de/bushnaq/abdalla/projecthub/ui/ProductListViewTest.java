@@ -82,6 +82,22 @@ public class ProductListViewTest extends AbstractUiTestUtil {
     }
 
     /**
+     * Tests the behavior when attempting to create a product with a name that already exists.
+     * <p>
+     * Creates a product, then tries to create another product with the same name.
+     * Verifies that the system displays an error and prevents the creation of the duplicate product.
+     *
+     * @throws Exception if any error occurs during the test
+     */
+    @Test
+    public void testCreateDuplicateName() throws Exception {
+        // First, create a product
+        productViewTester.createProductConfirm(name);
+        // Then try to create another product with the same name
+        productViewTester.createProductWithDuplicateName(name);
+    }
+
+    /**
      * Tests the behavior when attempting to delete a product but canceling the operation.
      * <p>
      * Creates a product, then attempts to delete it but cancels the confirmation dialog.

@@ -34,8 +34,7 @@ import org.springframework.web.server.ServerErrorException;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.fail;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 @ExtendWith(SpringExtension.class)
@@ -86,6 +85,19 @@ public class ProductTest extends AbstractEntityGenerator {
     @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void create() throws Exception {
         addRandomProducts(1);
+    }
+
+    @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
+    public void createDuplicateNameFails() throws Exception {
+        Product product1 = addProduct("Product1");
+        try {
+            Product product2 = addProduct("Product1");
+            fail("Should not be able to create a product with duplicate name");
+        } catch (Exception e) {
+            // Expected exception for duplicate name
+            assertTrue(e.getMessage().contains("CONFLICT") || e.getMessage().contains("already exists"));
+        }
     }
 
     @Test
@@ -154,6 +166,30 @@ public class ProductTest extends AbstractEntityGenerator {
 
     @Test
     @WithMockUser(username = "admin-user", roles = "ADMIN")
+    public void updateToDuplicateNameFails() throws Exception {
+        // Create two products
+        addRandomProducts(2);
+        Product product1 = expectedProducts.get(0);
+        Product product2 = expectedProducts.get(1);
+
+        // Try to update product2 to have the same name as product1
+        String originalName = product2.getName();
+        product2.setName(product1.getName());
+
+        try {
+            updateProduct(product2);
+            fail("Should not be able to update a product to have a duplicate name");
+        } catch (Exception e) {
+            // Expected exception for duplicate name
+            assertTrue(e.getMessage().contains("CONFLICT") || e.getMessage().contains("already exists"));
+        }
+
+        // Restore original name for cleanup
+        product2.setName(originalName);
+    }
+
+    @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void updateUsingFakeId() throws Exception {
         addRandomProducts(2);
         Product product = expectedProducts.getFirst();
@@ -198,5 +234,4 @@ public class ProductTest extends AbstractEntityGenerator {
             removeProduct(expectedProducts.get(0).getId());
         });
     }
-
 }

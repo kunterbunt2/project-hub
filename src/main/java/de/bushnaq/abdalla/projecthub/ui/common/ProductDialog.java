@@ -27,41 +27,41 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import de.bushnaq.abdalla.projecthub.dto.Product;
 
-import java.util.function.Consumer;
-
 /**
  * A reusable dialog for creating and editing products.
  */
 public class ProductDialog extends Dialog {
 
-    public static final String  CANCEL_BUTTON      = "cancel-product-button";
-    public static final String  CONFIRM_BUTTON     = "save-product-button";
-    public static final String  PRODUCT_DIALOG     = "product-dialog";
-    public static final String  PRODUCT_NAME_FIELD = "product-name-field";
-    private final       boolean isEditMode;
+    public static final String    CANCEL_BUTTON      = "cancel-product-button";
+    public static final String    CONFIRM_BUTTON     = "save-product-button";
+    public static final String    PRODUCT_DIALOG     = "product-dialog";
+    public static final String    PRODUCT_NAME_FIELD = "product-name-field";
+    private final       boolean   isEditMode;
+    private final       TextField nameField;
 
     /**
      * Creates a dialog for creating or editing a product.
      *
      * @param product      The product to edit, or null for creating a new product
-     * @param saveCallback Callback that receives the product with updated values
+     * @param saveCallback Callback that receives the product with updated values and a reference to this dialog
      */
-    public ProductDialog(Product product, Consumer<Product> saveCallback) {
+    public ProductDialog(Product product, SaveCallback saveCallback) {
         isEditMode = product != null;
 
         // Set the dialog title
         setHeaderTitle(isEditMode ? "Edit Product" : "Create Product");
         setId(PRODUCT_DIALOG);
 
-
         VerticalLayout dialogLayout = new VerticalLayout();
         dialogLayout.setPadding(false);
         dialogLayout.setSpacing(true);
 
-        TextField nameField = new TextField("Product Name");
+        nameField = new TextField("Product Name");
         nameField.setId(PRODUCT_NAME_FIELD);
         nameField.setWidthFull();
         nameField.setRequired(true);
+        // Add helper text explaining the uniqueness requirement
+        nameField.setHelperText("Product name must be unique");
 
         if (isEditMode) {
             nameField.setValue(product.getName());
@@ -84,8 +84,8 @@ public class ProductDialog extends Dialog {
                 productToSave.setName(nameField.getValue().trim());
             }
 
-            saveCallback.accept(productToSave);
-            close();
+            // Call the save callback with the product and a reference to this dialog
+            saveCallback.save(productToSave, this);
         });
         saveButton.setId(CONFIRM_BUTTON);
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -99,7 +99,25 @@ public class ProductDialog extends Dialog {
         buttonLayout.setWidthFull();
 
         dialogLayout.add(buttonLayout);
+
         add(dialogLayout);
     }
 
+    /**
+     * Sets an error message on the product name field.
+     *
+     * @param errorMessage The error message to display, or null to clear the error
+     */
+    public void setNameFieldError(String errorMessage) {
+        nameField.setInvalid(errorMessage != null);
+        nameField.setErrorMessage(errorMessage);
+    }
+
+    /**
+     * Functional interface for the save callback that receives both the product and a reference to this dialog
+     */
+    @FunctionalInterface
+    public interface SaveCallback {
+        void save(Product product, ProductDialog dialog);
+    }
 }

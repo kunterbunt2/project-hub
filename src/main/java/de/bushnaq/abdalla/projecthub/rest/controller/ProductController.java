@@ -20,8 +20,10 @@ package de.bushnaq.abdalla.projecthub.rest.controller;
 import de.bushnaq.abdalla.projecthub.dao.ProductDAO;
 import de.bushnaq.abdalla.projecthub.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -55,12 +57,21 @@ public class ProductController {
     @PostMapping(consumes = "application/json;charset=UTF-8", produces = "application/json;charset=UTF-8")
     @PreAuthorize("hasRole('ADMIN')")
     public ProductDAO save(@RequestBody ProductDAO product) {
+        // Check if a product with the same name already exists
+        if (productRepository.existsByName(product.getName())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A product with name '" + product.getName() + "' already exists");
+        }
         return productRepository.save(product);
     }
 
     @PutMapping()
     @PreAuthorize("hasRole('ADMIN')")
     public void update(@RequestBody ProductDAO product) {
+        // Check if another product with the same name exists (excluding the current product)
+        ProductDAO existingProduct = productRepository.findByName(product.getName());
+        if (existingProduct != null && !existingProduct.getId().equals(product.getId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Another product with name '" + product.getName() + "' already exists");
+        }
         productRepository.save(product);
     }
 }

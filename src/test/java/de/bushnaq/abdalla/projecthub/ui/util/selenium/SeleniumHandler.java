@@ -41,6 +41,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Stack;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -50,13 +51,15 @@ import static org.junit.jupiter.api.Assertions.*;
 @Component
 @Getter
 public class SeleniumHandler {
-    private       WebDriver     driver;
-    private final Duration      implicitWaitDuration;
-    private final Logger        logger = LoggerFactory.getLogger(this.getClass());
-    private final VideoRecorder videoRecorder;
-    private       WebDriverWait wait;
-    private       Duration      waitDuration;
-    private       Dimension     windowSize;  // Added field to store custom window size
+    private       WebDriver       driver;
+    private final Duration        implicitWaitDuration;
+    private final Stack<Duration> implicitWaitStack = new Stack<>();
+    private final Logger          logger            = LoggerFactory.getLogger(this.getClass());
+    private final VideoRecorder   videoRecorder;
+    private       WebDriverWait   wait;
+    private       Duration        waitDuration;
+    private final Stack<Duration> waitDurationStack = new Stack<>();
+    private       Dimension       windowSize;  // Added field to store custom window size
 
     public SeleniumHandler() {
         this(Duration.ofSeconds(10), Duration.ofSeconds(30));
@@ -88,15 +91,37 @@ public class SeleniumHandler {
         }
     }
 
+    /**
+     * Ensures that a grid contains exactly the expected count of elements with the specified name.
+     * <p>
+     * This method is useful for verifying that a specific element appears exactly the expected
+     * number of times in a grid, such as checking that no duplicate products were created.
+     *
+     * @param gridId         the ID of the grid WebElement to check
+     * @param gridNamePrefix the prefix used in the element IDs within the grid
+     * @param name           the name suffix to search for in the grid element IDs
+     * @param expectedCount  the expected number of occurrences of the element in the grid
+     */
+    public void ensureElementCountInGrid(String gridId, String gridNamePrefix, String name, int expectedCount) {
+        {
+            WebElement grid = getDriver().findElement(By.id(gridId));
+            // Wait a moment for any UI updates to complete
+            wait(500);
+            // Check for the div containing the product name
+            List<WebElement> matchingElements = grid.findElements(By.cssSelector("[id^='" + gridNamePrefix + name + "']"));
+            assertEquals(expectedCount, matchingElements.size(), "Expected 1 element with name '" + name + "' but found " + matchingElements.size());
+        }
+    }
+
     public void ensureIsInList(String id, String userName) {
         waitUntil(ExpectedConditions.elementToBeClickable(By.id(id + userName)));
     }
 
     public void ensureIsNotInList(String id, String name) {
         Duration implicitTime = getImplicitWaitDuration();
-        setImplicit(Duration.ofSeconds(1));
+        setImplicitWaitDuration(Duration.ofSeconds(1));
         waitUntil(ExpectedConditions.not(ExpectedConditions.elementToBeClickable(By.id(id + name))));
-        setImplicit(implicitTime);
+        setImplicitWaitDuration(implicitTime);
     }
 
     public void ensureIsSelected(String id, String userName) {
@@ -243,7 +268,7 @@ public class SeleniumHandler {
             driver = new ChromeDriver(options);
             wait   = new WebDriverWait(getDriver(), waitDuration);
             //Applied wait time
-            setImplicit(implicitWaitDuration);
+            setImplicitWaitDuration(implicitWaitDuration);
 
             if (windowSize != null) {
                 getDriver().manage().window().setSize(windowSize);
@@ -262,6 +287,56 @@ public class SeleniumHandler {
             }
         }
         return driver;
+    }
+
+    /**
+     * Gets the error message from a Vaadin text field element by accessing the error-message slot.
+     * <p>
+     * This method retrieves the error message that appears below a form field when validation fails.
+     * It waits for the field to become invalid and for an error message to appear before returning it.
+     * It uses JavaScript to access the shadow DOM and find the error message slot content.
+     *
+     * @param fieldId the ID of the field element
+     * @return the error message text, or null if no error message is present after waiting
+     */
+    public String getFieldErrorMessage(String fieldId) {
+        pushWaitDuration(Duration.ofSeconds(3));
+        waitUntil(ExpectedConditions.presenceOfElementLocated(By.id(fieldId)));
+
+        // Wait for the field to become invalid (with a timeout)
+        try {
+            // Use waitUntil with a custom condition to wait for field to become invalid and have an error message
+            waitUntil(driver -> {
+                Boolean isInvalid = (Boolean) executeJavaScript(
+                        "var field = document.getElementById('" + fieldId + "');" +//
+                                "return field && field.invalid;");
+
+                if (Boolean.TRUE.equals(isInvalid)) {
+                    // Now check if the error message element exists
+                    String errorMsg = (String) executeJavaScript(//
+                            "var field = document.getElementById('" + fieldId + "');" +//
+                                    "var errorElement = field.querySelector('[slot=\"error-message\"]');" +//
+                                    "return errorElement ? errorElement.textContent : null;");
+
+                    return errorMsg != null && !errorMsg.isEmpty();
+                }
+                return false;
+            });
+        } catch (org.openqa.selenium.TimeoutException e) {
+            logger.warn("Timed out waiting for error message on field: {}", fieldId);
+            // We'll continue and try to get whatever message might be there
+        }
+        popWaitDuration();
+        // Now that we've waited, get the actual error message
+        String script =
+                "var field = document.getElementById('" + fieldId + "');" +//
+                        "if (field && field.invalid) {" +//
+                        "  var errorElement = field.querySelector('[slot=\"error-message\"]');" +//
+                        "  return errorElement ? errorElement.textContent : null;" +//
+                        "}" +//
+                        "return null;";
+
+        return (String) executeJavaScript(script);
     }
 
     public Duration getImplicitWaitDuration() {
@@ -298,6 +373,16 @@ public class SeleniumHandler {
     }
 
     /**
+     * Helper method to initialize WebDriverWait if it hasn't been initialized yet.
+     * This is used by methods that need to wait for elements or conditions.
+     */
+    private void initWait() {
+        if (wait == null) {
+            wait = new WebDriverWait(getDriver(), waitDuration);
+        }
+    }
+
+    /**
      * Checks if an element is present on the page
      *
      * @param locator the By locator for the element to check
@@ -331,6 +416,46 @@ public class SeleniumHandler {
         WebElement button = findElement(By.xpath("//vaadin-button[@slot='submit' and contains(@theme, 'submit')]"));
         button.click();
         waitForPageLoaded();
+    }
+
+    /**
+     * Pops the last implicit wait duration from the stack and restores it.
+     * If the stack is empty, nothing happens.
+     */
+    public void popImplicitWait() {
+        if (!implicitWaitStack.isEmpty()) {
+            setImplicitWaitDuration(implicitWaitStack.pop());
+        }
+    }
+
+    /**
+     * Pops the last wait duration from the stack and restores it.
+     * If the stack is empty, nothing happens.
+     */
+    public void popWaitDuration() {
+        if (!waitDurationStack.isEmpty()) {
+            setWaitDuration(waitDurationStack.pop());
+        }
+    }
+
+    /**
+     * Pushes the current implicit wait duration onto a stack and sets a new value.
+     *
+     * @param newDuration the new implicit wait duration to set
+     */
+    public void pushImplicitWait(Duration newDuration) {
+        implicitWaitStack.push(getImplicitWaitDuration());
+        setImplicitWaitDuration(newDuration);
+    }
+
+    /**
+     * Pushes the current wait duration onto a stack and sets a new value.
+     *
+     * @param newDuration the new wait duration to set
+     */
+    public void pushWaitDuration(Duration newDuration) {
+        waitDurationStack.push(getWaitDuration());
+        setWaitDuration(newDuration);
     }
 
     /**
@@ -549,7 +674,7 @@ public class SeleniumHandler {
         }
     }
 
-    public void setImplicit(Duration duration) {
+    public void setImplicitWaitDuration(Duration duration) {
         getDriver().manage().timeouts().implicitlyWait(duration);
     }
 
@@ -717,6 +842,21 @@ public class SeleniumHandler {
 
     public void waitForElementToBeLocated(String id) {
         waitUntil(ExpectedConditions.presenceOfElementLocated(By.id(id)));
+    }
+
+    /**
+     * Waits for a notification of a specific type to appear.
+     * <p>
+     * This method waits for a Vaadin notification to appear with the specified type
+     * (such as "error", "success", "warning", or "info").
+     *
+     * @param notificationType the type of notification to wait for (e.g., "error")
+     */
+    public void waitForNotification(String notificationType) {
+        // Wait for notification overlay to appear
+        waitUntil(ExpectedConditions.presenceOfElementLocated(By.cssSelector("vaadin-notification-container vaadin-notification-card")));
+        // Wait specifically for notification with the given type
+        waitUntil(ExpectedConditions.presenceOfElementLocated(By.cssSelector("vaadin-notification-container vaadin-notification-card[theme~='" + notificationType + "']")));
     }
 
     public void waitForPageLoaded() {
