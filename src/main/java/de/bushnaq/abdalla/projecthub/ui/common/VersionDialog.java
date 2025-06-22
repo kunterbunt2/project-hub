@@ -27,26 +27,25 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import de.bushnaq.abdalla.projecthub.dto.Version;
 
-import java.util.function.Consumer;
-
 /**
  * A reusable dialog for creating and editing versions.
  */
 public class VersionDialog extends Dialog {
 
-    public static final String  CANCEL_BUTTON      = "cancel-version-button";
-    public static final String  CONFIRM_BUTTON     = "save-version-button";
-    public static final String  VERSION_DIALOG     = "version-dialog";
-    public static final String  VERSION_NAME_FIELD = "version-name-field";
-    private final       boolean isEditMode;
+    public static final String    CANCEL_BUTTON      = "cancel-version-button";
+    public static final String    CONFIRM_BUTTON     = "save-version-button";
+    public static final String    VERSION_DIALOG     = "version-dialog";
+    public static final String    VERSION_NAME_FIELD = "version-name-field";
+    private final       boolean   isEditMode;
+    private final       TextField nameField;
 
     /**
      * Creates a dialog for creating or editing a version.
      *
      * @param version      The version to edit, or null for creating a new version
-     * @param saveCallback Callback that receives the version with updated values
+     * @param saveCallback Callback that receives the version with updated values and a reference to this dialog
      */
-    public VersionDialog(Version version, Consumer<Version> saveCallback) {
+    public VersionDialog(Version version, SaveCallback saveCallback) {
         isEditMode = version != null;
 
         // Set the dialog title
@@ -57,10 +56,12 @@ public class VersionDialog extends Dialog {
         dialogLayout.setPadding(false);
         dialogLayout.setSpacing(true);
 
-        TextField nameField = new TextField("Version Name");
+        nameField = new TextField("Version Name");
         nameField.setId(VERSION_NAME_FIELD);
         nameField.setWidthFull();
         nameField.setRequired(true);
+        // Add helper text explaining the uniqueness requirement
+        nameField.setHelperText("Version name must be unique");
 
         if (isEditMode) {
             nameField.setValue(version.getName());
@@ -83,8 +84,8 @@ public class VersionDialog extends Dialog {
                 versionToSave.setName(nameField.getValue().trim());
             }
 
-            saveCallback.accept(versionToSave);
-            close();
+            // Call the save callback with the version and a reference to this dialog
+            saveCallback.save(versionToSave, this);
         });
         saveButton.setId(CONFIRM_BUTTON);
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -99,5 +100,23 @@ public class VersionDialog extends Dialog {
 
         dialogLayout.add(buttonLayout);
         add(dialogLayout);
+    }
+
+    /**
+     * Sets an error message on the name field to indicate uniqueness violation
+     *
+     * @param errorMessage The error message to show
+     */
+    public void setNameFieldError(String errorMessage) {
+        nameField.setInvalid(errorMessage != null);
+        nameField.setErrorMessage(errorMessage);
+    }
+
+    /**
+     * Functional interface for the save callback that receives the edited version and a reference to this dialog
+     */
+    @FunctionalInterface
+    public interface SaveCallback {
+        void save(Version version, VersionDialog dialog);
     }
 }

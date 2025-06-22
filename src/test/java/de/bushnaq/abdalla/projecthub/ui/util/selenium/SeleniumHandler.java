@@ -104,6 +104,7 @@ public class SeleniumHandler {
      */
     public void ensureElementCountInGrid(String gridId, String gridNamePrefix, String name, int expectedCount) {
         {
+            waitForElementToBeLocated(gridId);
             WebElement grid = getDriver().findElement(By.id(gridId));
             // Wait a moment for any UI updates to complete
             wait(500);

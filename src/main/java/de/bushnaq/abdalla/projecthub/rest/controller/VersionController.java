@@ -21,9 +21,11 @@ import de.bushnaq.abdalla.projecthub.dao.VersionDAO;
 import de.bushnaq.abdalla.projecthub.repository.ProductRepository;
 import de.bushnaq.abdalla.projecthub.repository.VersionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -65,6 +67,10 @@ public class VersionController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<VersionDAO> persist(@RequestBody VersionDAO version) {
         return productRepository.findById(version.getProductId()).map(product -> {
+            // Check if a version with the same name already exists
+            if (versionRepository.existsByName(version.getName())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "A version with name '" + version.getName() + "' already exists");
+            }
             VersionDAO save = versionRepository.save(version);
             return ResponseEntity.ok(save);
         }).orElse(ResponseEntity.notFound().build());
@@ -73,6 +79,11 @@ public class VersionController {
     @PutMapping()
     @PreAuthorize("hasRole('ADMIN')")
     public void update(@RequestBody VersionDAO version) {
+        // Check if another version with the same name exists (excluding the current version)
+        VersionDAO existingVersion = versionRepository.findByName(version.getName());
+        if (existingVersion != null && !existingVersion.getId().equals(version.getId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Another version with name '" + version.getName() + "' already exists");
+        }
         versionRepository.save(version);
     }
 }

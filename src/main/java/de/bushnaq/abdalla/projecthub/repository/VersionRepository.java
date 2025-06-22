@@ -23,5 +23,9 @@ import org.springframework.data.repository.ListCrudRepository;
 import java.util.List;
 
 public interface VersionRepository extends ListCrudRepository<VersionDAO, Long> {
+    boolean existsByName(String name);
+
+    VersionDAO findByName(String name);
+
     List<VersionDAO> findByProductId(Long productId);
 }

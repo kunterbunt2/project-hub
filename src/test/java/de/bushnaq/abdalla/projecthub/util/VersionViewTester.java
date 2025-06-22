@@ -25,6 +25,8 @@ import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import org.springframework.stereotype.Component;
 
 import static de.bushnaq.abdalla.projecthub.ui.VersionListView.VERSION_GRID_NAME_PREFIX;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test helper class for interacting with the Version UI components.
@@ -76,6 +78,29 @@ public class VersionViewTester {
         seleniumHandler.setTextField(VersionDialog.VERSION_NAME_FIELD, name);
         seleniumHandler.click(VersionDialog.CONFIRM_BUTTON);
         seleniumHandler.ensureIsInList(VersionListView.VERSION_GRID_NAME_PREFIX, name);
+    }
+
+    /**
+     * Tests the attempt to create a version with a name that already exists.
+     * <p>
+     * Opens the version creation dialog, enters a name that already exists,
+     * clicks the save button, and verifies that an error message is displayed
+     * indicating the name is already in use.
+     *
+     * @param name the duplicate name to attempt to use
+     */
+    public void createVersionWithDuplicateName(String name) {
+        seleniumHandler.click(VersionListView.CREATE_VERSION_BUTTON);
+        seleniumHandler.setTextField(VersionDialog.VERSION_NAME_FIELD, name);
+        seleniumHandler.click(VersionDialog.CONFIRM_BUTTON);
+
+        // Check for field error message instead of notification
+        String errorMessage = seleniumHandler.getFieldErrorMessage(VersionDialog.VERSION_NAME_FIELD);
+        assertNotNull(errorMessage, "Error message should be present on the name field");
+        assertTrue(errorMessage.contains("already exists"), "Error message should indicate version already exists");
+
+        seleniumHandler.click(VersionDialog.CANCEL_BUTTON);
+        seleniumHandler.ensureElementCountInGrid(VersionListView.VERSION_GRID, VERSION_GRID_NAME_PREFIX, name, 1);
     }
 
     /**
@@ -145,6 +170,32 @@ public class VersionViewTester {
         seleniumHandler.click(VersionDialog.CONFIRM_BUTTON);
         seleniumHandler.ensureIsInList(VersionListView.VERSION_GRID_NAME_PREFIX, newName);
         seleniumHandler.ensureIsNotInList(VersionListView.VERSION_GRID_NAME_PREFIX, name);
+    }
+
+    /**
+     * Tests the attempt to edit a version to have a name that already exists.
+     * <p>
+     * Opens the context menu for the specified version, selects the edit option,
+     * changes the name to one that already exists, clicks the save button, and verifies
+     * that an error message is displayed indicating the name is already in use.
+     *
+     * @param originalName  the name of the version to edit
+     * @param duplicateName the duplicate name that already exists
+     */
+    public void editVersionWithDuplicateName(String originalName, String duplicateName) {
+        seleniumHandler.click(VersionListView.VERSION_GRID_ACTION_BUTTON_PREFIX + originalName);
+        seleniumHandler.click(VersionListView.VERSION_GRID_EDIT_BUTTON_PREFIX + originalName);
+        seleniumHandler.setTextField(VersionDialog.VERSION_NAME_FIELD, duplicateName);
+        seleniumHandler.click(VersionDialog.CONFIRM_BUTTON);
+
+        // Check for field error message instead of notification
+        String errorMessage = seleniumHandler.getFieldErrorMessage(VersionDialog.VERSION_NAME_FIELD);
+        assertNotNull(errorMessage, "Error message should be present on the name field");
+        assertTrue(errorMessage.contains("already exists"), "Error message should indicate version already exists");
+
+        seleniumHandler.click(VersionDialog.CANCEL_BUTTON);
+        seleniumHandler.ensureIsInList(VersionListView.VERSION_GRID_NAME_PREFIX, originalName);
+        seleniumHandler.ensureIsInList(VersionListView.VERSION_GRID_NAME_PREFIX, duplicateName);
     }
 
     /**

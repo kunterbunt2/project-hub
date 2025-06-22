@@ -96,6 +96,22 @@ public class VersionListViewTest extends AbstractUiTestUtil {
     }
 
     /**
+     * Tests the behavior when attempting to create a version with a name that already exists.
+     * <p>
+     * Creates a version, then tries to create another version with the same name.
+     * Verifies that the system displays an error and prevents the creation of the duplicate version.
+     *
+     * @throws Exception if any error occurs during the test
+     */
+    @Test
+    public void testCreateDuplicateNameFails() throws Exception {
+        // First, create a version
+        versionViewTester.createVersionConfirm(versionName);
+        // Then try to create another version with the same name
+        versionViewTester.createVersionWithDuplicateName(versionName);
+    }
+
+    /**
      * Tests the behavior when attempting to delete a version but canceling the operation.
      * <p>
      * Creates a version, then attempts to delete it but cancels the confirmation dialog.
@@ -149,5 +165,23 @@ public class VersionListViewTest extends AbstractUiTestUtil {
     public void testEditConfirm() throws Exception {
         versionViewTester.createVersionConfirm(versionName);
         versionViewTester.editVersionConfirm(versionName, newVersionName);
+    }
+
+    /**
+     * Tests the behavior when attempting to edit a version to have a name that already exists.
+     * <p>
+     * Creates two versions, then tries to update the second version to have the same name as the first.
+     * Verifies that the system displays an error and prevents the update.
+     *
+     * @throws Exception if any error occurs during the test
+     */
+    @Test
+    public void testEditDuplicateNameFails() throws Exception {
+        // First, create two versions with different names
+        versionViewTester.createVersionConfirm(versionName);
+        versionViewTester.createVersionConfirm(newVersionName);
+
+        // Then try to edit the second version to have the same name as the first
+        versionViewTester.editVersionWithDuplicateName(newVersionName, versionName);
     }
 }

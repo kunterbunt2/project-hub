@@ -39,6 +39,8 @@ import de.bushnaq.abdalla.projecthub.ui.common.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.common.VersionDialog;
 import de.bushnaq.abdalla.projecthub.ui.view.MainLayout;
 import jakarta.annotation.security.PermitAll;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Clock;
 import java.time.format.DateTimeFormatter;
@@ -53,6 +55,7 @@ import java.util.Map;
 public class VersionListView extends Main implements AfterNavigationObserver {
     public static final String        CREATE_VERSION_BUTTON             = "create-version-button";
     public static final String        ROUTE                             = "version-list";
+    public static final String        VERSION_GRID                      = "version-grid";
     public static final String        VERSION_GRID_ACTION_BUTTON_PREFIX = "version-grid-action-button-prefix-";
     public static final String        VERSION_GRID_DELETE_BUTTON_PREFIX = "version-grid-delete-button-prefix-";
     public static final String        VERSION_GRID_EDIT_BUTTON_PREFIX   = "version-grid-edit-button-prefix-";
@@ -92,6 +95,7 @@ public class VersionListView extends Main implements AfterNavigationObserver {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
         grid = new Grid<>();
+        grid.setId(VERSION_GRID);
         grid.addColumn(Version::getKey).setHeader("Key");
         grid.addColumn(new ComponentRenderer<>(version -> {
             Div div    = new Div();
@@ -193,18 +197,34 @@ public class VersionListView extends Main implements AfterNavigationObserver {
     }
 
     private void openVersionDialog(Version version) {
-        VersionDialog dialog = new VersionDialog(version, savedVersion -> {
-            if (version != null) {
-                // Edit mode
-                versionApi.update(savedVersion);
-                Notification.show("Version updated", 3000, Notification.Position.BOTTOM_START);
-            } else {
-                // Create mode
-                savedVersion.setProductId(productId);
-                versionApi.persist(savedVersion);
-                Notification.show("Version created", 3000, Notification.Position.BOTTOM_START);
+        VersionDialog dialog = new VersionDialog(version, (savedVersion, versionDialog) -> {
+            try {
+                if (version != null) {
+                    // Edit mode
+                    versionApi.update(savedVersion);
+                    Notification.show("Version updated", 3000, Notification.Position.BOTTOM_START);
+                    versionDialog.close();
+                } else {
+                    // Create mode
+                    savedVersion.setProductId(productId);
+                    versionApi.persist(savedVersion);
+                    Notification.show("Version created", 3000, Notification.Position.BOTTOM_START);
+                    versionDialog.close();
+                }
+                refreshGrid();
+            } catch (ResponseStatusException e) {
+                if (e.getStatusCode() == HttpStatus.CONFLICT) {
+                    // This is a name uniqueness violation
+                    versionDialog.setNameFieldError(e.getReason());
+                } else {
+                    // Some other error
+                    Notification.show("Error: " + e.getMessage(), 3000, Notification.Position.MIDDLE);
+                    versionDialog.close();
+                }
+            } catch (Exception ex) {
+                Notification.show("Unexpected error: " + ex.getMessage(), 3000, Notification.Position.MIDDLE);
+                versionDialog.close();
             }
-            refreshGrid();
         });
         dialog.open();
     }
