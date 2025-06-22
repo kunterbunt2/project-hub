@@ -25,6 +25,9 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.Context;
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
+import de.bushnaq.abdalla.projecthub.dto.Task;
+import de.bushnaq.abdalla.projecthub.dto.User;
+import de.bushnaq.abdalla.projecthub.dto.Worklog;
 import de.bushnaq.abdalla.projecthub.report.burndown.BurnDownChart;
 import de.bushnaq.abdalla.projecthub.report.burndown.RenderDao;
 import de.bushnaq.abdalla.projecthub.report.gantt.GanttChart;
@@ -40,6 +43,9 @@ import jakarta.annotation.security.PermitAll;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -51,6 +57,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
 // Create a utility method for generating two-part cells
@@ -116,12 +124,8 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
         if (queryParameters.getParameters().containsKey("sprint")) {
             this.sprintId = Long.parseLong(queryParameters.getParameters().get("sprint").getFirst());
         }
-        //- populate grid with tasks of the sprint
-        sprint = sprintApi.getById(sprintId);
-        sprint.initialize();
-        sprint.initUserMap(userApi.getAll(sprintId));
-        sprint.initTaskMap(taskApi.getAll(sprintId), worklogApi.getAll(sprintId));
-        sprint.recalculate(ParameterOptions.getLocalNow());
+
+        loadData();
 
         pageTitle.setText(sprint.getName());
         //- update breadcrumbs
@@ -227,10 +231,12 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
 
     private void createGanttChart() {
         try {
+            long  time       = System.currentTimeMillis();
             Image ganttChart = generateGanttChartImage();
             ganttChart.getStyle()//.set("object-fit", "contain") // Maintain aspect ratio
                     .set("margin-top", "var(--lumo-space-m)");
             add(ganttChart);
+            logger.info("Gantt chart generated in {} ms", System.currentTimeMillis() - time);
         } catch (Exception e) {
             add(new Paragraph("Error generating gantt chart: " + e.getMessage()));
         }
@@ -332,10 +338,12 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
                 .set("background-color", "var(--lumo-base-color)");
 
         try {
+            long  time          = System.currentTimeMillis();
             Image burndownChart = generateBurnDownImage();
             burndownChart.getStyle().set("object-fit", "contain") // Maintain aspect ratio
                     .set("margin-top", "var(--lumo-space-m)");
             spanningColumn.add(burndownChart);
+            logger.info("Burndown chart generated in {} ms", System.currentTimeMillis() - time);
         } catch (Exception e) {
             spanningColumn.add(new Paragraph("Error loading burndown chart: " + e.getMessage()));
         }
@@ -395,6 +403,89 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
         ganttChart.setId(GANTT_CHART);
         ganttChart.setWidth(chart.getChartWidth() + "px");
         return ganttChart;
+    }
+
+    private void loadData() {
+        //- populate grid with tasks of the sprint
+        long time = System.currentTimeMillis();
+
+        // Capture the security context from the current thread
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // Load in parallel with security context propagation
+        CompletableFuture<Sprint> sprintFuture = CompletableFuture.supplyAsync(() -> {
+            // Set security context in this thread
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(authentication);
+            SecurityContextHolder.setContext(context);
+            try {
+                Sprint s = sprintApi.getById(sprintId);
+                s.initialize();
+                return s;
+            } finally {
+                SecurityContextHolder.clearContext();// Clear the security context after execution
+            }
+        });
+
+        CompletableFuture<List<User>> usersFuture = CompletableFuture.supplyAsync(() -> {
+            // Set security context in this thread
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(authentication);
+            SecurityContextHolder.setContext(context);
+            try {
+                return userApi.getAll(sprintId);
+            } finally {
+                SecurityContextHolder.clearContext();// Clear the security context after execution
+
+            }
+        });
+
+        CompletableFuture<List<Task>> tasksFuture = CompletableFuture.supplyAsync(() -> {
+            // Set security context in this thread
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(authentication);
+            SecurityContextHolder.setContext(context);
+            try {
+                return taskApi.getAll(sprintId);
+            } finally {
+                SecurityContextHolder.clearContext();// Clear the security context after execution
+            }
+        });
+
+        CompletableFuture<List<Worklog>> worklogsFuture = CompletableFuture.supplyAsync(() -> {
+            // Set security context in this thread
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(authentication);
+            SecurityContextHolder.setContext(context);
+            try {
+                return worklogApi.getAll(sprintId);
+            } finally {
+                SecurityContextHolder.clearContext();// Clear the security context after execution
+            }
+        });
+
+        // Wait for all futures and combine results
+        try {
+            sprint = sprintFuture.get();
+            logger.info("sprint loaded and initialized in {} ms", System.currentTimeMillis() - time);
+            time = System.currentTimeMillis();
+            sprint.initUserMap(usersFuture.get());
+            sprint.initTaskMap(tasksFuture.get(), worklogsFuture.get());
+            logger.info("sprint user, task and worklog maps initialized in {} ms", System.currentTimeMillis() - time);
+            sprint.recalculate(ParameterOptions.getLocalNow());
+        } catch (InterruptedException | ExecutionException e) {
+            logger.error("Error loading sprint data", e);
+            // Handle exception appropriately
+        }
+    }
+
+    @Deprecated
+    private void loadDataOld() {
+        sprint = sprintApi.getById(sprintId);
+        sprint.initialize();
+        sprint.initUserMap(userApi.getAll(sprintId));
+        sprint.initTaskMap(taskApi.getAll(sprintId), worklogApi.getAll(sprintId));
+        sprint.recalculate(ParameterOptions.getLocalNow());
     }
 
     private void logTime() {
