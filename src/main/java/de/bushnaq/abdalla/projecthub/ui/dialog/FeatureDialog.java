@@ -1,0 +1,121 @@
+/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.ui.dialog;
+
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import de.bushnaq.abdalla.projecthub.dto.Feature;
+
+/**
+ * A reusable dialog for creating and editing features.
+ */
+public class FeatureDialog extends Dialog {
+
+    public static final String    CANCEL_BUTTON      = "cancel-feature-button";
+    public static final String    CONFIRM_BUTTON     = "save-feature-button";
+    public static final String    FEATURE_DIALOG     = "feature-dialog";
+    public static final String    FEATURE_NAME_FIELD = "feature-name-field";
+    private final       boolean   isEditMode;
+    private final       TextField nameField;
+
+    /**
+     * Creates a dialog for creating or editing a feature.
+     *
+     * @param feature      The feature to edit, or null for creating a new feature
+     * @param saveCallback Callback that receives the feature with updated values and a reference to this dialog
+     */
+    public FeatureDialog(Feature feature, SaveCallback saveCallback) {
+        isEditMode = feature != null;
+
+        setHeaderTitle(isEditMode ? "Edit Feature" : "Create Feature");
+        setId(FEATURE_DIALOG);
+
+        VerticalLayout dialogLayout = new VerticalLayout();
+        dialogLayout.setPadding(false);
+        dialogLayout.setSpacing(true);
+
+        nameField = new TextField("Feature Name");
+        nameField.setId(FEATURE_NAME_FIELD);
+        nameField.setWidthFull();
+        nameField.setRequired(true);
+        // Add helper text explaining the uniqueness requirement
+        nameField.setHelperText("Feature name must be unique");
+
+        if (isEditMode) {
+            nameField.setValue(feature.getName());
+        }
+
+        dialogLayout.add(nameField);
+
+        Button saveButton = new Button("Save", e -> {
+            if (nameField.getValue().trim().isEmpty()) {
+                Notification.show("Please enter a feature name", 3000, Notification.Position.MIDDLE);
+                return;
+            }
+
+            Feature featureToSave;
+            if (isEditMode) {
+                featureToSave = feature;
+                featureToSave.setName(nameField.getValue().trim());
+            } else {
+                featureToSave = new Feature();
+                featureToSave.setName(nameField.getValue().trim());
+            }
+
+            // Call the save callback with the feature and a reference to this dialog
+            saveCallback.save(featureToSave, this);
+        });
+        saveButton.setId(CONFIRM_BUTTON);
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        Button cancelButton = new Button("Cancel", e -> close());
+        cancelButton.setId(CANCEL_BUTTON);
+
+        HorizontalLayout buttonLayout = new HorizontalLayout();
+        buttonLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
+        buttonLayout.add(cancelButton, saveButton);
+        buttonLayout.setWidthFull();
+
+        dialogLayout.add(buttonLayout);
+        add(dialogLayout);
+    }
+
+    /**
+     * Sets an error message on the name field to indicate uniqueness violation
+     *
+     * @param errorMessage The error message to show
+     */
+    public void setErrorMessage(String errorMessage) {
+        nameField.setErrorMessage(errorMessage);
+        nameField.setInvalid(true);
+    }
+
+    /**
+     * Functional interface for the save callback that receives the edited feature and a reference to this dialog
+     */
+    @FunctionalInterface
+    public interface SaveCallback {
+        void save(Feature feature, FeatureDialog dialog);
+    }
+}

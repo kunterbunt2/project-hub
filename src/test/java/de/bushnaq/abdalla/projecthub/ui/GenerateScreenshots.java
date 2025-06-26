@@ -17,9 +17,11 @@
 
 package de.bushnaq.abdalla.projecthub.ui;
 
-import de.bushnaq.abdalla.projecthub.ui.common.*;
+import de.bushnaq.abdalla.projecthub.ui.dialog.*;
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import de.bushnaq.abdalla.projecthub.ui.view.*;
+import de.bushnaq.abdalla.projecthub.ui.view.util.*;
 import de.bushnaq.abdalla.projecthub.util.*;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,24 +48,23 @@ import java.util.List;
 @Transactional
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class GenerateScreenshots extends AbstractUiTestUtil {
-    private String            featureName;
     @Autowired
-    private FeatureViewTester featureViewTester;
-    private String            productName;
+    private FeatureListViewTester featureListViewTester;
+    private String                featureName;
     @Autowired
-    private ProductViewTester productViewTester;
+    private ProductListViewTester productListViewTester;
+    private String                productName;
     @Autowired
-    private SeleniumHandler   seleniumHandler;
-    private String            sprintName;
+    private SeleniumHandler       seleniumHandler;
     @Autowired
-    private SprintViewTester  sprintViewTester;
-    private String            userName;
+    private SprintListViewTester  sprintListViewTester;
+    private String                sprintName;
     @Autowired
-    private UserViewTester    userViewTester;
-    private String            versionName;
+    private UserListViewTester    userListViewTester;
+    private String                userName;
     @Autowired
-    private VersionViewTester versionViewTester;
-
+    private VersionListViewTester versionListViewTester;
+    private String                versionName;
 
     private static List<RandomCase> listRandomCases() {
         RandomCase[] randomCases = new RandomCase[]{//
@@ -155,24 +156,24 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         featureName = nameGenerator.generateFeatureName(0);
         sprintName  = nameGenerator.generateSprintName(0);
 
-        productViewTester.switchToProductListView("../project-hub.wiki/screenshots/login.png", testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+        productListViewTester.switchToProductListView("../project-hub.wiki/screenshots/login.png", testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/product-list-view.png");
         takeProductDialogScreenshots();
-        productViewTester.selectProduct(productName);
+        productListViewTester.selectProduct(productName);
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/version-list-view.png");
         takeVersionDialogScreenshots();
-        versionViewTester.selectVersion(versionName);
+        versionListViewTester.selectVersion(versionName);
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/feature-list-view.png");
         takeProjectDialogScreenshots();
-        featureViewTester.selectFeature(featureName);
+        featureListViewTester.selectFeature(featureName);
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/sprint-list-view.png");
         takeSprintDialogScreenshots();
-        sprintViewTester.selectSprint(sprintName);
+        sprintListViewTester.selectSprint(sprintName);
         seleniumHandler.waitForElementToBeClickable(SprintQualityBoard.GANTT_CHART);
         seleniumHandler.waitForElementToBeClickable(SprintQualityBoard.BURNDOWN_CHART);
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/sprint-quality-board.png");
 
-        userViewTester.switchToUserListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+        userListViewTester.switchToUserListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/user-list-view.png");
         takeUserDialogScreenshots();
 

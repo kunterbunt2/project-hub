@@ -19,7 +19,7 @@ package de.bushnaq.abdalla.projecthub.ui;
 
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
-import de.bushnaq.abdalla.projecthub.util.ProductViewTester;
+import de.bushnaq.abdalla.projecthub.ui.view.util.ProductListViewTester;
 import de.bushnaq.abdalla.projecthub.util.RandomCase;
 import de.bushnaq.abdalla.projecthub.util.TestInfoUtil;
 import org.junit.jupiter.api.Disabled;
@@ -49,11 +49,11 @@ import java.util.List;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @Disabled
 public class Demo extends AbstractUiTestUtil {
-    private static final Logger            logger = LoggerFactory.getLogger(Demo.class);
+    private static final Logger                logger = LoggerFactory.getLogger(Demo.class);
     @Autowired
-    private              ProductViewTester productViewTester;
+    private              ProductListViewTester productListViewTester;
     @Autowired
-    private              SeleniumHandler   seleniumHandler;
+    private              SeleniumHandler       seleniumHandler;
 
     private static List<RandomCase> listRandomCases() {
         RandomCase[] randomCases = new RandomCase[]{//
@@ -75,7 +75,7 @@ public class Demo extends AbstractUiTestUtil {
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         generateProductsIfNeeded(testInfo, randomCase);
 //        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
-        productViewTester.switchToProductListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+        productListViewTester.switchToProductListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
         seleniumHandler.waitUntilBrowserClosed(0);
     }
 }
