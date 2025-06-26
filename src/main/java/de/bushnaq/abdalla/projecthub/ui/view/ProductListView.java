@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view;
 
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -100,6 +101,7 @@ public class ProductListView extends Main implements AfterNavigationObserver {
         {
             Grid.Column<Product> column = grid.addColumn(Product::getKey).setHeader("Key");
             column.setId("product-grid-key-column");
+            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.KEY), new Div(new Text("Key"))));
         }
         {
             Grid.Column<Product> column = grid.addColumn(new ComponentRenderer<>(product -> {
@@ -117,14 +119,17 @@ public class ProductListView extends Main implements AfterNavigationObserver {
                 return div;
             })).setHeader("Name");
             column.setId("product-grid-name-column");
+            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CUBE), new Div(new Text("Name"))));
         }
         {
             Grid.Column<Product> column = grid.addColumn(product -> dateTimeFormatter.format(product.getCreated())).setHeader("Created");
             column.setId("product-grid-created-column");
+            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("Created"))));
         }
         {
             Grid.Column<Product> column = grid.addColumn(product -> dateTimeFormatter.format(product.getUpdated())).setHeader("Updated");
             column.setId("product-grid-updated-column");
+            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("Updated"))));
         }
 
         // Add actions column with context menu

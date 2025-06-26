@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view;
 
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
@@ -89,31 +90,12 @@ public class UserListView extends Main implements AfterNavigationObserver {
         grid = new Grid<>();
         refreshGrid();
         {
-            Grid.Column<User> column = grid.addColumn(new ComponentRenderer<>(user -> {
-                HorizontalLayout layout = new HorizontalLayout();
-                layout.setAlignItems(FlexComponent.Alignment.CENTER);
-                layout.setSpacing(true);
-
-                Icon keyIcon = new Icon(VaadinIcon.KEY);
-                keyIcon.setSize("16px");
-
-                Div div = new Div();
-                div.add(user.getKey());
-
-                layout.add(keyIcon, div);
-                return layout;
-            })).setHeader("Key");
+            Grid.Column<User> column = grid.addColumn(User::getKey).setHeader("Key");
             column.setId("user-grid-key-column");
+            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.KEY), new Div(new Text("Key"))));
         }
         {
             Grid.Column<User> column = grid.addColumn(new ComponentRenderer<>(user -> {
-                HorizontalLayout layout = new HorizontalLayout();
-                layout.setAlignItems(FlexComponent.Alignment.CENTER);
-                layout.setSpacing(true);
-
-                Icon userIcon = new Icon(VaadinIcon.USER);
-                userIcon.setSize("16px");
-
                 Div div = new Div();
                 // Create color indicator if available
                 if (user.getColor() != null) {
@@ -129,96 +111,35 @@ public class UserListView extends Main implements AfterNavigationObserver {
                 }
                 div.add(user.getName());
                 div.setId(USER_GRID_NAME_PREFIX + user.getName());
-
-                layout.add(userIcon, div);
-                return layout;
+                return div;
             })).setHeader("Name");
             column.setId("user-grid-name-column");
+            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.USER), new Div(new Text("Name"))));
         }
         {
-            Grid.Column<User> column = grid.addColumn(new ComponentRenderer<>(user -> {
-                HorizontalLayout layout = new HorizontalLayout();
-                layout.setAlignItems(FlexComponent.Alignment.CENTER);
-                layout.setSpacing(true);
-
-                Icon emailIcon = new Icon(VaadinIcon.ENVELOPE);
-                emailIcon.setSize("16px");
-
-                Div div = new Div();
-                div.add(user.getEmail());
-
-                layout.add(emailIcon, div);
-                return layout;
-            })).setHeader("Email");
+            Grid.Column<User> column = grid.addColumn(User::getEmail).setHeader("Email");
             column.setId("user-grid-email-column");
+            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.ENVELOPE), new Div(new Text("Email"))));
         }
         {
-            Grid.Column<User> column = grid.addColumn(new ComponentRenderer<>(user -> {
-                HorizontalLayout layout = new HorizontalLayout();
-                layout.setAlignItems(FlexComponent.Alignment.CENTER);
-                layout.setSpacing(true);
-
-                Icon calendarUserIcon = new Icon(VaadinIcon.CALENDAR_USER);
-                calendarUserIcon.setSize("16px");
-
-                Div div = new Div();
-                div.add(user.getFirstWorkingDay() != null ? user.getFirstWorkingDay().toString() : "");
-
-                layout.add(calendarUserIcon, div);
-                return layout;
-            })).setHeader("First Working Day");
+            Grid.Column<User> column = grid.addColumn(user -> user.getFirstWorkingDay() != null ? user.getFirstWorkingDay().toString() : "").setHeader("First Working Day");
             column.setId("user-grid-first-working-day-column");
+            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR_USER), new Div(new Text("First Working Day"))));
         }
         {
-            Grid.Column<User> column = grid.addColumn(new ComponentRenderer<>(user -> {
-                HorizontalLayout layout = new HorizontalLayout();
-                layout.setAlignItems(FlexComponent.Alignment.CENTER);
-                layout.setSpacing(true);
-
-                Icon calendarUserIcon = new Icon(VaadinIcon.CALENDAR_USER);
-                calendarUserIcon.setSize("16px");
-
-                Div div = new Div();
-                div.add(user.getLastWorkingDay() != null ? user.getLastWorkingDay().toString() : "");
-
-                layout.add(calendarUserIcon, div);
-                return layout;
-            })).setHeader("Last Working Day");
+            Grid.Column<User> column = grid.addColumn(user -> user.getLastWorkingDay() != null ? user.getLastWorkingDay().toString() : "").setHeader("Last Working Day");
             column.setId("user-grid-last-working-day-column");
+            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR_USER), new Div(new Text("Last Working Day"))));
         }
         {
-            Grid.Column<User> column = grid.addColumn(new ComponentRenderer<>(user -> {
-                HorizontalLayout layout = new HorizontalLayout();
-                layout.setAlignItems(FlexComponent.Alignment.CENTER);
-                layout.setSpacing(true);
-
-                Icon calendarIcon = new Icon(VaadinIcon.CALENDAR);
-                calendarIcon.setSize("16px");
-
-                Div div = new Div();
-                div.add(dateTimeFormatter.format(user.getCreated()));
-
-                layout.add(calendarIcon, div);
-                return layout;
-            })).setHeader("Created");
+            Grid.Column<User> column = grid.addColumn(user -> dateTimeFormatter.format(user.getCreated())).setHeader("Created");
             column.setId("user-grid-created-column");
+            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("Created"))));
         }
         {
-            Grid.Column<User> column = grid.addColumn(new ComponentRenderer<>(user -> {
-                HorizontalLayout layout = new HorizontalLayout();
-                layout.setAlignItems(FlexComponent.Alignment.CENTER);
-                layout.setSpacing(true);
-
-                Icon calendarIcon = new Icon(VaadinIcon.CALENDAR);
-                calendarIcon.setSize("16px");
-
-                Div div = new Div();
-                div.add(dateTimeFormatter.format(user.getUpdated()));
-
-                layout.add(calendarIcon, div);
-                return layout;
-            })).setHeader("Updated");
+            Grid.Column<User> column = grid.addColumn(user -> dateTimeFormatter.format(user.getUpdated())).setHeader("Updated");
             column.setId("user-grid-updated-column");
+            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("Updated"))));
         }
 
         // Add actions column with context menu

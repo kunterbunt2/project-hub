@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view;
 
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -96,8 +97,12 @@ public class VersionListView extends Main implements AfterNavigationObserver {
 
         grid = new Grid<>();
         grid.setId(VERSION_GRID);
-        grid.addColumn(Version::getKey).setHeader("Key");
-        grid.addColumn(new ComponentRenderer<>(version -> {
+
+        Grid.Column<Version> keyColumn = grid.addColumn(Version::getKey).setHeader("Key");
+        keyColumn.setId("version-grid-key-column");
+        keyColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.KEY), new Div(new Text("Key"))));
+
+        Grid.Column<Version> nameColumn = grid.addColumn(new ComponentRenderer<>(version -> {
             Div div    = new Div();
             Div square = new Div();
             square.setMinHeight("16px");
@@ -111,8 +116,16 @@ public class VersionListView extends Main implements AfterNavigationObserver {
             div.setId(VERSION_GRID_NAME_PREFIX + version.getName());
             return div;
         })).setHeader("Name");
-        grid.addColumn(version -> dateTimeFormatter.format(version.getCreated())).setHeader("Created");
-        grid.addColumn(version -> dateTimeFormatter.format(version.getUpdated())).setHeader("Updated");
+        nameColumn.setId("version-grid-name-column");
+        nameColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.PACKAGE), new Div(new Text("Name"))));
+
+        Grid.Column<Version> createdColumn = grid.addColumn(version -> dateTimeFormatter.format(version.getCreated())).setHeader("Created");
+        createdColumn.setId("version-grid-created-column");
+        createdColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("Created"))));
+
+        Grid.Column<Version> updatedColumn = grid.addColumn(version -> dateTimeFormatter.format(version.getUpdated())).setHeader("Updated");
+        updatedColumn.setId("version-grid-updated-column");
+        updatedColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("Updated"))));
 
         // Add actions column with context menu
         grid.addColumn(new ComponentRenderer<>(version -> {

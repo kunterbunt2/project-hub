@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view;
 
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -98,8 +99,12 @@ public class SprintListView extends Main implements AfterNavigationObserver {
 
         grid = new Grid<>();
         grid.setId(SPRINT_GRID);
-        grid.addColumn(Sprint::getKey).setHeader("Key");
-        grid.addColumn(new ComponentRenderer<>(sprint -> {
+
+        Grid.Column<Sprint> keyColumn = grid.addColumn(Sprint::getKey).setHeader("Key");
+        keyColumn.setId("sprint-grid-key-column");
+        keyColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.KEY), new Div(new Text("Key"))));
+
+        Grid.Column<Sprint> nameColumn = grid.addColumn(new ComponentRenderer<>(sprint -> {
             Div div    = new Div();
             Div square = new Div();
             square.setMinHeight("16px");
@@ -113,12 +118,32 @@ public class SprintListView extends Main implements AfterNavigationObserver {
             div.setId(SPRINT_GRID_NAME_PREFIX + sprint.getName());
             return div;
         })).setHeader("Name");
-        grid.addColumn(sprint -> sprint.getStart() != null ? dateTimeFormatter.format(sprint.getStart()) : "").setHeader("Start");
-        grid.addColumn(sprint -> sprint.getEnd() != null ? dateTimeFormatter.format(sprint.getEnd()) : "").setHeader("End");
-        grid.addColumn(sprint -> sprint.getStatus().name()).setHeader("Status");
-        grid.addColumn(sprint -> sprint.getOriginalEstimation() != null ? DateUtil.createDurationString(sprint.getOriginalEstimation(), false, true, true) : "").setHeader("Original Estimation");
-        grid.addColumn(sprint -> sprint.getWorked() != null ? DateUtil.createDurationString(sprint.getWorked(), false, true, true) : "").setHeader("Worked");
-        grid.addColumn(sprint -> sprint.getRemaining() != null ? DateUtil.createDurationString(sprint.getRemaining(), false, true, true) : "").setHeader("Remaining");
+        nameColumn.setId("sprint-grid-name-column");
+        nameColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.TASKS), new Div(new Text("Name"))));
+
+        Grid.Column<Sprint> startColumn = grid.addColumn(sprint -> sprint.getStart() != null ? dateTimeFormatter.format(sprint.getStart()) : "").setHeader("Start");
+        startColumn.setId("sprint-grid-start-column");
+        startColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("Start"))));
+
+        Grid.Column<Sprint> endColumn = grid.addColumn(sprint -> sprint.getEnd() != null ? dateTimeFormatter.format(sprint.getEnd()) : "").setHeader("End");
+        endColumn.setId("sprint-grid-end-column");
+        endColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("End"))));
+
+        Grid.Column<Sprint> statusColumn = grid.addColumn(sprint -> sprint.getStatus().name()).setHeader("Status");
+        statusColumn.setId("sprint-grid-status-column");
+        statusColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.FLAG), new Div(new Text("Status"))));
+
+        Grid.Column<Sprint> originalEstimationColumn = grid.addColumn(sprint -> sprint.getOriginalEstimation() != null ? DateUtil.createDurationString(sprint.getOriginalEstimation(), false, true, true) : "").setHeader("Original Estimation");
+        originalEstimationColumn.setId("sprint-grid-original-estimation-column");
+        originalEstimationColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CLOCK), new Div(new Text("Original Estimation"))));
+
+        Grid.Column<Sprint> workedColumn = grid.addColumn(sprint -> sprint.getWorked() != null ? DateUtil.createDurationString(sprint.getWorked(), false, true, true) : "").setHeader("Worked");
+        workedColumn.setId("sprint-grid-worked-column");
+        workedColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.TIMER), new Div(new Text("Worked"))));
+
+        Grid.Column<Sprint> remainingColumn = grid.addColumn(sprint -> sprint.getRemaining() != null ? DateUtil.createDurationString(sprint.getRemaining(), false, true, true) : "").setHeader("Remaining");
+        remainingColumn.setId("sprint-grid-remaining-column");
+        remainingColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.HOURGLASS), new Div(new Text("Remaining"))));
 
         // Add actions column with context menu
         grid.addColumn(new ComponentRenderer<>(sprint -> {
