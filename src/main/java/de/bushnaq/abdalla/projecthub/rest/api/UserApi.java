@@ -86,6 +86,17 @@ public class UserApi extends AbstractApi {
         return response.getBody();
     }
 
+    public User getByName(String name) {
+        ResponseEntity<User> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/user/name/{name}",
+                HttpMethod.GET,
+                createHttpEntity(),
+                User.class,
+                name
+        ));
+        return response.getBody();
+    }
+
     public User persist(User user) {
         ResponseEntity<User> response = executeWithErrorHandling(() -> restTemplate.exchange(
                 getBaseUrl() + "/user",

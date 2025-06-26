@@ -22,7 +22,10 @@ import lombok.*;
 import org.hibernate.annotations.Proxy;
 
 @Entity
-@Table(name = "feature")
+@Table(
+        name = "features",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"versionId", "name"})
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -36,7 +39,7 @@ public class FeatureDAO extends AbstractTimeAwareDAO {
     @Column(name = "id")
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String name;
 
     @Column(nullable = false)

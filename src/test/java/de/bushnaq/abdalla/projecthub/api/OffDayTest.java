@@ -31,6 +31,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerErrorException;
 
 import java.time.LocalDate;
@@ -183,7 +184,7 @@ public class OffDayTest extends AbstractEntityGenerator {
             try {
                 removeOffDay(offDay, user);
                 fail("should not be able to delete the first location");
-            } catch (ServerErrorException e) {
+            } catch (ResponseStatusException e) {
                 //expected
                 user.setId(id);
             }
@@ -279,7 +280,7 @@ public class OffDayTest extends AbstractEntityGenerator {
             try {
                 updateOffDay(offDay, user);
                 fail("should not be able to update");
-            } catch (ServerErrorException e) {
+            } catch (ResponseStatusException e) {
                 //expected
                 user.setId(id);
                 offDay.setType(type);

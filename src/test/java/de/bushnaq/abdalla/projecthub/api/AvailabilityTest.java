@@ -30,6 +30,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerErrorException;
 
 import java.time.LocalDate;
@@ -172,7 +173,7 @@ public class AvailabilityTest extends AbstractEntityGenerator {
             try {
                 removeAvailability(availability, user);
                 fail("should not be able to delete");
-            } catch (ServerErrorException e) {
+            } catch (ResponseStatusException e) {
                 availability.setId(id);
                 //expected
             }
@@ -203,7 +204,7 @@ public class AvailabilityTest extends AbstractEntityGenerator {
             try {
                 removeAvailability(availability, user);
                 fail("should not be able to delete");
-            } catch (ServerErrorException e) {
+            } catch (ResponseStatusException e) {
                 user.setId(id);
                 //expected
             }
@@ -273,7 +274,7 @@ public class AvailabilityTest extends AbstractEntityGenerator {
             try {
                 updateAvailability(availability, user);
                 fail("should not be able to update");
-            } catch (ServerErrorException e) {
+            } catch (ResponseStatusException e) {
                 //expected
                 availability.setAvailability(a);
                 user.setId(userId);

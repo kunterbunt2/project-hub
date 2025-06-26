@@ -29,6 +29,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerErrorException;
 
 import java.util.List;
@@ -165,7 +166,7 @@ public class VersionTest extends AbstractEntityGenerator {
         try {
             versionApi.getById(FAKE_ID);
             fail("Version should not exist");
-        } catch (ServerErrorException e) {
+        } catch (ResponseStatusException e) {
             //expected
         }
     }
@@ -207,7 +208,7 @@ public class VersionTest extends AbstractEntityGenerator {
         try {
             updateVersion(version2);
             fail("Should not be able to update a version to have a duplicate name");
-        } catch (Exception e) {
+        } catch (ResponseStatusException e) {
             // Expected exception for duplicate name
             assertTrue(e.getMessage().contains("CONFLICT") || e.getMessage().contains("already exists"));
         }

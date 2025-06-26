@@ -72,6 +72,14 @@ public class UserController {
         return userRepository.findAll();
     }
 
+    @GetMapping("/name/{name}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public ResponseEntity<UserDAO> getByName(@PathVariable String name) {
+        return userRepository.findByName(name)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @PostMapping(consumes = "application/json", produces = "application/json")
     @PreAuthorize("hasRole('ADMIN')")
     public UserDAO save(@RequestBody UserDAO user) {
@@ -84,4 +92,3 @@ public class UserController {
         userRepository.save(user);
     }
 }
-

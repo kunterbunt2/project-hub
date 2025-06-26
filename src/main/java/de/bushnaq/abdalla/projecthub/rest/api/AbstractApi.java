@@ -247,7 +247,7 @@ public class AbstractApi {
                 // all other exception
                 throw new ServerErrorException(e.getMessage(), e.getCause());
             } else if (e instanceof HttpClientErrorException.NotFound) {
-                throw new ServerErrorException(e.getMessage(), e.getCause());
+                throw new ResponseStatusException(e.getStatusCode(), e.getMessage(), e.getCause());
             } else {
                 ErrorResponse error      = objectMapper.readValue(e.getResponseBodyAsString(), ErrorResponse.class);
                 HttpStatus    httpStatus = error.getHttpStatus();

@@ -25,7 +25,11 @@ import java.util.List;
 public interface VersionRepository extends ListCrudRepository<VersionDAO, Long> {
     boolean existsByName(String name);
 
+    boolean existsByNameAndProductId(String name, Long productId);
+
     VersionDAO findByName(String name);
+
+    VersionDAO findByNameAndProductId(String name, Long productId);
 
     List<VersionDAO> findByProductId(Long productId);
 }

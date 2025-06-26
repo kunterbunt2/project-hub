@@ -29,7 +29,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ServerErrorException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -144,7 +144,7 @@ public class UserTest extends AbstractEntityGenerator {
             try {
                 User user = userApi.getById(FAKE_ID);
                 fail("User should not exist");
-            } catch (ServerErrorException e) {
+            } catch (ResponseStatusException e) {
                 //expected
             }
         }

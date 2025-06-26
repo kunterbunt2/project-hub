@@ -153,6 +153,8 @@ public final class MainLayout extends AppLayout {
 
         var userMenuItem = userMenu.addItem(avatar);
         userMenuItem.add(username);
+        userMenuItem.getSubMenu().addItem(/*new Icon(VaadinIcon.CALENDAR_USER),*/"Manage Availability", e -> navigateToAvailability(username));
+        userMenuItem.getSubMenu().addItem(/*new Icon(VaadinIcon.MAP_MARKER),*/"Manage Location", e -> navigateToLocation(username));
         userMenuItem.getSubMenu().addItem("View Profile").setEnabled(false);
         userMenuItem.getSubMenu().addItem("Manage Settings").setEnabled(false);
         userMenuItem.getSubMenu().addItem("Logout", e -> logout());
@@ -170,5 +172,12 @@ public final class MainLayout extends AppLayout {
         logoutHandler.logout(SecurityUtils.getHttpServletRequest(), SecurityUtils.getHttpServletResponse(), SecurityContextHolder.getContext().getAuthentication());
         getUI().ifPresent(ui -> ui.getPage().setLocation("/ui/login"));
     }
-}
 
+    private void navigateToAvailability(String username) {
+        getUI().ifPresent(ui -> ui.navigate("availability/" + username));
+    }
+
+    private void navigateToLocation(String username) {
+        getUI().ifPresent(ui -> ui.navigate("location/" + username));
+    }
+}

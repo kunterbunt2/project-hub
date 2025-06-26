@@ -29,6 +29,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerErrorException;
 
 import java.util.List;
@@ -156,7 +157,7 @@ public class FeatureTest extends AbstractEntityGenerator {
         try {
             featureApi.getById(FAKE_ID);
             fail("Feature should not exist");
-        } catch (ServerErrorException e) {
+        } catch (ResponseStatusException e) {
             //expected
         }
     }

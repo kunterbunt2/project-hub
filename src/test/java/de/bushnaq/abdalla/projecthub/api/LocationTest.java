@@ -30,6 +30,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerErrorException;
 
 import java.time.LocalDate;
@@ -221,7 +222,7 @@ public class LocationTest extends AbstractEntityGenerator {
             try {
                 locationApi.deleteById(user, user.getLocations().getFirst());
                 fail("should not be able to delete");
-            } catch (ServerErrorException e) {
+            } catch (ResponseStatusException e) {
                 //expected
                 user.setId(userId);
             }
@@ -315,7 +316,7 @@ public class LocationTest extends AbstractEntityGenerator {
             try {
                 updateLocation(location, user);
                 fail("should not be able to update");
-            } catch (ServerErrorException e) {
+            } catch (ResponseStatusException e) {
                 //expected
                 location.setCountry(country);
                 user.setId(userId);

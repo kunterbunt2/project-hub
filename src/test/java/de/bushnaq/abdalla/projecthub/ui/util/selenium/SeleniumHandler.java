@@ -216,6 +216,24 @@ public class SeleniumHandler {
         return (String) executeJavaScript(colorScript);
     }
 
+    /**
+     * Gets the selected text from a Vaadin ComboBox component.
+     * <p>
+     * This method retrieves the visible text of the selected item in a ComboBox.
+     * It uses JavaScript to access the `selectedItemLabel` property of the component,
+     * which is a reliable way to get the display value, as the `value` attribute
+     * might contain an internal ID.
+     *
+     * @param id the ID of the vaadin-combo-box element
+     * @return the selected text as a String, or null if no item is selected or the element is not found.
+     */
+    public String getComboBoxValue(String id) {
+        waitUntil(ExpectedConditions.presenceOfElementLocated(By.id(id)));
+        WebElement e = findElement(By.id(id));
+        WebElement i = e.findElement(By.tagName("input"));
+        return i.getAttribute("value");
+    }
+
     public String getCurrentUrl() {
         return getDriver().getCurrentUrl();
     }
@@ -360,6 +378,7 @@ public class SeleniumHandler {
     }
 
     public String getTextField(String id) {
+        waitUntil(ExpectedConditions.elementToBeClickable(By.id(id)));
         WebElement e     = findElement(By.id(id));
         String     value = e.getAttribute("value");
         return value;
@@ -559,6 +578,12 @@ public class SeleniumHandler {
         assertEquals(rowName, label.getText());
     }
 
+    public void sendKeys(String id, CharSequence... keysToSend) {
+        WebElement e = findElement(By.id(id));
+        WebElement i = e.findElement(By.tagName("input"));
+        i.sendKeys(keysToSend);
+    }
+
     public void setCheckCheckbox(String id, boolean value) {
         boolean old = getCheckbox(id);
         if (old != value) {
@@ -628,6 +653,25 @@ public class SeleniumHandler {
         }
 
         return result;
+    }
+
+    public void setComboBoxValue(String id, String text) {
+        waitUntil(ExpectedConditions.elementToBeClickable(By.id(id)));
+        WebElement e = findElement(By.id(id));
+        WebElement i = e.findElement(By.tagName("input"));
+        waitForElementToBeInteractable(i.getAttribute("id"));
+        String value = i.getAttribute("value");
+        if (value.isEmpty()) {
+        } else {
+            i.sendKeys(Keys.CONTROL + "a");
+            i.sendKeys(Keys.DELETE);
+        }
+        i.sendKeys(text);
+        sendKeys(id, Keys.RETURN);
+        wait(500);
+//        setTextField(id, value);
+        sendKeys(id, Keys.ARROW_DOWN, Keys.TAB);
+//        wait(1000);
     }
 
     /**
@@ -841,8 +885,46 @@ public class SeleniumHandler {
         waitUntil(ExpectedConditions.elementToBeClickable(By.id(id)));
     }
 
+    /**
+     * Wait for an element to become interactable (enabled and visible)
+     * This is useful for elements like ComboBoxes that may be disabled initially
+     * and only become enabled after other UI actions.
+     *
+     * @param id The ID of the element to wait for
+     */
+    public void waitForElementToBeInteractable(String id) {
+        try {
+            // Wait for the element to be visible first
+            waitUntil(ExpectedConditions.visibilityOfElementLocated(By.id(id)));
+
+            // Wait for the element to not have the 'disabled' attribute
+            waitUntil(driver -> {
+                WebElement element = driver.findElement(By.id(id));
+                return element.getAttribute("disabled") == null &&
+                        !"true".equals(element.getAttribute("aria-disabled"));
+            });
+
+            // Finally, wait for it to be clickable
+            waitUntil(ExpectedConditions.elementToBeClickable(By.id(id)));
+
+            // Small additional delay to ensure UI is fully ready
+            try {
+                Thread.sleep(300);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        } catch (Exception e) {
+            logger.error("Error waiting for element to be interactable: " + id, e);
+            throw e;
+        }
+    }
+
     public void waitForElementToBeLocated(String id) {
         waitUntil(ExpectedConditions.presenceOfElementLocated(By.id(id)));
+    }
+
+    public void waitForElementToBeNotClickable(String id) {
+        waitUntil(ExpectedConditions.not(ExpectedConditions.elementToBeClickable(By.id(id))));
     }
 
     /**

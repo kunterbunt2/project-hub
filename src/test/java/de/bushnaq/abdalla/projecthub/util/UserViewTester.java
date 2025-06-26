@@ -290,8 +290,4 @@ public class UserViewTester {
         Assertions.assertEquals(expectedFirstDay, actualFirstDay, "First working day mismatch");
         Assertions.assertEquals(expectedLastDay, actualLastDay, "Last working day mismatch");
     }
-
-    public void waitUntilBrowserClosed() {
-        seleniumHandler.waitUntilBrowserClosed(0);
-    }
 }

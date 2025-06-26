@@ -23,8 +23,11 @@ import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface UserRepository extends ListCrudRepository<UserDAO, Long> {
+
+    Optional<UserDAO> findByName(String name);
 
     @Query("SELECT DISTINCT u FROM UserDAO u WHERE u.id IN " +
             "(SELECT t.resourceId FROM TaskDAO t WHERE t.sprintId = :sprintId AND t.resourceId IS NOT NULL)")

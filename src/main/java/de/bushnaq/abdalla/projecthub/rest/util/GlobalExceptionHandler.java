@@ -26,6 +26,7 @@ import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
@@ -54,4 +55,11 @@ public class GlobalExceptionHandler {
         ErrorResponse error = new ErrorResponse(ex.getStatusCode(), ex.getMessage(), ex);
         return ResponseEntity.status(ex.getStatusCode()).contentType(MediaType.APPLICATION_JSON).body(error);
     }
+
+    @ExceptionHandler(HttpClientErrorException.class)
+    public ResponseEntity<ErrorResponse> handleResponseStatusException(HttpClientErrorException ex) {
+        ErrorResponse error = new ErrorResponse(ex.getStatusCode(), ex.getMessage(), ex);
+        return ResponseEntity.status(ex.getStatusCode()).contentType(MediaType.APPLICATION_JSON).body(error);
+    }
+
 }

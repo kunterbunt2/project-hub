@@ -25,7 +25,11 @@ import java.util.List;
 public interface SprintRepository extends ListCrudRepository<SprintDAO, Long> {
     boolean existsByName(String name);
 
+    boolean existsByNameAndFeatureId(String name, Long featureId);
+
     List<SprintDAO> findByFeatureId(Long featureId);
 
     SprintDAO findByName(String name);
+
+    SprintDAO findByNameAndFeatureId(String name, Long featureId);
 }

@@ -66,9 +66,9 @@ public class FeatureController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FeatureDAO> save(@RequestBody FeatureDAO feature) {
         return versionRepository.findById(feature.getVersionId()).map(version -> {
-            // Check if a feature with the same name already exists
-            if (featureRepository.existsByName(feature.getName())) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "A feature with name '" + feature.getName() + "' already exists");
+            // Check if a feature with the same name already exists for this version
+            if (featureRepository.existsByNameAndVersionId(feature.getName(), feature.getVersionId())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "A feature with name '" + feature.getName() + "' already exists for this version");
             }
             FeatureDAO save = featureRepository.save(feature);
             return ResponseEntity.ok(save);
@@ -78,10 +78,10 @@ public class FeatureController {
     @PutMapping()
     @PreAuthorize("hasRole('ADMIN')")
     public FeatureDAO update(@RequestBody FeatureDAO feature) {
-        // Check if another feature with the same name exists (excluding the current feature)
-        FeatureDAO existingFeature = featureRepository.findByName(feature.getName());
+        // Check if another feature with the same name exists in the same version (excluding the current feature)
+        FeatureDAO existingFeature = featureRepository.findByNameAndVersionId(feature.getName(), feature.getVersionId());
         if (existingFeature != null && !existingFeature.getId().equals(feature.getId())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Another feature with name '" + feature.getName() + "' already exists");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Another feature with name '" + feature.getName() + "' already exists for this version");
         }
         return featureRepository.save(feature);
     }

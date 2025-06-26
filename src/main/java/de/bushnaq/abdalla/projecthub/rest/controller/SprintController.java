@@ -65,9 +65,9 @@ public class SprintController {
     @PostMapping()
     @PreAuthorize("hasRole('ADMIN')")
     public SprintDAO save(@RequestBody SprintDAO sprintDAO) {
-        // Check if a sprint with the same name already exists
-        if (sprintRepository.existsByName(sprintDAO.getName())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "A sprint with name '" + sprintDAO.getName() + "' already exists");
+        // Check if a sprint with the same name already exists for this feature
+        if (sprintRepository.existsByNameAndFeatureId(sprintDAO.getName(), sprintDAO.getFeatureId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A sprint with name '" + sprintDAO.getName() + "' already exists for this feature");
         }
         SprintDAO save = sprintRepository.save(sprintDAO);
         return save;
@@ -76,10 +76,10 @@ public class SprintController {
     @PutMapping()
     @PreAuthorize("hasRole('ADMIN')")
     public SprintDAO update(@RequestBody SprintDAO sprintEntity) {
-        // Check if another sprint with the same name exists (excluding the current sprint)
-        SprintDAO existingSprint = sprintRepository.findByName(sprintEntity.getName());
+        // Check if another sprint with the same name exists in the same feature (excluding the current sprint)
+        SprintDAO existingSprint = sprintRepository.findByNameAndFeatureId(sprintEntity.getName(), sprintEntity.getFeatureId());
         if (existingSprint != null && !existingSprint.getId().equals(sprintEntity.getId())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Another sprint with name '" + sprintEntity.getName() + "' already exists");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Another sprint with name '" + sprintEntity.getName() + "' already exists for this feature");
         }
         return sprintRepository.save(sprintEntity);
     }

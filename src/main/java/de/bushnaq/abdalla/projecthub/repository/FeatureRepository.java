@@ -25,7 +25,11 @@ import java.util.List;
 public interface FeatureRepository extends ListCrudRepository<FeatureDAO, Long> {
     boolean existsByName(String name);
 
+    boolean existsByNameAndVersionId(String name, Long versionId);
+
     FeatureDAO findByName(String name);
+
+    FeatureDAO findByNameAndVersionId(String name, Long versionId);
 
     List<FeatureDAO> findByVersionId(Long versionId);
 }
