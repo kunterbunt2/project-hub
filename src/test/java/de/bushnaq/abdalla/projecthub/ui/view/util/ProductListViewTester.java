@@ -117,13 +117,12 @@ public class ProductListViewTester {
     /**
      * Tests product deletion where the user cancels the delete confirmation.
      * <p>
-     * Opens the context menu for the specified product, selects the delete option,
+     * Clicks the delete button for the specified product,
      * then cancels the confirmation dialog. Verifies that the product still exists in the list.
      *
      * @param name the name of the product to attempt to delete
      */
     public void deleteProductCancel(String name) {
-        seleniumHandler.click(ProductListView.PRODUCT_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(ProductListView.PRODUCT_GRID_DELETE_BUTTON_PREFIX + name);
         seleniumHandler.click(ConfirmDialog.CANCEL_BUTTON);
         seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, name);
@@ -132,14 +131,13 @@ public class ProductListViewTester {
     /**
      * Tests the successful deletion of a product.
      * <p>
-     * Opens the context menu for the specified product, selects the delete option,
+     * Clicks the delete button for the specified product,
      * then confirms the deletion in the confirmation dialog. Verifies that the product
      * is removed from the product list.
      *
      * @param name the name of the product to delete
      */
     public void deleteProductConfirm(String name) {
-        seleniumHandler.click(ProductListView.PRODUCT_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(ProductListView.PRODUCT_GRID_DELETE_BUTTON_PREFIX + name);
         seleniumHandler.click(ConfirmDialog.CONFIRM_BUTTON);
         seleniumHandler.ensureIsNotInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, name);
@@ -148,7 +146,7 @@ public class ProductListViewTester {
     /**
      * Tests product editing where the user cancels the edit operation.
      * <p>
-     * Opens the context menu for the specified product, selects the edit option,
+     * Clicks the edit button for the specified product,
      * enters a new name, then cancels the edit dialog. Verifies that the product
      * still exists with its original name and no product with the new name exists.
      *
@@ -156,7 +154,6 @@ public class ProductListViewTester {
      * @param newName the new name to attempt to assign to the product
      */
     public void editProductCancel(String name, String newName) {
-        seleniumHandler.click(ProductListView.PRODUCT_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(ProductListView.PRODUCT_GRID_EDIT_BUTTON_PREFIX + name);
         seleniumHandler.setTextField(ProductDialog.PRODUCT_NAME_FIELD, newName);
         seleniumHandler.click(ProductDialog.CANCEL_BUTTON);
@@ -167,7 +164,7 @@ public class ProductListViewTester {
     /**
      * Tests the successful editing of a product.
      * <p>
-     * Opens the context menu for the specified product, selects the edit option,
+     * Clicks the edit button for the specified product,
      * enters a new name, then confirms the edit. Verifies that the product with
      * the new name appears in the list and the product with the old name is gone.
      *
@@ -175,7 +172,6 @@ public class ProductListViewTester {
      * @param newName the new name to assign to the product
      */
     public void editProductConfirm(String name, String newName) {
-        seleniumHandler.click(ProductListView.PRODUCT_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(ProductListView.PRODUCT_GRID_EDIT_BUTTON_PREFIX + name);
         seleniumHandler.setTextField(ProductDialog.PRODUCT_NAME_FIELD, newName);
         seleniumHandler.click(ProductDialog.CONFIRM_BUTTON);
@@ -183,8 +179,17 @@ public class ProductListViewTester {
         seleniumHandler.ensureIsNotInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, name);
     }
 
+    /**
+     * Tests product editing with a duplicate name that should fail.
+     * <p>
+     * Clicks the edit button for the specified product,
+     * enters a name that already exists, then attempts to confirm the edit.
+     * Verifies that an error message appears and the original name is preserved.
+     *
+     * @param name    the original name of the product to edit
+     * @param newName the duplicate name to attempt to use
+     */
     public void editProductWithDuplicateNameFails(String name, String newName) {
-        seleniumHandler.click(ProductListView.PRODUCT_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(ProductListView.PRODUCT_GRID_EDIT_BUTTON_PREFIX + name);
         seleniumHandler.setTextField(ProductDialog.PRODUCT_NAME_FIELD, newName);
         seleniumHandler.click(ProductDialog.CONFIRM_BUTTON);
@@ -197,8 +202,6 @@ public class ProductListViewTester {
 
         seleniumHandler.click(ProductDialog.CANCEL_BUTTON);
         seleniumHandler.ensureElementCountInGrid(ProductListView.PRODUCT_GRID, PRODUCT_GRID_NAME_PREFIX, name, 1);
-//        seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, newName);
-//        seleniumHandler.ensureIsNotInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, name);
     }
 
     /**

@@ -107,13 +107,12 @@ public class FeatureListViewTester {
     /**
      * Tests feature deletion where the user cancels the delete confirmation.
      * <p>
-     * Opens the context menu for the specified feature, selects the delete option,
+     * Clicks the delete button for the specified feature,
      * then cancels the confirmation dialog. Verifies that the feature still exists in the list.
      *
      * @param name the name of the feature to attempt to delete
      */
     public void deleteFeatureCancel(String name) {
-        seleniumHandler.click(FeatureListView.FEATURE_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(FeatureListView.FEATURE_GRID_DELETE_BUTTON_PREFIX + name);
         seleniumHandler.click(ConfirmDialog.CANCEL_BUTTON);
         seleniumHandler.ensureIsInList(FEATURE_GRID_NAME_PREFIX, name);
@@ -122,14 +121,13 @@ public class FeatureListViewTester {
     /**
      * Tests the successful deletion of a feature.
      * <p>
-     * Opens the context menu for the specified feature, selects the delete option,
+     * Clicks the delete button for the specified feature,
      * then confirms the deletion in the confirmation dialog. Verifies that the feature
      * is removed from the feature list.
      *
      * @param name the name of the feature to delete
      */
     public void deleteFeatureConfirm(String name) {
-        seleniumHandler.click(FeatureListView.FEATURE_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(FeatureListView.FEATURE_GRID_DELETE_BUTTON_PREFIX + name);
         seleniumHandler.click(ConfirmDialog.CONFIRM_BUTTON);
         seleniumHandler.ensureIsNotInList(FEATURE_GRID_NAME_PREFIX, name);
@@ -138,7 +136,7 @@ public class FeatureListViewTester {
     /**
      * Tests feature editing where the user cancels the edit operation.
      * <p>
-     * Opens the context menu for the specified feature, selects the edit option,
+     * Clicks the edit button for the specified feature,
      * enters a new name, then cancels the edit dialog. Verifies that the feature
      * still exists with its original name and no feature with the new name exists.
      *
@@ -146,9 +144,7 @@ public class FeatureListViewTester {
      * @param newName the new name to attempt to assign to the feature
      */
     public void editFeatureCancel(String name, String newName) {
-        seleniumHandler.click(FeatureListView.FEATURE_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(FeatureListView.FEATURE_GRID_EDIT_BUTTON_PREFIX + name);
-
         seleniumHandler.setTextField(FeatureDialog.FEATURE_NAME_FIELD, newName);
         seleniumHandler.click(FeatureDialog.CANCEL_BUTTON);
         seleniumHandler.ensureIsInList(FEATURE_GRID_NAME_PREFIX, name);
@@ -158,7 +154,7 @@ public class FeatureListViewTester {
     /**
      * Tests the successful editing of a feature.
      * <p>
-     * Opens the context menu for the specified feature, selects the edit option,
+     * Clicks the edit button for the specified feature,
      * enters a new name, then confirms the edit. Verifies that the feature with
      * the new name appears in the list and the feature with the old name is gone.
      *
@@ -166,9 +162,7 @@ public class FeatureListViewTester {
      * @param newName the new name to assign to the feature
      */
     public void editFeatureConfirm(String name, String newName) {
-        seleniumHandler.click(FeatureListView.FEATURE_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(FeatureListView.FEATURE_GRID_EDIT_BUTTON_PREFIX + name);
-
         seleniumHandler.setTextField(FeatureDialog.FEATURE_NAME_FIELD, newName);
         seleniumHandler.click(FeatureDialog.CONFIRM_BUTTON);
         seleniumHandler.ensureIsInList(FEATURE_GRID_NAME_PREFIX, newName);
@@ -178,7 +172,7 @@ public class FeatureListViewTester {
     /**
      * Tests the attempt to edit a feature to have a name that already exists.
      * <p>
-     * Opens the context menu for the specified feature, selects the edit option,
+     * Clicks the edit button for the specified feature,
      * changes the name to one that already exists, clicks the save button, and verifies
      * that an error message is displayed indicating the name is already in use.
      *
@@ -186,7 +180,6 @@ public class FeatureListViewTester {
      * @param duplicateName the duplicate name that already exists
      */
     public void editFeatureWithDuplicateName(String originalName, String duplicateName) {
-        seleniumHandler.click(FeatureListView.FEATURE_GRID_ACTION_BUTTON_PREFIX + originalName);
         seleniumHandler.click(FeatureListView.FEATURE_GRID_EDIT_BUTTON_PREFIX + originalName);
         seleniumHandler.setTextField(FeatureDialog.FEATURE_NAME_FIELD, duplicateName);
         seleniumHandler.click(FeatureDialog.CONFIRM_BUTTON);

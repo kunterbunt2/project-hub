@@ -114,13 +114,12 @@ public class UserListViewTester {
     /**
      * Tests user deletion where the user cancels the delete confirmation.
      * <p>
-     * Opens the context menu for the specified user, selects the delete option,
+     * Clicks the delete button for the specified user,
      * then cancels the confirmation dialog. Verifies that the user still exists in the list.
      *
      * @param name the name of the user to attempt to delete
      */
     public void deleteUserCancel(String name) {
-        seleniumHandler.click(UserListView.USER_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(UserListView.USER_GRID_DELETE_BUTTON_PREFIX + name);
         seleniumHandler.click(ConfirmDialog.CANCEL_BUTTON);
         seleniumHandler.ensureIsInList(UserListView.USER_GRID_NAME_PREFIX, name);
@@ -129,14 +128,13 @@ public class UserListViewTester {
     /**
      * Tests the successful deletion of a user.
      * <p>
-     * Opens the context menu for the specified user, selects the delete option,
+     * Clicks the delete button for the specified user,
      * then confirms the deletion in the confirmation dialog. Verifies that the user
      * is removed from the user list.
      *
      * @param name the name of the user to delete
      */
     public void deleteUserConfirm(String name) {
-        seleniumHandler.click(UserListView.USER_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(UserListView.USER_GRID_DELETE_BUTTON_PREFIX + name);
         seleniumHandler.click(ConfirmDialog.CONFIRM_BUTTON);
         seleniumHandler.ensureIsNotInList(UserListView.USER_GRID_NAME_PREFIX, name);
@@ -145,7 +143,7 @@ public class UserListViewTester {
     /**
      * Tests user editing where the user cancels the edit operation.
      * <p>
-     * Opens the context menu for the specified user, selects the edit option,
+     * Clicks the edit button for the specified user,
      * enters new values for all fields, then cancels the edit dialog. Verifies that the user
      * still exists with its original originalName and no user with the new originalName exists.
      *
@@ -168,7 +166,6 @@ public class UserListViewTester {
         // First verify the current field values before starting the edit
         verifyUserDialogFields(originalName, originalEmail, originalColor, originalFirstDay, originalLastDay);
 
-        seleniumHandler.click(UserListView.USER_GRID_ACTION_BUTTON_PREFIX + originalName);
         seleniumHandler.click(UserListView.USER_GRID_EDIT_BUTTON_PREFIX + originalName);
         seleniumHandler.setTextField(UserDialog.USER_NAME_FIELD, newName);
         seleniumHandler.setTextField(UserDialog.USER_EMAIL_FIELD, newEmail);
@@ -185,13 +182,12 @@ public class UserListViewTester {
         seleniumHandler.click(UserDialog.CANCEL_BUTTON);
         seleniumHandler.ensureIsInList(UserListView.USER_GRID_NAME_PREFIX, originalName);
         seleniumHandler.ensureIsNotInList(UserListView.USER_GRID_NAME_PREFIX, newName);
-
     }
 
     /**
      * Tests the successful editing of a user with all fields.
      * <p>
-     * Opens the context menu for the specified user, selects the edit option,
+     * Clicks the edit button for the specified user,
      * enters new values for all fields, then confirms the edit. Verifies that the user with
      * the new name appears in the list and the user with the old name is gone.
      * Also verifies that all fields were correctly updated with the new values.
@@ -204,7 +200,6 @@ public class UserListViewTester {
      * @param lastWorkingDay  the new last working day for the user
      */
     public void editUserConfirm(String name, String newName, String email, String color, LocalDate firstWorkingDay, LocalDate lastWorkingDay) {
-        seleniumHandler.click(UserListView.USER_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(UserListView.USER_GRID_EDIT_BUTTON_PREFIX + name);
         seleniumHandler.setTextField(UserDialog.USER_NAME_FIELD, newName);
         seleniumHandler.setTextField(UserDialog.USER_EMAIL_FIELD, email);
@@ -274,7 +269,6 @@ public class UserListViewTester {
      */
     public void verifyUserDialogFields(String name, String expectedEmail, String expectedColor, LocalDate expectedFirstDay, LocalDate expectedLastDay) {
         // Open the edit dialog for the specified user
-        seleniumHandler.click(UserListView.USER_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(UserListView.USER_GRID_EDIT_BUTTON_PREFIX + name);
         // Read actual values from the dialog
         String    actualName     = seleniumHandler.getTextField(UserDialog.USER_NAME_FIELD);

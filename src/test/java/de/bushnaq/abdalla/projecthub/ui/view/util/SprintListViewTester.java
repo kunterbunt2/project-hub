@@ -108,13 +108,12 @@ public class SprintListViewTester {
     /**
      * Tests sprint deletion where the user cancels the delete confirmation.
      * <p>
-     * Opens the context menu for the specified sprint, selects the delete option,
+     * Clicks the delete button for the specified sprint,
      * then cancels the confirmation dialog. Verifies that the sprint still exists in the list.
      *
      * @param name the name of the sprint to attempt to delete
      */
     public void deleteSprintCancel(String name) {
-        seleniumHandler.click(SprintListView.SPRINT_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(SprintListView.SPRINT_GRID_DELETE_BUTTON_PREFIX + name);
         seleniumHandler.click(ConfirmDialog.CANCEL_BUTTON);
         seleniumHandler.ensureIsInList(SprintListView.SPRINT_GRID_NAME_PREFIX, name);
@@ -123,14 +122,13 @@ public class SprintListViewTester {
     /**
      * Tests the successful deletion of a sprint.
      * <p>
-     * Opens the context menu for the specified sprint, selects the delete option,
+     * Clicks the delete button for the specified sprint,
      * then confirms the deletion in the confirmation dialog. Verifies that the sprint
      * is removed from the sprint list.
      *
      * @param name the name of the sprint to delete
      */
     public void deleteSprintConfirm(String name) {
-        seleniumHandler.click(SprintListView.SPRINT_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(SprintListView.SPRINT_GRID_DELETE_BUTTON_PREFIX + name);
         seleniumHandler.click(ConfirmDialog.CONFIRM_BUTTON);
         seleniumHandler.ensureIsNotInList(SprintListView.SPRINT_GRID_NAME_PREFIX, name);
@@ -139,7 +137,7 @@ public class SprintListViewTester {
     /**
      * Tests sprint editing where the user cancels the edit operation.
      * <p>
-     * Opens the context menu for the specified sprint, selects the edit option,
+     * Clicks the edit button for the specified sprint,
      * enters a new name, then cancels the edit dialog. Verifies that the sprint
      * still exists with its original name and no sprint with the new name exists.
      *
@@ -147,7 +145,6 @@ public class SprintListViewTester {
      * @param newName the new name to attempt to assign to the sprint
      */
     public void editSprintCancel(String name, String newName) {
-        seleniumHandler.click(SprintListView.SPRINT_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(SprintListView.SPRINT_GRID_EDIT_BUTTON_PREFIX + name);
         seleniumHandler.setTextField(SprintDialog.SPRINT_NAME_FIELD, newName);
         seleniumHandler.click(SprintDialog.CANCEL_BUTTON);
@@ -158,7 +155,7 @@ public class SprintListViewTester {
     /**
      * Tests the successful editing of a sprint.
      * <p>
-     * Opens the context menu for the specified sprint, selects the edit option,
+     * Clicks the edit button for the specified sprint,
      * enters a new name, then confirms the edit. Verifies that the sprint with
      * the new name appears in the list and the sprint with the old name is gone.
      *
@@ -166,7 +163,6 @@ public class SprintListViewTester {
      * @param newName the new name to assign to the sprint
      */
     public void editSprintConfirm(String name, String newName) {
-        seleniumHandler.click(SprintListView.SPRINT_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(SprintListView.SPRINT_GRID_EDIT_BUTTON_PREFIX + name);
         seleniumHandler.setTextField(SprintDialog.SPRINT_NAME_FIELD, newName);
         seleniumHandler.click(SprintDialog.CONFIRM_BUTTON);
@@ -177,7 +173,7 @@ public class SprintListViewTester {
     /**
      * Tests the attempt to edit a sprint to have a name that already exists.
      * <p>
-     * Opens the context menu for the specified sprint, selects the edit option,
+     * Clicks the edit button for the specified sprint,
      * changes the name to one that already exists, clicks the save button, and verifies
      * that an error message is displayed indicating the name is already in use.
      *
@@ -185,7 +181,6 @@ public class SprintListViewTester {
      * @param duplicateName the duplicate name that already exists
      */
     public void editSprintWithDuplicateName(String originalName, String duplicateName) {
-        seleniumHandler.click(SprintListView.SPRINT_GRID_ACTION_BUTTON_PREFIX + originalName);
         seleniumHandler.click(SprintListView.SPRINT_GRID_EDIT_BUTTON_PREFIX + originalName);
         seleniumHandler.setTextField(SprintDialog.SPRINT_NAME_FIELD, duplicateName);
         seleniumHandler.click(SprintDialog.CONFIRM_BUTTON);

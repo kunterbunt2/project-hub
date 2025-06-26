@@ -21,7 +21,6 @@ import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
@@ -145,26 +144,27 @@ public class SprintListView extends Main implements AfterNavigationObserver {
         remainingColumn.setId("sprint-grid-remaining-column");
         remainingColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.HOURGLASS), new Div(new Text("Remaining"))));
 
-        // Add actions column with context menu
+        // Add actions column with direct buttons instead of context menu
         grid.addColumn(new ComponentRenderer<>(sprint -> {
-            Button actionButton = new Button(new Icon(VaadinIcon.ELLIPSIS_DOTS_V));
-            actionButton.setId(SPRINT_GRID_ACTION_BUTTON_PREFIX + sprint.getName());
-            actionButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-            actionButton.getElement().setAttribute("aria-label", "More options");
+            HorizontalLayout layout = new HorizontalLayout();
+            layout.setAlignItems(FlexComponent.Alignment.CENTER);
+            layout.setSpacing(true);
 
-            // Center the button with CSS
-            actionButton.getStyle().set("margin", "auto");
-            actionButton.getStyle().set("display", "block");
+            Button editButton = new Button(new Icon(VaadinIcon.EDIT));
+            editButton.setId(SPRINT_GRID_EDIT_BUTTON_PREFIX + sprint.getName());
+            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
+            editButton.addClickListener(e -> openSprintDialog(sprint));
+            editButton.getElement().setAttribute("title", "Edit");
 
-            ContextMenu contextMenu = new ContextMenu();
-            contextMenu.setOpenOnClick(true);
-            contextMenu.setTarget(actionButton);
+            Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));
+            deleteButton.setId(SPRINT_GRID_DELETE_BUTTON_PREFIX + sprint.getName());
+            deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
+            deleteButton.addClickListener(e -> confirmDelete(sprint));
+            deleteButton.getElement().setAttribute("title", "Delete");
 
-            contextMenu.addItem("Edit...", e -> openSprintDialog(sprint)).setId(SPRINT_GRID_EDIT_BUTTON_PREFIX + sprint.getName());
-            contextMenu.addItem("Delete...", e -> confirmDelete(sprint)).setId(SPRINT_GRID_DELETE_BUTTON_PREFIX + sprint.getName());
-
-            return actionButton;
-        })).setWidth("70px").setFlexGrow(0);
+            layout.add(editButton, deleteButton);
+            return layout;
+        })).setWidth("120px").setFlexGrow(0);
 
         grid.setSizeFull();
         //- Add click listener to navigate to TaskView with the selected version ID

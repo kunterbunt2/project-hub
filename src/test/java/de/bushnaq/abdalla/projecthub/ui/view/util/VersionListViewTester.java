@@ -106,13 +106,12 @@ public class VersionListViewTester {
     /**
      * Tests version deletion where the user cancels the delete confirmation.
      * <p>
-     * Opens the context menu for the specified version, selects the delete option,
+     * Clicks the delete button for the specified version,
      * then cancels the confirmation dialog. Verifies that the version still exists in the list.
      *
      * @param name the name of the version to attempt to delete
      */
     public void deleteVersionCancel(String name) {
-        seleniumHandler.click(VersionListView.VERSION_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(VersionListView.VERSION_GRID_DELETE_BUTTON_PREFIX + name);
         seleniumHandler.click(ConfirmDialog.CANCEL_BUTTON);
         seleniumHandler.ensureIsInList(VersionListView.VERSION_GRID_NAME_PREFIX, name);
@@ -121,14 +120,13 @@ public class VersionListViewTester {
     /**
      * Tests the successful deletion of a version.
      * <p>
-     * Opens the context menu for the specified version, selects the delete option,
+     * Clicks the delete button for the specified version,
      * then confirms the deletion in the confirmation dialog. Verifies that the version
      * is removed from the version list.
      *
      * @param name the name of the version to delete
      */
     public void deleteVersionConfirm(String name) {
-        seleniumHandler.click(VersionListView.VERSION_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(VersionListView.VERSION_GRID_DELETE_BUTTON_PREFIX + name);
         seleniumHandler.click(ConfirmDialog.CONFIRM_BUTTON);
         seleniumHandler.ensureIsNotInList(VersionListView.VERSION_GRID_NAME_PREFIX, name);
@@ -137,7 +135,7 @@ public class VersionListViewTester {
     /**
      * Tests version editing where the user cancels the edit operation.
      * <p>
-     * Opens the context menu for the specified version, selects the edit option,
+     * Clicks the edit button for the specified version,
      * enters a new name, then cancels the edit dialog. Verifies that the version
      * still exists with its original name and no version with the new name exists.
      *
@@ -145,7 +143,6 @@ public class VersionListViewTester {
      * @param newName the new name to attempt to assign to the version
      */
     public void editVersionCancel(String name, String newName) {
-        seleniumHandler.click(VersionListView.VERSION_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(VersionListView.VERSION_GRID_EDIT_BUTTON_PREFIX + name);
         seleniumHandler.setTextField(VersionDialog.VERSION_NAME_FIELD, newName);
         seleniumHandler.click(VersionDialog.CANCEL_BUTTON);
@@ -156,7 +153,7 @@ public class VersionListViewTester {
     /**
      * Tests the successful editing of a version.
      * <p>
-     * Opens the context menu for the specified version, selects the edit option,
+     * Clicks the edit button for the specified version,
      * enters a new name, then confirms the edit. Verifies that the version with
      * the new name appears in the list and the version with the old name is gone.
      *
@@ -164,7 +161,6 @@ public class VersionListViewTester {
      * @param newName the new name to assign to the version
      */
     public void editVersionConfirm(String name, String newName) {
-        seleniumHandler.click(VersionListView.VERSION_GRID_ACTION_BUTTON_PREFIX + name);
         seleniumHandler.click(VersionListView.VERSION_GRID_EDIT_BUTTON_PREFIX + name);
         seleniumHandler.setTextField(VersionDialog.VERSION_NAME_FIELD, newName);
         seleniumHandler.click(VersionDialog.CONFIRM_BUTTON);
@@ -175,7 +171,7 @@ public class VersionListViewTester {
     /**
      * Tests the attempt to edit a version to have a name that already exists.
      * <p>
-     * Opens the context menu for the specified version, selects the edit option,
+     * Clicks the edit button for the specified version,
      * changes the name to one that already exists, clicks the save button, and verifies
      * that an error message is displayed indicating the name is already in use.
      *
@@ -183,7 +179,6 @@ public class VersionListViewTester {
      * @param duplicateName the duplicate name that already exists
      */
     public void editVersionWithDuplicateName(String originalName, String duplicateName) {
-        seleniumHandler.click(VersionListView.VERSION_GRID_ACTION_BUTTON_PREFIX + originalName);
         seleniumHandler.click(VersionListView.VERSION_GRID_EDIT_BUTTON_PREFIX + originalName);
         seleniumHandler.setTextField(VersionDialog.VERSION_NAME_FIELD, duplicateName);
         seleniumHandler.click(VersionDialog.CONFIRM_BUTTON);

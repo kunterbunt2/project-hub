@@ -20,7 +20,6 @@ package de.bushnaq.abdalla.projecthub.ui.view;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
@@ -142,26 +141,27 @@ public class UserListView extends Main implements AfterNavigationObserver {
             column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("Updated"))));
         }
 
-        // Add actions column with context menu
+        // Add actions column with direct buttons instead of context menu
         grid.addColumn(new ComponentRenderer<>(user -> {
-            Button actionButton = new Button(new Icon(VaadinIcon.ELLIPSIS_DOTS_V));
-            actionButton.setId(USER_GRID_ACTION_BUTTON_PREFIX + user.getName());
-            actionButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-            actionButton.getElement().setAttribute("aria-label", "More options");
+            HorizontalLayout layout = new HorizontalLayout();
+            layout.setAlignItems(FlexComponent.Alignment.CENTER);
+            layout.setSpacing(true);
 
-            // Center the button with CSS
-            actionButton.getStyle().set("margin", "auto");
-            actionButton.getStyle().set("display", "block");
+            Button editButton = new Button(new Icon(VaadinIcon.EDIT));
+            editButton.setId(USER_GRID_EDIT_BUTTON_PREFIX + user.getName());
+            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
+            editButton.addClickListener(e -> openUserDialog(user));
+            editButton.getElement().setAttribute("title", "Edit");
 
-            ContextMenu contextMenu = new ContextMenu();
-            contextMenu.setOpenOnClick(true);
-            contextMenu.setTarget(actionButton);
+            Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));
+            deleteButton.setId(USER_GRID_DELETE_BUTTON_PREFIX + user.getName());
+            deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
+            deleteButton.addClickListener(e -> confirmDelete(user));
+            deleteButton.getElement().setAttribute("title", "Delete");
 
-            contextMenu.addItem("Edit...", e -> openUserDialog(user)).setId(USER_GRID_EDIT_BUTTON_PREFIX + user.getName());
-            contextMenu.addItem("Delete...", e -> confirmDelete(user)).setId(USER_GRID_DELETE_BUTTON_PREFIX + user.getName());
-
-            return actionButton;
-        })).setWidth("70px").setFlexGrow(0);
+            layout.add(editButton, deleteButton);
+            return layout;
+        })).setWidth("120px").setFlexGrow(0);
 
         grid.setSizeFull();
 

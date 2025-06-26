@@ -21,7 +21,6 @@ import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
@@ -132,26 +131,27 @@ public class ProductListView extends Main implements AfterNavigationObserver {
             column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("Updated"))));
         }
 
-        // Add actions column with context menu
+        // Add actions column with direct buttons instead of context menu
         grid.addColumn(new ComponentRenderer<>(product -> {
-            Button actionButton = new Button(new Icon(VaadinIcon.ELLIPSIS_DOTS_V));
-            actionButton.setId(PRODUCT_GRID_ACTION_BUTTON_PREFIX + product.getName());
-            actionButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-            actionButton.getElement().setAttribute("aria-label", "More options");
+            HorizontalLayout layout = new HorizontalLayout();
+            layout.setAlignItems(FlexComponent.Alignment.CENTER);
+            layout.setSpacing(true);
 
-            // Center the button with CSS
-            actionButton.getStyle().set("margin", "auto");
-            actionButton.getStyle().set("display", "block");
+            Button editButton = new Button(new Icon(VaadinIcon.EDIT));
+            editButton.setId(PRODUCT_GRID_EDIT_BUTTON_PREFIX + product.getName());
+            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
+            editButton.addClickListener(e -> openProductDialog(product));
+            editButton.getElement().setAttribute("title", "Edit");
 
-            ContextMenu contextMenu = new ContextMenu();
-            contextMenu.setOpenOnClick(true);
-            contextMenu.setTarget(actionButton);
+            Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));
+            deleteButton.setId(PRODUCT_GRID_DELETE_BUTTON_PREFIX + product.getName());
+            deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
+            deleteButton.addClickListener(e -> confirmDelete(product));
+            deleteButton.getElement().setAttribute("title", "Delete");
 
-            contextMenu.addItem("Edit...", e -> openProductDialog(product)).setId(PRODUCT_GRID_EDIT_BUTTON_PREFIX + product.getName());
-            contextMenu.addItem("Delete...", e -> confirmDelete(product)).setId(PRODUCT_GRID_DELETE_BUTTON_PREFIX + product.getName());
-
-            return actionButton;
-        })).setWidth("70px").setFlexGrow(0);
+            layout.add(editButton, deleteButton);
+            return layout;
+        })).setHeader("Actions").setFlexGrow(0).setWidth("120px");
 
         grid.setSizeFull();
 
