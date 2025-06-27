@@ -63,11 +63,11 @@ public class AvailabilityDialog extends Dialog {
         this.availability      = isNewAvailability ? new Availability() : availability;
 
         setId(AVAILABILITY_DIALOG);
-        setCloseOnEsc(true);
-        setCloseOnOutsideClick(false);
-        setDraggable(true);
-        setResizable(true);
-        setWidth("400px");
+        setWidth("480px");
+//        setCloseOnEsc(true);
+//        setCloseOnOutsideClick(false);
+//        setDraggable(true);
+//        setResizable(true);
 
         // Setup form and actions
         add(createHeader(), createForm(), createButtonLayout());

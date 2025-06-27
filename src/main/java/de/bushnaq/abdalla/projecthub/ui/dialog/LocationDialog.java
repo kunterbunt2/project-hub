@@ -61,7 +61,7 @@ public class LocationDialog extends Dialog {
         this.onSaveCallback = onSaveCallback;
 
         setId(LOCATION_DIALOG);
-        setWidth("500px");
+        setWidth("480px");
         setHeaderTitle(location == null ? "Add New Location" : "Edit Location");
 
         VerticalLayout content = createDialogContent();

@@ -51,6 +51,7 @@ public class ProductDialog extends Dialog {
         // Set the dialog title
         setHeaderTitle(isEditMode ? "Edit Product" : "Create Product");
         setId(PRODUCT_DIALOG);
+        setWidth("480px");
 
         VerticalLayout dialogLayout = new VerticalLayout();
         dialogLayout.setPadding(false);

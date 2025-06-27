@@ -66,11 +66,11 @@ public class OffDayDialog extends Dialog {
         this.offDay         = isNewOffDay ? new OffDay(LocalDate.now(), LocalDate.now(), OffDayType.VACATION) : offDay;
 
         setId(OFFDAY_DIALOG);
-        setCloseOnEsc(true);
-        setCloseOnOutsideClick(false);
-        setDraggable(true);
-        setResizable(true);
-        setWidth("400px");
+        setWidth("480px");
+//        setCloseOnEsc(true);
+//        setCloseOnOutsideClick(false);
+//        setDraggable(true);
+//        setResizable(true);
 
         // Setup form and actions
         add(createHeader(), createForm(), createButtonLayout());

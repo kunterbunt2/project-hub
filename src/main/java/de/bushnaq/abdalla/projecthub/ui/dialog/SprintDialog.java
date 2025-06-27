@@ -50,6 +50,7 @@ public class SprintDialog extends Dialog {
 
         setHeaderTitle(isEditMode ? "Edit Sprint" : "Create Sprint");
         setId(SPRINT_DIALOG);
+        setWidth("480px");
 
         VerticalLayout dialogLayout = new VerticalLayout();
         dialogLayout.setPadding(false);

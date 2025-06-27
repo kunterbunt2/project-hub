@@ -60,6 +60,7 @@ public class UserDialog extends Dialog {
 
         setHeaderTitle(isEditMode ? "Edit User" : "Create User");
         setId(USER_DIALOG);
+        setWidth("480px");
 
         VerticalLayout dialogLayout = new VerticalLayout();
         dialogLayout.setPadding(false);

@@ -44,6 +44,7 @@ public class ConfirmDialog extends Dialog {
     public ConfirmDialog(String title, String message, String confirmButtonText, Runnable action) {
         setHeaderTitle(title);
         setId(CONFIRM_DIALOG);
+        setWidth("480px");
 
         VerticalLayout dialogLayout = new VerticalLayout();
         dialogLayout.add(message);

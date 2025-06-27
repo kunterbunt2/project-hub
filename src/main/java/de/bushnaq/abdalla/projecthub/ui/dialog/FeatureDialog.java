@@ -50,6 +50,7 @@ public class FeatureDialog extends Dialog {
 
         setHeaderTitle(isEditMode ? "Edit Feature" : "Create Feature");
         setId(FEATURE_DIALOG);
+        setWidth("480px");
 
         VerticalLayout dialogLayout = new VerticalLayout();
         dialogLayout.setPadding(false);

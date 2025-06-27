@@ -51,6 +51,7 @@ public class VersionDialog extends Dialog {
         // Set the dialog title
         setHeaderTitle(isEditMode ? "Edit Version" : "Create Version");
         setId(VERSION_DIALOG);
+        setWidth("480px");
 
         VerticalLayout dialogLayout = new VerticalLayout();
         dialogLayout.setPadding(false);
