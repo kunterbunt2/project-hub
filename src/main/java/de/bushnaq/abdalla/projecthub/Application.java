@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub;
 
+import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.page.AppShellConfigurator;
 import com.vaadin.flow.theme.Theme;
 import org.springframework.boot.SpringApplication;
@@ -28,6 +29,7 @@ import java.time.Clock;
 
 @SpringBootApplication
 @ComponentScan
+@JsModule("@vaadin/vaadin-lumo-styles/presets/compact.js")
 @Theme(value = "theme")
 public class Application implements AppShellConfigurator {
     @Bean
