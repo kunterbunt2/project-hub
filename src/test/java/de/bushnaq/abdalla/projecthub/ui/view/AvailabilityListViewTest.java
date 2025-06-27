@@ -57,17 +57,17 @@ import java.time.LocalDate;
 public class AvailabilityListViewTest extends AbstractUiTestUtil {
     @Autowired
     private       AvailabilityListViewTester availabilityListViewTester;
-    private final double                     availabilityPercent    = 80.0;
+    private final int                        availabilityPercent    = 80;
     // Initial availability record that exists when the user is created (today's date)
     private final LocalDate                  initialDate            = LocalDate.now();
-    private final double                     initialPercent         = 100.0;
+    private final int                        initialPercent         = 100;
     // Invalid test data for validation tests
-    private final double                     invalidHighPercent     = 160.0; // Above 150% limit
-    private final double                     invalidLowPercent      = -10.0; // Below 0% limit
-    private final double                     newAvailabilityPercent = 50.0;
+    private final int                        invalidHighPercent     = 160; // Above 150% limit
+    private final int                        invalidLowPercent      = -10; // Below 0% limit
+    private final int                        newAvailabilityPercent = 50;
     // Test data for updating availability records
     private final LocalDate                  newStartDate           = LocalDate.of(2025, 8, 1);
-    private final double                     secondAvailPercent     = 75.0;
+    private final int                        secondAvailPercent     = 75;
     // Test data for the second availability record (for create operations)
     private final LocalDate                  secondStartDate        = LocalDate.of(2025, 7, 1);
     @Autowired

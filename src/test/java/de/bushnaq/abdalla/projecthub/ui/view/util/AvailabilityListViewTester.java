@@ -101,7 +101,7 @@ public class AvailabilityListViewTester {
      * @param startDate              the start date for the availability record
      * @param availabilityPercentage the availability percentage (as a value between 0 and 150)
      */
-    public void createAvailabilityConfirm(LocalDate startDate, double availabilityPercentage) {
+    public void createAvailabilityConfirm(LocalDate startDate, int availabilityPercentage) {
         seleniumHandler.click(AvailabilityListView.CREATE_AVAILABILITY_BUTTON);
         seleniumHandler.setDatePickerValue(AvailabilityDialog.AVAILABILITY_START_DATE_FIELD, startDate);
         seleniumHandler.setTextField(AvailabilityDialog.AVAILABILITY_PERCENTAGE_FIELD, String.valueOf(availabilityPercentage));

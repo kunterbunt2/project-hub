@@ -14,30 +14,19 @@
 | profiler                    | TestResult.java                           | src      |        4 |        0 |       16 |        9 |       29 |
 | profiler                    | TimeKeeping.java                          | src      |       14 |        0 |       16 |       65 |       95 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
-| projecthub.api              | AvailabilityTest.java                     | src      |       35 |        0 |       46 |      236 |      317 |
-| projecthub.api              | FeatureTest.java                          | src      |       25 |        0 |       22 |      167 |      214 |
-| projecthub.api              | LocationTest.java                         | src      |       43 |        0 |       47 |      273 |      363 |
-| projecthub.api              | OffDayTest.java                           | src      |       36 |        0 |       49 |      239 |      324 |
-| projecthub.api              | ProductTest.java                          | src      |       22 |        0 |       21 |      159 |      202 |
-| projecthub.api              | SprintTest.java                           | src      |       23 |        0 |       26 |      162 |      211 |
-| projecthub.api              | TaskTest.java                             | src      |       28 |        0 |       22 |      128 |      178 |
-| projecthub.api              | UserTest.java                             | src      |       32 |        0 |       29 |      153 |      214 |
-| projecthub.api              | VersionTest.java                          | src      |       25 |        0 |       22 |      175 |      222 |
-| projecthub.api              | WorklogTest.java                          | src      |       16 |        0 |       18 |       71 |      105 |
-+-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.dao              | AbstractDateRangeDAO.java                 | src      |        7 |        0 |       16 |       17 |       40 |
 | projecthub.dao              | AbstractTimeAwareDAO.java                 | src      |        9 |        0 |       16 |       30 |       55 |
 | projecthub.dao              | AvailabilityDAO.java                      | src      |        8 |        3 |       16 |       28 |       55 |
 | projecthub.dao              | ErrorException.java                       | src      |        1 |        0 |        0 |        6 |        7 |
-| projecthub.dao              | FeatureDAO.java                           | src      |        6 |        0 |       16 |       22 |       44 |
+| projecthub.dao              | FeatureDAO.java                           | src      |        6 |        0 |       16 |       25 |       47 |
 | projecthub.dao              | LocationDAO.java                          | src      |        8 |        0 |       16 |       30 |       54 |
 | projecthub.dao              | OffDayDAO.java                            | src      |        6 |        0 |       20 |       26 |       52 |
 | projecthub.dao              | ProductDAO.java                           | src      |        6 |        0 |       16 |       20 |       42 |
 | projecthub.dao              | RelationDAO.java                          | src      |        7 |        0 |       17 |       24 |       48 |
-| projecthub.dao              | SprintDAO.java                            | src      |        5 |        0 |       16 |       54 |       75 |
+| projecthub.dao              | SprintDAO.java                            | src      |        5 |        0 |       16 |       57 |       78 |
 | projecthub.dao              | TaskDAO.java                              | src      |        8 |        3 |       16 |       70 |       97 |
 | projecthub.dao              | UserDAO.java                              | src      |       15 |        0 |       16 |       50 |       81 |
-| projecthub.dao              | VersionDAO.java                           | src      |        7 |        0 |       16 |       22 |       45 |
+| projecthub.dao              | VersionDAO.java                           | src      |        7 |        0 |       16 |       25 |       48 |
 | projecthub.dao              | WarnException.java                        | src      |        1 |        0 |        0 |        6 |        7 |
 | projecthub.dao              | WorklogDAO.java                           | src      |       13 |        0 |       16 |       34 |       63 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
@@ -102,7 +91,7 @@
 | projecthub.report.gantt     | GanttRenderer.java                        | src      |       20 |        6 |       39 |      164 |      229 |
 | projecthub.report.gantt     | GanttTest.java                            | src      |       17 |        9 |       22 |      117 |      165 |
 | projecthub.report.gantt     | GanttUtil.java                            | src      |       73 |       17 |      215 |      651 |      956 |
-| projecthub.report.gantt     | LegacyGanttTest.java                      | src      |        9 |       16 |       28 |      169 |      222 |
+| projecthub.report.gantt     | LegacyGanttTest.java                      | src      |       10 |       16 |       30 |      174 |      230 |
 | projecthub.report.gantt     | LevelingResourcesException.java           | src      |        2 |        0 |       16 |        6 |       24 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.report.html.dao  | ReportCell.java                           | src      |       22 |        0 |       16 |      111 |      149 |
@@ -113,48 +102,57 @@
 | projecthub.report           | AbstractRenderer.java                     | src      |       44 |        5 |       55 |      240 |      344 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.repository       | AvailabilityRepository.java               | src      |        3 |        0 |       16 |        5 |       24 |
-| projecthub.repository       | FeatureRepository.java                    | src      |        4 |        0 |       16 |        7 |       27 |
+| projecthub.repository       | FeatureRepository.java                    | src      |        8 |        0 |       16 |       11 |       35 |
 | projecthub.repository       | LocationRepository.java                   | src      |        3 |        0 |       16 |        5 |       24 |
 | projecthub.repository       | OffDayRepository.java                     | src      |        3 |        0 |       16 |        5 |       24 |
-| projecthub.repository       | ProductRepository.java                    | src      |        3 |        0 |       16 |        5 |       24 |
-| projecthub.repository       | SprintRepository.java                     | src      |        4 |        0 |       16 |        7 |       27 |
+| projecthub.repository       | ProductRepository.java                    | src      |        4 |        0 |       16 |        7 |       27 |
+| projecthub.repository       | SprintRepository.java                     | src      |        8 |        0 |       16 |       11 |       35 |
 | projecthub.repository       | TaskRepository.java                       | src      |        4 |        0 |       16 |        7 |       27 |
-| projecthub.repository       | UserRepository.java                       | src      |        5 |        0 |       16 |       11 |       32 |
-| projecthub.repository       | VersionRepository.java                    | src      |        4 |        0 |       16 |        7 |       27 |
+| projecthub.repository       | UserRepository.java                       | src      |        6 |        0 |       16 |       13 |       35 |
+| projecthub.repository       | VersionRepository.java                    | src      |        8 |        0 |       16 |       11 |       35 |
 | projecthub.repository       | WorklogRepository.java                    | src      |        4 |        0 |       16 |        7 |       27 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
-| projecthub.rest.api         | AbstractApi.java                          | src      |       32 |       22 |       41 |      180 |      275 |
+| projecthub.rest.api         | AbstractApi.java                          | src      |       32 |       22 |       42 |      183 |      279 |
 | projecthub.rest.api         | AvailabilityApi.java                      | src      |       10 |        0 |       17 |       60 |       87 |
+| projecthub.rest.api         | AvailabilityApiTest.java                  | src      |       35 |        0 |       46 |      237 |      318 |
 | projecthub.rest.api         | FeatureApi.java                           | src      |       14 |        0 |       16 |       77 |      107 |
+| projecthub.rest.api         | FeatureApiTest.java                       | src      |       33 |        0 |       31 |      195 |      259 |
 | projecthub.rest.api         | LocationApi.java                          | src      |       11 |        0 |       17 |       60 |       88 |
+| projecthub.rest.api         | LocationApiTest.java                      | src      |       43 |        0 |       47 |      274 |      364 |
 | projecthub.rest.api         | OffDayApi.java                            | src      |       12 |        0 |       17 |       60 |       89 |
+| projecthub.rest.api         | OffDayApiTest.java                        | src      |       36 |        0 |       49 |      240 |      325 |
 | projecthub.rest.api         | ProductApi.java                           | src      |       13 |        0 |       16 |       67 |       96 |
+| projecthub.rest.api         | ProductApiTest.java                       | src      |       26 |        0 |       26 |      185 |      237 |
 | projecthub.rest.api         | SprintApi.java                            | src      |       14 |        0 |       16 |       77 |      107 |
+| projecthub.rest.api         | SprintApiTest.java                        | src      |       31 |        0 |       35 |      189 |      255 |
 | projecthub.rest.api         | TaskApi.java                              | src      |       15 |        0 |       16 |       77 |      108 |
-| projecthub.rest.api         | UserApi.java                              | src      |       14 |        0 |       16 |       77 |      107 |
+| projecthub.rest.api         | TaskApiTest.java                          | src      |       28 |        0 |       22 |      128 |      178 |
+| projecthub.rest.api         | UserApi.java                              | src      |       15 |        0 |       16 |       87 |      118 |
+| projecthub.rest.api         | UserApiTest.java                          | src      |       32 |        0 |       29 |      153 |      214 |
 | projecthub.rest.api         | VersionApi.java                           | src      |       14 |        0 |       16 |       77 |      107 |
+| projecthub.rest.api         | VersionApiTest.java                       | src      |       33 |        0 |       31 |      203 |      267 |
 | projecthub.rest.api         | WorklogApi.java                           | src      |       14 |        0 |       16 |       77 |      107 |
+| projecthub.rest.api         | WorklogApiTest.java                       | src      |       16 |        0 |       18 |       71 |      105 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.rest.controller  | AvailabilityController.java               | src      |       10 |        0 |       16 |       54 |       80 |
-| projecthub.rest.controller  | FeatureController.java                    | src      |       12 |        0 |       16 |       50 |       78 |
+| projecthub.rest.controller  | FeatureController.java                    | src      |       11 |        0 |       18 |       59 |       88 |
 | projecthub.rest.controller  | LocationController.java                   | src      |       10 |        0 |       16 |       55 |       81 |
 | projecthub.rest.controller  | OffDayController.java                     | src      |       10 |        0 |       16 |       54 |       80 |
-| projecthub.rest.controller  | ProductController.java                    | src      |       10 |        0 |       16 |       40 |       66 |
-| projecthub.rest.controller  | SprintController.java                     | src      |       11 |        0 |       16 |       48 |       75 |
+| projecthub.rest.controller  | ProductController.java                    | src      |       10 |        0 |       18 |       49 |       77 |
+| projecthub.rest.controller  | SprintController.java                     | src      |       11 |        0 |       18 |       57 |       86 |
 | projecthub.rest.controller  | TaskController.java                       | src      |       11 |        0 |       16 |       49 |       76 |
-| projecthub.rest.controller  | UserController.java                       | src      |       15 |        0 |       16 |       56 |       87 |
-| projecthub.rest.controller  | VersionController.java                    | src      |       11 |        0 |       16 |       51 |       78 |
+| projecthub.rest.controller  | UserController.java                       | src      |       15 |        0 |       16 |       63 |       94 |
+| projecthub.rest.controller  | VersionController.java                    | src      |       11 |        0 |       18 |       60 |       89 |
 | projecthub.rest.controller  | WorklogController.java                    | src      |       11 |        0 |       16 |       41 |       68 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.rest.debug       | DebugUtil.java                            | src      |        4 |        0 |       16 |       18 |       38 |
 | projecthub.rest.debug       | JsonResponseLogger.java                   | src      |        8 |        0 |       16 |       48 |       72 |
 | projecthub.rest.debug       | RequestLoggingFilter.java                 | src      |       18 |        0 |       19 |       75 |      112 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
-| projecthub.rest.util        | ErrorResponse.java                        | src      |        6 |        0 |       16 |       18 |       40 |
-| projecthub.rest.util        | GlobalExceptionHandler.java               | src      |        6 |        0 |       16 |       50 |       72 |
-+-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.rest             | ColorDeserializer.java                    | src      |        6 |        0 |       18 |       24 |       48 |
 | projecthub.rest             | ColorSerializer.java                      | src      |        6 |        0 |       17 |       17 |       40 |
+| projecthub.rest             | ErrorResponse.java                        | src      |       28 |       30 |       38 |      135 |      231 |
+| projecthub.rest             | GlobalExceptionHandler.java               | src      |        9 |        0 |       16 |       40 |       65 |
 | projecthub.rest             | JacksonConfig.java                        | src      |        7 |        0 |       19 |       67 |       93 |
 | projecthub.rest             | OffsetDateTimeDeserializer.java           | src      |        5 |        0 |       17 |       19 |       41 |
 | projecthub.rest             | OffsetDateTimeSerializer.java             | src      |        5 |        0 |       17 |       18 |       40 |
@@ -170,63 +168,72 @@
 | projecthub.security         | SecurityUserRepository.java               | src      |        4 |        0 |       16 |        8 |       28 |
 | projecthub.security         | SecurityUtils.java                        | src      |       12 |       25 |       16 |       45 |       98 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
-| projecthub.ui.common        | ConfirmDialog.java                        | src      |       10 |       11 |       16 |       33 |       70 |
-| projecthub.ui.common        | FeatureDialog.java                        | src      |       17 |        9 |       16 |       60 |      102 |
-| projecthub.ui.common        | ProductDialog.java                        | src      |       19 |        9 |       17 |       60 |      105 |
-| projecthub.ui.common        | SprintDialog.java                         | src      |       17 |        9 |       16 |       60 |      102 |
-| projecthub.ui.common        | UserDialog.java                           | src      |       27 |        9 |       24 |      125 |      185 |
-| projecthub.ui.common        | VersionDialog.java                        | src      |       17 |        9 |       17 |       60 |      103 |
-+-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.ui.component     | Breadcrumbs.java                          | src      |       17 |        0 |       20 |       79 |      116 |
+| projecthub.ui.component     | ThemeToggle.java                          | src      |        9 |        0 |       19 |       51 |       79 |
 | projecthub.ui.component     | ViewToolbar.java                          | src      |        9 |        0 |       16 |       33 |       58 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
+| projecthub.ui.dialog        | AvailabilityDialog.java                   | src      |       32 |        0 |       34 |      148 |      214 |
+| projecthub.ui.dialog        | ConfirmDialog.java                        | src      |       10 |       11 |       16 |       33 |       70 |
+| projecthub.ui.dialog        | FeatureDialog.java                        | src      |       18 |       17 |       18 |       68 |      121 |
+| projecthub.ui.dialog        | LocationDialog.java                       | src      |       44 |        0 |       41 |      231 |      316 |
+| projecthub.ui.dialog        | ProductDialog.java                        | src      |       19 |       17 |       19 |       68 |      123 |
+| projecthub.ui.dialog        | SprintDialog.java                         | src      |       18 |       17 |       18 |       68 |      121 |
+| projecthub.ui.dialog        | UserDialog.java                           | src      |       27 |        9 |       24 |      125 |      185 |
+| projecthub.ui.dialog        | VersionDialog.java                        | src      |       18 |       17 |       19 |       68 |      122 |
++-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.ui.util.selenium | ScreenShotCreator.java                    | src      |       15 |        7 |       35 |       78 |      135 |
-| projecthub.ui.util.selenium | SeleniumHandler.java                      | src      |       92 |      103 |       60 |      557 |      812 |
+| projecthub.ui.util.selenium | SeleniumHandler.java                      | src      |      112 |      172 |       75 |      676 |     1035 |
 | projecthub.ui.util.selenium | SeleniumTestResultExtension.java          | src      |        9 |        0 |       17 |       42 |       68 |
 | projecthub.ui.util.selenium | VideoRecorder.java                        | src      |       26 |       40 |       28 |      136 |      230 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.ui.util          | AbstractUiTestUtil.java                   | src      |        9 |        0 |       20 |       18 |       47 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
-| projecthub.ui.view          | MainErrorHandler.java                     | src      |        5 |        0 |       16 |       28 |       49 |
-| projecthub.ui.view          | MainLayout.java                           | src      |       31 |        0 |       22 |      121 |      174 |
-| projecthub.ui.view          | MainView.java                             | src      |        7 |        7 |       18 |       25 |       57 |
-| projecthub.ui.view          | ThemeToggle.java                          | src      |        8 |        0 |        3 |       51 |       62 |
+| projecthub.ui.view.util     | AvailabilityListViewTester.java           | src      |       41 |      120 |       42 |      134 |      337 |
+| projecthub.ui.view.util     | FeatureListViewTester.java                | src      |       18 |       95 |       18 |       77 |      208 |
+| projecthub.ui.view.util     | LocationListViewTester.java               | src      |       35 |      117 |       32 |      130 |      314 |
+| projecthub.ui.view.util     | ProductListViewTester.java                | src      |       29 |      115 |       52 |      136 |      332 |
+| projecthub.ui.view.util     | SprintListViewTester.java                 | src      |       18 |       96 |       18 |       77 |      209 |
+| projecthub.ui.view.util     | TaskListViewTester.java                   | src      |        5 |        0 |       19 |        8 |       32 |
+| projecthub.ui.view.util     | UserListViewTester.java                   | src      |       17 |      115 |       31 |      124 |      287 |
+| projecthub.ui.view.util     | VersionListViewTester.java                | src      |       18 |       94 |       18 |       77 |      207 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
-| projecthub.ui               | Demo.java                                 | src      |        6 |        0 |       20 |       55 |       81 |
-| projecthub.ui               | FeatureListView.java                      | src      |       27 |        0 |       27 |      184 |      238 |
-| projecthub.ui               | FeatureListViewTest.java                  | src      |       11 |       65 |       18 |       73 |      167 |
-| projecthub.ui               | GenerateScreenshots.java                  | src      |       27 |       15 |       37 |      178 |      257 |
+| projecthub.ui.view          | AvailabilityListView.java                 | src      |       39 |        6 |       29 |      236 |      310 |
+| projecthub.ui.view          | AvailabilityListViewTest.java             | src      |       15 |       80 |       31 |       81 |      207 |
+| projecthub.ui.view          | FeatureListView.java                      | src      |       28 |        0 |       28 |      208 |      264 |
+| projecthub.ui.view          | FeatureListViewTest.java                  | src      |       14 |       81 |       23 |       83 |      201 |
+| projecthub.ui.view          | LocationListView.java                     | src      |       56 |       14 |       34 |      280 |      384 |
+| projecthub.ui.view          | LocationListViewTest.java                 | src      |       13 |       74 |       25 |       78 |      190 |
+| projecthub.ui.view          | LoginView.java                            | src      |       17 |        3 |       22 |       75 |      117 |
+| projecthub.ui.view          | MainView.java                             | src      |        7 |        7 |       18 |       25 |       57 |
+| projecthub.ui.view          | ProductListView.java                      | src      |       24 |        0 |       28 |      187 |      239 |
+| projecthub.ui.view          | ProductListViewOidcTest.java              | src      |       23 |       55 |       41 |      111 |      230 |
+| projecthub.ui.view          | ProductListViewTest.java                  | src      |       12 |       63 |       19 |       68 |      162 |
+| projecthub.ui.view          | SprintListView.java                       | src      |       31 |        0 |       29 |      233 |      293 |
+| projecthub.ui.view          | SprintListViewTest.java                   | src      |       15 |       82 |       24 |       86 |      207 |
+| projecthub.ui.view          | SprintQualityBoard.java                   | src      |       57 |        0 |       47 |      439 |      543 |
+| projecthub.ui.view          | SprintQualityBoardTest.java               | src      |       12 |        0 |       18 |      106 |      136 |
+| projecthub.ui.view          | TaskListView.java                         | src      |       19 |        0 |       22 |      163 |      204 |
+| projecthub.ui.view          | UserListView.java                         | src      |       22 |        0 |       21 |      176 |      219 |
+| projecthub.ui.view          | UserListViewTest.java                     | src      |       11 |       63 |       17 |       70 |      161 |
+| projecthub.ui.view          | VersionListView.java                      | src      |       28 |        0 |       29 |      196 |      253 |
+| projecthub.ui.view          | VersionListViewTest.java                  | src      |       13 |       80 |       20 |       74 |      187 |
++-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
+| projecthub.ui               | Demo.java                                 | src      |        6 |        0 |       21 |       54 |       81 |
+| projecthub.ui               | GenerateScreenshots.java                  | src      |       34 |       21 |       48 |      233 |      336 |
 | projecthub.ui               | HtmlColor.java                            | src      |        6 |        0 |       36 |       22 |       64 |
-| projecthub.ui               | LoginView.java                            | src      |       17 |        3 |       22 |       75 |      117 |
-| projecthub.ui               | ProductListView.java                      | src      |       24 |        0 |       24 |      165 |      213 |
-| projecthub.ui               | ProductListViewOidcTest.java              | src      |       23 |       55 |       35 |      141 |      254 |
-| projecthub.ui               | ProductListViewTest.java                  | src      |       11 |       55 |       16 |       63 |      145 |
-| projecthub.ui               | SprintListView.java                       | src      |       24 |        0 |       28 |      196 |      248 |
-| projecthub.ui               | SprintListViewTest.java                   | src      |       12 |       66 |       19 |       76 |      173 |
-| projecthub.ui               | SprintQualityBoard.java                   | src      |       47 |        0 |       39 |      365 |      451 |
-| projecthub.ui               | SprintQualityBoardTest.java               | src      |       12 |        0 |       17 |      103 |      132 |
+| projecthub.ui               | MainErrorHandler.java                     | src      |        5 |        0 |       16 |       28 |       49 |
+| projecthub.ui               | MainLayout.java                           | src      |       32 |        0 |       22 |      130 |      184 |
 | projecthub.ui               | SprintStatus.java                         | src      |        2 |        0 |       16 |        4 |       22 |
-| projecthub.ui               | TaskListView.java                         | src      |       19 |        0 |       22 |      163 |      204 |
-| projecthub.ui               | UserListView.java                         | src      |       23 |        0 |       22 |      166 |      211 |
-| projecthub.ui               | UserListViewTest.java                     | src      |       11 |       63 |       16 |       76 |      166 |
-| projecthub.ui               | VersionListView.java                      | src      |       25 |        0 |       28 |      167 |      220 |
-| projecthub.ui               | VersionListViewTest.java                  | src      |       10 |       64 |       16 |       64 |      154 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.util             | AbstractEntityGenerator.java              | src      |       98 |       48 |       46 |      630 |      822 |
 | projecthub.util             | AbstractGanttTestUtil.java                | src      |       49 |        6 |       51 |      493 |      599 |
-| projecthub.util             | AbstractLegacyGanttTestUtil.java          | src      |       10 |        0 |       19 |       83 |      112 |
+| projecthub.util             | AbstractLegacyGanttTestUtil.java          | src      |       10 |        0 |       19 |       87 |      116 |
 | projecthub.util             | AbstractTestUtil.java                     | src      |       20 |        0 |       27 |       92 |      139 |
 | projecthub.util             | DTOAsserts.java                           | src      |       29 |        0 |       25 |      135 |      189 |
-| projecthub.util             | FeatureViewTester.java                    | src      |       14 |       76 |       16 |       58 |      164 |
 | projecthub.util             | H2DatabaseStateManager.java               | src      |       22 |       27 |       27 |      125 |      201 |
 | projecthub.util             | NameGenerator.java                        | src      |       12 |        0 |       16 |       81 |      109 |
-| projecthub.util             | ProductViewTester.java                    | src      |       23 |       97 |       27 |      139 |      286 |
 | projecthub.util             | RandomCase.java                           | src      |        7 |        0 |       16 |       49 |       72 |
-| projecthub.util             | SprintViewTester.java                     | src      |       12 |       77 |       16 |       58 |      163 |
-| projecthub.util             | TaskViewTester.java                       | src      |        5 |        0 |       19 |        8 |       32 |
 | projecthub.util             | TestInfoUtil.java                         | src      |       15 |       86 |       16 |       51 |      168 |
-| projecthub.util             | UserViewTester.java                       | src      |       19 |      115 |       31 |      131 |      296 |
-| projecthub.util             | VersionViewTester.java                    | src      |       12 |       75 |       16 |       58 |      161 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub                  | Application.java                          | src      |        5 |        0 |       16 |       20 |       41 |
 | projecthub                  | Context.java                              | src      |        4 |        0 |       71 |       10 |       85 |
@@ -278,5 +285,5 @@
 | util                        | TaskUtil.java                             | src      |        8 |        0 |       31 |       15 |       54 |
 | util                        | Util.java                                 | src      |       21 |        0 |       30 |      162 |      213 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
-| 28 package(s)               | 249 file(s)                               | java     |     3607 |     1738 |     6141 |    20262 |    31748 |
+| 27 package(s)               | 257 file(s)                               | java     |     4032 |     2417 |     6595 |    22348 |    35392 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+

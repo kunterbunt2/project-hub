@@ -61,7 +61,6 @@ import java.util.stream.Collectors;
 @PermitAll
 public class AvailabilityListView extends Main implements BeforeEnterObserver, AfterNavigationObserver {
     public static final String             AVAILABILITY_GRID                      = "availability-grid";
-    public static final String             AVAILABILITY_GRID_ACTION_BUTTON_PREFIX = "availability-action-button-";
     public static final String             AVAILABILITY_GRID_AVAILABILITY_PREFIX  = "availability-value-";
     public static final String             AVAILABILITY_GRID_DELETE_BUTTON_PREFIX = "availability-delete-button-";
     public static final String             AVAILABILITY_GRID_EDIT_BUTTON_PREFIX   = "availability-edit-button-";
@@ -69,7 +68,6 @@ public class AvailabilityListView extends Main implements BeforeEnterObserver, A
     public static final String             AVAILABILITY_LIST_PAGE_TITLE           = "availability-page-title";
     public static final String             CREATE_AVAILABILITY_BUTTON             = "create-availability-button";
     public static final String             INFO_BOX                               = "availability-info-box";
-    // Static IDs for UI elements to aid in testing
     public static final String             ROUTE                                  = "availability";
     private final       AvailabilityApi    availabilityApi;
     private final       Grid<Availability> availabilityGrid                       = new Grid<>(Availability.class, false);

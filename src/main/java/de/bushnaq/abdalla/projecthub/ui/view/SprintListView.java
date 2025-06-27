@@ -56,7 +56,6 @@ import java.util.Map;
 public class SprintListView extends Main implements AfterNavigationObserver {
     public static final String       CREATE_SPRINT_BUTTON             = "create-sprint-button";
     public static final String       SPRINT_GRID                      = "sprint-grid";
-    public static final String       SPRINT_GRID_ACTION_BUTTON_PREFIX = "sprint-grid-action-button-prefix-";
     public static final String       SPRINT_GRID_DELETE_BUTTON_PREFIX = "sprint-grid-delete-button-prefix-";
     public static final String       SPRINT_GRID_EDIT_BUTTON_PREFIX   = "sprint-grid-edit-button-prefix-";
     public static final String       SPRINT_GRID_NAME_PREFIX          = "sprint-grid-name-";

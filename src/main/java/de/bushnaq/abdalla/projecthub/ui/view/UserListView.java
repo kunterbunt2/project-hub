@@ -50,7 +50,6 @@ import java.time.format.FormatStyle;
 public class UserListView extends Main implements AfterNavigationObserver {
     public static final String     CREATE_USER_BUTTON             = "create-user-button";
     public static final String     ROUTE                          = "user-list";
-    public static final String     USER_GRID_ACTION_BUTTON_PREFIX = "user-grid-action-button-prefix-";
     public static final String     USER_GRID_DELETE_BUTTON_PREFIX = "user-grid-delete-button-prefix-";
     public static final String     USER_GRID_EDIT_BUTTON_PREFIX   = "user-grid-edit-button-prefix-";
     public static final String     USER_GRID_NAME_PREFIX          = "user-grid-name-";

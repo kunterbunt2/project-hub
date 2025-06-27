@@ -23,13 +23,14 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.textfield.NumberField;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.validator.RangeValidator;
@@ -40,19 +41,17 @@ import de.bushnaq.abdalla.projecthub.rest.api.AvailabilityApi;
 import java.time.LocalDate;
 
 public class AvailabilityDialog extends Dialog {
+    public static final String               AVAILABILITY_DIALOG           = "availability-dialog";
     public static final String               AVAILABILITY_PERCENTAGE_FIELD = "availability-percentage-field";
-    // Static IDs for UI elements to aid in testing
     public static final String               AVAILABILITY_START_DATE_FIELD = "availability-start-date-field";
     public static final String               CANCEL_BUTTON                 = "availability-dialog-cancel";
     public static final String               CONFIRM_BUTTON                = "availability-dialog-confirm";
     private final       Availability         availability;
     private final       AvailabilityApi      availabilityApi;
-    private final       NumberField          availabilityField             = new NumberField("Availability (%)");
-    // Form binder
+    private final       IntegerField         availabilityField             = new IntegerField("Availability (%)");
     private final       Binder<Availability> binder                        = new Binder<>(Availability.class);
     private final       boolean              isNewAvailability;
     private final       Runnable             onSaveCallback;
-    // Form fields
     private final       DatePicker           startDateField                = new DatePicker("Start Date");
     private final       User                 user;
 
@@ -63,6 +62,7 @@ public class AvailabilityDialog extends Dialog {
         this.isNewAvailability = (availability == null);
         this.availability      = isNewAvailability ? new Availability() : availability;
 
+        setId(AVAILABILITY_DIALOG);
         setCloseOnEsc(true);
         setCloseOnOutsideClick(false);
         setDraggable(true);
@@ -79,6 +79,10 @@ public class AvailabilityDialog extends Dialog {
         binder.forField(startDateField)
                 .asRequired("Start date is required")
                 .withValidator(this::validateStartDateUniqueness, "Another availability record already exists with this date")
+                .withValidationStatusHandler(status -> {
+                    startDateField.setInvalid(status.getMessage().isPresent());
+                    startDateField.setErrorMessage(status.getMessage().orElse(""));
+                })
                 .bind(Availability::getStart, Availability::setStart);
 
         // Availability binding (as percentage, converting between 0-150% display and 0-1.5 stored value)
@@ -86,33 +90,32 @@ public class AvailabilityDialog extends Dialog {
                 .asRequired("Availability is required")
                 .withConverter(
                         value -> value != null ? value.floatValue() / 100 : 0.0f,  // Double to float and convert from percentage
-                        value -> value != null ? (double) value * 100 : 0.0  // float to Double and convert to percentage
+                        value -> value != null ? (int) (value * 100) : 0  // float to Double and convert to percentage
                 )
-                .withValidator(new RangeValidator<>("Availability must be between 0% and 150%",
-                        Float::compare, 0.0f, 1.5f))
+                .withValidator(new RangeValidator<>("Availability must be between 0% and 150%", Float::compare, 0.0f, 1.5f))
+                .withValidationStatusHandler(status -> {
+                    availabilityField.setInvalid(status.getMessage().isPresent());
+                    availabilityField.setErrorMessage(status.getMessage().orElse(""));
+                })
                 .bind(Availability::getAvailability, Availability::setAvailability);
 
         // Load data into the form
         if (!isNewAvailability) {
             binder.readBean(availability);
-
             // If editing, convert the stored value (0-1.5) to percentage display (0-150)
-            availabilityField.setValue((double) availability.getAvailability() * 100);
+            availabilityField.setValue((int) availability.getAvailability() * 100);
         }
     }
 
     private HorizontalLayout createButtonLayout() {
-        Button saveButton   = new Button("Save", new Icon(VaadinIcon.CHECK));
-        Button cancelButton = new Button("Cancel", new Icon(VaadinIcon.CLOSE));
-
-        // Set IDs for testing
+        Button saveButton = new Button("Save", new Icon(VaadinIcon.CHECK));
         saveButton.setId(CONFIRM_BUTTON);
-        cancelButton.setId(CANCEL_BUTTON);
-
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-
         saveButton.addClickListener(event -> saveAvailability());
+
+        Button cancelButton = new Button("Cancel", new Icon(VaadinIcon.CLOSE));
+        cancelButton.setId(CANCEL_BUTTON);
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         cancelButton.addClickListener(event -> close());
 
         HorizontalLayout buttonLayout = new HorizontalLayout(saveButton, cancelButton);
@@ -128,15 +131,10 @@ public class AvailabilityDialog extends Dialog {
 
         // Configure fields
         startDateField.setWidthFull();
-        startDateField.setRequired(true);
         startDateField.setHelperText("The date when this availability level begins");
         startDateField.setId(AVAILABILITY_START_DATE_FIELD);
 
         availabilityField.setWidthFull();
-        availabilityField.setRequiredIndicatorVisible(true);
-        availabilityField.setMin(0);
-        availabilityField.setMax(150);
-        availabilityField.setStep(5);
         availabilityField.setHelperText("Value between 0-150% (e.g., 100 = full time)");
         availabilityField.setSuffixComponent(new Span("%"));
         availabilityField.setId(AVAILABILITY_PERCENTAGE_FIELD);
@@ -154,7 +152,12 @@ public class AvailabilityDialog extends Dialog {
 
     private void saveAvailability() {
         try {
-            // Validate and write to bean
+            // Validate all fields first - this will trigger validation and show error messages
+            if (!binder.validate().isOk()) {
+                return; // Stop here if validation fails
+            }
+
+            // Write values to bean
             binder.writeBean(availability);
 
             // Ensure user association is set
@@ -168,26 +171,20 @@ public class AvailabilityDialog extends Dialog {
             }
 
             // Notify success
-            String message = isNewAvailability ?
-                    "New availability record added" :
-                    "Availability record updated";
+            String message = isNewAvailability ? "New availability record added" : "Availability record updated";
             Notification.show(message, 3000, Notification.Position.MIDDLE);
 
             // Trigger refresh callback and close dialog
             onSaveCallback.run();
             close();
-
         } catch (ValidationException e) {
-            Notification notification = Notification.show(
-                    "Please fix the errors and try again.",
-                    3000,
-                    Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            System.out.printf("Validation failed: %s%n", e.getMessage());
+            // Validation errors will already be displayed next to the fields
+            // No need for additional notification
         } catch (Exception e) {
-            Notification notification = Notification.show(
-                    "Error saving availability: " + e.getMessage(),
-                    3000,
-                    Notification.Position.MIDDLE);
+            System.out.printf("Validation failed: %s%n", e.getMessage());
+            // Only show notification for unexpected errors
+            Notification notification = Notification.show("Error saving availability: " + e.getMessage(), 3000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
     }
@@ -201,14 +198,7 @@ public class AvailabilityDialog extends Dialog {
         }
 
         // Check if any other availability record exists with the same date
-        return user.getAvailabilities().stream()
-                .noneMatch(a -> date.equals(a.getStart()) && !a.equals(availability));
+        return user.getAvailabilities().stream().noneMatch(a -> date.equals(a.getStart()) && !a.equals(availability));
     }
 
-    // Small helper class for the percentage suffix
-    private static class Span extends com.vaadin.flow.component.html.Span {
-        public Span(String text) {
-            super(text);
-        }
-    }
 }

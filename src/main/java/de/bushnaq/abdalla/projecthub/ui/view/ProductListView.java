@@ -57,7 +57,6 @@ import java.util.Map;
 public class ProductListView extends Main implements AfterNavigationObserver {
     public static final String        CREATE_PRODUCT_BUTTON             = "create-product-button";
     public static final String        PRODUCT_GRID                      = "product-grid";
-    public static final String        PRODUCT_GRID_ACTION_BUTTON_PREFIX = "product-grid-action-button-prefix-";
     public static final String        PRODUCT_GRID_DELETE_BUTTON_PREFIX = "product-grid-delete-button-prefix-";
     public static final String        PRODUCT_GRID_EDIT_BUTTON_PREFIX   = "product-grid-edit-button-prefix-";
     public static final String        PRODUCT_GRID_NAME_PREFIX          = "product-grid-name-";
@@ -217,7 +216,6 @@ public class ProductListView extends Main implements AfterNavigationObserver {
                 dialogReference.close();
             } catch (Exception e) {
                 if (e instanceof ResponseStatusException && ((ResponseStatusException) e).getStatusCode().equals(HttpStatus.CONFLICT)) {
-
                     dialogReference.setNameFieldError(((ResponseStatusException) e).getReason());
                     // Keep the dialog open so the user can correct the name
                 } else {

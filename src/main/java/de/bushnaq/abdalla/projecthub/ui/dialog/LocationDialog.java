@@ -43,7 +43,7 @@ public class LocationDialog extends Dialog {
     public static final String           CANCEL_BUTTON             = "location-dialog-cancel";
     public static final String           CONFIRM_BUTTON            = "location-dialog-confirm";
     public static final String           LOCATION_COUNTRY_FIELD    = "location-country-field";
-    // Static IDs for UI elements to aid in testing
+    public static final String           LOCATION_DIALOG           = "location-dialog";
     public static final String           LOCATION_START_DATE_FIELD = "location-start-date-field";
     public static final String           LOCATION_STATE_FIELD      = "location-state-field";
     private final       ComboBox<String> countryComboBox           = new ComboBox<>("Country");
@@ -60,6 +60,7 @@ public class LocationDialog extends Dialog {
         this.locationApi    = locationApi;
         this.onSaveCallback = onSaveCallback;
 
+        setId(LOCATION_DIALOG);
         setWidth("500px");
         setHeaderTitle(location == null ? "Add New Location" : "Edit Location");
 

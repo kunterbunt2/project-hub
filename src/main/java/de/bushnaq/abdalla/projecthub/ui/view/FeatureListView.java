@@ -55,10 +55,7 @@ import java.util.Map;
 @RolesAllowed({"USER", "ADMIN"}) // Restrict access to users with specific roles
 public class FeatureListView extends Main implements AfterNavigationObserver {
     public static final String        CREATE_FEATURE_BUTTON_ID          = "create-feature-button";
-    public static final String        DELETE_FEATURE_BUTTON_ID          = "delete-feature-button";
-    public static final String        EDIT_FEATURE_BUTTON_ID            = "edit-feature-button";
     public static final String        FEATURE_GRID                      = "feature-grid";
-    public static final String        FEATURE_GRID_ACTION_BUTTON_PREFIX = "feature-grid-action-button-prefix-";
     public static final String        FEATURE_GRID_DELETE_BUTTON_PREFIX = "feature-grid-delete-button-prefix-";
     public static final String        FEATURE_GRID_EDIT_BUTTON_PREFIX   = "feature-grid-edit-button-prefix-";
     public static final String        FEATURE_GRID_NAME_PREFIX          = "feature-grid-name-";

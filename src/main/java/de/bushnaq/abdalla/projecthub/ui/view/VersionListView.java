@@ -56,7 +56,6 @@ public class VersionListView extends Main implements AfterNavigationObserver {
     public static final String        CREATE_VERSION_BUTTON             = "create-version-button";
     public static final String        ROUTE                             = "version-list";
     public static final String        VERSION_GRID                      = "version-grid";
-    public static final String        VERSION_GRID_ACTION_BUTTON_PREFIX = "version-grid-action-button-prefix-";
     public static final String        VERSION_GRID_DELETE_BUTTON_PREFIX = "version-grid-delete-button-prefix-";
     public static final String        VERSION_GRID_EDIT_BUTTON_PREFIX   = "version-grid-edit-button-prefix-";
     public static final String        VERSION_GRID_NAME_PREFIX          = "version-grid-name-";

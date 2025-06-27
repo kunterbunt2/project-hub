@@ -62,14 +62,12 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
     public static final String         CREATE_LOCATION_BUTTON             = "create-location-button";
     public static final String         INFO_BOX                           = "location-info-box";
     public static final String         LOCATION_GRID                      = "location-grid";
-    public static final String         LOCATION_GRID_ACTION_BUTTON_PREFIX = "location-action-button-";
     public static final String         LOCATION_GRID_COUNTRY_PREFIX       = "location-country-";
     public static final String         LOCATION_GRID_DELETE_BUTTON_PREFIX = "location-delete-button-";
     public static final String         LOCATION_GRID_EDIT_BUTTON_PREFIX   = "location-edit-button-";
     public static final String         LOCATION_GRID_START_DATE_PREFIX    = "location-start-";
     public static final String         LOCATION_GRID_STATE_PREFIX         = "location-state-";
     public static final String         LOCATION_LIST_PAGE_TITLE           = "location-page-title";
-    // Static IDs for UI elements to aid in testing
     public static final String         ROUTE                              = "location";
     private             User           currentUser;
     private final       Div            infoBox                            = new Div();

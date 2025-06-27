@@ -22,7 +22,8 @@ import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.*;
 import de.bushnaq.abdalla.projecthub.ui.view.util.*;
-import de.bushnaq.abdalla.projecthub.util.*;
+import de.bushnaq.abdalla.projecthub.util.RandomCase;
+import de.bushnaq.abdalla.projecthub.util.TestInfoUtil;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -39,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 
@@ -49,22 +51,27 @@ import java.util.List;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class GenerateScreenshots extends AbstractUiTestUtil {
     @Autowired
-    private FeatureListViewTester featureListViewTester;
-    private String                featureName;
+    private       AvailabilityListViewTester availabilityListViewTester;
     @Autowired
-    private ProductListViewTester productListViewTester;
-    private String                productName;
+    private       FeatureListViewTester      featureListViewTester;
+    private       String                     featureName;
     @Autowired
-    private SeleniumHandler       seleniumHandler;
+    private       LocationListViewTester     locationListViewTester;
     @Autowired
-    private SprintListViewTester  sprintListViewTester;
-    private String                sprintName;
+    private       ProductListViewTester      productListViewTester;
+    private       String                     productName;
     @Autowired
-    private UserListViewTester    userListViewTester;
-    private String                userName;
+    private       SeleniumHandler            seleniumHandler;
     @Autowired
-    private VersionListViewTester versionListViewTester;
-    private String                versionName;
+    private       SprintListViewTester       sprintListViewTester;
+    private       String                     sprintName;
+    private final LocalDate                  startDate = LocalDate.of(2025, 6, 1);
+    @Autowired
+    private       UserListViewTester         userListViewTester;
+    private       String                     userName;
+    @Autowired
+    private       VersionListViewTester      versionListViewTester;
+    private       String                     versionName;
 
     private static List<RandomCase> listRandomCases() {
         RandomCase[] randomCases = new RandomCase[]{//
@@ -88,6 +95,73 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
     }
 
     /**
+     * Takes screenshots of Availability create, edit and delete dialogs
+     */
+    private void takeAvailabilityDialogScreenshots() {
+        // Create availability dialog
+        {
+            seleniumHandler.click(AvailabilityListView.CREATE_AVAILABILITY_BUTTON);
+            seleniumHandler.waitForElementToBeClickable(AvailabilityDialog.CANCEL_BUTTON); // Wait for dialog
+            seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement(AvailabilityDialog.AVAILABILITY_DIALOG), AvailabilityDialog.AVAILABILITY_DIALOG, "../project-hub.wiki/screenshots/availability-create-dialog.png");
+            seleniumHandler.click(AvailabilityDialog.CANCEL_BUTTON);
+        }
+
+        // Edit availability dialog
+        // We'll use the current date as a reference to find a record to edit
+        {
+            String dateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            seleniumHandler.click(AvailabilityListView.AVAILABILITY_GRID_EDIT_BUTTON_PREFIX + dateStr);
+            seleniumHandler.waitForElementToBeClickable(AvailabilityDialog.CANCEL_BUTTON); // Wait for dialog
+            seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement(AvailabilityDialog.AVAILABILITY_DIALOG), AvailabilityDialog.AVAILABILITY_DIALOG, "../project-hub.wiki/screenshots/availability-edit-dialog.png");
+            seleniumHandler.click(AvailabilityDialog.CANCEL_BUTTON);
+        }
+
+        // Delete availability dialog
+        {
+            // create something we can at least try to delete
+            availabilityListViewTester.createAvailabilityConfirm(startDate, 50);
+            String dateStr = startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            seleniumHandler.click(AvailabilityListView.AVAILABILITY_GRID_DELETE_BUTTON_PREFIX + dateStr);
+            seleniumHandler.waitForElementToBeClickable(ConfirmDialog.CANCEL_BUTTON); // Wait for dialog
+            seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement(ConfirmDialog.CONFIRM_DIALOG), ConfirmDialog.CONFIRM_DIALOG, "../project-hub.wiki/screenshots/availability-delete-dialog.png");
+            seleniumHandler.click(ConfirmDialog.CANCEL_BUTTON);
+        }
+    }
+
+    /**
+     * Takes screenshots of Location create, edit and delete dialogs
+     */
+    private void takeLocationDialogScreenshots() {
+        // Create location dialog
+        {
+            seleniumHandler.click(LocationListView.CREATE_LOCATION_BUTTON);
+            seleniumHandler.waitForElementToBeClickable(LocationDialog.CANCEL_BUTTON); // Wait for dialog
+            seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement(LocationDialog.LOCATION_DIALOG), LocationDialog.LOCATION_DIALOG, "../project-hub.wiki/screenshots/location-create-dialog.png");
+            seleniumHandler.click(LocationDialog.CANCEL_BUTTON);
+        }
+
+        // Edit location dialog
+        // We'll use the current date as a reference to find a record to edit
+        {
+            String dateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            seleniumHandler.click(LocationListView.LOCATION_GRID_EDIT_BUTTON_PREFIX + dateStr);
+            seleniumHandler.waitForElementToBeClickable(LocationDialog.CANCEL_BUTTON); // Wait for dialog
+            seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement(LocationDialog.LOCATION_DIALOG), LocationDialog.LOCATION_DIALOG, "../project-hub.wiki/screenshots/location-edit-dialog.png");
+            seleniumHandler.click(LocationDialog.CANCEL_BUTTON);
+        }
+
+        // Delete location dialog
+        {
+            locationListViewTester.createLocationConfirm(startDate, "United States (US)", "California (ca)");
+            String dateStr = startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            seleniumHandler.click(LocationListView.LOCATION_GRID_DELETE_BUTTON_PREFIX + dateStr);
+            seleniumHandler.waitForElementToBeClickable(ConfirmDialog.CANCEL_BUTTON); // Wait for dialog
+            seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement(ConfirmDialog.CONFIRM_DIALOG), ConfirmDialog.CONFIRM_DIALOG, "../project-hub.wiki/screenshots/location-delete-dialog.png");
+            seleniumHandler.click(ConfirmDialog.CANCEL_BUTTON);
+        }
+    }
+
+    /**
      * Takes screenshots of Product create, edit and delete dialogs
      */
     private void takeProductDialogScreenshots() {
@@ -98,14 +172,12 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         seleniumHandler.click(ProductDialog.CANCEL_BUTTON);
 
         // Edit product dialog - open action menu first, then edit
-        seleniumHandler.click(ProductListView.PRODUCT_GRID_ACTION_BUTTON_PREFIX + productName);
         seleniumHandler.click(ProductListView.PRODUCT_GRID_EDIT_BUTTON_PREFIX + productName);
         seleniumHandler.waitForElementToBeClickable(ProductDialog.CANCEL_BUTTON); // Wait for dialog
         seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement(ProductDialog.PRODUCT_DIALOG), ProductDialog.PRODUCT_DIALOG, "../project-hub.wiki/screenshots/product-edit-dialog.png");
         seleniumHandler.click(ProductDialog.CANCEL_BUTTON);
 
         // Delete product dialog - open action menu first, then delete
-        seleniumHandler.click(ProductListView.PRODUCT_GRID_ACTION_BUTTON_PREFIX + productName);
         seleniumHandler.click(ProductListView.PRODUCT_GRID_DELETE_BUTTON_PREFIX + productName);
         seleniumHandler.waitForElementToBeClickable(ConfirmDialog.CANCEL_BUTTON); // Wait for dialog
         seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement(ConfirmDialog.CONFIRM_DIALOG), ConfirmDialog.CONFIRM_DIALOG, "../project-hub.wiki/screenshots/product-delete-dialog.png");
@@ -123,14 +195,12 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         seleniumHandler.click(FeatureDialog.CANCEL_BUTTON);
 
         // Edit project dialog - open action menu first, then edit
-        seleniumHandler.click(FeatureListView.FEATURE_GRID_ACTION_BUTTON_PREFIX + featureName);
         seleniumHandler.click(FeatureListView.FEATURE_GRID_EDIT_BUTTON_PREFIX + featureName);
         seleniumHandler.waitForElementToBeClickable(FeatureDialog.CANCEL_BUTTON); // Wait for dialog
         seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement(FeatureDialog.FEATURE_DIALOG), FeatureDialog.FEATURE_DIALOG, "../project-hub.wiki/screenshots/feature-edit-dialog.png");
         seleniumHandler.click(FeatureDialog.CANCEL_BUTTON);
 
         // Delete project dialog - open action menu first, then delete
-        seleniumHandler.click(FeatureListView.FEATURE_GRID_ACTION_BUTTON_PREFIX + featureName);
         seleniumHandler.click(FeatureListView.FEATURE_GRID_DELETE_BUTTON_PREFIX + featureName);
         seleniumHandler.waitForElementToBeClickable(ConfirmDialog.CANCEL_BUTTON); // Wait for dialog
         seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement(ConfirmDialog.CONFIRM_DIALOG), ConfirmDialog.CONFIRM_DIALOG, "../project-hub.wiki/screenshots/feature-delete-dialog.png");
@@ -149,7 +219,7 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         generateProductsIfNeeded(testInfo, randomCase);
-//        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
         userName    = nameGenerator.generateUserName(0);
         productName = nameGenerator.generateProductName(0);
         versionName = nameGenerator.generateVersionName(0);
@@ -177,6 +247,16 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/user-list-view.png");
         takeUserDialogScreenshots();
 
+        // Navigate to AvailabilityListView for the current user and take screenshots
+        availabilityListViewTester.switchToAvailabilityListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
+        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/availability-list-view.png");
+        takeAvailabilityDialogScreenshots();
+
+        // Navigate to LocationListView for the current user and take screenshots
+        locationListViewTester.switchToLocationListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
+        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/location-list-view.png");
+        takeLocationDialogScreenshots();
+
         seleniumHandler.waitUntilBrowserClosed(5000);
     }
 
@@ -191,14 +271,12 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         seleniumHandler.click(SprintDialog.CANCEL_BUTTON);
 
         // Edit sprint dialog - open action menu first, then edit
-        seleniumHandler.click(SprintListView.SPRINT_GRID_ACTION_BUTTON_PREFIX + sprintName);
         seleniumHandler.click(SprintListView.SPRINT_GRID_EDIT_BUTTON_PREFIX + sprintName);
         seleniumHandler.waitForElementToBeClickable(SprintDialog.CANCEL_BUTTON); // Wait for dialog
         seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement(SprintDialog.SPRINT_DIALOG), SprintDialog.SPRINT_DIALOG, "../project-hub.wiki/screenshots/sprint-edit-dialog.png");
         seleniumHandler.click(SprintDialog.CANCEL_BUTTON);
 
         // Delete sprint dialog - open action menu first, then delete
-        seleniumHandler.click(SprintListView.SPRINT_GRID_ACTION_BUTTON_PREFIX + sprintName);
         seleniumHandler.click(SprintListView.SPRINT_GRID_DELETE_BUTTON_PREFIX + sprintName);
         seleniumHandler.waitForElementToBeClickable(ConfirmDialog.CANCEL_BUTTON); // Wait for dialog
         seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement(ConfirmDialog.CONFIRM_DIALOG), ConfirmDialog.CONFIRM_DIALOG, "../project-hub.wiki/screenshots/sprint-delete-dialog.png");
@@ -217,14 +295,12 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
 
         // Edit user dialog - open action menu first, then edit
         // Get first user in the list
-        seleniumHandler.click(UserListView.USER_GRID_ACTION_BUTTON_PREFIX + userName);
         seleniumHandler.click(UserListView.USER_GRID_EDIT_BUTTON_PREFIX + userName);
         seleniumHandler.waitForElementToBeClickable(UserDialog.CANCEL_BUTTON); // Wait for dialog
         seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement(UserDialog.USER_DIALOG), UserDialog.USER_DIALOG, "../project-hub.wiki/screenshots/user-edit-dialog.png");
         seleniumHandler.click(UserDialog.CANCEL_BUTTON);
 
         // Delete user dialog - open action menu first, then delete
-        seleniumHandler.click(UserListView.USER_GRID_ACTION_BUTTON_PREFIX + userName);
         seleniumHandler.click(UserListView.USER_GRID_DELETE_BUTTON_PREFIX + userName);
         seleniumHandler.waitForElementToBeClickable(ConfirmDialog.CANCEL_BUTTON); // Wait for dialog
         seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement(ConfirmDialog.CONFIRM_DIALOG), ConfirmDialog.CONFIRM_DIALOG, "../project-hub.wiki/screenshots/user-delete-dialog.png");
@@ -242,14 +318,12 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         seleniumHandler.click(VersionDialog.CANCEL_BUTTON);
 
         // Edit version dialog - open action menu first, then edit
-        seleniumHandler.click(VersionListView.VERSION_GRID_ACTION_BUTTON_PREFIX + versionName);
         seleniumHandler.click(VersionListView.VERSION_GRID_EDIT_BUTTON_PREFIX + versionName);
         seleniumHandler.waitForElementToBeClickable(VersionDialog.CANCEL_BUTTON); // Wait for dialog
         seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement(VersionDialog.VERSION_DIALOG), VersionDialog.VERSION_DIALOG, "../project-hub.wiki/screenshots/version-edit-dialog.png");
         seleniumHandler.click(VersionDialog.CANCEL_BUTTON);
 
         // Delete version dialog - open action menu first, then delete
-        seleniumHandler.click(VersionListView.VERSION_GRID_ACTION_BUTTON_PREFIX + versionName);
         seleniumHandler.click(VersionListView.VERSION_GRID_DELETE_BUTTON_PREFIX + versionName);
         seleniumHandler.waitForElementToBeClickable(ConfirmDialog.CANCEL_BUTTON); // Wait for dialog
         seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement(ConfirmDialog.CONFIRM_DIALOG), ConfirmDialog.CONFIRM_DIALOG, "../project-hub.wiki/screenshots/version-delete-dialog.png");
