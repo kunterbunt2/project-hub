@@ -225,10 +225,7 @@ public class LocationDialog extends Dialog {
                 return stateCode;
             });
         } catch (Exception e) {
-            Notification notification = Notification.show(
-                    "Error loading regions for " + countryCode + ": " + e.getMessage(),
-                    3000,
-                    Notification.Position.MIDDLE);
+            Notification notification = Notification.show("Error loading regions for " + countryCode + ": " + e.getMessage(), 3000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
             stateComboBox.setEnabled(false);
         }
@@ -276,6 +273,7 @@ public class LocationDialog extends Dialog {
         // Validate country
         if (countryComboBox.getValue() == null || countryComboBox.getValue().isEmpty()) {
             countryComboBox.setInvalid(true);
+            countryComboBox.setErrorMessage("Please select a country");
             isValid = false;
         } else {
             countryComboBox.setInvalid(false);
@@ -284,6 +282,7 @@ public class LocationDialog extends Dialog {
         // Validate state
         if (stateComboBox.getValue() == null || stateComboBox.getValue().isEmpty()) {
             stateComboBox.setInvalid(true);
+            stateComboBox.setErrorMessage("Please select a state/region");
             isValid = false;
         } else {
             stateComboBox.setInvalid(false);
@@ -292,6 +291,7 @@ public class LocationDialog extends Dialog {
         // Validate start date
         if (startDatePicker.getValue() == null) {
             startDatePicker.setInvalid(true);
+            startDatePicker.setErrorMessage("Please select a start date");
             isValid = false;
         } else {
             // Check if this start date already exists for the user (unless it's the current location being edited)
@@ -299,13 +299,11 @@ public class LocationDialog extends Dialog {
                     .filter(loc -> !loc.getId().equals(location.getId()))
                     .anyMatch(loc -> loc.getStart().equals(startDatePicker.getValue()))) {
                 startDatePicker.setInvalid(true);
-                Notification notification = Notification.show("A location with this start date already exists", 3000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                startDatePicker.setErrorMessage("A location with this start date already exists");
                 isValid = false;
             } else if (location == null && user.getLocations().stream().anyMatch(loc -> loc.getStart().equals(startDatePicker.getValue()))) {
                 startDatePicker.setInvalid(true);
-                Notification notification = Notification.show("A location with this start date already exists", 3000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                startDatePicker.setErrorMessage("A location with this start date already exists");
                 isValid = false;
             } else {
                 startDatePicker.setInvalid(false);
