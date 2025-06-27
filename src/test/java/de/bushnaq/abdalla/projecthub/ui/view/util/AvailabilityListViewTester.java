@@ -80,7 +80,7 @@ public class AvailabilityListViewTester {
      * @param startDate              the start date for the availability record
      * @param availabilityPercentage the availability percentage (as a value between 0 and 150)
      */
-    public void createAvailabilityCancel(LocalDate startDate, double availabilityPercentage) {
+    public void createAvailabilityCancel(LocalDate startDate, int availabilityPercentage) {
         seleniumHandler.click(AvailabilityListView.CREATE_AVAILABILITY_BUTTON);
         seleniumHandler.setDatePickerValue(AvailabilityDialog.AVAILABILITY_START_DATE_FIELD, startDate);
         seleniumHandler.setTextField(AvailabilityDialog.AVAILABILITY_PERCENTAGE_FIELD, String.valueOf(availabilityPercentage));
@@ -122,7 +122,7 @@ public class AvailabilityListViewTester {
      * @param existingStartDate the start date that already has an availability record
      * @param newPercentage     the new availability percentage for the duplicate record
      */
-    public void createDuplicateDateAvailability(LocalDate existingStartDate, double newPercentage) {
+    public void createDuplicateDateAvailability(LocalDate existingStartDate, int newPercentage) {
         String existingDateStr = existingStartDate.format(dateFormatter);
 
         // Try to create a duplicate record
@@ -149,7 +149,7 @@ public class AvailabilityListViewTester {
      * @param startDate         the start date for the new availability record
      * @param invalidPercentage the invalid availability percentage (outside 0-150 range)
      */
-    public void createInvalidPercentageAvailability(LocalDate startDate, double invalidPercentage) {
+    public void createInvalidPercentageAvailability(LocalDate startDate, int invalidPercentage) {
         String startDateStr = startDate.format(dateFormatter);
 
         // Try to create a record with invalid percentage
@@ -212,8 +212,7 @@ public class AvailabilityListViewTester {
      * @param originalPercentage the original availability percentage to verify remains unchanged after cancellation
      * @param newPercentage      the availability percentage to attempt to assign
      */
-    public void editAvailabilityCancel(LocalDate originalStartDate, LocalDate newStartDate,
-                                       double originalPercentage, double newPercentage) {
+    public void editAvailabilityCancel(LocalDate originalStartDate, LocalDate newStartDate, int originalPercentage, int newPercentage) {
         String originalDateStr = originalStartDate.format(dateFormatter);
 
         // Verify original values first
@@ -247,7 +246,7 @@ public class AvailabilityListViewTester {
      * @param newStartDate      the new start date to assign
      * @param newPercentage     the new availability percentage to assign
      */
-    public void editAvailabilityConfirm(LocalDate originalStartDate, LocalDate newStartDate, double newPercentage) {
+    public void editAvailabilityConfirm(LocalDate originalStartDate, LocalDate newStartDate, int newPercentage) {
         String originalDateStr = originalStartDate.format(dateFormatter);
 
         // Edit the record and confirm
@@ -302,20 +301,19 @@ public class AvailabilityListViewTester {
      * @param startDateStr       the formatted start date string of the record to verify
      * @param expectedPercentage the expected availability percentage
      */
-    private void verifyAvailabilityValue(String startDateStr, double expectedPercentage) {
+    private void verifyAvailabilityValue(String startDateStr, int expectedPercentage) {
         // Open the edit dialog for the specified record
         seleniumHandler.click(AvailabilityListView.AVAILABILITY_GRID_EDIT_BUTTON_PREFIX + startDateStr);
 
         // Read the actual percentage value
         String actualPercentageText = seleniumHandler.getTextField(AvailabilityDialog.AVAILABILITY_PERCENTAGE_FIELD);
-        double actualPercentage     = Double.parseDouble(actualPercentageText);
+        int    actualPercentage     = Integer.parseInt(actualPercentageText);
 
         // Cancel the dialog to avoid making changes
         seleniumHandler.click(AvailabilityDialog.CANCEL_BUTTON);
 
         // Allow for a small floating-point difference
-        assertEquals(expectedPercentage, actualPercentage, 0.01,
-                "Availability percentage mismatch for record with start date: " + startDateStr);
+        assertEquals(expectedPercentage, actualPercentage, "Availability percentage mismatch for record with start date: " + startDateStr);
     }
 
     /**

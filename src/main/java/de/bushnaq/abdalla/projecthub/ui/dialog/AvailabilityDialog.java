@@ -103,7 +103,7 @@ public class AvailabilityDialog extends Dialog {
         if (!isNewAvailability) {
             binder.readBean(availability);
             // If editing, convert the stored value (0-1.5) to percentage display (0-150)
-            availabilityField.setValue((int) availability.getAvailability() * 100);
+            availabilityField.setValue((int) (availability.getAvailability() * 100));
         }
     }
 

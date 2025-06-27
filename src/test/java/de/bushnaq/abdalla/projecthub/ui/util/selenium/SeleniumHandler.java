@@ -380,7 +380,8 @@ public class SeleniumHandler {
     public String getTextField(String id) {
         waitUntil(ExpectedConditions.elementToBeClickable(By.id(id)));
         WebElement e     = findElement(By.id(id));
-        String     value = e.getAttribute("value");
+        WebElement i     = e.findElement(By.tagName("input"));
+        String     value = i.getAttribute("value");
         return value;
     }
 

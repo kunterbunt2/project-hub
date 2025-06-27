@@ -53,11 +53,10 @@ minimalistic project effort estimation and progress tracking and release date in
 
 # Issues
 
-1. api authentication currently uses a fixed password. this needs to be fixed after introduction of oidc.
+1. LocationDialog not showing errors in dialog.
 2. AvailabilityTest.userSecurity() generates several exceptions on server side that the test does not catch.
 3. gantt calendar too light.
 4. gantt calendar should be using sprint calendar.
-5. video recording is recording total screen instead of the browser only.
 
 # License
 
