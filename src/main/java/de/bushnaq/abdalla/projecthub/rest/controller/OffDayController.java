@@ -21,10 +21,13 @@ import de.bushnaq.abdalla.projecthub.dao.OffDayDAO;
 import de.bushnaq.abdalla.projecthub.repository.OffDayRepository;
 import de.bushnaq.abdalla.projecthub.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -62,6 +65,21 @@ public class OffDayController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<OffDayDAO> save(@RequestBody OffDayDAO offDay, @PathVariable Long userId) {
         return userRepository.findById(userId).map(user -> {
+            // Check for overlapping OffDays
+            List<OffDayDAO> overlappingOffDays = offDayRepository.findOverlappingOffDays(
+                    user,
+                    offDay.getFirstDay(),
+                    offDay.getLastDay(),
+                    null // No ID to exclude since this is a new record
+            );
+
+            if (!overlappingOffDays.isEmpty()) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "This off day overlaps with existing off days for the user"
+                );
+            }
+
             offDay.setUser(user);
             OffDayDAO save = offDayRepository.save(offDay);
             return ResponseEntity.ok(save); // Return 200 OK
@@ -72,6 +90,21 @@ public class OffDayController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Object> update(@RequestBody OffDayDAO offDay, @PathVariable Long userId) {
         return userRepository.findById(userId).map(user -> {
+            // Check for overlapping OffDays, excluding the current offDay being updated
+            List<OffDayDAO> overlappingOffDays = offDayRepository.findOverlappingOffDays(
+                    user,
+                    offDay.getFirstDay(),
+                    offDay.getLastDay(),
+                    offDay.getId() // Exclude the current offDay
+            );
+
+            if (!overlappingOffDays.isEmpty()) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "This off day overlaps with existing off days for the user"
+                );
+            }
+
             offDay.setUser(user);
             OffDayDAO save = offDayRepository.save(offDay);
             return ResponseEntity.ok().build(); // Return 200 OK

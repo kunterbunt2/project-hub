@@ -18,7 +18,36 @@
 package de.bushnaq.abdalla.projecthub.repository;
 
 import de.bushnaq.abdalla.projecthub.dao.OffDayDAO;
+import de.bushnaq.abdalla.projecthub.dao.UserDAO;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.ListCrudRepository;
+import org.springframework.data.repository.query.Param;
+
+import java.time.LocalDate;
+import java.util.List;
 
 public interface OffDayRepository extends ListCrudRepository<OffDayDAO, Long> {
+
+    /**
+     * Find overlapping OffDays for a specific user.
+     * An OffDay overlaps if its date range (firstDay to lastDay) overlaps with the given date range.
+     * Two ranges overlap when:
+     * - The start of the new range is before or equal to the end of an existing range AND
+     * - The end of the new range is after or equal to the start of an existing range
+     *
+     * @param user     the user to check for
+     * @param firstDay the start date of the range to check
+     * @param lastDay  the end date of the range to check
+     * @param offDayId ID of the current OffDay (to exclude from results when updating)
+     * @return list of overlapping OffDays
+     */
+    @Query("SELECT o FROM OffDayDAO o WHERE o.user = :user " +
+            "AND (:offDayId IS NULL OR o.id != :offDayId) " +
+            "AND ((o.firstDay <= :firstDay AND o.lastDay >= :firstDay) OR (o.firstDay <= :lastDay AND o.lastDay >= :lastDay) OR (o.firstDay >= :firstDay AND o.lastDay <= :lastDay) )")
+    List<OffDayDAO> findOverlappingOffDays(
+            @Param("user") UserDAO user,
+            @Param("firstDay") LocalDate firstDay,
+            @Param("lastDay") LocalDate lastDay,
+            @Param("offDayId") Long offDayId
+    );
 }

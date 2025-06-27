@@ -191,6 +191,20 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
         return headerLayout;
     }
 
+    private HorizontalLayout createHeaderWithIcon(VaadinIcon icon, String text) {
+        Icon headerIcon = new Icon(icon);
+        headerIcon.setSize("16px");
+
+        Span headerText = new Span(text);
+        headerText.addClassNames(LumoUtility.Margin.XSMALL);
+
+        HorizontalLayout headerLayout = new HorizontalLayout(headerIcon, headerText);
+        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+        headerLayout.setSpacing(false);
+
+        return headerLayout;
+    }
+
     private Grid<Location> createLocationGrid() {
         locationGrid.setId(LOCATION_GRID);
         locationGrid.setWidthFull();
@@ -198,21 +212,12 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
 
         // Add columns
         locationGrid.addColumn(new ComponentRenderer<>(location -> {
-                    String           startDateStr = location.getStart().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                    HorizontalLayout layout       = new HorizontalLayout();
-                    layout.setAlignItems(FlexComponent.Alignment.CENTER);
-                    layout.setSpacing(true);
-
-                    Icon calendarIcon = new Icon(VaadinIcon.CALENDAR);
-                    calendarIcon.setSize("16px");
-
-                    Span span = new Span(startDateStr);
+                    String startDateStr = location.getStart().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                    Span   span         = new Span(startDateStr);
                     span.setId(LOCATION_GRID_START_DATE_PREFIX + startDateStr);
-
-                    layout.add(calendarIcon, span);
-                    return layout;
+                    return span;
                 }))
-                .setHeader("Start Date")
+                .setHeader(createHeaderWithIcon(VaadinIcon.CALENDAR, "Start Date"))
                 .setSortable(true)
                 .setKey("start");
 
@@ -221,21 +226,11 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
                     String countryCode = location.getCountry();
                     Locale locale      = new Locale("", countryCode);
                     String displayText = locale.getDisplayCountry() + " (" + countryCode + ")";
-
-                    HorizontalLayout layout = new HorizontalLayout();
-                    layout.setAlignItems(FlexComponent.Alignment.CENTER);
-                    layout.setSpacing(true);
-
-                    Icon globeIcon = new Icon(VaadinIcon.GLOBE);
-                    globeIcon.setSize("16px");
-
-                    Span span = new Span(displayText);
+                    Span   span        = new Span(displayText);
                     span.setId(LOCATION_GRID_COUNTRY_PREFIX + displayText);
-
-                    layout.add(globeIcon, span);
-                    return layout;
+                    return span;
                 }))
-                .setHeader("Country")
+                .setHeader(createHeaderWithIcon(VaadinIcon.GLOBE, "Country"))
                 .setSortable(true)
                 .setKey("country");
 
@@ -244,21 +239,11 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
                     String countryCode = location.getCountry();
                     String stateCode   = location.getState();
                     String displayText = getStateDescription(countryCode, stateCode);
-
-                    HorizontalLayout layout = new HorizontalLayout();
-                    layout.setAlignItems(FlexComponent.Alignment.CENTER);
-                    layout.setSpacing(true);
-
-                    Icon mapIcon = new Icon(VaadinIcon.MAP_MARKER);
-                    mapIcon.setSize("16px");
-
-                    Span span = new Span(displayText);
+                    Span   span        = new Span(displayText);
                     span.setId(LOCATION_GRID_STATE_PREFIX + displayText);
-
-                    layout.add(mapIcon, span);
-                    return layout;
+                    return span;
                 }))
-                .setHeader("State/Region")
+                .setHeader(createHeaderWithIcon(VaadinIcon.MAP_MARKER, "State/Region"))
                 .setSortable(true)
                 .setKey("state");
 
@@ -290,7 +275,7 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
 
             layout.add(editButton, deleteButton);
             return layout;
-        })).setHeader("Actions").setFlexGrow(0).setWidth("120px");
+        })).setHeader(createHeaderWithIcon(VaadinIcon.COG, "Actions")).setFlexGrow(0).setWidth("120px");
 
         return locationGrid;
     }

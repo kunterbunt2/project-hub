@@ -165,7 +165,7 @@ public class AvailabilityListView extends Main implements BeforeEnterObserver, A
                     span.setId(AVAILABILITY_GRID_START_DATE_PREFIX + startDateStr);
                     return span;
                 }))
-                .setHeader("Start Date")
+                .setHeader(createHeaderWithIcon(VaadinIcon.CALENDAR, "Start Date"))
                 .setSortable(true)
                 .setKey("start");
 
@@ -176,7 +176,7 @@ public class AvailabilityListView extends Main implements BeforeEnterObserver, A
                             span.setId(AVAILABILITY_GRID_AVAILABILITY_PREFIX + availability.getAvailability());
                             return availability.getAvailability();
                         }, percentageFormat))
-                .setHeader("Availability")
+                .setHeader(createHeaderWithIcon(VaadinIcon.CHART, "Availability"))
                 .setSortable(true)
                 .setKey("availability");
 
@@ -248,6 +248,20 @@ public class AvailabilityListView extends Main implements BeforeEnterObserver, A
         headerLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
         headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
         headerLayout.addClassNames(LumoUtility.Margin.Bottom.MEDIUM);
+
+        return headerLayout;
+    }
+
+    private HorizontalLayout createHeaderWithIcon(VaadinIcon icon, String text) {
+        Icon headerIcon = new Icon(icon);
+        headerIcon.setSize("16px");
+
+        Span headerText = new Span(text);
+        headerText.addClassNames(LumoUtility.Margin.XSMALL);
+
+        HorizontalLayout headerLayout = new HorizontalLayout(headerIcon, headerText);
+        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+        headerLayout.setSpacing(false);
 
         return headerLayout;
     }

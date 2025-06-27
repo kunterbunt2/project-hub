@@ -34,7 +34,7 @@ public abstract class AbstractDateRangeDAO extends AbstractTimeAwareDAO {
     @Column(nullable = false)
     private LocalDate firstDay;
 
-    @Column(nullable = true)
+    @Column(nullable = false)
     private LocalDate lastDay;
 
 }

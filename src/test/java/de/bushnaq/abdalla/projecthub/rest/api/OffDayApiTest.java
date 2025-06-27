@@ -51,6 +51,7 @@ public class OffDayApiTest extends AbstractEntityGenerator {
     private static final String LAST_DATE_0  = "2024-03-14";
     private static final String LAST_DATE_1  = "2025-07-01";
 
+
     @Test
     @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void add() throws Exception {
@@ -67,6 +68,49 @@ public class OffDayApiTest extends AbstractEntityGenerator {
             User user = expectedUsers.getFirst();
             //vacation
             addOffDay(user, LocalDate.parse(FIRST_DATE_0), LocalDate.parse(LAST_DATE_0), OffDayType.VACATION);
+        }
+    }
+
+    @Test
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
+    public void addOverlappingRanges() throws Exception {
+//        final String DATE_0_START = "2024-03-05";
+//        final String DATE_0_END   = "2024-03-10";
+//        final String DATE_1_START = "2024-03-01";
+//        final String DATE_1_END   = "2024-03-10";
+//        final String DATE_2_START = "2024-03-05";
+//        final String DATE_2_END   = "2024-03-10";
+//        final String DATE_3_START = "2024-03-08";
+//        final String DATE_3_END   = "2024-03-15";
+        Long id;
+
+        DateRange[] rangeList = {//
+//                new DateRange("2024-03-05", "2024-03-10"),//
+                new DateRange("2024-03-01", "2024-03-10"),//
+                new DateRange("2024-03-05", "2024-03-10"),//
+                new DateRange("2024-03-08", "2024-03-15"),//
+                new DateRange("2024-03-01", "2024-03-15"),//
+        };
+
+        //create a user
+        {
+            User user = addRandomUser(LocalDate.parse(FIRST_DATE_0));
+            id = user.getId();
+        }
+
+        //add a vacation
+        {
+            User user = expectedUsers.getFirst();
+            //vacation
+            addOffDay(user, LocalDate.parse("2024-03-05"), LocalDate.parse("2024-03-10"), OffDayType.VACATION);
+            for (DateRange range : rangeList) {
+                try {
+                    addOffDay(user, LocalDate.parse(range.start), LocalDate.parse(range.end), OffDayType.VACATION);
+                    fail("Should not be able to add overlapping OffDay " + range.start + " to " + range.end);
+                } catch (ResponseStatusException e) {
+                    //ok
+                }
+            }
         }
     }
 
@@ -241,6 +285,10 @@ public class OffDayApiTest extends AbstractEntityGenerator {
             OffDay offDay = user.getOffDays().getFirst();
             Long   id     = offDay.getId();
             offDay.setId(FAKE_ID);
+            LocalDate firstDay = offDay.getFirstDay();
+            LocalDate lastDay  = offDay.getLastDay();
+            offDay.setFirstDay(LocalDate.parse(FIRST_DATE_1));
+            offDay.setLastDay(LocalDate.parse(LAST_DATE_1));
             OffDayType type = offDay.getType();
             offDay.setType(OffDayType.SICK);
             try {
@@ -250,6 +298,8 @@ public class OffDayApiTest extends AbstractEntityGenerator {
                 //expected
                 offDay.setId(id);
                 offDay.setType(type);
+                offDay.setFirstDay(firstDay);
+                offDay.setLastDay(lastDay);
             }
         }
     }
@@ -321,5 +371,15 @@ public class OffDayApiTest extends AbstractEntityGenerator {
             OffDay offDay = user.getOffDays().getFirst();
             removeOffDay(offDay, user);
         });
+    }
+
+    class DateRange {
+        String end;
+        String start;
+
+        public DateRange(String start, String end) {
+            this.start = start;
+            this.end   = end;
+        }
     }
 }

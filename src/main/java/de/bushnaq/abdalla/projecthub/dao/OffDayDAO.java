@@ -31,10 +31,6 @@ import org.hibernate.annotations.Proxy;
 @ToString(callSuper = true)
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Proxy(lazy = false)
-//@JsonIdentityInfo(
-//        scope = OffDayDAO.class,
-//        generator = ObjectIdGenerators.PropertyGenerator.class,
-//        property = "id")
 public class OffDayDAO extends AbstractDateRangeDAO {
 
     @Id

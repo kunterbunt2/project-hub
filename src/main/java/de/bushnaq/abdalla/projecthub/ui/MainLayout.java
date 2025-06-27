@@ -156,6 +156,7 @@ public final class MainLayout extends AppLayout {
         userMenuItem.add(username);
         userMenuItem.getSubMenu().addItem(/*new Icon(VaadinIcon.CALENDAR_USER),*/"Manage Availability", e -> navigateToAvailability(username));
         userMenuItem.getSubMenu().addItem(/*new Icon(VaadinIcon.MAP_MARKER),*/"Manage Location", e -> navigateToLocation(username));
+        userMenuItem.getSubMenu().addItem("Manage Off Days", e -> navigateToOffDays(username));
         userMenuItem.getSubMenu().addItem("View Profile").setEnabled(false);
         userMenuItem.getSubMenu().addItem("Manage Settings").setEnabled(false);
         userMenuItem.getSubMenu().addItem("Logout", e -> logout());
@@ -180,5 +181,9 @@ public final class MainLayout extends AppLayout {
 
     private void navigateToLocation(String username) {
         getUI().ifPresent(ui -> ui.navigate("location/" + username));
+    }
+
+    private void navigateToOffDays(String username) {
+        getUI().ifPresent(ui -> ui.navigate("offday/" + username));
     }
 }
