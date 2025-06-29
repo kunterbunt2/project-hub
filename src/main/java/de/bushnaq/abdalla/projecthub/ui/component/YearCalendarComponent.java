@@ -51,7 +51,6 @@ public class YearCalendarComponent extends VerticalLayout {
     private static final String                     CLASS_FILLING_DAY  = "calendar-filling-day";
     private static final String                     CLASS_HOLIDAY_DAY  = "calendar-holiday-day";
     private static final String                     CLASS_MONTH_NAME   = "calendar-month-name";
-    // CSS class names for different day types
     private static final String                     CLASS_NORMAL_DAY   = "calendar-normal-day";
     private static final String                     CLASS_SICK_DAY     = "calendar-sick-day";
     private static final String                     CLASS_TODAY        = "calendar-today";
@@ -59,7 +58,6 @@ public class YearCalendarComponent extends VerticalLayout {
     private static final String                     CLASS_VACATION_DAY = "calendar-vacation-day";
     private static final String                     CLASS_WEEKEND_DAY  = "calendar-weekend-day";
     private static final String                     DAY_SIZE_PX        = "36px"; // Increased from 24px (50% larger)
-    // Calendar display constants
     private static final int                        MONTHS_PER_ROW     = 4;
     private              int                        currentYear;
     private final        Consumer<LocalDate>        dayClickHandler;
@@ -83,9 +81,6 @@ public class YearCalendarComponent extends VerticalLayout {
         setHeight("auto");
         setPadding(false);
         setSpacing(false);
-
-        // Initialize and build the calendar
-        initializeStyles();
     }
 
     /**
@@ -280,31 +275,21 @@ public class YearCalendarComponent extends VerticalLayout {
 
         // Add some bottom margin to ensure space between month name and first row
         calendarGrid.getStyle().set("margin-top", "4px");
-
         LocalDate today = LocalDate.now();
-
         // First day of month
         LocalDate firstOfMonth = LocalDate.of(currentYear, month, 1);
-
         // Determine first day of week for this month (0 = Monday, 6 = Sunday in our display)
         int firstDayOfWeek = firstOfMonth.getDayOfWeek().getValue() - 1; // Monday is 1 in DayOfWeek, but we want 0
-
         // Last day of month
         int lastDay = firstOfMonth.lengthOfMonth();
-
         // Add filling days from previous month
         if (firstDayOfWeek > 0) {
             // Get the previous month
             LocalDate prevMonthDate    = firstOfMonth.minusMonths(1);
             int       prevMonthLastDay = prevMonthDate.lengthOfMonth();
-
             for (int i = 0; i < firstDayOfWeek; i++) {
-                int day = prevMonthLastDay - firstDayOfWeek + i + 1;
-                LocalDate date = LocalDate.of(
-                        month.getValue() == 1 ? currentYear - 1 : currentYear,
-                        month.getValue() == 1 ? 12 : month.getValue() - 1,
-                        day);
-
+                int       day  = prevMonthLastDay - firstDayOfWeek + i + 1;
+                LocalDate date = LocalDate.of(month.getValue() == 1 ? currentYear - 1 : currentYear, month.getValue() == 1 ? 12 : month.getValue() - 1, day);
                 calendarGrid.add(createDayComponent(day, date, true, true));
             }
         }
@@ -313,10 +298,8 @@ public class YearCalendarComponent extends VerticalLayout {
         for (int day = 1; day <= lastDay; day++) {
             LocalDate date      = LocalDate.of(currentYear, month, day);
             boolean   isWeekend = isWeekend(date);
-
             // Check if it's today
             boolean isToday = date.equals(today);
-
             calendarGrid.add(createDayComponent(day, date, isWeekend, false, isToday));
         }
 
@@ -324,11 +307,7 @@ public class YearCalendarComponent extends VerticalLayout {
         int fillingDaysNeeded = 7 - ((firstDayOfWeek + lastDay) % 7);
         if (fillingDaysNeeded < 7) { // Skip if it's exactly 7 (full week)
             for (int i = 1; i <= fillingDaysNeeded; i++) {
-                LocalDate date = LocalDate.of(
-                        month.getValue() == 12 ? currentYear + 1 : currentYear,
-                        month.getValue() == 12 ? 1 : month.getValue() + 1,
-                        i);
-
+                LocalDate date = LocalDate.of(month.getValue() == 12 ? currentYear + 1 : currentYear, month.getValue() == 12 ? 1 : month.getValue() + 1, i);
                 calendarGrid.add(createDayComponent(i, date, false, true));
             }
         }
@@ -361,35 +340,6 @@ public class YearCalendarComponent extends VerticalLayout {
         return header;
     }
 
-    /**
-     * Initializes CSS styles for the calendar.
-     */
-    private void initializeStyles() {
-        // Apply CSS that uses our color scheme variables defined in styles.css
-        getElement().executeJs(
-                "const style = document.createElement('style');" +
-                        "style.setAttribute('data-calendar-styles', 'true');" + // Add data attribute for identification
-                        "style.textContent = `" +
-                        "." + CLASS_NORMAL_DAY + " { color: var(--calendar-normal-day-text-color); }" + // Removed background color
-                        "." + CLASS_FILLING_DAY + " { color: var(--calendar-filling-day-text-color); }" + // Removed background color
-                        "." + CLASS_WEEKEND_DAY + " { color: #777777; }" + // Removed background, set to dark gray text
-                        "." + CLASS_VACATION_DAY + " { background-color: var(--calendar-vacation-color); color: var(--calendar-vacation-text-color); }" +
-                        "." + CLASS_SICK_DAY + " { background-color: var(--calendar-sick-color); color: var(--calendar-sick-text-color); }" +
-                        "." + CLASS_HOLIDAY_DAY + " { background-color: var(--calendar-holiday-color); color: var(--calendar-holiday-text-color); }" +
-                        "." + CLASS_TRIP_DAY + " { background-color: var(--calendar-trip-color); color: var(--calendar-trip-text-color); }" +
-                        "." + CLASS_TODAY + " { position: relative; font-weight: bold; }" + // Added font-weight: bold
-                        "." + CLASS_TODAY + "::after { " +
-                        "  content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; " +
-                        "  border: 2px solid rgba(255, 0, 0, 0.8); " + // Changed from background to border
-                        "  border-radius: 50%; " +
-                        "  z-index: 1; " +
-                        "  box-sizing: border-box; " + // Ensure border fits within the day size
-                        "}" +
-                        "." + CLASS_MONTH_NAME + " { color: var(--calendar-month-name-color); }" +
-                        "`;" +
-                        "document.head.appendChild(style);"
-        );
-    }
 
     /**
      * Checks if a date falls on a weekend based on the user's calendar.
@@ -434,30 +384,20 @@ public class YearCalendarComponent extends VerticalLayout {
         if (updatedUser != null) {
             this.user = updatedUser;
         }
-
         // Clear previous content
         removeAll();
-
         // Build the off day map for quick lookup
         buildOffDayMap();
-
         // Create year navigation header
         add(createYearHeader());
-
         // Create the calendar grid (3 rows x 4 months each)
         Div calendarGrid = new Div();
-        calendarGrid.addClassNames(
-                LumoUtility.Display.FLEX,
-                LumoUtility.FlexWrap.WRAP,
-                LumoUtility.Width.FULL);
-
+        calendarGrid.addClassNames(LumoUtility.Display.FLEX, LumoUtility.FlexWrap.WRAP, LumoUtility.Width.FULL);
         // Add each month
         for (int monthIndex = 0; monthIndex < 12; monthIndex++) {
             calendarGrid.add(createMonthComponent(Month.of(monthIndex + 1)));
         }
-
         add(calendarGrid);
-
         // Add legend
         add(createLegend());
     }

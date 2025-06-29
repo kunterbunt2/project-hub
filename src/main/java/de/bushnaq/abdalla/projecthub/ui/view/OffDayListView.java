@@ -17,7 +17,6 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view;
 
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
@@ -52,7 +51,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Route(value = "offday/:username?", layout = MainLayout.class)
@@ -310,55 +308,6 @@ public class OffDayListView extends Main implements BeforeEnterObserver, AfterNa
         dialog.open();
     }
 
-    /**
-     * Completely refreshes the calendar component by creating a new instance
-     * This ensures proper theme application
-     */
-    private void refreshCalendar() {
-        if (currentUser == null) {
-            return;
-        }
-
-        // Get the parent container of the calendar
-        Optional<Component> contentLayout = getChildren()
-                .filter(component -> component instanceof HorizontalLayout &&
-                        component.getId().isPresent() &&
-                        component.getId().get().equals("content-layout"))
-                .findFirst();
-
-        if (contentLayout.isPresent()) {
-            HorizontalLayout layout = (HorizontalLayout) contentLayout.get();
-
-            // Remove the old calendar if it exists
-            layout.getChildren()
-                    .filter(component -> component instanceof YearCalendarComponent)
-                    .findFirst()
-                    .ifPresent(layout::remove);
-
-            // Create a fresh calendar instance
-            yearCalendar = new YearCalendarComponent(
-                    currentUser,
-                    java.time.LocalDate.now().getYear(),
-                    this::handleCalendarDayClick);
-
-            // Set up the theme change listener for this new calendar instance
-            setupCalendarThemeChangeListener();
-
-            // Add the new calendar to the layout with the same sizing as before
-            layout.add(yearCalendar);
-            layout.setFlexGrow(2, yearCalendar);
-        }
-    }
-
-    /**
-     * Server-side handler for theme changes on calendar
-     * Will be called from JS via executeJs
-     */
-    public void refreshCalendarOnThemeChange() {
-        // Use the refreshCalendar method to recreate the calendar with the new theme
-        refreshCalendar();
-    }
-
     private void refreshOffDayGrid() {
         if (currentUser != null) {
             // Reload the user to get fresh data
@@ -381,9 +330,6 @@ public class OffDayListView extends Main implements BeforeEnterObserver, AfterNa
                         java.time.LocalDate.now().getYear(),
                         this::handleCalendarDayClick);
 
-                // Set up the theme change listener
-                setupCalendarThemeChangeListener();
-
                 // Ensure the main layout contains both grid and calendar
                 if (getComponentCount() == 2) { // Header and infobox are already added
                     VerticalLayout gridLayout = new VerticalLayout();
@@ -404,64 +350,6 @@ public class OffDayListView extends Main implements BeforeEnterObserver, AfterNa
                 yearCalendar.updateCalendar();
             }
         }
-    }
-
-    /**
-     * Register a listener for theme changes in the calendar
-     * This will be called when our YearCalendarComponent detects a theme change
-     */
-    private void setupCalendarThemeChangeListener() {
-        // Add a DOM event listener for our custom "calendar-theme-changed" event
-        getElement().executeJs(
-                "this.addEventListener('calendar-theme-changed', () => {" +
-                        "  $0.$server.refreshCalendarOnThemeChange();" +
-                        "});"
-        );
-    }
-
-    /**
-     * Creates or updates the main content layout containing the grid and calendar
-     */
-    private void updateContentLayout() {
-        // Remove the old content layout if it exists
-        getChildren().forEach(component -> {
-            if (component.getId().isPresent() && component.getId().get().equals("content-layout")) {
-                remove(component);
-            }
-        });
-
-        // Create the new content layout with grid and calendar
-        HorizontalLayout contentLayout = new HorizontalLayout();
-        contentLayout.setId("content-layout");
-        contentLayout.setWidthFull();
-        contentLayout.setHeightFull();
-        contentLayout.setPadding(false);
-        contentLayout.setSpacing(true);
-
-        // Create and add the off day grid
-        VerticalLayout gridLayout = new VerticalLayout();
-        gridLayout.setPadding(false);
-        gridLayout.setSpacing(false);
-        gridLayout.setSizeFull();
-
-        // Reuse the existing offDayGrid instead of creating a new one
-        gridLayout.add(offDayGrid);
-        gridLayout.setWidth("100%");
-
-        // Create or update the calendar component
-        if (yearCalendar == null) {
-            yearCalendar = new YearCalendarComponent(
-                    currentUser,
-                    java.time.LocalDate.now().getYear(),
-                    this::handleCalendarDayClick
-            );
-        } else {
-            yearCalendar.updateCalendar();
-        }
-//        yearCalendar.setWidth("60%");
-
-        contentLayout.add(gridLayout, yearCalendar);
-        add(contentLayout);
     }
 
     private void updateInfoBox() {

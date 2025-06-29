@@ -17,6 +17,61 @@
   --calendar-filling-day-text-color: #AAAAAA;
 }
 
+/* Calendar component styles */
+.calendar-normal-day {
+  color: var(--calendar-normal-day-text-color);
+}
+
+.calendar-filling-day {
+  color: var(--calendar-filling-day-text-color);
+}
+
+.calendar-weekend-day {
+  color: #777777;
+}
+
+.calendar-vacation-day {
+  background-color: var(--calendar-vacation-color);
+  color: var(--calendar-vacation-text-color);
+}
+
+.calendar-sick-day {
+  background-color: var(--calendar-sick-color);
+  color: var(--calendar-sick-text-color);
+}
+
+.calendar-holiday-day {
+  background-color: var(--calendar-holiday-color);
+  color: var(--calendar-holiday-text-color);
+}
+
+.calendar-trip-day {
+  background-color: var(--calendar-trip-color);
+  color: var(--calendar-trip-text-color);
+}
+
+.calendar-today {
+  position: relative;
+  font-weight: bold;
+}
+
+.calendar-today::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px solid rgba(255, 0, 0, 0.8);
+  border-radius: 50%;
+  z-index: 1;
+  box-sizing: border-box;
+}
+
+.calendar-month-name {
+  color: var(--calendar-month-name-color);
+}
+
 [theme~="dark"] {
   --lumo-base-color: hsl(0, 0%, 13%);
   --lumo-primary-color: hsl(0, 0%, 70%);
