@@ -53,6 +53,8 @@ minimalistic project effort estimation and progress tracking and release date in
 
 # Issues
 
+1. users are retired by their name instead of their email address.
+2. user email addresses must be unique.
 1. LocationDialog not showing errors in dialog.
 2. AvailabilityTest.userSecurity() generates several exceptions on server side that the test does not catch.
 3. gantt calendar too light.

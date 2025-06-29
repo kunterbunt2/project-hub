@@ -18,6 +18,7 @@
 package de.bushnaq.abdalla.projecthub.ui.component;
 
 import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -61,9 +62,11 @@ public class ThemeToggle extends Button {
         if (themeList.contains(Lumo.DARK)) {
             themeList.remove(Lumo.DARK);
             darkTheme = false;
+            ComponentUtil.fireEvent(UI.getCurrent(), new ThemeVariantChangedEvent(UI.getCurrent(), Lumo.LIGHT));
         } else {
             themeList.add(Lumo.DARK);
             darkTheme = true;
+            ComponentUtil.fireEvent(UI.getCurrent(), new ThemeVariantChangedEvent(UI.getCurrent(), Lumo.DARK));
         }
         updateTooltip();
 

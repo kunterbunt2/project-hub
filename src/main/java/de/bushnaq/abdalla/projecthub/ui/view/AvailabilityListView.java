@@ -227,7 +227,7 @@ public class AvailabilityListView extends Main implements BeforeEnterObserver, A
         user.setColor(new java.awt.Color(51, 102, 204));
         Availability availability = new Availability(1.0f, java.time.LocalDate.now());
         user.addAvailability(availability);
-        Location location = new Location("de", "nw", java.time.LocalDate.now());
+        Location location = new Location("DE", "nw", java.time.LocalDate.now());
         user.addLocation(location);
         return user;
     }

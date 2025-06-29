@@ -141,6 +141,10 @@ public class User extends AbstractTimeAware implements Comparable<User> {
         //TODO rethink employee leaving company and coming back
         ProjectCalendar pc = getCalendar();
         LocalDate       endDateInclusive;
+        for (OffDay offDay : getOffDays()) {
+            ProjectCalendarException pce = pc.addCalendarException(offDay.getFirstDay(), offDay.getLastDay());
+            pce.setName(offDay.getType().name());
+        }
         for (int i = 0; i < locations.size(); i++) {
             Location  location           = locations.get(i);
             LocalDate startDateInclusive = location.getStart();
@@ -161,10 +165,6 @@ public class User extends AbstractTimeAware implements Comparable<User> {
                 ProjectCalendarException pce = pc.addCalendarException(holiday.getDate());
                 pce.setName(holiday.getDescription());
             }
-        }
-        for (OffDay offDay : getOffDays()) {
-            ProjectCalendarException pce = pc.addCalendarException(offDay.getFirstDay(), offDay.getLastDay());
-            pce.setName(offDay.getType().name());
         }
     }
 

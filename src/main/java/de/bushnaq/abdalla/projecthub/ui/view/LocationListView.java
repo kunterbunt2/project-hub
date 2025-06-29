@@ -34,6 +34,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import de.bushnaq.abdalla.projecthub.dto.Availability;
 import de.bushnaq.abdalla.projecthub.dto.Location;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.rest.api.LocationApi;
@@ -163,8 +164,7 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
         user.setEmail(username);
         user.setFirstWorkingDay(java.time.LocalDate.now());
         user.setColor(new java.awt.Color(51, 102, 204));
-        de.bushnaq.abdalla.projecthub.dto.Availability availability =
-                new de.bushnaq.abdalla.projecthub.dto.Availability(1.0f, java.time.LocalDate.now());
+        Availability availability = new Availability(1.0f, java.time.LocalDate.now());
         user.addAvailability(availability);
         Location location = new Location("DE", "nw", java.time.LocalDate.now());
         user.addLocation(location);
