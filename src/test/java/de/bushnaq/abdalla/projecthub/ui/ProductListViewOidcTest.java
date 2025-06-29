@@ -15,7 +15,7 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.ui.view;
+package de.bushnaq.abdalla.projecthub.ui;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;

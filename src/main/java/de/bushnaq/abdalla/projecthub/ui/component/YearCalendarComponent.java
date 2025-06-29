@@ -17,7 +17,6 @@
 
 package de.bushnaq.abdalla.projecthub.ui.component;
 
-import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -76,11 +75,16 @@ public class YearCalendarComponent extends VerticalLayout {
         this.currentYear     = year;
         this.dayClickHandler = dayClickHandler;
 
-        // Use fixed width to prevent stretching
-//        setWidth("1000px"); // Fixed width instead of auto
+        // Set fixed width that won't resize
+        setWidth("1200px");
         setHeight("auto");
         setPadding(false);
         setSpacing(false);
+
+        // Prevent resizing of the component
+        getStyle()
+                .set("flex-shrink", "0")
+                .set("flex-grow", "0");
     }
 
     /**
@@ -231,8 +235,10 @@ public class YearCalendarComponent extends VerticalLayout {
                 LumoUtility.Padding.SMALL,
                 LumoUtility.Margin.SMALL);
 
-        // Calculate width to fit 4 months per row with some margin
-        monthComponent.getStyle().set("width", "calc(25% - 20px)");
+        // Use fixed width for consistent sizing across all containers
+        // With 4 months per row and total width of 1067px, each month gets ~266px
+        // Subtracting margin and padding
+        monthComponent.getStyle().set("width", "272px");
         monthComponent.getStyle().set("box-sizing", "border-box");
 
         // Month name header
@@ -270,8 +276,8 @@ public class YearCalendarComponent extends VerticalLayout {
         calendarGrid.getStyle()
                 .set("display", "grid")
                 .set("grid-template-columns", "repeat(7, 1fr)")
-                .set("gap", "1px"); // Exactly 1px gap as shown in the screenshot
-//                .set("width", "100%");
+                .set("gap", "1px")
+                .set("width", "100%");  // Enable this line to ensure full width
 
         // Add some bottom margin to ensure space between month name and first row
         calendarGrid.getStyle().set("margin-top", "4px");
@@ -349,14 +355,6 @@ public class YearCalendarComponent extends VerticalLayout {
         return !calendar.isWorkingDay(date.getDayOfWeek());
     }
 
-    @Override
-    protected void onAttach(AttachEvent attachEvent) {
-        super.onAttach(attachEvent);
-
-        // Build the calendar (Vaadin will automatically handle theme changes)
-        updateCalendar();
-    }
-
     /**
      * Updates the calendar to display the specified year.
      *
@@ -364,14 +362,7 @@ public class YearCalendarComponent extends VerticalLayout {
      */
     public void setYear(int year) {
         this.currentYear = year;
-        updateCalendar();
-    }
-
-    /**
-     * Updates the calendar display based on current user and year.
-     */
-    public void updateCalendar() {
-        updateCalendar(this.user);
+        updateCalendar(user);
     }
 
     /**

@@ -62,12 +62,17 @@ public class OffDayListViewTester {
         this.port            = port;
     }
 
+    public void clickDeleteButtonForRecord(LocalDate firstDay) {
+        String id = findOffDayRecordId(firstDay);
+        seleniumHandler.click(OffDayListView.OFFDAY_GRID_DELETE_BUTTON_PREFIX + id);
+    }
+
     /**
      * Clicks the edit button for the off day record with the specified first day.
      *
      * @param firstDay the first day of the record to edit
      */
-    private void clickEditButtonForRecord(LocalDate firstDay) {
+    public void clickEditButtonForRecord(LocalDate firstDay) {
         String id = findOffDayRecordId(firstDay);
         seleniumHandler.click(OffDayListView.OFFDAY_GRID_EDIT_BUTTON_PREFIX + id);
     }
@@ -296,12 +301,15 @@ public class OffDayListViewTester {
      * @param username            The username for which to view off days (optional, uses current user if null)
      */
     public void switchToOffDayListView(String recordingFolderName, String testName, String username) {
-        seleniumHandler.getAndCheck("http://localhost:" + port + "/ui/" + LoginView.ROUTE);
-        seleniumHandler.startRecording(recordingFolderName, testName);
-        seleniumHandler.setLoginUser("admin-user");
-        seleniumHandler.setLoginPassword("test-password");
-        seleniumHandler.loginSubmit();
-        seleniumHandler.waitUntil(ExpectedConditions.elementToBeClickable(By.id(ProductListView.PRODUCT_LIST_PAGE_TITLE)));
+        //- Check if we need to log in
+        if (!seleniumHandler.getCurrentUrl().contains("/ui/")) {
+            seleniumHandler.getAndCheck("http://localhost:" + port + "/ui/" + LoginView.ROUTE);
+            seleniumHandler.startRecording(recordingFolderName, testName);
+            seleniumHandler.setLoginUser("admin-user");
+            seleniumHandler.setLoginPassword("test-password");
+            seleniumHandler.loginSubmit();
+            seleniumHandler.waitUntil(ExpectedConditions.elementToBeClickable(By.id(ProductListView.PRODUCT_LIST_PAGE_TITLE)));
+        }
 
         // Navigate to the off day view for the specific user
         String url = "http://localhost:" + port + "/ui/" + OffDayListView.ROUTE + (username != null ? "/" + username : "");

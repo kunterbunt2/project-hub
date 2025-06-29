@@ -226,6 +226,10 @@ public class ProductListViewTester {
         switchToProductListView(null, recordingFolderName, testName);
     }
 
+    public void switchToProductListView(String screenshotFileName, String recordingFolderName, String testName, String userName, String Password) {
+
+    }
+
     /**
      * Navigates to the ProductListView using Basic Authentication.
      * <p>

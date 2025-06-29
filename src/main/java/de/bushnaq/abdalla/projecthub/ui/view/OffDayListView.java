@@ -20,7 +20,6 @@ package de.bushnaq.abdalla.projecthub.ui.view;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Span;
@@ -30,7 +29,6 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -68,32 +66,25 @@ public class OffDayListView extends Main implements BeforeEnterObserver, AfterNa
     public static final String                OFFDAY_LIST_PAGE_TITLE           = "offday-page-title";
     public static final String                ROUTE                            = "offday";
     private             User                  currentUser;
-    private final       Div                   infoBox                          = new Div();
+    private final       Grid<OffDay>          grid                             = new Grid<>(OffDay.class, false);
     private final       OffDayApi             offDayApi;
-    private final       Grid<OffDay>          offDayGrid                       = new Grid<>(OffDay.class, false);
     private final       UserApi               userApi;
     private             YearCalendarComponent yearCalendar;
+
 
     public OffDayListView(OffDayApi offDayApi, UserApi userApi) {
         this.offDayApi = offDayApi;
         this.userApi   = userApi;
 
-        addClassName("offday-view");
-        setWidthFull();
-        addClassNames(LumoUtility.Padding.LARGE);
+        setSizeFull();
+        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        HorizontalLayout headerLayout = createHeader();
-        add(headerLayout, infoBox);
-
-        // We'll add the content layout after user is loaded
+        add(createHeader(), new HorizontalLayout(createGrid(), createCalendar()));
     }
 
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
-        // Initialize grid columns only once
-        if (offDayGrid.getColumns().isEmpty()) {
-            createOffDayGrid();
-        }
+//        createCalendar();
         refreshOffDayGrid();
     }
 
@@ -131,12 +122,11 @@ public class OffDayListView extends Main implements BeforeEnterObserver, AfterNa
             // Redirect to main page if no username and not authenticated
             event.forwardTo("");
         }
+        createCalendar();
     }
 
     private void confirmDelete(OffDay offDay) {
-        ConfirmDialog dialog = new ConfirmDialog("Confirm Delete",
-                "Are you sure you want to delete this off day record?",
-                "Delete",
+        ConfirmDialog dialog = new ConfirmDialog("Confirm Delete", "Are you sure you want to delete this off day record?", "Delete",
                 () -> {
                     try {
                         offDayApi.deleteById(currentUser, offDay);
@@ -152,6 +142,14 @@ public class OffDayListView extends Main implements BeforeEnterObserver, AfterNa
                     }
                 });
         dialog.open();
+    }
+
+    private YearCalendarComponent createCalendar() {
+        // Create a new YearCalendarComponent with the current user and the current year
+        if (yearCalendar != null)
+            return yearCalendar;
+        yearCalendar = new YearCalendarComponent(currentUser, java.time.LocalDate.now().getYear(), this::handleCalendarDayClick);
+        return yearCalendar;
     }
 
     /**
@@ -171,6 +169,69 @@ public class OffDayListView extends Main implements BeforeEnterObserver, AfterNa
         de.bushnaq.abdalla.projecthub.dto.Location location = new Location("DE", "nw", java.time.LocalDate.now());
         user.addLocation(location);
         return user;
+    }
+
+    private Grid<OffDay> createGrid() {
+        grid.setId(OFFDAY_GRID);
+        grid.setWidthFull();
+        grid.addClassNames(LumoUtility.Border.ALL, LumoUtility.BorderColor.CONTRAST_10);
+
+        // Add columns
+        grid.addColumn(new ComponentRenderer<>(offDay -> {
+                    DateTimeFormatter formatter    = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                    String            startDateStr = offDay.getFirstDay().format(formatter);
+                    Span              span         = new Span(startDateStr);
+                    span.setId(OFFDAY_GRID_START_DATE_PREFIX + offDay.getId());
+                    return span;
+                }))
+                .setHeader(createHeaderWithIcon(VaadinIcon.CALENDAR, "First Day"))
+                .setSortable(true)
+                .setKey("firstDay");
+
+        grid.addColumn(new ComponentRenderer<>(offDay -> {
+                    DateTimeFormatter formatter  = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                    String            endDateStr = offDay.getLastDay().format(formatter);
+                    Span              span       = new Span(endDateStr);
+                    span.setId(OFFDAY_GRID_END_DATE_PREFIX + offDay.getId());
+                    return span;
+                }))
+                .setHeader(createHeaderWithIcon(VaadinIcon.CALENDAR, "Last Day"))
+                .setSortable(true)
+                .setKey("lastDay");
+
+        grid.addColumn(new ComponentRenderer<>(offDay -> {
+                    OffDayType type = offDay.getType();
+                    Span       span = new Span(type.name());
+                    span.setId(OFFDAY_GRID_TYPE_PREFIX + offDay.getId());
+                    return span;
+                }))
+                .setHeader(createHeaderWithIcon(VaadinIcon.TAGS, "Type"))
+                .setSortable(true)
+                .setKey("type");
+
+        // Add action column
+        grid.addColumn(new ComponentRenderer<>(offDay -> {
+            HorizontalLayout layout = new HorizontalLayout();
+            layout.setAlignItems(FlexComponent.Alignment.CENTER);
+            layout.setSpacing(true);
+
+            Button editButton = new Button(new Icon(VaadinIcon.EDIT));
+            editButton.setId(OFFDAY_GRID_EDIT_BUTTON_PREFIX + offDay.getId());
+            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
+            editButton.addClickListener(e -> openOffDayDialog(offDay));
+            editButton.getElement().setAttribute("title", "Edit");
+
+            Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));
+            deleteButton.setId(OFFDAY_GRID_DELETE_BUTTON_PREFIX + offDay.getId());
+            deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
+            deleteButton.addClickListener(e -> confirmDelete(offDay));
+            deleteButton.getElement().setAttribute("title", "Delete");
+
+            layout.add(editButton, deleteButton);
+            return layout;
+        })).setHeader(createHeaderWithIcon(VaadinIcon.COG, "Actions")).setFlexGrow(0).setWidth("120px");
+
+        return grid;
     }
 
     private HorizontalLayout createHeader() {
@@ -205,69 +266,6 @@ public class OffDayListView extends Main implements BeforeEnterObserver, AfterNa
         headerLayout.setSpacing(false);
 
         return headerLayout;
-    }
-
-    private Grid<OffDay> createOffDayGrid() {
-        offDayGrid.setId(OFFDAY_GRID);
-        offDayGrid.setWidthFull();
-        offDayGrid.addClassNames(LumoUtility.Border.ALL, LumoUtility.BorderColor.CONTRAST_10);
-
-        // Add columns
-        offDayGrid.addColumn(new ComponentRenderer<>(offDay -> {
-                    DateTimeFormatter formatter    = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                    String            startDateStr = offDay.getFirstDay().format(formatter);
-                    Span              span         = new Span(startDateStr);
-                    span.setId(OFFDAY_GRID_START_DATE_PREFIX + offDay.getId());
-                    return span;
-                }))
-                .setHeader(createHeaderWithIcon(VaadinIcon.CALENDAR, "First Day"))
-                .setSortable(true)
-                .setKey("firstDay");
-
-        offDayGrid.addColumn(new ComponentRenderer<>(offDay -> {
-                    DateTimeFormatter formatter  = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                    String            endDateStr = offDay.getLastDay().format(formatter);
-                    Span              span       = new Span(endDateStr);
-                    span.setId(OFFDAY_GRID_END_DATE_PREFIX + offDay.getId());
-                    return span;
-                }))
-                .setHeader(createHeaderWithIcon(VaadinIcon.CALENDAR, "Last Day"))
-                .setSortable(true)
-                .setKey("lastDay");
-
-        offDayGrid.addColumn(new ComponentRenderer<>(offDay -> {
-                    OffDayType type = offDay.getType();
-                    Span       span = new Span(type.name());
-                    span.setId(OFFDAY_GRID_TYPE_PREFIX + offDay.getId());
-                    return span;
-                }))
-                .setHeader(createHeaderWithIcon(VaadinIcon.TAGS, "Type"))
-                .setSortable(true)
-                .setKey("type");
-
-        // Add action column
-        offDayGrid.addColumn(new ComponentRenderer<>(offDay -> {
-            HorizontalLayout layout = new HorizontalLayout();
-            layout.setAlignItems(FlexComponent.Alignment.CENTER);
-            layout.setSpacing(true);
-
-            Button editButton = new Button(new Icon(VaadinIcon.EDIT));
-            editButton.setId(OFFDAY_GRID_EDIT_BUTTON_PREFIX + offDay.getId());
-            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
-            editButton.addClickListener(e -> openOffDayDialog(offDay));
-            editButton.getElement().setAttribute("title", "Edit");
-
-            Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));
-            deleteButton.setId(OFFDAY_GRID_DELETE_BUTTON_PREFIX + offDay.getId());
-            deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
-            deleteButton.addClickListener(e -> confirmDelete(offDay));
-            deleteButton.getElement().setAttribute("title", "Delete");
-
-            layout.add(editButton, deleteButton);
-            return layout;
-        })).setHeader(createHeaderWithIcon(VaadinIcon.COG, "Actions")).setFlexGrow(0).setWidth("120px");
-
-        return offDayGrid;
     }
 
     /**
@@ -308,6 +306,7 @@ public class OffDayListView extends Main implements BeforeEnterObserver, AfterNa
         dialog.open();
     }
 
+
     private void refreshOffDayGrid() {
         if (currentUser != null) {
             // Reload the user to get fresh data
@@ -315,68 +314,12 @@ public class OffDayListView extends Main implements BeforeEnterObserver, AfterNa
             currentUser.initialize();
 
             // Sort off days by start date (newest to oldest)
-            List<OffDay> sortedOffDays = currentUser.getOffDays().stream()
-                    .sorted(Comparator.comparing(OffDay::getFirstDay).reversed())
-                    .collect(Collectors.toList());
+            List<OffDay> sortedOffDays = currentUser.getOffDays().stream().sorted(Comparator.comparing(OffDay::getFirstDay).reversed()).collect(Collectors.toList());
 
-            offDayGrid.setItems(sortedOffDays);
+            grid.setItems(sortedOffDays);
 
-            // Update the info box
-            updateInfoBox();
-
-            // Create or update the calendar component with current year
-            if (yearCalendar == null) {
-                yearCalendar = new YearCalendarComponent(currentUser,
-                        java.time.LocalDate.now().getYear(),
-                        this::handleCalendarDayClick);
-
-                // Ensure the main layout contains both grid and calendar
-                if (getComponentCount() == 2) { // Header and infobox are already added
-                    VerticalLayout gridLayout = new VerticalLayout();
-                    gridLayout.setWidthFull();
-                    gridLayout.setPadding(false);
-                    gridLayout.add(offDayGrid);
-
-                    HorizontalLayout contentLayout = new HorizontalLayout(gridLayout, yearCalendar);
-                    contentLayout.setWidthFull();
-                    contentLayout.setFlexGrow(1, gridLayout);
-                    contentLayout.setFlexGrow(2, yearCalendar);
-                    contentLayout.setId("content-layout");
-
-                    add(contentLayout);
-                }
-            } else {
-                // Just update the calendar with fresh data
-                yearCalendar.updateCalendar();
-            }
+            yearCalendar.updateCalendar(currentUser);
         }
     }
 
-    private void updateInfoBox() {
-        infoBox.removeAll();
-        infoBox.setId(INFO_BOX);
-
-        VerticalLayout infoContent = new VerticalLayout();
-        infoContent.setSpacing(false);
-        infoContent.setPadding(false);
-
-        Span heading = new Span("Off Day Information");
-        heading.getElement().getStyle().set("font-weight", "bold");
-
-        Span info = new Span("Off days represent periods when you are not available for work due to vacation, " +
-                "sickness, holidays, or business trips.");
-        Span instruction = new Span("Each off day record consists of a date range and a type. " +
-                "Adding your off days helps with accurate project planning and resource allocation.");
-
-        infoContent.add(heading, info, instruction);
-        infoContent.addClassNames(
-                LumoUtility.Padding.SMALL,
-                LumoUtility.Background.CONTRAST_5,
-                LumoUtility.Border.ALL,
-                LumoUtility.BorderColor.CONTRAST_10,
-                LumoUtility.Margin.Bottom.MEDIUM
-        );
-
-        infoBox.add(infoContent);
-    }
 }

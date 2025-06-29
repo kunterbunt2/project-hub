@@ -63,34 +63,46 @@ public class ProductListView extends Main implements AfterNavigationObserver {
     public static final String        PRODUCT_LIST_PAGE_TITLE           = "product-list-page-title";
     public static final String        ROUTE                             = "product-list";
     private final       Clock         clock;
-    private final       Grid<Product> grid;
+    private             Grid<Product> grid;
     private final       ProductApi    productApi;
 
     public ProductListView(ProductApi productApi, Clock clock) {
         this.productApi = productApi;
         this.clock      = clock;
 
-        // Create header layout with title and create button
-        HorizontalLayout headerLayout = new HorizontalLayout();
-        headerLayout.setWidthFull();
-        headerLayout.setPadding(false);
-        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-        headerLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+        setSizeFull();
+        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        H2 pageTitle = new H2("Products");
-        pageTitle.setId(PRODUCT_LIST_PAGE_TITLE);
-        pageTitle.addClassNames(
-                LumoUtility.Margin.Top.MEDIUM,
-                LumoUtility.Margin.Bottom.SMALL
+        add(createHeader(), createGrid(clock));
+    }
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+        getElement().getParent().getComponent()
+                .ifPresent(component -> {
+                    if (component instanceof MainLayout mainLayout) {
+                        mainLayout.getBreadcrumbs().clear();
+                        mainLayout.getBreadcrumbs().addItem("Products", ProductListView.class);
+                    }
+                });
+    }
+
+    private void confirmDelete(Product product) {
+        String message = "Are you sure you want to delete product \"" + product.getName() + "\"?";
+        ConfirmDialog dialog = new ConfirmDialog(
+                "Confirm Delete",
+                message,
+                "Delete",
+                () -> {
+                    productApi.deleteById(product.getId());
+                    refreshGrid();
+                    Notification.show("Product deleted", 3000, Notification.Position.BOTTOM_START);
+                }
         );
+        dialog.open();
+    }
 
-        Button createButton = new Button("Create", new Icon(VaadinIcon.PLUS));
-        createButton.setId(CREATE_PRODUCT_BUTTON);
-        createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        createButton.addClickListener(e -> openProductDialog(null));
-
-        headerLayout.add(pageTitle, createButton);
-
+    private Grid<Product> createGrid(Clock clock) {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
         grid = new Grid<>();
@@ -161,42 +173,33 @@ public class ProductListView extends Main implements AfterNavigationObserver {
             Map<String, String> params = new HashMap<>();
             params.put("product", String.valueOf(selectedProduct.getId()));
             // Navigate with query parameters
-            UI.getCurrent().navigate(
-                    VersionListView.class,
-                    QueryParameters.simple(params)
-            );
+            UI.getCurrent().navigate(VersionListView.class, QueryParameters.simple(params));
         });
-
-        setSizeFull();
-        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
-
-        add(headerLayout, grid);
+        return grid;
     }
 
-    @Override
-    public void afterNavigation(AfterNavigationEvent event) {
-        getElement().getParent().getComponent()
-                .ifPresent(component -> {
-                    if (component instanceof MainLayout mainLayout) {
-                        mainLayout.getBreadcrumbs().clear();
-                        mainLayout.getBreadcrumbs().addItem("Products", ProductListView.class);
-                    }
-                });
-    }
+    private HorizontalLayout createHeader() {
+        HorizontalLayout headerLayout;
+        headerLayout = new HorizontalLayout();
+        headerLayout.setWidthFull();
+        headerLayout.setPadding(false);
+        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+        headerLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
 
-    private void confirmDelete(Product product) {
-        String message = "Are you sure you want to delete product \"" + product.getName() + "\"?";
-        ConfirmDialog dialog = new ConfirmDialog(
-                "Confirm Delete",
-                message,
-                "Delete",
-                () -> {
-                    productApi.deleteById(product.getId());
-                    refreshGrid();
-                    Notification.show("Product deleted", 3000, Notification.Position.BOTTOM_START);
-                }
+        H2 pageTitle = new H2("Products");
+        pageTitle.setId(PRODUCT_LIST_PAGE_TITLE);
+        pageTitle.addClassNames(
+                LumoUtility.Margin.Top.MEDIUM,
+                LumoUtility.Margin.Bottom.SMALL
         );
-        dialog.open();
+
+        Button createButton = new Button("Create", new Icon(VaadinIcon.PLUS));
+        createButton.setId(CREATE_PRODUCT_BUTTON);
+        createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        createButton.addClickListener(e -> openProductDialog(null));
+
+        headerLayout.add(pageTitle, createButton);
+        return headerLayout;
     }
 
     private void openProductDialog(Product product) {

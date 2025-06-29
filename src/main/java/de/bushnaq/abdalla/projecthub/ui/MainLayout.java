@@ -100,7 +100,7 @@ public final class MainLayout extends AppLayout {
     }
 
     private Image createLogo() {
-        Image logo = new Image("images/logo.svg", "Kassándra Logo");
+        Image logo = new Image("images/logo.svg", "Kassandra Logo");
         logo.setHeight("32px");
         return logo;
     }
@@ -140,8 +140,7 @@ public final class MainLayout extends AppLayout {
     }
 
     private Component createUserMenu() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String         username       = authentication != null ? authentication.getName() : "Guest";
+        final String username = getUserName();
 
         var avatar = new Avatar(username);
         avatar.addThemeVariants(AvatarVariant.LUMO_XSMALL);
@@ -154,8 +153,8 @@ public final class MainLayout extends AppLayout {
 
         var userMenuItem = userMenu.addItem(avatar);
         userMenuItem.add(username);
-        userMenuItem.getSubMenu().addItem(/*new Icon(VaadinIcon.CALENDAR_USER),*/"Manage Availability", e -> navigateToAvailability(username));
-        userMenuItem.getSubMenu().addItem(/*new Icon(VaadinIcon.MAP_MARKER),*/"Manage Location", e -> navigateToLocation(username));
+        userMenuItem.getSubMenu().addItem("Manage Availability", e -> navigateToAvailability(username));
+        userMenuItem.getSubMenu().addItem("Manage Location", e -> navigateToLocation(username));
         userMenuItem.getSubMenu().addItem("Manage Off Days", e -> navigateToOffDays(username));
         userMenuItem.getSubMenu().addItem("View Profile").setEnabled(false);
         userMenuItem.getSubMenu().addItem("Manage Settings").setEnabled(false);
@@ -167,6 +166,20 @@ public final class MainLayout extends AppLayout {
     // Method to get the breadcrumbs component (to be used by views)
     public Breadcrumbs getBreadcrumbs() {
         return breadcrumbs;
+    }
+
+    private String getUserName() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String         userName       = authentication != null ? authentication.getName() : "Guest";
+
+        // If using OIDC, try to get the email address from authentication details
+        if (authentication != null && authentication.getPrincipal() instanceof org.springframework.security.oauth2.core.oidc.user.OidcUser oidcUser) {
+            String email = oidcUser.getEmail();
+            if (email != null && !email.isEmpty()) {
+                userName = email;
+            }
+        }
+        return userName;
     }
 
     private void logout() {

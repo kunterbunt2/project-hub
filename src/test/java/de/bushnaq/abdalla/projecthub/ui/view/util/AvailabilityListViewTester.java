@@ -278,13 +278,15 @@ public class AvailabilityListViewTester {
      * @param username            The username for which to view availability (optional, uses current user if null)
      */
     public void switchToAvailabilityListView(String recordingFolderName, String testName, String username) {
-        seleniumHandler.getAndCheck("http://localhost:" + port + "/ui/" + LoginView.ROUTE);
-        seleniumHandler.startRecording(recordingFolderName, testName);
-        seleniumHandler.setLoginUser("admin-user");
-        seleniumHandler.setLoginPassword("test-password");
-        seleniumHandler.loginSubmit();
-        seleniumHandler.waitUntil(ExpectedConditions.elementToBeClickable(By.id(ProductListView.PRODUCT_LIST_PAGE_TITLE)));
-
+        //- Check if we need to log in
+        if (!seleniumHandler.getCurrentUrl().contains("/ui/")) {
+            seleniumHandler.getAndCheck("http://localhost:" + port + "/ui/" + LoginView.ROUTE);
+            seleniumHandler.startRecording(recordingFolderName, testName);
+            seleniumHandler.setLoginUser("admin-user");
+            seleniumHandler.setLoginPassword("test-password");
+            seleniumHandler.loginSubmit();
+            seleniumHandler.waitUntil(ExpectedConditions.elementToBeClickable(By.id(ProductListView.PRODUCT_LIST_PAGE_TITLE)));
+        }
         // Navigate to the availability view for the specific user or current user
         String url = "http://localhost:" + port + "/ui/" + AvailabilityListView.ROUTE;
         seleniumHandler.getAndCheck(url);

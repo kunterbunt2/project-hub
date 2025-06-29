@@ -20,7 +20,6 @@ package de.bushnaq.abdalla.projecthub.ui.view;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Span;
@@ -30,7 +29,6 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.NumberRenderer;
 import com.vaadin.flow.router.*;
@@ -70,21 +68,18 @@ public class AvailabilityListView extends Main implements BeforeEnterObserver, A
     public static final String             INFO_BOX                               = "availability-info-box";
     public static final String             ROUTE                                  = "availability";
     private final       AvailabilityApi    availabilityApi;
-    private final       Grid<Availability> availabilityGrid                       = new Grid<>(Availability.class, false);
     private             User               currentUser;
-    private final       Div                infoBox                                = new Div();
+    private final       Grid<Availability> grid                                   = new Grid<>(Availability.class, false);
+    //    private final       Div                infoBox                                = new Div();
     private final       UserApi            userApi;
 
     public AvailabilityListView(AvailabilityApi availabilityApi, UserApi userApi) {
         this.availabilityApi = availabilityApi;
         this.userApi         = userApi;
 
-        addClassName("availability-view");
-        setWidthFull();
-        addClassNames(LumoUtility.Padding.LARGE);
-
-        HorizontalLayout headerLayout = createHeader();
-        add(headerLayout, infoBox, createAvailabilityGrid());
+        setSizeFull();
+        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
+        add(createHeader(), createGrid());
     }
 
     @Override
@@ -102,8 +97,7 @@ public class AvailabilityListView extends Main implements BeforeEnterObserver, A
 
         // If no username is provided, use the current authenticated user
         // Store in a final variable to use in lambda
-        final String username = (usernameParam == null && currentUsername != null) ?
-                currentUsername : usernameParam;
+        final String username = (usernameParam == null && currentUsername != null) ? currentUsername : usernameParam;
 
         if (username != null) {
             try {
@@ -127,7 +121,7 @@ public class AvailabilityListView extends Main implements BeforeEnterObserver, A
     }
 
     private void confirmDelete(Availability availability) {
-        if (availabilityGrid.getListDataView().getItems().count() <= 1) {
+        if (grid.getListDataView().getItems().count() <= 1) {
             Notification notification = Notification.show("Cannot delete - Users must have at least one availability", 3000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
             return;
@@ -142,75 +136,11 @@ public class AvailabilityListView extends Main implements BeforeEnterObserver, A
                         refreshAvailabilityGrid();
                         Notification.show("Availability deleted", 3000, Notification.Position.MIDDLE);
                     } catch (Exception ex) {
-                        Notification notification = Notification.show(
-                                "Failed to delete: " + ex.getMessage(),
-                                3000,
-                                Notification.Position.MIDDLE);
+                        Notification notification = Notification.show("Failed to delete: " + ex.getMessage(), 3000, Notification.Position.MIDDLE);
                         notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
                     }
                 });
         dialog.open();
-    }
-
-    private Grid<Availability> createAvailabilityGrid() {
-        availabilityGrid.setId(AVAILABILITY_GRID);
-        availabilityGrid.setWidthFull();
-        availabilityGrid.addClassNames(LumoUtility.Border.ALL, LumoUtility.BorderColor.CONTRAST_10);
-
-        // Add columns
-        availabilityGrid.addColumn(new ComponentRenderer<>(availability -> {
-                    String startDateStr = availability.getStart().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                    Span   span         = new Span(startDateStr);
-                    span.setId(AVAILABILITY_GRID_START_DATE_PREFIX + startDateStr);
-                    span.setId(AVAILABILITY_GRID_START_DATE_PREFIX + startDateStr);
-                    return span;
-                }))
-                .setHeader(createHeaderWithIcon(VaadinIcon.CALENDAR, "Start Date"))
-                .setSortable(true)
-                .setKey("start");
-
-        NumberFormat percentageFormat = NumberFormat.getPercentInstance(Locale.US);
-        availabilityGrid.addColumn(new NumberRenderer<>(
-                        availability -> {
-                            Span span = new Span(percentageFormat.format(availability.getAvailability()));
-                            span.setId(AVAILABILITY_GRID_AVAILABILITY_PREFIX + availability.getAvailability());
-                            return availability.getAvailability();
-                        }, percentageFormat))
-                .setHeader(createHeaderWithIcon(VaadinIcon.CHART, "Availability"))
-                .setSortable(true)
-                .setKey("availability");
-
-        // Add action column
-        availabilityGrid.addColumn(new ComponentRenderer<>(availability -> {
-            String startDateStr = availability.getStart().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-
-            HorizontalLayout layout = new HorizontalLayout();
-            layout.setAlignItems(FlexComponent.Alignment.CENTER);
-            layout.setSpacing(true);
-
-            Button editButton = new Button(new Icon(VaadinIcon.EDIT));
-            editButton.setId(AVAILABILITY_GRID_EDIT_BUTTON_PREFIX + startDateStr);
-            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
-            editButton.addClickListener(e -> openAvailabilityDialog(availability));
-            editButton.getElement().setAttribute("title", "Edit");
-
-            Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));
-            deleteButton.setId(AVAILABILITY_GRID_DELETE_BUTTON_PREFIX + startDateStr);
-            deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
-            deleteButton.addClickListener(e -> confirmDelete(availability));
-            deleteButton.getElement().setAttribute("title", "Delete");
-
-            // Disable delete if this is the user's only availability
-            if (availabilityGrid.getListDataView().getItems().count() <= 1) {
-                deleteButton.setEnabled(false);
-                deleteButton.getElement().setAttribute("title", "Cannot delete - Users must have at least one availability");
-            }
-
-            layout.add(editButton, deleteButton);
-            return layout;
-        })).setHeader("Actions").setFlexGrow(0).setWidth("120px");
-
-        return availabilityGrid;
     }
 
     /**
@@ -230,6 +160,68 @@ public class AvailabilityListView extends Main implements BeforeEnterObserver, A
         Location location = new Location("DE", "nw", java.time.LocalDate.now());
         user.addLocation(location);
         return user;
+    }
+
+    private Grid<Availability> createGrid() {
+        grid.setId(AVAILABILITY_GRID);
+//        grid.setWidthFull();
+        grid.setSizeFull();
+        grid.addClassNames(LumoUtility.Border.ALL, LumoUtility.BorderColor.CONTRAST_10);
+
+        // Add columns
+        grid.addColumn(new ComponentRenderer<>(availability -> {
+                    String startDateStr = availability.getStart().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                    Span   span         = new Span(startDateStr);
+                    span.setId(AVAILABILITY_GRID_START_DATE_PREFIX + startDateStr);
+                    span.setId(AVAILABILITY_GRID_START_DATE_PREFIX + startDateStr);
+                    return span;
+                }))
+                .setHeader(createHeaderWithIcon(VaadinIcon.CALENDAR, "Start Date"))
+                .setSortable(true)
+                .setKey("start");
+
+        NumberFormat percentageFormat = NumberFormat.getPercentInstance(Locale.US);
+        grid.addColumn(new NumberRenderer<>(
+                        availability -> {
+                            Span span = new Span(percentageFormat.format(availability.getAvailability()));
+                            span.setId(AVAILABILITY_GRID_AVAILABILITY_PREFIX + availability.getAvailability());
+                            return availability.getAvailability();
+                        }, percentageFormat))
+                .setHeader(createHeaderWithIcon(VaadinIcon.CHART, "Availability"))
+                .setSortable(true)
+                .setKey("availability");
+
+        // Add action column
+        grid.addColumn(new ComponentRenderer<>(availability -> {
+            String startDateStr = availability.getStart().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
+            HorizontalLayout layout = new HorizontalLayout();
+            layout.setAlignItems(FlexComponent.Alignment.CENTER);
+            layout.setSpacing(true);
+
+            Button editButton = new Button(new Icon(VaadinIcon.EDIT));
+            editButton.setId(AVAILABILITY_GRID_EDIT_BUTTON_PREFIX + startDateStr);
+            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
+            editButton.addClickListener(e -> openAvailabilityDialog(availability));
+            editButton.getElement().setAttribute("title", "Edit");
+
+            Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));
+            deleteButton.setId(AVAILABILITY_GRID_DELETE_BUTTON_PREFIX + startDateStr);
+            deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
+            deleteButton.addClickListener(e -> confirmDelete(availability));
+            deleteButton.getElement().setAttribute("title", "Delete");
+
+            // Disable delete if this is the user's only availability
+            if (grid.getListDataView().getItems().count() <= 1) {
+                deleteButton.setEnabled(false);
+                deleteButton.getElement().setAttribute("title", "Cannot delete - Users must have at least one availability");
+            }
+
+            layout.add(editButton, deleteButton);
+            return layout;
+        })).setHeader("Actions").setFlexGrow(0).setWidth("120px");
+
+        return grid;
     }
 
     private HorizontalLayout createHeader() {
@@ -287,36 +279,36 @@ public class AvailabilityListView extends Main implements BeforeEnterObserver, A
                     .sorted(Comparator.comparing(Availability::getStart).reversed())
                     .collect(Collectors.toList());
 
-            availabilityGrid.setItems(sortedAvailabilities);
-            updateInfoBox();
+            grid.setItems(sortedAvailabilities);
+//            updateInfoBox();
         }
     }
 
-    private void updateInfoBox() {
-        infoBox.removeAll();
-        infoBox.setId(INFO_BOX);
-
-        VerticalLayout infoContent = new VerticalLayout();
-        infoContent.setSpacing(false);
-        infoContent.setPadding(false);
-
-        Span heading = new Span("Availability Information");
-        heading.getElement().getStyle().set("font-weight", "bold");
-
-        Span info = new Span("Availability represents the percentage of time you are available for work. " +
-                "Values should be between 0 (unavailable) and 150% availability.");
-        Span instruction = new Span("Start dates must be unique. The most recent availability will be used for current tasks. +" +
-                "Your availability list should cover all your time you are working for this organization.");
-
-        infoContent.add(heading, info, instruction);
-        infoContent.addClassNames(
-                LumoUtility.Padding.SMALL,
-                LumoUtility.Background.CONTRAST_5,
-                LumoUtility.Border.ALL,
-                LumoUtility.BorderColor.CONTRAST_10,
-                LumoUtility.Margin.Bottom.MEDIUM
-        );
-
-        infoBox.add(infoContent);
-    }
+//    private void updateInfoBox() {
+//        infoBox.removeAll();
+//        infoBox.setId(INFO_BOX);
+//
+//        VerticalLayout infoContent = new VerticalLayout();
+//        infoContent.setSpacing(false);
+//        infoContent.setPadding(false);
+//
+//        Span heading = new Span("Availability Information");
+//        heading.getElement().getStyle().set("font-weight", "bold");
+//
+//        Span info = new Span("Availability represents the percentage of time you are available for work. " +
+//                "Values should be between 0 (unavailable) and 150% availability.");
+//        Span instruction = new Span("Start dates must be unique. The most recent availability will be used for current tasks. +" +
+//                "Your availability list should cover all your time you are working for this organization.");
+//
+//        infoContent.add(heading, info, instruction);
+//        infoContent.addClassNames(
+//                LumoUtility.Padding.SMALL,
+//                LumoUtility.Background.CONTRAST_5,
+//                LumoUtility.Border.ALL,
+//                LumoUtility.BorderColor.CONTRAST_10,
+//                LumoUtility.Margin.Bottom.MEDIUM
+//        );
+//
+//        infoBox.add(infoContent);
+//    }
 }

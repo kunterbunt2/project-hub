@@ -17,6 +17,8 @@
 
 package de.bushnaq.abdalla.projecthub.ui;
 
+import dasniko.testcontainers.keycloak.KeycloakContainer;
+import de.bushnaq.abdalla.projecthub.dto.OffDayType;
 import de.bushnaq.abdalla.projecthub.ui.dialog.*;
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
@@ -34,44 +36,83 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
+        properties = {
+                "server.port=8080",
+                "spring.profiles.active=test",
+                // Disable basic authentication for these tests
+                "spring.security.basic.enabled=false"
+        }
+)
 @AutoConfigureMockMvc
 @Transactional
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+@Testcontainers
 public class GenerateScreenshots extends AbstractUiTestUtil {
+    // Start Keycloak container with realm configuration
+    @Container
+    private static final KeycloakContainer          keycloak        = new KeycloakContainer("quay.io/keycloak/keycloak:24.0.1")
+            .withRealmImportFile("keycloak/project-hub-realm.json")
+            .withAdminUsername("admin")
+            .withAdminPassword("admin")
+            // Expose on a fixed port for more reliable testing
+            .withExposedPorts(8080, 8443)
+            // Add debugging to see container output
+            .withLogConsumer(outputFrame -> System.out.println("Keycloak: " + outputFrame.getUtf8String()))
+            // Make Keycloak accessible from outside the container
+            .withEnv("KC_HOSTNAME_STRICT", "false")
+            .withEnv("KC_HOSTNAME_STRICT_HTTPS", "false");
     @Autowired
-    private       AvailabilityListViewTester availabilityListViewTester;
+    private              AvailabilityListViewTester availabilityListViewTester;
     @Autowired
-    private       FeatureListViewTester      featureListViewTester;
-    private       String                     featureName;
+    private              FeatureListViewTester      featureListViewTester;
+    private              String                     featureName;
+    private final        LocalDate                  firstDay        = LocalDate.of(2025, 6, 1);
+    private final        LocalDate                  firstDayRecord1 = LocalDate.of(2025, 8, 1);
+    private final        LocalDate                  lastDay         = LocalDate.of(2025, 6, 1);
+    private final        LocalDate                  lastDayRecord1  = LocalDate.of(2025, 8, 5);
     @Autowired
-    private       LocationListViewTester     locationListViewTester;
+    private              LocationListViewTester     locationListViewTester;
     @Autowired
-    private       ProductListViewTester      productListViewTester;
-    private       String                     productName;
+    private              OffDayListViewTester       offDayListViewTester;
     @Autowired
-    private       SeleniumHandler            seleniumHandler;
+    private              ProductListViewTester      productListViewTester;
+    private              String                     productName;
     @Autowired
-    private       SprintListViewTester       sprintListViewTester;
-    private       String                     sprintName;
-    private final LocalDate                  startDate = LocalDate.of(2025, 6, 1);
+    private              SeleniumHandler            seleniumHandler;
     @Autowired
-    private       UserListViewTester         userListViewTester;
-    private       String                     userName;
+    private              SprintListViewTester       sprintListViewTester;
+    private              String                     sprintName;
+    private final        OffDayType                 typeRecord1     = OffDayType.VACATION;
     @Autowired
-    private       VersionListViewTester      versionListViewTester;
-    private       String                     versionName;
+    private              UserListViewTester         userListViewTester;
+    private              String                     userName;
+    @Autowired
+    private              VersionListViewTester      versionListViewTester;
+    private              String                     versionName;
+
+    // Method to get the public-facing URL, fixing potential redirect issues
+    private static String getPublicFacingUrl(KeycloakContainer container) {
+        return String.format("http://%s:%s",
+                container.getHost(),
+                container.getMappedPort(8080));
+    }
 
     private static List<RandomCase> listRandomCases() {
         RandomCase[] randomCases = new RandomCase[]{//
@@ -92,6 +133,46 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         } else {
             logger.warn("No authenticated user found. Running demo without authentication.");
         }
+    }
+
+    // Configure Spring Security to use the Keycloak container
+    @DynamicPropertySource
+    static void registerKeycloakProperties(DynamicPropertyRegistry registry) {
+        // Start the container
+        keycloak.start();
+
+        // Get the actual URL that's accessible from outside the container
+        String externalUrl = getPublicFacingUrl(keycloak);
+        System.out.println("Keycloak External URL: " + externalUrl);
+
+        // Log all container environment information for debugging
+        System.out.println("Keycloak Container:");
+        System.out.println("  Auth Server URL: " + keycloak.getAuthServerUrl());
+        System.out.println("  Container IP: " + keycloak.getHost());
+        System.out.println("  HTTP Port Mapping: " + keycloak.getMappedPort(8080));
+        System.out.println("  HTTPS Port Mapping: " + keycloak.getMappedPort(8443));
+
+        // Override the authServerUrl with our public-facing URL
+        String publicAuthServerUrl = externalUrl + "/";
+
+        // Create properties with the public URL
+        Map<String, String> props = new HashMap<>();
+        props.put("spring.security.oauth2.client.provider.keycloak.issuer-uri", publicAuthServerUrl + "realms/project-hub-realm");
+        props.put("spring.security.oauth2.client.provider.keycloak.authorization-uri", publicAuthServerUrl + "realms/project-hub-realm/protocol/openid-connect/auth");
+        props.put("spring.security.oauth2.client.provider.keycloak.token-uri", publicAuthServerUrl + "realms/project-hub-realm/protocol/openid-connect/token");
+        props.put("spring.security.oauth2.client.provider.keycloak.user-info-uri", publicAuthServerUrl + "realms/project-hub-realm/protocol/openid-connect/userinfo");
+        props.put("spring.security.oauth2.client.provider.keycloak.jwk-set-uri", publicAuthServerUrl + "realms/project-hub-realm/protocol/openid-connect/certs");
+
+        props.put("spring.security.oauth2.client.registration.keycloak.client-id", "project-hub-client");
+        props.put("spring.security.oauth2.client.registration.keycloak.client-secret", "test-client-secret");
+        props.put("spring.security.oauth2.client.registration.keycloak.scope", "openid,profile,email");
+        props.put("spring.security.oauth2.client.registration.keycloak.authorization-grant-type", "authorization_code");
+        props.put("spring.security.oauth2.client.registration.keycloak.redirect-uri", "{baseUrl}/login/oauth2/code/{registrationId}");
+
+        props.put("spring.security.oauth2.resourceserver.jwt.issuer-uri", publicAuthServerUrl + "realms/project-hub-realm");
+
+        // Register all properties
+        props.forEach((key, value) -> registry.add(key, () -> value));
     }
 
     /**
@@ -119,8 +200,8 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         // Delete availability dialog
         {
             // create something we can at least try to delete
-            availabilityListViewTester.createAvailabilityConfirm(startDate, 50);
-            String dateStr = startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            availabilityListViewTester.createAvailabilityConfirm(firstDay, 50);
+            String dateStr = firstDay.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
             seleniumHandler.click(AvailabilityListView.AVAILABILITY_GRID_DELETE_BUTTON_PREFIX + dateStr);
             seleniumHandler.waitForElementToBeClickable(ConfirmDialog.CANCEL_BUTTON); // Wait for dialog
             seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement(ConfirmDialog.CONFIRM_DIALOG), ConfirmDialog.CONFIRM_DIALOG, "../project-hub.wiki/screenshots/availability-delete-dialog.png");
@@ -152,11 +233,46 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
 
         // Delete location dialog
         {
-            locationListViewTester.createLocationConfirm(startDate, "United States (US)", "California (ca)");
-            String dateStr = startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            locationListViewTester.createLocationConfirm(firstDay, "United States (US)", "California (ca)");
+            String dateStr = firstDay.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
             seleniumHandler.click(LocationListView.LOCATION_GRID_DELETE_BUTTON_PREFIX + dateStr);
             seleniumHandler.waitForElementToBeClickable(ConfirmDialog.CANCEL_BUTTON); // Wait for dialog
             seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement(ConfirmDialog.CONFIRM_DIALOG), ConfirmDialog.CONFIRM_DIALOG, "../project-hub.wiki/screenshots/location-delete-dialog.png");
+            seleniumHandler.click(ConfirmDialog.CANCEL_BUTTON);
+        }
+    }
+
+    /**
+     * Takes screenshots of OffDay create, edit and delete dialogs
+     */
+    private void takeOffDayDialogScreenshots() {
+        // Create availability dialog
+        {
+            seleniumHandler.click(OffDayListView.CREATE_OFFDAY_BUTTON);
+            seleniumHandler.setDatePickerValue(OffDayDialog.OFFDAY_START_DATE_FIELD, firstDay);
+            seleniumHandler.setDatePickerValue(OffDayDialog.OFFDAY_END_DATE_FIELD, lastDay);
+            seleniumHandler.setComboBoxValue(OffDayDialog.OFFDAY_TYPE_FIELD, OffDayType.VACATION.name());
+            seleniumHandler.waitForElementToBeClickable(OffDayDialog.CANCEL_BUTTON); // Wait for dialog
+            seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement(OffDayDialog.OFFDAY_DIALOG), OffDayDialog.OFFDAY_DIALOG, "../project-hub.wiki/screenshots/offday-create-dialog.png");
+            seleniumHandler.click(OffDayDialog.CANCEL_BUTTON);
+        }
+
+        // Edit availability dialog
+        {
+            // Create an initial record
+            offDayListViewTester.createOffDayConfirm(firstDayRecord1, lastDayRecord1, typeRecord1);
+
+            offDayListViewTester.clickEditButtonForRecord(firstDayRecord1);
+            seleniumHandler.waitForElementToBeClickable(OffDayDialog.CANCEL_BUTTON); // Wait for dialog
+            seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement(OffDayDialog.OFFDAY_DIALOG), OffDayDialog.OFFDAY_DIALOG, "../project-hub.wiki/screenshots/offday-edit-dialog.png");
+            seleniumHandler.click(OffDayDialog.CANCEL_BUTTON);
+        }
+
+        // Delete availability dialog
+        {
+            offDayListViewTester.clickDeleteButtonForRecord(firstDayRecord1);
+            seleniumHandler.waitForElementToBeClickable(ConfirmDialog.CANCEL_BUTTON); // Wait for dialog
+            seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement(ConfirmDialog.CONFIRM_DIALOG), ConfirmDialog.CONFIRM_DIALOG, "../project-hub.wiki/screenshots/offday-delete-dialog.png");
             seleniumHandler.click(ConfirmDialog.CANCEL_BUTTON);
         }
     }
@@ -212,7 +328,7 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
     @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void takeScreenshots(RandomCase randomCase, TestInfo testInfo) throws Exception {
         // Set browser window to a fixed size for consistent screenshots
-        seleniumHandler.setWindowSize(1800, 1200);
+        seleniumHandler.setWindowSize(1024, 800);
 
 //        printAuthentication();
         TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
@@ -220,13 +336,13 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         generateProductsIfNeeded(testInfo, randomCase);
         seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
-        userName    = nameGenerator.generateUserName(0);
+        userName    = "Christopher Paul";
         productName = nameGenerator.generateProductName(0);
         versionName = nameGenerator.generateVersionName(0);
         featureName = nameGenerator.generateFeatureName(0);
         sprintName  = nameGenerator.generateSprintName(0);
 
-        productListViewTester.switchToProductListView("../project-hub.wiki/screenshots/login.png", testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+        productListViewTester.switchToProductListViewWithOidc("christopher.paul@example.com", "password", null, testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/product-list-view.png");
         takeProductDialogScreenshots();
         productListViewTester.selectProduct(productName);
@@ -238,6 +354,8 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         featureListViewTester.selectFeature(featureName);
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/sprint-list-view.png");
         takeSprintDialogScreenshots();
+
+        seleniumHandler.setWindowSize(1800, 1200);
         sprintListViewTester.selectSprint(sprintName);
         seleniumHandler.waitForElementToBeClickable(SprintQualityBoard.GANTT_CHART);
         seleniumHandler.waitForElementToBeClickable(SprintQualityBoard.BURNDOWN_CHART);
@@ -247,6 +365,7 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/user-list-view.png");
         takeUserDialogScreenshots();
 
+        seleniumHandler.setWindowSize(1024, 800);
         // Navigate to AvailabilityListView for the current user and take screenshots
         availabilityListViewTester.switchToAvailabilityListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/availability-list-view.png");
@@ -256,6 +375,12 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         locationListViewTester.switchToLocationListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/location-list-view.png");
         takeLocationDialogScreenshots();
+
+        // Navigate to OffDayListView for the current user and take screenshots
+        seleniumHandler.setWindowSize(1800, 1300);
+        offDayListViewTester.switchToOffDayListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
+        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/offday-list-view.png");
+        takeOffDayDialogScreenshots();
 
         seleniumHandler.waitUntilBrowserClosed(5000);
     }

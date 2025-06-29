@@ -4,6 +4,26 @@
   "displayName": "Project Hub Test Realm",
   "users": [
     {
+      "username": "christopher.paul@example.com",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Test",
+      "lastName": "User",
+      "email": "christopher.paul@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "admin",
+        "user",
+        "offline_access"
+      ]
+    },
+    {
       "username": "testuser",
       "enabled": true,
       "emailVerified": true,

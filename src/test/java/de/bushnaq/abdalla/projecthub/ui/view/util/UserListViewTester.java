@@ -218,12 +218,15 @@ public class UserListViewTester {
      * by checking for the presence of the page title element.
      */
     public void switchToUserListView(String recordingFolderName, String testName) {
-        seleniumHandler.getAndCheck("http://localhost:" + port + "/ui/" + LoginView.ROUTE);
-        seleniumHandler.startRecording(recordingFolderName, testName);
-        seleniumHandler.setLoginUser("admin-user");
-        seleniumHandler.setLoginPassword("test-password");
-        seleniumHandler.loginSubmit();
-        seleniumHandler.waitUntil(ExpectedConditions.elementToBeClickable(By.id(ProductListView.PRODUCT_LIST_PAGE_TITLE)));
+        //- Check if we need to log in
+        if (!seleniumHandler.getCurrentUrl().contains("/ui/")) {
+            seleniumHandler.getAndCheck("http://localhost:" + port + "/ui/" + LoginView.ROUTE);
+            seleniumHandler.startRecording(recordingFolderName, testName);
+            seleniumHandler.setLoginUser("admin-user");
+            seleniumHandler.setLoginPassword("test-password");
+            seleniumHandler.loginSubmit();
+            seleniumHandler.waitUntil(ExpectedConditions.elementToBeClickable(By.id(ProductListView.PRODUCT_LIST_PAGE_TITLE)));
+        }
         seleniumHandler.getAndCheck("http://localhost:" + port + "/ui/" + UserListView.ROUTE);
         seleniumHandler.waitUntil(ExpectedConditions.elementToBeClickable(By.id(UserListView.USER_LIST_PAGE_TITLE)));
     }

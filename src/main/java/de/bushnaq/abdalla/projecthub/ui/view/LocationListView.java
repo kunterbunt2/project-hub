@@ -20,7 +20,6 @@ package de.bushnaq.abdalla.projecthub.ui.view;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Span;
@@ -30,7 +29,6 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -71,7 +69,6 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
     public static final String         LOCATION_LIST_PAGE_TITLE           = "location-page-title";
     public static final String         ROUTE                              = "location";
     private             User           currentUser;
-    private final       Div            infoBox                            = new Div();
     private final       LocationApi    locationApi;
     private final       Grid<Location> locationGrid                       = new Grid<>(Location.class, false);
     private final       UserApi        userApi;
@@ -80,12 +77,10 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
         this.locationApi = locationApi;
         this.userApi     = userApi;
 
-        addClassName("location-view");
-        setWidthFull();
-        addClassNames(LumoUtility.Padding.LARGE);
+        setSizeFull();
+        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        HorizontalLayout headerLayout = createHeader();
-        add(headerLayout, infoBox, createLocationGrid());
+        add(createHeader(), createLocationGrid());
     }
 
     @Override
@@ -332,36 +327,36 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
                     .collect(Collectors.toList());
 
             locationGrid.setItems(sortedLocations);
-            updateInfoBox();
+//            updateInfoBox();
         }
     }
 
-    private void updateInfoBox() {
-        infoBox.removeAll();
-        infoBox.setId(INFO_BOX);
-
-        VerticalLayout infoContent = new VerticalLayout();
-        infoContent.setSpacing(false);
-        infoContent.setPadding(false);
-
-        Span heading = new Span("Location Information");
-        heading.getElement().getStyle().set("font-weight", "bold");
-
-        Span info = new Span("Locations represent where you are working under contract. " +
-                "Country and state/region are used to calculate official holidays.");
-
-        Span instruction = new Span("Start dates must be unique. The most recent location will be used for current tasks. " +
-                "Your location history should cover all your time working for this organization.");
-
-        infoContent.add(heading, info, instruction);
-        infoContent.addClassNames(
-                LumoUtility.Padding.SMALL,
-                LumoUtility.Background.CONTRAST_5,
-                LumoUtility.Border.ALL,
-                LumoUtility.BorderColor.CONTRAST_10,
-                LumoUtility.Margin.Bottom.MEDIUM
-        );
-
-        infoBox.add(infoContent);
-    }
+//    private void updateInfoBox() {
+//        infoBox.removeAll();
+//        infoBox.setId(INFO_BOX);
+//
+//        VerticalLayout infoContent = new VerticalLayout();
+//        infoContent.setSpacing(false);
+//        infoContent.setPadding(false);
+//
+//        Span heading = new Span("Location Information");
+//        heading.getElement().getStyle().set("font-weight", "bold");
+//
+//        Span info = new Span("Locations represent where you are working under contract. " +
+//                "Country and state/region are used to calculate official holidays.");
+//
+//        Span instruction = new Span("Start dates must be unique. The most recent location will be used for current tasks. " +
+//                "Your location history should cover all your time working for this organization.");
+//
+//        infoContent.add(heading, info, instruction);
+//        infoContent.addClassNames(
+//                LumoUtility.Padding.SMALL,
+//                LumoUtility.Background.CONTRAST_5,
+//                LumoUtility.Border.ALL,
+//                LumoUtility.BorderColor.CONTRAST_10,
+//                LumoUtility.Margin.Bottom.MEDIUM
+//        );
+//
+//        infoBox.add(infoContent);
+//    }
 }

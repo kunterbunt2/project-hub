@@ -1,4 +1,6 @@
 /* Default theme (light) */
+@import url('./components/vaadin-dialog-overlay.css');
+
 :root {
   /* Calendar component colors - light theme */
   --calendar-vacation-color: #D4EDDA;

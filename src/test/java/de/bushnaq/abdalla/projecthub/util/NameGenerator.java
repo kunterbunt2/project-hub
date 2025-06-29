@@ -28,7 +28,8 @@ import java.util.List;
 import java.util.logging.Logger;
 
 public class NameGenerator {
-    private static final Logger       logger = Logger.getLogger(NameGenerator.class.getName().toLowerCase());
+    public static final  String       PROJECT_HUB_ORG = "@kassandra.org";
+    private static final Logger       logger          = Logger.getLogger(NameGenerator.class.getName().toLowerCase());
     private final        List<String> productNames;
     private final        List<String> projectNames;
     private final        List<String> sprintNames;
@@ -89,6 +90,10 @@ public class NameGenerator {
 
     public String generateStoryName(int t) {
         return String.format("Story-%d", t);
+    }
+
+    public String generateUserEmail(int userIndex) {
+        return userNames.get(userIndex).getFirstName().toLowerCase() + "." + userNames.get(userIndex).getLastName().toLowerCase() + PROJECT_HUB_ORG;
     }
 
     public String generateUserName(int userIndex) {
