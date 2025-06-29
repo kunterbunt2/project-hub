@@ -1,6 +1,9 @@
-# Target
+# kassandra
 
-minimalistic project effort estimation and progress tracking and release date interpolation open source server.
+tiny project management server.<br>
+project effort estimation and progress tracking and release date interpolation open source server.
+## features
+tbd
 
 [Requirements](https://github.com/kunterbunt2/project-hub/wiki/Requirements)
 
