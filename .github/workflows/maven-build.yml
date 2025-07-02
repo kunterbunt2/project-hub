@@ -22,11 +22,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # First, set up JDK 11 for building the name-machine dependency
-      - name: Set up JDK 11 for name-machine dependency
+      # First, set up JDK 8 for building the name-machine dependency
+      - name: Set up JDK 8 for name-machine dependency
         uses: actions/setup-java@v3
         with:
-          java-version: '11'
+          java-version: '8'
           distribution: 'temurin'
           cache: maven
 
@@ -49,8 +49,8 @@ jobs:
           chmod +x ./gradlew
           
           # Build with Gradle - create JAR file
-          echo "Building name-machine with Gradle using Java 11..."
-          ./gradlew clean build -x test
+          echo "Building name-machine with Gradle using Java 8..."
+          ./gradlew clean jar
           
           # Find and copy the JAR to the Maven repository
           if [ -f build/libs/name-machine-1.1.0.jar ]; then
