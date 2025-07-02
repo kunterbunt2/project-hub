@@ -77,7 +77,7 @@ jobs:
           
           # Create a minimal POM file for Maven
           echo "Creating POM file..."
-          cat > ~/.m2/repository/org/ajbrown/name-machine/1.1.0/name-machine-1.1.0.pom << EOF
+          cat > ~/.m2/repository/org/ajbrown/name-machine/1.1.0/name-machine-1.1.0.pom << 'EOF'
   <?xml version="1.0" encoding="UTF-8"?>
   <project xmlns="http://maven.apache.org/POM/4.0.0"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
