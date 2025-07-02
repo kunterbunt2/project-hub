@@ -40,64 +40,93 @@ jobs:
           echo "Chrome version: $CHROME_VERSION"
           # WebDriverManager will handle chromedriver installation in your tests, but we add this for debugging
 
-      # Handle name-machine dependency manually if needed
+      # Handle name-machine dependency manually as it's a Gradle project
       - name: Handle name-machine dependency
         run: |
-          # Check if the dependency already exists in the local repository
-          if [ ! -f ~/.m2/repository/com/github/ajbrown/name-machine/1.1.0/name-machine-1.1.0.jar ]; then
-            echo "Downloading name-machine dependency from GitHub releases..."
-            mkdir -p /tmp/name-machine-build
-            cd /tmp/name-machine-build
+          # Create directory for the dependency
+          mkdir -p ~/.m2/repository/org/ajbrown/name-machine/1.1.0/
           
-            # Clone the name-machine repository
-            git clone https://github.com/ajbrown/name-machine.git .
-            git checkout 1.1.0 || git checkout master
+          # Clone the name-machine repository
+          echo "Downloading name-machine dependency from GitHub..."
+          mkdir -p /tmp/name-machine-build
+          cd /tmp/name-machine-build
+          git clone https://github.com/ajbrown/name-machine.git .
           
-            # Build with Maven
-            mvn clean install -DskipTests
+          # Try to checkout the 1.1.0 tag, or use master if not found
+          git checkout 1.1.0 || git checkout master
           
-            echo "name-machine dependency installed to local Maven repository"
+          # Build with Gradle - create JAR file
+          echo "Building name-machine with Gradle..."
+          ./gradlew clean build -x test
+          
+          # Find and copy the JAR to the Maven repository
+          if [ -f build/libs/name-machine-1.1.0.jar ]; then
+            cp build/libs/name-machine-1.1.0.jar ~/.m2/repository/org/ajbrown/name-machine/1.1.0/
+            echo "Created name-machine-1.1.0.jar"
+          elif [ -f build/libs/name-machine.jar ]; then
+            cp build/libs/name-machine.jar ~/.m2/repository/org/ajbrown/name-machine/1.1.0/name-machine-1.1.0.jar
+            echo "Created name-machine-1.1.0.jar from name-machine.jar"
           else
-            echo "name-machine dependency already exists in local Maven repository"
+            find build/libs -name "*.jar" | while read jar; do
+              echo "Found JAR: $jar"
+              cp "$jar" ~/.m2/repository/org/ajbrown/name-machine/1.1.0/name-machine-1.1.0.jar
+              echo "Created name-machine-1.1.0.jar from $jar"
+              break
+            done
           fi
+          
+          # Create a minimal POM file for Maven
+          echo "Creating POM file..."
+          cat > ~/.m2/repository/org/ajbrown/name-machine/1.1.0/name-machine-1.1.0.pom << EOF
+  <?xml version="1.0" encoding="UTF-8"?>
+  <project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.ajbrown</groupId>
+  <artifactId>name-machine</artifactId>
+  <version>1.1.0</version>
+  </project>
+  EOF
+  echo "name-machine dependency installed to local Maven repository"
 
-      # Configure TestContainers to use Docker daemon
-      - name: Configure TestContainers
-        run: |
-          echo "testcontainers.reuse.enable=true" > ~/.testcontainers.properties
+# Configure TestContainers to use Docker daemon
+- name: Configure TestContainers
+  run: |
+    echo "testcontainers.reuse.enable=true" > ~/.testcontainers.properties
 
-      # Create directory for test recordings/screenshots
-      - name: Create test directories
-        run: |
-          mkdir -p test-recordings
-          mkdir -p test-results
+# Create directory for test recordings/screenshots
+- name: Create test directories
+  run: |
+    mkdir -p test-recordings
+    mkdir -p test-results
 
-      - name: Build with Maven
-        run: mvn -B package --file pom.xml
+- name: Build with Maven
+  run: mvn -B package --file pom.xml
 
-      - name: Run tests with UI tests in headless mode
-        run: |
-          mvn test -Dselenium.headless=true
-        env:
-          # Set environment variables for headless testing
-          SELENIUM_HEADLESS: "true"
-          # Ensure Vaadin runs in production mode to avoid dev server issues
-          VAADIN_PRODUCTION_MODE: "true"
-          # Make test containers accessible from GitHub runner
-          DOCKER_HOST: "tcp://localhost:2375"
-          # Any ports needed for your tests
-          SERVER_PORT: 8080
-          # Java options for memory, etc.
-          MAVEN_OPTS: "-Xmx2048m"
+- name: Run tests with UI tests in headless mode
+  run: |
+    mvn test -Dselenium.headless=true
+  env:
+    # Set environment variables for headless testing
+    SELENIUM_HEADLESS: "true"
+    # Ensure Vaadin runs in production mode to avoid dev server issues
+    VAADIN_PRODUCTION_MODE: "true"
+    # Make test containers accessible from GitHub runner
+    DOCKER_HOST: "tcp://localhost:2375"
+    # Any ports needed for your tests
+    SERVER_PORT: 8080
+    # Java options for memory, etc.
+    MAVEN_OPTS: "-Xmx2048m"
 
-      # Upload test recordings and screenshots as artifacts
-      - name: Upload test recordings and results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-artifacts
-          path: |
-            test-recordings/
-            test-results/
-            target/surefire-reports/
-          retention-days: 7
+# Upload test recordings and screenshots as artifacts
+- name: Upload test recordings and results
+  if: always()
+  uses: actions/upload-artifact@v4
+  with:
+    name: test-artifacts
+    path: |
+      test-recordings/
+      test-results/
+      target/surefire-reports/
+    retention-days: 7
