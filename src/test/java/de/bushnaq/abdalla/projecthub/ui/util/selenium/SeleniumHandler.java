@@ -279,30 +279,40 @@ public class SeleniumHandler {
     }
 
     public WebDriver getDriver() {
-        if (driver == null) {
-            WebDriverManager.chromedriver().setup();
-            ChromeOptions options = new ChromeOptions();
-            options.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
-            options.addArguments("--remote-allow-origins=*");
-            driver = new ChromeDriver(options);
-            wait   = new WebDriverWait(getDriver(), waitDuration);
-            //Applied wait time
-            setImplicitWaitDuration(implicitWaitDuration);
+        if (driver != null) {
+            return driver;
+        }
 
+        WebDriverManager.chromedriver().setup();
+
+        ChromeOptions options = new ChromeOptions();
+
+        // Check if we're running in headless mode (for CI environment)
+        boolean headlessMode = Boolean.parseBoolean(System.getProperty("selenium.headless", System.getenv("SELENIUM_HEADLESS")));
+        if (headlessMode) {
+            logger.info("Running Chrome in headless mode");
+            options.addArguments("--headless=new");
+            options.addArguments("--disable-gpu");
+            options.addArguments("--no-sandbox");
+            options.addArguments("--disable-dev-shm-usage");
+            options.addArguments("--window-size=1920,1080");
+        }
+
+        options.addArguments("--remote-allow-origins=*");
+        options.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
+
+        driver = new ChromeDriver(options);
+        setImplicitWaitDuration(implicitWaitDuration);
+        wait = new WebDriverWait(driver, waitDuration);
+
+        // Set default window size if not in headless mode
+        if (!headlessMode) {
             if (windowSize != null) {
                 getDriver().manage().window().setSize(windowSize);
                 getDriver().manage().window().setPosition(new Point(33, 22));
             } else {
                 //maximize window by default
                 getDriver().manage().window().maximize();
-            }
-            //firefox
-            {
-                //            WebDriverManager.firefoxdriver().setup();
-                //            FirefoxOptions options = new FirefoxOptions();
-                //            options.setCapability("moz:webdriverClick", false);//https://stackoverflow.com/questions/49864965/org-openqa-selenium-elementnotinteractableexception-element-is-not-reachable-by
-                //            options.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
-                //            driver = new FirefoxDriver(options);
             }
         }
         return driver;
@@ -1033,4 +1043,5 @@ public class SeleniumHandler {
             }
         }
     }
+
 }

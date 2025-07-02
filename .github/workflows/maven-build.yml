@@ -1,0 +1,82 @@
+name: Maven Build and Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      # Docker daemon service for TestContainers
+      docker:
+        image: docker:dind
+        options: --privileged
+        ports:
+          - 2375:2375
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Set up Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: 'stable'
+
+      - name: Install Chrome driver
+        run: |
+          CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d. -f1)
+          echo "Chrome version: $CHROME_VERSION"
+          # WebDriverManager will handle chromedriver installation in your tests, but we add this for debugging
+
+      # Configure TestContainers to use Docker daemon
+      - name: Configure TestContainers
+        run: |
+          echo "testcontainers.reuse.enable=true" > ~/.testcontainers.properties
+
+      # Create directory for test recordings/screenshots
+      - name: Create test directories
+        run: |
+          mkdir -p test-recordings
+          mkdir -p test-results
+
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml
+
+      - name: Run tests with UI tests in headless mode
+        run: |
+          mvn test -Dselenium.headless=true
+        env:
+          # Set environment variables for headless testing
+          SELENIUM_HEADLESS: "true"
+          # Ensure Vaadin runs in production mode to avoid dev server issues
+          VAADIN_PRODUCTION_MODE: "true"
+          # Make test containers accessible from GitHub runner
+          DOCKER_HOST: "tcp://localhost:2375"
+          # Any ports needed for your tests
+          SERVER_PORT: 8080
+          # Java options for memory, etc.
+          MAVEN_OPTS: "-Xmx2048m"
+
+      # Upload test recordings and screenshots as artifacts
+      - name: Upload test recordings and results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-artifacts
+          path: |
+            test-recordings/
+            test-results/
+            target/surefire-reports/
+          retention-days: 7
