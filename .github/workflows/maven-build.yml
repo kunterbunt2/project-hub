@@ -40,6 +40,27 @@ jobs:
           echo "Chrome version: $CHROME_VERSION"
           # WebDriverManager will handle chromedriver installation in your tests, but we add this for debugging
 
+      # Handle name-machine dependency manually if needed
+      - name: Handle name-machine dependency
+        run: |
+          # Check if the dependency already exists in the local repository
+          if [ ! -f ~/.m2/repository/com/github/ajbrown/name-machine/1.1.0/name-machine-1.1.0.jar ]; then
+            echo "Downloading name-machine dependency from GitHub releases..."
+            mkdir -p /tmp/name-machine-build
+            cd /tmp/name-machine-build
+          
+            # Clone the name-machine repository
+            git clone https://github.com/ajbrown/name-machine.git .
+            git checkout 1.1.0 || git checkout master
+          
+            # Build with Maven
+            mvn clean install -DskipTests
+          
+            echo "name-machine dependency installed to local Maven repository"
+          else
+            echo "name-machine dependency already exists in local Maven repository"
+          fi
+
       # Configure TestContainers to use Docker daemon
       - name: Configure TestContainers
         run: |

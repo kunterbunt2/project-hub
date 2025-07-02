@@ -110,7 +110,7 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.ajbrown</groupId>
+            <groupId>com.github.ajbrown</groupId>
             <artifactId>name-machine</artifactId>
             <version>1.1.0</version>
         </dependency>
