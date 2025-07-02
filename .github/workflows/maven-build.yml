@@ -75,58 +75,54 @@ jobs:
             done
           fi
           
-          # Create a minimal POM file for Maven
+          # Create a minimal POM file for Maven using echo commands instead of heredoc
           echo "Creating POM file..."
-          cat > ~/.m2/repository/org/ajbrown/name-machine/1.1.0/name-machine-1.1.0.pom << 'EOF'
-  <?xml version="1.0" encoding="UTF-8"?>
-  <project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>org.ajbrown</groupId>
-  <artifactId>name-machine</artifactId>
-  <version>1.1.0</version>
-  </project>
-  EOF
-  echo "name-machine dependency installed to local Maven repository"
+          echo '<?xml version="1.0" encoding="UTF-8"?>' > ~/.m2/repository/org/ajbrown/name-machine/1.1.0/name-machine-1.1.0.pom
+          echo '<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">' >> ~/.m2/repository/org/ajbrown/name-machine/1.1.0/name-machine-1.1.0.pom
+          echo '  <modelVersion>4.0.0</modelVersion>' >> ~/.m2/repository/org/ajbrown/name-machine/1.1.0/name-machine-1.1.0.pom
+          echo '  <groupId>org.ajbrown</groupId>' >> ~/.m2/repository/org/ajbrown/name-machine/1.1.0/name-machine-1.1.0.pom
+          echo '  <artifactId>name-machine</artifactId>' >> ~/.m2/repository/org/ajbrown/name-machine/1.1.0/name-machine-1.1.0.pom
+          echo '  <version>1.1.0</version>' >> ~/.m2/repository/org/ajbrown/name-machine/1.1.0/name-machine-1.1.0.pom
+          echo '</project>' >> ~/.m2/repository/org/ajbrown/name-machine/1.1.0/name-machine-1.1.0.pom
+          echo "name-machine dependency installed to local Maven repository"
 
-# Configure TestContainers to use Docker daemon
-- name: Configure TestContainers
-  run: |
-    echo "testcontainers.reuse.enable=true" > ~/.testcontainers.properties
+      # Configure TestContainers to use Docker daemon
+      - name: Configure TestContainers
+        run: |
+          echo "testcontainers.reuse.enable=true" > ~/.testcontainers.properties
 
-# Create directory for test recordings/screenshots
-- name: Create test directories
-  run: |
-    mkdir -p test-recordings
-    mkdir -p test-results
+      # Create directory for test recordings/screenshots
+      - name: Create test directories
+        run: |
+          mkdir -p test-recordings
+          mkdir -p test-results
 
-- name: Build with Maven
-  run: mvn -B package --file pom.xml
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml
 
-- name: Run tests with UI tests in headless mode
-  run: |
-    mvn test -Dselenium.headless=true
-  env:
-    # Set environment variables for headless testing
-    SELENIUM_HEADLESS: "true"
-    # Ensure Vaadin runs in production mode to avoid dev server issues
-    VAADIN_PRODUCTION_MODE: "true"
-    # Make test containers accessible from GitHub runner
-    DOCKER_HOST: "tcp://localhost:2375"
-    # Any ports needed for your tests
-    SERVER_PORT: 8080
-    # Java options for memory, etc.
-    MAVEN_OPTS: "-Xmx2048m"
+      - name: Run tests with UI tests in headless mode
+        run: |
+          mvn test -Dselenium.headless=true
+        env:
+          # Set environment variables for headless testing
+          SELENIUM_HEADLESS: "true"
+          # Ensure Vaadin runs in production mode to avoid dev server issues
+          VAADIN_PRODUCTION_MODE: "true"
+          # Make test containers accessible from GitHub runner
+          DOCKER_HOST: "tcp://localhost:2375"
+          # Any ports needed for your tests
+          SERVER_PORT: 8080
+          # Java options for memory, etc.
+          MAVEN_OPTS: "-Xmx2048m"
 
-# Upload test recordings and screenshots as artifacts
-- name: Upload test recordings and results
-  if: always()
-  uses: actions/upload-artifact@v4
-  with:
-    name: test-artifacts
-    path: |
-      test-recordings/
-      test-results/
-      target/surefire-reports/
-    retention-days: 7
+      # Upload test recordings and screenshots as artifacts
+      - name: Upload test recordings and results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts
+          path: |
+            test-recordings/
+            test-results/
+            target/surefire-reports/
+          retention-days: 7
