@@ -22,23 +22,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up JDK 17
+      # First, set up JDK 11 for building the name-machine dependency
+      - name: Set up JDK 11 for name-machine dependency
         uses: actions/setup-java@v3
         with:
-          java-version: '17'
+          java-version: '11'
           distribution: 'temurin'
           cache: maven
-
-      - name: Set up Chrome
-        uses: browser-actions/setup-chrome@v1
-        with:
-          chrome-version: 'stable'
-
-      - name: Install Chrome driver
-        run: |
-          CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d. -f1)
-          echo "Chrome version: $CHROME_VERSION"
-          # WebDriverManager will handle chromedriver installation in your tests, but we add this for debugging
 
       # Handle name-machine dependency manually as it's a Gradle project
       - name: Handle name-machine dependency
@@ -55,8 +45,11 @@ jobs:
           # Try to checkout the 1.1.0 tag, or use master if not found
           git checkout 1.1.0 || git checkout master
           
+          # Make gradlew executable
+          chmod +x ./gradlew
+          
           # Build with Gradle - create JAR file
-          echo "Building name-machine with Gradle..."
+          echo "Building name-machine with Gradle using Java 11..."
           ./gradlew clean build -x test
           
           # Find and copy the JAR to the Maven repository
@@ -75,7 +68,7 @@ jobs:
             done
           fi
           
-          # Create a minimal POM file for Maven using echo commands instead of heredoc
+          # Create a minimal POM file for Maven using echo commands
           echo "Creating POM file..."
           echo '<?xml version="1.0" encoding="UTF-8"?>' > ~/.m2/repository/org/ajbrown/name-machine/1.1.0/name-machine-1.1.0.pom
           echo '<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">' >> ~/.m2/repository/org/ajbrown/name-machine/1.1.0/name-machine-1.1.0.pom
@@ -85,6 +78,25 @@ jobs:
           echo '  <version>1.1.0</version>' >> ~/.m2/repository/org/ajbrown/name-machine/1.1.0/name-machine-1.1.0.pom
           echo '</project>' >> ~/.m2/repository/org/ajbrown/name-machine/1.1.0/name-machine-1.1.0.pom
           echo "name-machine dependency installed to local Maven repository"
+
+      # Now switch to JDK 17 for our main project
+      - name: Set up JDK 17 for main project
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Set up Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: 'stable'
+
+      - name: Install Chrome driver
+        run: |
+          CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d. -f1)
+          echo "Chrome version: $CHROME_VERSION"
+          # WebDriverManager will handle chromedriver installation in your tests, but we add this for debugging
 
       # Configure TestContainers to use Docker daemon
       - name: Configure TestContainers
