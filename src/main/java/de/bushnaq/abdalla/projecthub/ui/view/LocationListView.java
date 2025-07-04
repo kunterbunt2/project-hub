@@ -167,22 +167,33 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
     }
 
     private HorizontalLayout createHeader() {
-        H2 heading = new H2("Manage Your Location");
-        heading.setId(LOCATION_LIST_PAGE_TITLE);
-        heading.addClassNames(LumoUtility.Margin.NONE);
-
-        Button addButton = new Button("Add Location");
-        addButton.setId(CREATE_LOCATION_BUTTON);
-        addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        addButton.setIcon(new Icon(VaadinIcon.PLUS));
-        addButton.addClickListener(e -> openLocationDialog(null));
-
-        HorizontalLayout headerLayout = new HorizontalLayout(heading, addButton);
+        HorizontalLayout headerLayout = new HorizontalLayout();
         headerLayout.setWidthFull();
-        headerLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+        headerLayout.setPadding(false);
         headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-        headerLayout.addClassNames(LumoUtility.Margin.Bottom.MEDIUM);
+        headerLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
 
+        // Create title layout with icon
+        HorizontalLayout titleLayout = new HorizontalLayout();
+        titleLayout.setSpacing(true);
+        titleLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+
+        Icon locationIcon = new Icon(VaadinIcon.MAP_MARKER);
+        H2   pageTitle    = new H2("Locations");
+        pageTitle.setId(LOCATION_LIST_PAGE_TITLE);
+        pageTitle.addClassNames(
+                LumoUtility.Margin.Top.MEDIUM,
+                LumoUtility.Margin.Bottom.SMALL
+        );
+
+        titleLayout.add(locationIcon, pageTitle);
+
+        Button createButton = new Button("Create", new Icon(VaadinIcon.PLUS));
+        createButton.setId(CREATE_LOCATION_BUTTON);
+        createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        createButton.addClickListener(e -> openLocationDialog(null));
+
+        headerLayout.add(titleLayout, createButton);
         return headerLayout;
     }
 

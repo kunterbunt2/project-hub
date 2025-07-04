@@ -186,19 +186,27 @@ public class ProductListView extends Main implements AfterNavigationObserver {
         headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
         headerLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
 
-        H2 pageTitle = new H2("Products");
+        // Create page title with icon
+        HorizontalLayout titleLayout = new HorizontalLayout();
+        titleLayout.setSpacing(true);
+        titleLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+
+        Icon productIcon = new Icon(VaadinIcon.CUBE);
+        H2   pageTitle   = new H2("Products");
         pageTitle.setId(PRODUCT_LIST_PAGE_TITLE);
         pageTitle.addClassNames(
                 LumoUtility.Margin.Top.MEDIUM,
                 LumoUtility.Margin.Bottom.SMALL
         );
 
+        titleLayout.add(productIcon, pageTitle);
+
         Button createButton = new Button("Create", new Icon(VaadinIcon.PLUS));
         createButton.setId(CREATE_PRODUCT_BUTTON);
         createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         createButton.addClickListener(e -> openProductDialog(null));
 
-        headerLayout.add(pageTitle, createButton);
+        headerLayout.add(titleLayout, createButton);
         return headerLayout;
     }
 

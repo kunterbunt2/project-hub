@@ -20,6 +20,8 @@ package de.bushnaq.abdalla.projecthub.ui.dialog;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -48,8 +50,26 @@ public class VersionDialog extends Dialog {
     public VersionDialog(Version version, SaveCallback saveCallback) {
         isEditMode = version != null;
 
-        // Set the dialog title
-        setHeaderTitle(isEditMode ? "Edit Version" : "Create Version");
+        // Set the dialog title with an icon
+        String title = isEditMode ? "Edit Version" : "Create Version";
+
+        // Create a custom header with icon
+        HorizontalLayout headerLayout = new HorizontalLayout();
+        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+        headerLayout.setSpacing(true);
+
+        Icon titleIcon = new Icon(VaadinIcon.TAG);
+        titleIcon.getStyle().set("margin-right", "0.5em");
+
+        com.vaadin.flow.component.html.H3 titleLabel = new com.vaadin.flow.component.html.H3(title);
+        titleLabel.getStyle().set("margin", "0");
+
+        headerLayout.add(titleIcon, titleLabel);
+
+        // Set the custom header
+        setHeaderTitle(null); // Clear the default title
+        getHeader().add(headerLayout);
+
         setId(VERSION_DIALOG);
         setWidth("480px");
 
@@ -57,12 +77,14 @@ public class VersionDialog extends Dialog {
         dialogLayout.setPadding(false);
         dialogLayout.setSpacing(true);
 
+        // Create name field with icon
         nameField = new TextField("Version Name");
         nameField.setId(VERSION_NAME_FIELD);
         nameField.setWidthFull();
         nameField.setRequired(true);
         // Add helper text explaining the uniqueness requirement
         nameField.setHelperText("Version name must be unique");
+        nameField.setPrefixComponent(new Icon(VaadinIcon.TAG));
 
         if (isEditMode) {
             nameField.setValue(version.getName());
@@ -70,7 +92,8 @@ public class VersionDialog extends Dialog {
 
         dialogLayout.add(nameField);
 
-        Button saveButton = new Button("Save", e -> {
+        Button saveButton = new Button("Save", new Icon(VaadinIcon.CHECK));
+        saveButton.addClickListener(e -> {
             if (nameField.getValue().trim().isEmpty()) {
                 Notification.show("Please enter a version name", 3000, Notification.Position.MIDDLE);
                 return;
@@ -91,7 +114,8 @@ public class VersionDialog extends Dialog {
         saveButton.setId(CONFIRM_BUTTON);
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        Button cancelButton = new Button("Cancel", e -> close());
+        Button cancelButton = new Button("Cancel", new Icon(VaadinIcon.CLOSE));
+        cancelButton.addClickListener(e -> close());
         cancelButton.setId(CANCEL_BUTTON);
 
         HorizontalLayout buttonLayout = new HorizontalLayout();
@@ -100,13 +124,14 @@ public class VersionDialog extends Dialog {
         buttonLayout.setWidthFull();
 
         dialogLayout.add(buttonLayout);
+
         add(dialogLayout);
     }
 
     /**
-     * Sets an error message on the name field to indicate uniqueness violation
+     * Sets an error message on the version name field.
      *
-     * @param errorMessage The error message to show
+     * @param errorMessage The error message to display, or null to clear the error
      */
     public void setNameFieldError(String errorMessage) {
         nameField.setInvalid(errorMessage != null);
@@ -114,7 +139,7 @@ public class VersionDialog extends Dialog {
     }
 
     /**
-     * Functional interface for the save callback that receives the edited version and a reference to this dialog
+     * Functional interface for the save callback that receives both the version and a reference to this dialog
      */
     @FunctionalInterface
     public interface SaveCallback {

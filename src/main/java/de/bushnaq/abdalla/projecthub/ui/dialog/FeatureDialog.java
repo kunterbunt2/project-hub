@@ -20,6 +20,8 @@ package de.bushnaq.abdalla.projecthub.ui.dialog;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -48,7 +50,26 @@ public class FeatureDialog extends Dialog {
     public FeatureDialog(Feature feature, SaveCallback saveCallback) {
         isEditMode = feature != null;
 
-        setHeaderTitle(isEditMode ? "Edit Feature" : "Create Feature");
+        // Set the dialog title with an icon
+        String title = isEditMode ? "Edit Feature" : "Create Feature";
+
+        // Create a custom header with icon
+        HorizontalLayout headerLayout = new HorizontalLayout();
+        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+        headerLayout.setSpacing(true);
+
+        Icon titleIcon = new Icon(VaadinIcon.PUZZLE_PIECE);
+        titleIcon.getStyle().set("margin-right", "0.5em");
+
+        com.vaadin.flow.component.html.H3 titleLabel = new com.vaadin.flow.component.html.H3(title);
+        titleLabel.getStyle().set("margin", "0");
+
+        headerLayout.add(titleIcon, titleLabel);
+
+        // Set the custom header
+        setHeaderTitle(null); // Clear the default title
+        getHeader().add(headerLayout);
+
         setId(FEATURE_DIALOG);
         setWidth("480px");
 
@@ -62,6 +83,7 @@ public class FeatureDialog extends Dialog {
         nameField.setRequired(true);
         // Add helper text explaining the uniqueness requirement
         nameField.setHelperText("Feature name must be unique");
+        nameField.setPrefixComponent(new Icon(VaadinIcon.PUZZLE_PIECE));
 
         if (isEditMode) {
             nameField.setValue(feature.getName());

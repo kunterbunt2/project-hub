@@ -21,6 +21,8 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -58,9 +60,28 @@ public class UserDialog extends Dialog {
     public UserDialog(User user, Consumer<User> saveCallback) {
         isEditMode = user != null;
 
-        setHeaderTitle(isEditMode ? "Edit User" : "Create User");
+        // Set the dialog title with an icon
+        String title = isEditMode ? "Edit User" : "Create User";
+
+        // Create a custom header with icon
+        HorizontalLayout headerLayout = new HorizontalLayout();
+        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+        headerLayout.setSpacing(true);
+
+        Icon titleIcon = new Icon(VaadinIcon.USER);
+        titleIcon.getStyle().set("margin-right", "0.5em");
+
+        com.vaadin.flow.component.html.H3 titleLabel = new com.vaadin.flow.component.html.H3(title);
+        titleLabel.getStyle().set("margin", "0");
+
+        headerLayout.add(titleIcon, titleLabel);
+
+        // Set the custom header
+        setHeaderTitle(null); // Clear the default title
+        getHeader().add(headerLayout);
+
         setId(USER_DIALOG);
-        setWidth("480px");
+        setWidth("500px");
 
         VerticalLayout dialogLayout = new VerticalLayout();
         dialogLayout.setPadding(false);
@@ -71,11 +92,13 @@ public class UserDialog extends Dialog {
         nameField.setId(USER_NAME_FIELD);
         nameField.setWidthFull();
         nameField.setRequired(true);
+        nameField.setPrefixComponent(new Icon(VaadinIcon.USER));
 
         // Email field
         EmailField emailField = new EmailField("Email");
         emailField.setId(USER_EMAIL_FIELD);
         emailField.setWidthFull();
+        emailField.setPrefixComponent(new Icon(VaadinIcon.ENVELOPE));
 
         // Color picker (using the community add-on)
         ColorPicker colorPicker = new ColorPicker();
@@ -103,11 +126,13 @@ public class UserDialog extends Dialog {
         DatePicker firstWorkingDayPicker = new DatePicker("First Working Day");
         firstWorkingDayPicker.setId(USER_FIRST_WORKING_DAY_PICKER);
         firstWorkingDayPicker.setWidthFull();
+        firstWorkingDayPicker.setPrefixComponent(new Icon(VaadinIcon.CALENDAR_USER));
 
         // Last working day picker
         DatePicker lastWorkingDayPicker = new DatePicker("Last Working Day");
         lastWorkingDayPicker.setId(USER_LAST_WORKING_DAY_PICKER);
         lastWorkingDayPicker.setWidthFull();
+        lastWorkingDayPicker.setPrefixComponent(new Icon(VaadinIcon.CALENDAR_USER));
 
         // Add validation to ensure last working day is after first working day
         firstWorkingDayPicker.addValueChangeListener(event -> {

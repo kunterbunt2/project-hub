@@ -22,6 +22,8 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -55,14 +57,33 @@ public class LocationDialog extends Dialog {
     private final       User             user;
 
     public LocationDialog(Location location, User user, LocationApi locationApi, Consumer<Void> onSaveCallback) {
-        this.location       = location;
+		this.location       = location;
         this.user           = user;
-        this.locationApi    = locationApi;
+        this.locationApi = locationApi;
         this.onSaveCallback = onSaveCallback;
+
+        // Set the dialog title with an icon
+        String title = location != null ? "Edit Location" : "Create Location";
+
+        // Create a custom header with icon
+        HorizontalLayout headerLayout = new HorizontalLayout();
+        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+        headerLayout.setSpacing(true);
+
+        Icon titleIcon = new Icon(VaadinIcon.MAP_MARKER);
+        titleIcon.getStyle().set("margin-right", "0.5em");
+
+        com.vaadin.flow.component.html.H3 titleLabel = new com.vaadin.flow.component.html.H3(title);
+        titleLabel.getStyle().set("margin", "0");
+
+        headerLayout.add(titleIcon, titleLabel);
+
+        // Set the custom header
+        setHeaderTitle(null); // Clear the default title
+        getHeader().add(headerLayout);
 
         setId(LOCATION_DIALOG);
         setWidth("480px");
-        setHeaderTitle(location == null ? "Add New Location" : "Edit Location");
 
         VerticalLayout content = createDialogContent();
         add(content);
@@ -97,6 +118,7 @@ public class LocationDialog extends Dialog {
         countryComboBox.setId(LOCATION_COUNTRY_FIELD);
         countryComboBox.setRequired(true);
         countryComboBox.setAllowCustomValue(false);
+        countryComboBox.setPrefixComponent(new Icon(VaadinIcon.GLOBE));
         populateCountries();
 
         // Country change listener to update states
@@ -113,12 +135,14 @@ public class LocationDialog extends Dialog {
         stateComboBox.setId(LOCATION_STATE_FIELD);
         stateComboBox.setRequired(true);
         stateComboBox.setAllowCustomValue(false);
+        stateComboBox.setPrefixComponent(new Icon(VaadinIcon.MAP_MARKER));
         stateComboBox.setEnabled(false); // Initially disabled until country is selected
 
         // Configure start date picker
         startDatePicker.setId(LOCATION_START_DATE_FIELD);
         startDatePicker.setRequired(true);
         startDatePicker.setMax(LocalDate.now().plusYears(10));
+        startDatePicker.setPrefixComponent(new Icon(VaadinIcon.CALENDAR));
 
         content.add(countryComboBox, stateComboBox, startDatePicker, createButtonLayout());
         return content;

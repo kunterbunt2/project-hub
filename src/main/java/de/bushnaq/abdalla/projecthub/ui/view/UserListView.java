@@ -69,19 +69,27 @@ public class UserListView extends Main implements AfterNavigationObserver {
         headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
         headerLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
 
-        H2 pageTitle = new H2("Users");
+        // Create title layout with icon
+        HorizontalLayout titleLayout = new HorizontalLayout();
+        titleLayout.setSpacing(true);
+        titleLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+
+        Icon userIcon  = new Icon(VaadinIcon.USER);
+        H2   pageTitle = new H2("Users");
         pageTitle.setId(USER_LIST_PAGE_TITLE);
         pageTitle.addClassNames(
                 LumoUtility.Margin.Top.MEDIUM,
                 LumoUtility.Margin.Bottom.SMALL
         );
 
+        titleLayout.add(userIcon, pageTitle);
+
         Button createButton = new Button("Create", new Icon(VaadinIcon.PLUS));
         createButton.setId(CREATE_USER_BUTTON);
         createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         createButton.addClickListener(e -> openUserDialog(null));
 
-        headerLayout.add(pageTitle, createButton);
+        headerLayout.add(titleLayout, createButton);
 
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 

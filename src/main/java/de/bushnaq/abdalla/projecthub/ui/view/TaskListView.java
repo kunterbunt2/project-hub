@@ -23,6 +23,10 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -71,11 +75,19 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         this.userApi   = userApi;
         this.clock     = clock;
 
+        // Create title layout with icon
+        HorizontalLayout titleLayout = new HorizontalLayout();
+        titleLayout.setSpacing(true);
+        titleLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+
+        Icon taskIcon = new Icon(VaadinIcon.TASKS);
         pageTitle = new H2("Tasks");
         pageTitle.addClassNames(
                 LumoUtility.Margin.Top.MEDIUM,
                 LumoUtility.Margin.Bottom.SMALL
         );
+
+        titleLayout.add(taskIcon, pageTitle);
 
         grid = new Grid<>();
         setupGridColumns();
@@ -92,7 +104,7 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        add(pageTitle, grid);
+        add(titleLayout, grid);
     }
 
     @Override

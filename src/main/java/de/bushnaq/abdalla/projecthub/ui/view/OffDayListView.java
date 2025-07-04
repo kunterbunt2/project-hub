@@ -235,22 +235,33 @@ public class OffDayListView extends Main implements BeforeEnterObserver, AfterNa
     }
 
     private HorizontalLayout createHeader() {
-        H2 heading = new H2("Manage Your Off Days");
-        heading.setId(OFFDAY_LIST_PAGE_TITLE);
-        heading.addClassNames(LumoUtility.Margin.NONE);
-
-        Button addButton = new Button("Add Off Day");
-        addButton.setId(CREATE_OFFDAY_BUTTON);
-        addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        addButton.setIcon(new Icon(VaadinIcon.PLUS));
-        addButton.addClickListener(e -> openOffDayDialog(null));
-
-        HorizontalLayout headerLayout = new HorizontalLayout(heading, addButton);
+        HorizontalLayout headerLayout = new HorizontalLayout();
         headerLayout.setWidthFull();
-        headerLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+        headerLayout.setPadding(false);
         headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-        headerLayout.addClassNames(LumoUtility.Margin.Bottom.MEDIUM);
+        headerLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
 
+        // Create title layout with icon
+        HorizontalLayout titleLayout = new HorizontalLayout();
+        titleLayout.setSpacing(true);
+        titleLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+
+        Icon offDayIcon = new Icon(VaadinIcon.CALENDAR_CLOCK);
+        H2   pageTitle  = new H2("Off Days");
+        pageTitle.setId(OFFDAY_LIST_PAGE_TITLE);
+        pageTitle.addClassNames(
+                LumoUtility.Margin.Top.MEDIUM,
+                LumoUtility.Margin.Bottom.SMALL
+        );
+
+        titleLayout.add(offDayIcon, pageTitle);
+
+        Button createButton = new Button("Create", new Icon(VaadinIcon.PLUS));
+        createButton.setId(CREATE_OFFDAY_BUTTON);
+        createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        createButton.addClickListener(e -> openOffDayDialog(null));
+
+        headerLayout.add(titleLayout, createButton);
         return headerLayout;
     }
 

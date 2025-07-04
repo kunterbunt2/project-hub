@@ -225,9 +225,17 @@ public class AvailabilityListView extends Main implements BeforeEnterObserver, A
     }
 
     private HorizontalLayout createHeader() {
-        H2 heading = new H2("Manage Your Availability");
+        // Create title layout with icon
+        HorizontalLayout titleLayout = new HorizontalLayout();
+        titleLayout.setSpacing(true);
+        titleLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+
+        Icon availabilityIcon = new Icon(VaadinIcon.CLOCK);
+        H2   heading          = new H2("Manage Your Availability");
         heading.setId(AVAILABILITY_LIST_PAGE_TITLE);
         heading.addClassNames(LumoUtility.Margin.NONE);
+
+        titleLayout.add(availabilityIcon, heading);
 
         Button addButton = new Button("Add Availability");
         addButton.setId(CREATE_AVAILABILITY_BUTTON);
@@ -235,7 +243,7 @@ public class AvailabilityListView extends Main implements BeforeEnterObserver, A
         addButton.setIcon(new Icon(VaadinIcon.PLUS));
         addButton.addClickListener(e -> openAvailabilityDialog(null));
 
-        HorizontalLayout headerLayout = new HorizontalLayout(heading, addButton);
+        HorizontalLayout headerLayout = new HorizontalLayout(titleLayout, addButton);
         headerLayout.setWidthFull();
         headerLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
         headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);

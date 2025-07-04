@@ -65,6 +65,26 @@ public class OffDayDialog extends Dialog {
         this.isNewOffDay    = (offDay == null);
         this.offDay         = isNewOffDay ? new OffDay(LocalDate.now(), LocalDate.now(), OffDayType.VACATION) : offDay;
 
+        // Set the dialog title with an icon
+        String title = offDay == null ? "Create Off Day" : "Edit Off Day";
+
+        // Create a custom header with icon
+        HorizontalLayout headerLayout = new HorizontalLayout();
+        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+        headerLayout.setSpacing(true);
+
+        Icon titleIcon = new Icon(VaadinIcon.CALENDAR_CLOCK);
+        titleIcon.getStyle().set("margin-right", "0.5em");
+
+        H3 titleLabel = new H3(title);
+        titleLabel.getStyle().set("margin", "0");
+
+        headerLayout.add(titleIcon, titleLabel);
+
+        // Set the custom header
+        setHeaderTitle(null); // Clear the default title
+        getHeader().add(headerLayout);
+
         setId(OFFDAY_DIALOG);
         setWidth("480px");
 //        setCloseOnEsc(true);
@@ -131,15 +151,18 @@ public class OffDayDialog extends Dialog {
         firstDayField.setWidthFull();
         firstDayField.setHelperText("The first day of the off period");
         firstDayField.setId(OFFDAY_START_DATE_FIELD);
+        firstDayField.setPrefixComponent(new Icon(VaadinIcon.CALENDAR_CLOCK));
 
         lastDayField.setWidthFull();
         lastDayField.setHelperText("The last day of the off period");
         lastDayField.setId(OFFDAY_END_DATE_FIELD);
+        lastDayField.setPrefixComponent(new Icon(VaadinIcon.CALENDAR_CLOCK));
 
         typeField.setWidthFull();
         typeField.setHelperText("Type of off day");
         typeField.setItems(OffDayType.values());
         typeField.setId(OFFDAY_TYPE_FIELD);
+        typeField.setPrefixComponent(new Icon(VaadinIcon.BRIEFCASE));
 
         // Add validation for date range relationship
         firstDayField.addValueChangeListener(e -> lastDayField.setMin(e.getValue()));

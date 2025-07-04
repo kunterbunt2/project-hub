@@ -62,6 +62,26 @@ public class AvailabilityDialog extends Dialog {
         this.isNewAvailability = (availability == null);
         this.availability      = isNewAvailability ? new Availability() : availability;
 
+        // Set the dialog title with an icon
+        String title = availability == null ? "Create Availability" : "Edit Availability";
+
+        // Create a custom header with icon
+        HorizontalLayout headerLayout = new HorizontalLayout();
+        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+        headerLayout.setSpacing(true);
+
+        Icon titleIcon = new Icon(VaadinIcon.CLOCK);
+        titleIcon.getStyle().set("margin-right", "0.5em");
+
+        H3 titleLabel = new H3(title);
+        titleLabel.getStyle().set("margin", "0");
+
+        headerLayout.add(titleIcon, titleLabel);
+
+        // Set the custom header
+        setHeaderTitle(null); // Clear the default title
+        getHeader().add(headerLayout);
+
         setId(AVAILABILITY_DIALOG);
         setWidth("480px");
 //        setCloseOnEsc(true);
@@ -133,10 +153,12 @@ public class AvailabilityDialog extends Dialog {
         startDateField.setWidthFull();
         startDateField.setHelperText("The date when this availability level begins");
         startDateField.setId(AVAILABILITY_START_DATE_FIELD);
+        startDateField.setPrefixComponent(new Icon(VaadinIcon.CALENDAR));
 
         availabilityField.setWidthFull();
         availabilityField.setHelperText("Value between 0-150% (e.g., 100 = full time)");
         availabilityField.setSuffixComponent(new Span("%"));
+        availabilityField.setPrefixComponent(new Icon(VaadinIcon.CLOCK));
         availabilityField.setId(AVAILABILITY_PERCENTAGE_FIELD);
 
         formLayout.add(startDateField, availabilityField);

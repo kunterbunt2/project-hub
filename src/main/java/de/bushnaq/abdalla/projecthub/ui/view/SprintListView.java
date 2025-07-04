@@ -79,6 +79,12 @@ public class SprintListView extends Main implements AfterNavigationObserver {
         headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
         headerLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
 
+        // Create title layout with icon
+        HorizontalLayout titleLayout = new HorizontalLayout();
+        titleLayout.setSpacing(true);
+        titleLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+
+        Icon sprintIcon = new Icon(VaadinIcon.TIMER);
         pageTitle = new H2("Sprints");
         pageTitle.setId(SPRINT_LIST_PAGE_TITLE);
         pageTitle.addClassNames(
@@ -86,12 +92,14 @@ public class SprintListView extends Main implements AfterNavigationObserver {
                 LumoUtility.Margin.Bottom.SMALL
         );
 
+        titleLayout.add(sprintIcon, pageTitle);
+
         Button createButton = new Button("Create", new Icon(VaadinIcon.PLUS));
         createButton.setId(CREATE_SPRINT_BUTTON);
         createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         createButton.addClickListener(e -> openSprintDialog(null));
 
-        headerLayout.add(pageTitle, createButton);
+        headerLayout.add(titleLayout, createButton);
 
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
