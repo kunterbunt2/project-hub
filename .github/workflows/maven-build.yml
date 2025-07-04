@@ -77,14 +77,14 @@ jobs:
           mkdir -p test-results
 
       - name: Build with Maven (skipping tests)
-        run: mvn -B package --file pom.xml -DskipTests
+        run: mvn -B package --file pom.xml -DskipTests -Pproduction
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
 
       - name: Run tests with UI tests in headless mode
         run: |
-          mvn test -Dtest=ProductListViewTest -Dselenium.headless=true
+          mvn test -Dtest=ProductListViewTest -Dselenium.headless=true -Pproduction
         env:
           # Set environment variables for headless testing
           SELENIUM_HEADLESS: "true"
