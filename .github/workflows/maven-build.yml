@@ -1,4 +1,6 @@
 name: Maven Build and Test
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 on:
   push:
