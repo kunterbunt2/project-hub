@@ -98,9 +98,27 @@ jobs:
           MAVEN_OPTS: "-Xmx2048m"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
+        continue-on-error: true  # Continue workflow even if tests fail to collect reports
+
+      # Generate Maven site with test reports
+      - name: Generate Site Reports
+        run: mvn site -DgenerateReports=true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
+        continue-on-error: true
+
+      # Generate test summary report
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v4
+        if: always()  # Always run this step to publish test results even if tests fail
+        with:
+          report_paths: '**/target/surefire-reports/TEST-*.xml'
+          summary: true
+          fail_on_failure: false
 
       # Upload test recordings and screenshots as artifacts
-      - name: Upload test recordings and results
+      - name: Upload test artifacts and reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -109,4 +127,6 @@ jobs:
             test-recordings/
             test-results/
             target/surefire-reports/
+            target/failsafe-reports/
+            target/site/
           retention-days: 7
