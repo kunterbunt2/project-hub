@@ -110,7 +110,7 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.ajbrown</groupId>
+            <groupId>org.ajbrown</groupId>
             <artifactId>name-machine</artifactId>
             <version>1.1.0</version>
         </dependency>
@@ -383,6 +383,11 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
+        <repository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/kunterbunt2/project-hub</url>
+        </repository>
+
     </repositories>
 
     <dependencyManagement>
