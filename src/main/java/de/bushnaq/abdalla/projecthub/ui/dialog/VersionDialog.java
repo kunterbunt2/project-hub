@@ -17,8 +17,6 @@
 
 package de.bushnaq.abdalla.projecthub.ui.dialog;
 
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -28,18 +26,21 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import de.bushnaq.abdalla.projecthub.dto.Version;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
 
 /**
  * A reusable dialog for creating and editing versions.
  */
 public class VersionDialog extends Dialog {
 
-    public static final String    CANCEL_BUTTON      = "cancel-version-button";
-    public static final String    CONFIRM_BUTTON     = "save-version-button";
-    public static final String    VERSION_DIALOG     = "version-dialog";
-    public static final String    VERSION_NAME_FIELD = "version-name-field";
-    private final       boolean   isEditMode;
-    private final       TextField nameField;
+    public static final String       CANCEL_BUTTON      = "cancel-version-button";
+    public static final String       CONFIRM_BUTTON     = "save-version-button";
+    public static final String       VERSION_DIALOG     = "version-dialog";
+    public static final String       VERSION_NAME_FIELD = "version-name-field";
+    private final       boolean      isEditMode;
+    private final       TextField    nameField;
+    private final       SaveCallback saveCallback;
+    private final       Version      version;
 
     /**
      * Creates a dialog for creating or editing a version.
@@ -48,7 +49,9 @@ public class VersionDialog extends Dialog {
      * @param saveCallback Callback that receives the version with updated values and a reference to this dialog
      */
     public VersionDialog(Version version, SaveCallback saveCallback) {
-        isEditMode = version != null;
+        this.version      = version;
+        this.saveCallback = saveCallback;
+        isEditMode        = version != null;
 
         // Set the dialog title with an icon
         String title = isEditMode ? "Edit Version" : "Create Version";
@@ -92,40 +95,29 @@ public class VersionDialog extends Dialog {
 
         dialogLayout.add(nameField);
 
-        Button saveButton = new Button("Save", new Icon(VaadinIcon.CHECK));
-        saveButton.addClickListener(e -> {
-            if (nameField.getValue().trim().isEmpty()) {
-                Notification.show("Please enter a version name", 3000, Notification.Position.MIDDLE);
-                return;
-            }
-
-            Version versionToSave;
-            if (isEditMode) {
-                versionToSave = version;
-                versionToSave.setName(nameField.getValue().trim());
-            } else {
-                versionToSave = new Version();
-                versionToSave.setName(nameField.getValue().trim());
-            }
-
-            // Call the save callback with the version and a reference to this dialog
-            saveCallback.save(versionToSave, this);
-        });
-        saveButton.setId(CONFIRM_BUTTON);
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-
-        Button cancelButton = new Button("Cancel", new Icon(VaadinIcon.CLOSE));
-        cancelButton.addClickListener(e -> close());
-        cancelButton.setId(CANCEL_BUTTON);
-
-        HorizontalLayout buttonLayout = new HorizontalLayout();
-        buttonLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
-        buttonLayout.add(cancelButton, saveButton);
-        buttonLayout.setWidthFull();
-
-        dialogLayout.add(buttonLayout);
+        dialogLayout.add(VaadinUtils.createDialogButtonLayout("Save", CONFIRM_BUTTON, "Cancel", CANCEL_BUTTON, this::save, this));
 
         add(dialogLayout);
+    }
+
+    private void save() {
+        if (nameField.getValue().trim().isEmpty()) {
+            Notification.show("Please enter a version name", 3000, Notification.Position.MIDDLE);
+            return;
+        }
+
+        Version versionToSave;
+        if (isEditMode) {
+            versionToSave = version;
+            versionToSave.setName(nameField.getValue().trim());
+        } else {
+            versionToSave = new Version();
+            versionToSave.setName(nameField.getValue().trim());
+        }
+
+        // Call the save callback with the version and a reference to this dialog
+        saveCallback.save(versionToSave, this);
+
     }
 
     /**

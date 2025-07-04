@@ -17,8 +17,6 @@
 
 package de.bushnaq.abdalla.projecthub.ui.dialog;
 
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.icon.Icon;
@@ -30,6 +28,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextField;
 import de.bushnaq.abdalla.projecthub.dto.User;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
 import org.vaadin.addons.tatu.ColorPicker;
 
 import java.awt.*;
@@ -41,15 +40,22 @@ import java.util.function.Consumer;
  */
 public class UserDialog extends Dialog {
 
-    public static final String  CANCEL_BUTTON                 = "cancel-user-button";
-    public static final String  CONFIRM_BUTTON                = "save-user-button";
-    public static final String  USER_COLOR_PICKER             = "user-color-picker";
-    public static final String  USER_DIALOG                   = "user-dialog";
-    public static final String  USER_EMAIL_FIELD              = "user-email-field";
-    public static final String  USER_FIRST_WORKING_DAY_PICKER = "user-first-working-day-picker";
-    public static final String  USER_LAST_WORKING_DAY_PICKER  = "user-last-working-day-picker";
-    public static final String  USER_NAME_FIELD               = "user-name-field";
-    private final       boolean isEditMode;
+    public static final String         CANCEL_BUTTON                 = "cancel-user-button";
+    public static final String         CONFIRM_BUTTON                = "save-user-button";
+    public static final String         USER_COLOR_PICKER             = "user-color-picker";
+    public static final String         USER_DIALOG                   = "user-dialog";
+    public static final String         USER_EMAIL_FIELD              = "user-email-field";
+    public static final String         USER_FIRST_WORKING_DAY_PICKER = "user-first-working-day-picker";
+    public static final String         USER_LAST_WORKING_DAY_PICKER  = "user-last-working-day-picker";
+    public static final String         USER_NAME_FIELD               = "user-name-field";
+    private final       ColorPicker    colorPicker;
+    private final       EmailField     emailField;
+    private final       DatePicker     firstWorkingDayPicker;
+    private final       boolean        isEditMode;
+    private final       DatePicker     lastWorkingDayPicker;
+    private final       TextField      nameField;
+    private final       Consumer<User> saveCallback;
+    private final       User           user;
 
     /**
      * Creates a dialog for creating or editing a user.
@@ -58,7 +64,9 @@ public class UserDialog extends Dialog {
      * @param saveCallback Callback that receives the user with updated values
      */
     public UserDialog(User user, Consumer<User> saveCallback) {
-        isEditMode = user != null;
+        this.user         = user;
+        this.saveCallback = saveCallback;
+        isEditMode        = user != null;
 
         // Set the dialog title with an icon
         String title = isEditMode ? "Edit User" : "Create User";
@@ -88,20 +96,20 @@ public class UserDialog extends Dialog {
         dialogLayout.setSpacing(true);
 
         // Name field
-        TextField nameField = new TextField("Name");
+        nameField = new TextField("Name");
         nameField.setId(USER_NAME_FIELD);
         nameField.setWidthFull();
         nameField.setRequired(true);
         nameField.setPrefixComponent(new Icon(VaadinIcon.USER));
 
         // Email field
-        EmailField emailField = new EmailField("Email");
+        emailField = new EmailField("Email");
         emailField.setId(USER_EMAIL_FIELD);
         emailField.setWidthFull();
         emailField.setPrefixComponent(new Icon(VaadinIcon.ENVELOPE));
 
         // Color picker (using the community add-on)
-        ColorPicker colorPicker = new ColorPicker();
+        colorPicker = new ColorPicker();
         colorPicker.setId(USER_COLOR_PICKER);
         colorPicker.setWidth("100%");
 
@@ -123,13 +131,13 @@ public class UserDialog extends Dialog {
         ));
 
         // First working day picker
-        DatePicker firstWorkingDayPicker = new DatePicker("First Working Day");
+        firstWorkingDayPicker = new DatePicker("First Working Day");
         firstWorkingDayPicker.setId(USER_FIRST_WORKING_DAY_PICKER);
         firstWorkingDayPicker.setWidthFull();
         firstWorkingDayPicker.setPrefixComponent(new Icon(VaadinIcon.CALENDAR_USER));
 
         // Last working day picker
-        DatePicker lastWorkingDayPicker = new DatePicker("Last Working Day");
+        lastWorkingDayPicker = new DatePicker("Last Working Day");
         lastWorkingDayPicker.setId(USER_LAST_WORKING_DAY_PICKER);
         lastWorkingDayPicker.setWidthFull();
         lastWorkingDayPicker.setPrefixComponent(new Icon(VaadinIcon.CALENDAR_USER));
@@ -166,46 +174,37 @@ public class UserDialog extends Dialog {
                 lastWorkingDayPicker
         );
 
-        Button saveButton = new Button("Save", e -> {
-            if (nameField.getValue().trim().isEmpty()) {
-                Notification.show("Please enter a user name", 3000, Notification.Position.MIDDLE);
-                return;
-            }
-
-            User userToSave;
-            if (isEditMode) {
-                userToSave = user;
-            } else {
-                userToSave = new User();
-            }
-
-            userToSave.setName(nameField.getValue().trim());
-            userToSave.setEmail(emailField.getValue().trim());
-
-            // Convert Vaadin color string to AWT Color
-            String colorValue = colorPicker.getValue();
-            if (colorValue != null && !colorValue.isEmpty()) {
-                userToSave.setColor(Color.decode(colorValue));
-            }
-
-            userToSave.setFirstWorkingDay(firstWorkingDayPicker.getValue());
-            userToSave.setLastWorkingDay(lastWorkingDayPicker.getValue());
-
-            saveCallback.accept(userToSave);
-            close();
-        });
-        saveButton.setId(CONFIRM_BUTTON);
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-
-        Button cancelButton = new Button("Cancel", e -> close());
-        cancelButton.setId(CANCEL_BUTTON);
-
-        HorizontalLayout buttonLayout = new HorizontalLayout();
-        buttonLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
-        buttonLayout.add(cancelButton, saveButton);
-        buttonLayout.setWidthFull();
-
-        dialogLayout.add(buttonLayout);
+        dialogLayout.add(VaadinUtils.createDialogButtonLayout("Save", CONFIRM_BUTTON, "Cancel", CANCEL_BUTTON, this::save, this));
         add(dialogLayout);
+    }
+
+    private void save() {
+        if (nameField.getValue().trim().isEmpty()) {
+            Notification.show("Please enter a user name", 3000, Notification.Position.MIDDLE);
+            return;
+        }
+
+        User userToSave;
+        if (isEditMode) {
+            userToSave = user;
+        } else {
+            userToSave = new User();
+        }
+
+        userToSave.setName(nameField.getValue().trim());
+        userToSave.setEmail(emailField.getValue().trim());
+
+        // Convert Vaadin color string to AWT Color
+        String colorValue = colorPicker.getValue();
+        if (colorValue != null && !colorValue.isEmpty()) {
+            userToSave.setColor(Color.decode(colorValue));
+        }
+
+        userToSave.setFirstWorkingDay(firstWorkingDayPicker.getValue());
+        userToSave.setLastWorkingDay(lastWorkingDayPicker.getValue());
+
+        saveCallback.accept(userToSave);
+        close();
+
     }
 }

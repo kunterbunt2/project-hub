@@ -19,6 +19,7 @@ package de.bushnaq.abdalla.projecthub.ui.util;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -32,6 +33,43 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 public final class VaadinUtils {
 
     /**
+     * Creates a standardized dialog button layout with save and cancel buttons
+     *
+     * @param saveButtonText   Text for the save button (e.g., "Save", "Create", "Confirm")
+     * @param saveButtonId     ID for the save button
+     * @param cancelButtonText Text for the cancel button (e.g., "Cancel", "Close")
+     * @param cancelButtonId   ID for the cancel button
+     * @param saveClickHandler Click handler for the save button
+     * @param dialog           The dialog instance that contains these buttons (for closing when cancel is clicked)
+     * @return A configured HorizontalLayout containing the dialog buttons
+     */
+    public static HorizontalLayout createDialogButtonLayout(
+            String saveButtonText,
+            String saveButtonId,
+            String cancelButtonText,
+            String cancelButtonId,
+            SaveButtonClickHandler saveClickHandler,
+            Dialog dialog) {
+
+        Button saveButton = new Button(saveButtonText, new Icon(VaadinIcon.CHECK));
+        saveButton.setId(saveButtonId);
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveButton.addClickListener(event -> saveClickHandler.onClick());
+
+        Button cancelButton = new Button(cancelButtonText, new Icon(VaadinIcon.CLOSE));
+        cancelButton.setId(cancelButtonId);
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        cancelButton.addClickListener(event -> dialog.close());
+
+        HorizontalLayout buttonLayout = new HorizontalLayout(saveButton, cancelButton);
+        buttonLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
+        buttonLayout.setWidthFull();
+        buttonLayout.getStyle().set("margin-top", "var(--lumo-space-m)");
+
+        return buttonLayout;
+    }
+
+    /**
      * Creates a standardized header layout with a title, icon, and create button
      *
      * @param title                    The title text to display
@@ -41,7 +79,12 @@ public final class VaadinUtils {
      * @param createButtonClickHandler Click handler for the create button
      * @return A configured HorizontalLayout containing the header elements
      */
-    public static HorizontalLayout createHeader(String title, String titleId, VaadinIcon titleIcon, String createButtonId, CreateButtonClickHandler createButtonClickHandler) {
+    public static HorizontalLayout createHeader(
+            String title,
+            String titleId,
+            VaadinIcon titleIcon,
+            String createButtonId,
+            CreateButtonClickHandler createButtonClickHandler) {
         HorizontalLayout headerLayout = new HorizontalLayout();
         headerLayout.setWidthFull();
         headerLayout.setPadding(false);
@@ -77,6 +120,14 @@ public final class VaadinUtils {
      */
     @FunctionalInterface
     public interface CreateButtonClickHandler {
+        void onClick();
+    }
+
+    /**
+     * Functional interface for dialog save button click handlers
+     */
+    @FunctionalInterface
+    public interface SaveButtonClickHandler {
         void onClick();
     }
 }

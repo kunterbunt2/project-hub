@@ -17,8 +17,6 @@
 
 package de.bushnaq.abdalla.projecthub.ui.dialog;
 
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -32,6 +30,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import de.bushnaq.abdalla.projecthub.dto.Location;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.rest.api.LocationApi;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
 import de.focus_shift.jollyday.core.HolidayManager;
 import de.focus_shift.jollyday.core.ManagerParameters;
 
@@ -57,9 +56,9 @@ public class LocationDialog extends Dialog {
     private final       User             user;
 
     public LocationDialog(Location location, User user, LocationApi locationApi, Consumer<Void> onSaveCallback) {
-		this.location       = location;
+        this.location       = location;
         this.user           = user;
-        this.locationApi = locationApi;
+        this.locationApi    = locationApi;
         this.onSaveCallback = onSaveCallback;
 
         // Set the dialog title with an icon
@@ -89,23 +88,6 @@ public class LocationDialog extends Dialog {
         add(content);
 
         initFormValues();
-    }
-
-    private HorizontalLayout createButtonLayout() {
-        Button saveButton = new Button("Save");
-        saveButton.setId(CONFIRM_BUTTON);
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        saveButton.addClickListener(event -> save());
-
-        Button cancelButton = new Button("Cancel");
-        cancelButton.setId(CANCEL_BUTTON);
-        cancelButton.addClickListener(event -> close());
-
-        HorizontalLayout buttonLayout = new HorizontalLayout(saveButton, cancelButton);
-        buttonLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
-        buttonLayout.setWidthFull();
-
-        return buttonLayout;
     }
 
     private VerticalLayout createDialogContent() {
@@ -144,7 +126,7 @@ public class LocationDialog extends Dialog {
         startDatePicker.setMax(LocalDate.now().plusYears(10));
         startDatePicker.setPrefixComponent(new Icon(VaadinIcon.CALENDAR));
 
-        content.add(countryComboBox, stateComboBox, startDatePicker, createButtonLayout());
+        content.add(countryComboBox, stateComboBox, startDatePicker, VaadinUtils.createDialogButtonLayout("Save", CONFIRM_BUTTON, "Cancel", CANCEL_BUTTON, this::save, this));
         return content;
     }
 

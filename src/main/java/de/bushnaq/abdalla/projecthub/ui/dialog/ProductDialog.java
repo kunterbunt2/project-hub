@@ -17,8 +17,6 @@
 
 package de.bushnaq.abdalla.projecthub.ui.dialog;
 
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -28,18 +26,21 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import de.bushnaq.abdalla.projecthub.dto.Product;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
 
 /**
  * A reusable dialog for creating and editing products.
  */
 public class ProductDialog extends Dialog {
 
-    public static final String    CANCEL_BUTTON      = "cancel-product-button";
-    public static final String    CONFIRM_BUTTON     = "save-product-button";
-    public static final String    PRODUCT_DIALOG     = "product-dialog";
-    public static final String    PRODUCT_NAME_FIELD = "product-name-field";
-    private final       boolean   isEditMode;
-    private final       TextField nameField;
+    public static final String       CANCEL_BUTTON      = "cancel-product-button";
+    public static final String       CONFIRM_BUTTON     = "save-product-button";
+    public static final String       PRODUCT_DIALOG     = "product-dialog";
+    public static final String       PRODUCT_NAME_FIELD = "product-name-field";
+    private final       boolean      isEditMode;
+    private final       TextField    nameField;
+    private final       Product      product;
+    private final       SaveCallback saveCallback;
 
     /**
      * Creates a dialog for creating or editing a product.
@@ -48,7 +49,9 @@ public class ProductDialog extends Dialog {
      * @param saveCallback Callback that receives the product with updated values and a reference to this dialog
      */
     public ProductDialog(Product product, SaveCallback saveCallback) {
-        isEditMode = product != null;
+        this.product      = product;
+        this.saveCallback = saveCallback;
+        isEditMode        = product != null;
 
         // Set the dialog title with an icon
         String title = isEditMode ? "Edit Product" : "Create Product";
@@ -92,40 +95,29 @@ public class ProductDialog extends Dialog {
 
         dialogLayout.add(nameField);
 
-        Button saveButton = new Button("Save", new Icon(VaadinIcon.CHECK));
-        saveButton.addClickListener(e -> {
-            if (nameField.getValue().trim().isEmpty()) {
-                Notification.show("Please enter a product name", 3000, Notification.Position.MIDDLE);
-                return;
-            }
-
-            Product productToSave;
-            if (isEditMode) {
-                productToSave = product;
-                productToSave.setName(nameField.getValue().trim());
-            } else {
-                productToSave = new Product();
-                productToSave.setName(nameField.getValue().trim());
-            }
-
-            // Call the save callback with the product and a reference to this dialog
-            saveCallback.save(productToSave, this);
-        });
-        saveButton.setId(CONFIRM_BUTTON);
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-
-        Button cancelButton = new Button("Cancel", new Icon(VaadinIcon.CLOSE));
-        cancelButton.addClickListener(e -> close());
-        cancelButton.setId(CANCEL_BUTTON);
-
-        HorizontalLayout buttonLayout = new HorizontalLayout();
-        buttonLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
-        buttonLayout.add(cancelButton, saveButton);
-        buttonLayout.setWidthFull();
-
-        dialogLayout.add(buttonLayout);
+        dialogLayout.add(VaadinUtils.createDialogButtonLayout("Save", CONFIRM_BUTTON, "Cancel", CANCEL_BUTTON, this::save, this));
 
         add(dialogLayout);
+    }
+
+    private void save() {
+        if (nameField.getValue().trim().isEmpty()) {
+            Notification.show("Please enter a product name", 3000, Notification.Position.MIDDLE);
+            return;
+        }
+
+        Product productToSave;
+        if (isEditMode) {
+            productToSave = product;
+            productToSave.setName(nameField.getValue().trim());
+        } else {
+            productToSave = new Product();
+            productToSave.setName(nameField.getValue().trim());
+        }
+
+        // Call the save callback with the product and a reference to this dialog
+        saveCallback.save(productToSave, this);
+
     }
 
     /**

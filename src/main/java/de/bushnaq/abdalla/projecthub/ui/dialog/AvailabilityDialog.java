@@ -17,8 +17,6 @@
 
 package de.bushnaq.abdalla.projecthub.ui.dialog;
 
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -37,6 +35,7 @@ import com.vaadin.flow.data.validator.RangeValidator;
 import de.bushnaq.abdalla.projecthub.dto.Availability;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.rest.api.AvailabilityApi;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
 
 import java.time.LocalDate;
 
@@ -90,7 +89,7 @@ public class AvailabilityDialog extends Dialog {
 //        setResizable(true);
 
         // Setup form and actions
-        add(createHeader(), createForm(), createButtonLayout());
+        add(createHeader(), createForm(), VaadinUtils.createDialogButtonLayout("Save", CONFIRM_BUTTON, "Cancel", CANCEL_BUTTON, this::save, this));
         configureFormBinder();
     }
 
@@ -127,25 +126,6 @@ public class AvailabilityDialog extends Dialog {
         }
     }
 
-    private HorizontalLayout createButtonLayout() {
-        Button saveButton = new Button("Save", new Icon(VaadinIcon.CHECK));
-        saveButton.setId(CONFIRM_BUTTON);
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        saveButton.addClickListener(event -> saveAvailability());
-
-        Button cancelButton = new Button("Cancel", new Icon(VaadinIcon.CLOSE));
-        cancelButton.setId(CANCEL_BUTTON);
-        cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-        cancelButton.addClickListener(event -> close());
-
-        HorizontalLayout buttonLayout = new HorizontalLayout(saveButton, cancelButton);
-        buttonLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
-        buttonLayout.setWidthFull();
-        buttonLayout.getStyle().set("margin-top", "var(--lumo-space-m)");
-
-        return buttonLayout;
-    }
-
     private FormLayout createForm() {
         FormLayout formLayout = new FormLayout();
 
@@ -172,7 +152,7 @@ public class AvailabilityDialog extends Dialog {
         return header;
     }
 
-    private void saveAvailability() {
+    private void save() {
         try {
             // Validate all fields first - this will trigger validation and show error messages
             if (!binder.validate().isOk()) {

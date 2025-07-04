@@ -17,8 +17,6 @@
 
 package de.bushnaq.abdalla.projecthub.ui.dialog;
 
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -36,6 +34,7 @@ import de.bushnaq.abdalla.projecthub.dto.OffDay;
 import de.bushnaq.abdalla.projecthub.dto.OffDayType;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.rest.api.OffDayApi;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -93,7 +92,7 @@ public class OffDayDialog extends Dialog {
 //        setResizable(true);
 
         // Setup form and actions
-        add(createHeader(), createForm(), createButtonLayout());
+        add(createHeader(), createForm(), VaadinUtils.createDialogButtonLayout("Save", CONFIRM_BUTTON, "Cancel", CANCEL_BUTTON, this::save, this));
         configureFormBinder();
     }
 
@@ -123,25 +122,6 @@ public class OffDayDialog extends Dialog {
         if (!isNewOffDay) {
             binder.readBean(offDay);
         }
-    }
-
-    private HorizontalLayout createButtonLayout() {
-        Button saveButton = new Button("Save", new Icon(VaadinIcon.CHECK));
-        saveButton.setId(CONFIRM_BUTTON);
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        saveButton.addClickListener(event -> saveOffDay());
-
-        Button cancelButton = new Button("Cancel", new Icon(VaadinIcon.CLOSE));
-        cancelButton.setId(CANCEL_BUTTON);
-        cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-        cancelButton.addClickListener(event -> close());
-
-        HorizontalLayout buttonLayout = new HorizontalLayout(saveButton, cancelButton);
-        buttonLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
-        buttonLayout.setWidthFull();
-        buttonLayout.getStyle().set("margin-top", "var(--lumo-space-m)");
-
-        return buttonLayout;
     }
 
     private FormLayout createForm() {
@@ -179,7 +159,7 @@ public class OffDayDialog extends Dialog {
         return header;
     }
 
-    private void saveOffDay() {
+    private void save() {
         try {
             // Validate all fields first - this will trigger validation and show error messages
             if (!binder.validate().isOk()) {

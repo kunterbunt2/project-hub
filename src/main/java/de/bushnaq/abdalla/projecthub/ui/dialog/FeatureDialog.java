@@ -17,8 +17,6 @@
 
 package de.bushnaq.abdalla.projecthub.ui.dialog;
 
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -28,27 +26,32 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import de.bushnaq.abdalla.projecthub.dto.Feature;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
 
 /**
  * A reusable dialog for creating and editing features.
  */
 public class FeatureDialog extends Dialog {
 
-    public static final String    CANCEL_BUTTON      = "cancel-feature-button";
-    public static final String    CONFIRM_BUTTON     = "save-feature-button";
-    public static final String    FEATURE_DIALOG     = "feature-dialog";
-    public static final String    FEATURE_NAME_FIELD = "feature-name-field";
-    private final       boolean   isEditMode;
-    private final       TextField nameField;
+    public static final String       CANCEL_BUTTON      = "cancel-feature-button";
+    public static final String       CONFIRM_BUTTON     = "save-feature-button";
+    public static final String       FEATURE_DIALOG     = "feature-dialog";
+    public static final String       FEATURE_NAME_FIELD = "feature-name-field";
+    private final       Feature      feature;
+    private final       boolean      isEditMode;
+    private final       TextField    nameField;
+    private final       SaveCallback onSaveCallback;
 
     /**
      * Creates a dialog for creating or editing a feature.
      *
-     * @param feature      The feature to edit, or null for creating a new feature
-     * @param saveCallback Callback that receives the feature with updated values and a reference to this dialog
+     * @param feature        The feature to edit, or null for creating a new feature
+     * @param onSaveCallback Callback that receives the feature with updated values and a reference to this dialog
      */
-    public FeatureDialog(Feature feature, SaveCallback saveCallback) {
-        isEditMode = feature != null;
+    public FeatureDialog(Feature feature, SaveCallback onSaveCallback) {
+        this.feature        = feature;
+        this.onSaveCallback = onSaveCallback;
+        isEditMode          = feature != null;
 
         // Set the dialog title with an icon
         String title = isEditMode ? "Edit Feature" : "Create Feature";
@@ -91,38 +94,29 @@ public class FeatureDialog extends Dialog {
 
         dialogLayout.add(nameField);
 
-        Button saveButton = new Button("Save", e -> {
-            if (nameField.getValue().trim().isEmpty()) {
-                Notification.show("Please enter a feature name", 3000, Notification.Position.MIDDLE);
-                return;
-            }
-
-            Feature featureToSave;
-            if (isEditMode) {
-                featureToSave = feature;
-                featureToSave.setName(nameField.getValue().trim());
-            } else {
-                featureToSave = new Feature();
-                featureToSave.setName(nameField.getValue().trim());
-            }
-
-            // Call the save callback with the feature and a reference to this dialog
-            saveCallback.save(featureToSave, this);
-        });
-        saveButton.setId(CONFIRM_BUTTON);
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-
-        Button cancelButton = new Button("Cancel", e -> close());
-        cancelButton.setId(CANCEL_BUTTON);
-
-        HorizontalLayout buttonLayout = new HorizontalLayout();
-        buttonLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
-        buttonLayout.add(cancelButton, saveButton);
-        buttonLayout.setWidthFull();
-
-        dialogLayout.add(buttonLayout);
+        dialogLayout.add(VaadinUtils.createDialogButtonLayout("Save", CONFIRM_BUTTON, "Cancel", CANCEL_BUTTON, this::save, this));
         add(dialogLayout);
     }
+
+    private void save() {
+        if (nameField.getValue().trim().isEmpty()) {
+            Notification.show("Please enter a feature name", 3000, Notification.Position.MIDDLE);
+            return;
+        }
+
+        Feature featureToSave;
+        if (isEditMode) {
+            featureToSave = feature;
+            featureToSave.setName(nameField.getValue().trim());
+        } else {
+            featureToSave = new Feature();
+            featureToSave.setName(nameField.getValue().trim());
+        }
+
+        // Call the save callback with the feature and a reference to this dialog
+        onSaveCallback.save(featureToSave, this);
+    }
+
 
     /**
      * Sets an error message on the name field to indicate uniqueness violation

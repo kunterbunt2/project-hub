@@ -17,8 +17,6 @@
 
 package de.bushnaq.abdalla.projecthub.ui.dialog;
 
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -28,18 +26,21 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
 
 /**
  * A reusable dialog for creating and editing sprints.
  */
 public class SprintDialog extends Dialog {
 
-    public static final String    CANCEL_BUTTON     = "cancel-sprint-button";
-    public static final String    CONFIRM_BUTTON    = "save-sprint-button";
-    public static final String    SPRINT_DIALOG     = "sprint-dialog";
-    public static final String    SPRINT_NAME_FIELD = "sprint-name-field";
-    private final       boolean   isEditMode;
-    private final       TextField nameField;
+    public static final String       CANCEL_BUTTON     = "cancel-sprint-button";
+    public static final String       CONFIRM_BUTTON    = "save-sprint-button";
+    public static final String       SPRINT_DIALOG     = "sprint-dialog";
+    public static final String       SPRINT_NAME_FIELD = "sprint-name-field";
+    private final       boolean      isEditMode;
+    private final       TextField    nameField;
+    private final       SaveCallback saveCallback;
+    private final       Sprint       sprint;
 
     /**
      * Creates a dialog for creating or editing a sprint.
@@ -48,7 +49,9 @@ public class SprintDialog extends Dialog {
      * @param saveCallback Callback that receives the sprint with updated values and a reference to this dialog
      */
     public SprintDialog(Sprint sprint, SaveCallback saveCallback) {
-        isEditMode = sprint != null;
+        this.sprint       = sprint;
+        this.saveCallback = saveCallback;
+        isEditMode        = sprint != null;
 
         // Set the dialog title with an icon
         String title = isEditMode ? "Edit Sprint" : "Create Sprint";
@@ -91,37 +94,28 @@ public class SprintDialog extends Dialog {
 
         dialogLayout.add(nameField);
 
-        Button saveButton = new Button("Save", e -> {
-            if (nameField.getValue().trim().isEmpty()) {
-                Notification.show("Please enter a sprint name", 3000, Notification.Position.MIDDLE);
-                return;
-            }
-
-            Sprint sprintToSave;
-            if (isEditMode) {
-                sprintToSave = sprint;
-                sprintToSave.setName(nameField.getValue().trim());
-            } else {
-                sprintToSave = new Sprint();
-                sprintToSave.setName(nameField.getValue().trim());
-            }
-
-            // Call the save callback with the sprint and a reference to this dialog
-            saveCallback.save(sprintToSave, this);
-        });
-        saveButton.setId(CONFIRM_BUTTON);
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-
-        Button cancelButton = new Button("Cancel", e -> close());
-        cancelButton.setId(CANCEL_BUTTON);
-
-        HorizontalLayout buttonLayout = new HorizontalLayout();
-        buttonLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
-        buttonLayout.add(cancelButton, saveButton);
-        buttonLayout.setWidthFull();
-
-        dialogLayout.add(buttonLayout);
+        dialogLayout.add(VaadinUtils.createDialogButtonLayout("Save", CONFIRM_BUTTON, "Cancel", CANCEL_BUTTON, this::save, this));
         add(dialogLayout);
+    }
+
+    private void save() {
+        if (nameField.getValue().trim().isEmpty()) {
+            Notification.show("Please enter a sprint name", 3000, Notification.Position.MIDDLE);
+            return;
+        }
+
+        Sprint sprintToSave;
+        if (isEditMode) {
+            sprintToSave = sprint;
+            sprintToSave.setName(nameField.getValue().trim());
+        } else {
+            sprintToSave = new Sprint();
+            sprintToSave.setName(nameField.getValue().trim());
+        }
+
+        // Call the save callback with the sprint and a reference to this dialog
+        saveCallback.save(sprintToSave, this);
+
     }
 
     /**
