@@ -23,7 +23,6 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -38,6 +37,7 @@ import de.bushnaq.abdalla.projecthub.rest.api.SprintApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.SprintDialog;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
 import de.bushnaq.abdalla.util.date.DateUtil;
 import jakarta.annotation.security.PermitAll;
 import org.springframework.http.HttpStatus;
@@ -62,8 +62,8 @@ public class SprintListView extends Main implements AfterNavigationObserver {
     public static final String       SPRINT_LIST_PAGE_TITLE           = "sprint-list-page-title";
     private final       Clock        clock;
     private             Long         featureId;
-    private final       Grid<Sprint> grid;
-    private final       H2           pageTitle;
+    private             Grid<Sprint> grid;
+    //    private             H2           pageTitle;
     private             Long         productId;
     private final       SprintApi    sprintApi;
     private             Long         versionId;
@@ -72,35 +72,73 @@ public class SprintListView extends Main implements AfterNavigationObserver {
         this.sprintApi = sprintApi;
         this.clock     = clock;
 
-        // Create header layout with title and create button
-        HorizontalLayout headerLayout = new HorizontalLayout();
-        headerLayout.setWidthFull();
-        headerLayout.setPadding(false);
-        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-        headerLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+        setSizeFull();
+        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        // Create title layout with icon
-        HorizontalLayout titleLayout = new HorizontalLayout();
-        titleLayout.setSpacing(true);
-        titleLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+        add(VaadinUtils.createHeader("Sprints", SPRINT_LIST_PAGE_TITLE, VaadinIcon.TASKS, CREATE_SPRINT_BUTTON, () -> openSprintDialog(null)), createGrid(clock));
+    }
 
-        Icon sprintIcon = new Icon(VaadinIcon.TIMER);
-        pageTitle = new H2("Sprints");
-        pageTitle.setId(SPRINT_LIST_PAGE_TITLE);
-        pageTitle.addClassNames(
-                LumoUtility.Margin.Top.MEDIUM,
-                LumoUtility.Margin.Bottom.SMALL
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+        //- Get query parameters
+        Location        location        = event.getLocation();
+        QueryParameters queryParameters = location.getQueryParameters();
+        if (queryParameters.getParameters().containsKey("product")) {
+            this.productId = Long.parseLong(queryParameters.getParameters().get("product").getFirst());
+        }
+        if (queryParameters.getParameters().containsKey("version")) {
+            this.versionId = Long.parseLong(queryParameters.getParameters().get("version").getFirst());
+        }
+        if (queryParameters.getParameters().containsKey("feature")) {
+            this.featureId = Long.parseLong(queryParameters.getParameters().get("feature").getFirst());
+//            pageTitle.setText("Sprints of Feature ID: " + featureId);
+        }
+        //- update breadcrumbs
+        getElement().getParent().getComponent()
+                .ifPresent(component -> {
+                    if (component instanceof MainLayout mainLayout) {
+                        mainLayout.getBreadcrumbs().clear();
+                        mainLayout.getBreadcrumbs().addItem("Products", ProductListView.class);
+                        {
+                            Map<String, String> params = new HashMap<>();
+                            params.put("product", String.valueOf(productId));
+                            mainLayout.getBreadcrumbs().addItem("Versions", VersionListView.class, params);
+                        }
+                        {
+                            Map<String, String> params = new HashMap<>();
+                            params.put("product", String.valueOf(productId));
+                            params.put("version", String.valueOf(versionId));
+                            mainLayout.getBreadcrumbs().addItem("Projects", FeatureListView.class, params);
+                        }
+                        {
+                            Map<String, String> params = new HashMap<>();
+                            params.put("product", String.valueOf(productId));
+                            params.put("version", String.valueOf(versionId));
+                            params.put("feature", String.valueOf(featureId));
+                            mainLayout.getBreadcrumbs().addItem("Sprints", SprintListView.class, params);
+                        }
+                    }
+                });
+
+        refreshGrid();
+    }
+
+    private void confirmDelete(Sprint sprint) {
+        String message = "Are you sure you want to delete sprint \"" + sprint.getName() + "\"?";
+        ConfirmDialog dialog = new ConfirmDialog(
+                "Confirm Delete",
+                message,
+                "Delete",
+                () -> {
+                    sprintApi.deleteById(sprint.getId());
+                    refreshGrid();
+                    Notification.show("Sprint deleted", 3000, Notification.Position.BOTTOM_START);
+                }
         );
+        dialog.open();
+    }
 
-        titleLayout.add(sprintIcon, pageTitle);
-
-        Button createButton = new Button("Create", new Icon(VaadinIcon.PLUS));
-        createButton.setId(CREATE_SPRINT_BUTTON);
-        createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        createButton.addClickListener(e -> openSprintDialog(null));
-
-        headerLayout.add(titleLayout, createButton);
-
+    private Grid<Sprint> createGrid(Clock clock) {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
         grid = new Grid<>();
@@ -189,71 +227,7 @@ public class SprintListView extends Main implements AfterNavigationObserver {
                     QueryParameters.simple(params)
             );
         });
-
-        setSizeFull();
-        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
-
-        add(headerLayout, grid);
-    }
-
-    @Override
-    public void afterNavigation(AfterNavigationEvent event) {
-        //- Get query parameters
-        Location        location        = event.getLocation();
-        QueryParameters queryParameters = location.getQueryParameters();
-        if (queryParameters.getParameters().containsKey("product")) {
-            this.productId = Long.parseLong(queryParameters.getParameters().get("product").getFirst());
-        }
-        if (queryParameters.getParameters().containsKey("version")) {
-            this.versionId = Long.parseLong(queryParameters.getParameters().get("version").getFirst());
-        }
-        if (queryParameters.getParameters().containsKey("feature")) {
-            this.featureId = Long.parseLong(queryParameters.getParameters().get("feature").getFirst());
-            pageTitle.setText("Sprints of Feature ID: " + featureId);
-        }
-        //- update breadcrumbs
-        getElement().getParent().getComponent()
-                .ifPresent(component -> {
-                    if (component instanceof MainLayout mainLayout) {
-                        mainLayout.getBreadcrumbs().clear();
-                        mainLayout.getBreadcrumbs().addItem("Products", ProductListView.class);
-                        {
-                            Map<String, String> params = new HashMap<>();
-                            params.put("product", String.valueOf(productId));
-                            mainLayout.getBreadcrumbs().addItem("Versions", VersionListView.class, params);
-                        }
-                        {
-                            Map<String, String> params = new HashMap<>();
-                            params.put("product", String.valueOf(productId));
-                            params.put("version", String.valueOf(versionId));
-                            mainLayout.getBreadcrumbs().addItem("Projects", FeatureListView.class, params);
-                        }
-                        {
-                            Map<String, String> params = new HashMap<>();
-                            params.put("product", String.valueOf(productId));
-                            params.put("version", String.valueOf(versionId));
-                            params.put("feature", String.valueOf(featureId));
-                            mainLayout.getBreadcrumbs().addItem("Sprints", SprintListView.class, params);
-                        }
-                    }
-                });
-
-        refreshGrid();
-    }
-
-    private void confirmDelete(Sprint sprint) {
-        String message = "Are you sure you want to delete sprint \"" + sprint.getName() + "\"?";
-        ConfirmDialog dialog = new ConfirmDialog(
-                "Confirm Delete",
-                message,
-                "Delete",
-                () -> {
-                    sprintApi.deleteById(sprint.getId());
-                    refreshGrid();
-                    Notification.show("Sprint deleted", 3000, Notification.Position.BOTTOM_START);
-                }
-        );
-        dialog.open();
+        return grid;
     }
 
     private void openSprintDialog(Sprint sprint) {

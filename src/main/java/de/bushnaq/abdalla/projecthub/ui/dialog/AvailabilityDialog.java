@@ -70,7 +70,7 @@ public class AvailabilityDialog extends Dialog {
         headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
         headerLayout.setSpacing(true);
 
-        Icon titleIcon = new Icon(VaadinIcon.CLOCK);
+        Icon titleIcon = new Icon(VaadinIcon.CHART);
         titleIcon.getStyle().set("margin-right", "0.5em");
 
         H3 titleLabel = new H3(title);
@@ -158,7 +158,7 @@ public class AvailabilityDialog extends Dialog {
         availabilityField.setWidthFull();
         availabilityField.setHelperText("Value between 0-150% (e.g., 100 = full time)");
         availabilityField.setSuffixComponent(new Span("%"));
-        availabilityField.setPrefixComponent(new Icon(VaadinIcon.CLOCK));
+        availabilityField.setPrefixComponent(new Icon(VaadinIcon.CHART));
         availabilityField.setId(AVAILABILITY_PERCENTAGE_FIELD);
 
         formLayout.add(startDateField, availabilityField);

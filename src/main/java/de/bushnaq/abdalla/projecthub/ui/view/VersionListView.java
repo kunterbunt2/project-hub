@@ -23,7 +23,6 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -38,6 +37,7 @@ import de.bushnaq.abdalla.projecthub.rest.api.VersionApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.VersionDialog;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
 import jakarta.annotation.security.PermitAll;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -61,8 +61,8 @@ public class VersionListView extends Main implements AfterNavigationObserver {
     public static final String        VERSION_GRID_NAME_PREFIX          = "version-grid-name-";
     public static final String        VERSION_LIST_PAGE_TITLE           = "version-list-page-title";
     private final       Clock         clock;
-    private final       Grid<Version> grid;
-    private final       H2            pageTitle;
+    private             Grid<Version> grid;
+    //    private             H2            pageTitle;
     private             Long          productId;
     private final       VersionApi    versionApi;
 
@@ -70,35 +70,53 @@ public class VersionListView extends Main implements AfterNavigationObserver {
         this.versionApi = versionApi;
         this.clock      = clock;
 
-        // Create header layout with title and create button
-        HorizontalLayout headerLayout = new HorizontalLayout();
-        headerLayout.setWidthFull();
-        headerLayout.setPadding(false);
-        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-        headerLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+        setSizeFull();
+        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        // Create title layout with icon
-        HorizontalLayout titleLayout = new HorizontalLayout();
-        titleLayout.setSpacing(true);
-        titleLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+        add(VaadinUtils.createHeader("Versions", VERSION_LIST_PAGE_TITLE, VaadinIcon.TAG, CREATE_VERSION_BUTTON, () -> openVersionDialog(null)), createGrid(clock));
+    }
 
-        Icon versionIcon = new Icon(VaadinIcon.TAG);
-        pageTitle = new H2("Versions");
-        pageTitle.setId(VERSION_LIST_PAGE_TITLE);
-        pageTitle.addClassNames(
-                LumoUtility.Margin.Top.MEDIUM,
-                LumoUtility.Margin.Bottom.SMALL
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+        //- Get query parameters
+        Location        location        = event.getLocation();
+        QueryParameters queryParameters = location.getQueryParameters();
+        if (queryParameters.getParameters().containsKey("product")) {
+            this.productId = Long.parseLong(queryParameters.getParameters().get("product").getFirst());
+//            pageTitle.setText("Versions of Product ID: " + productId);
+        }
+        //- update breadcrumbs
+        getElement().getParent().getComponent()
+                .ifPresent(component -> {
+                    if (component instanceof MainLayout mainLayout) {
+                        mainLayout.getBreadcrumbs().clear();
+                        mainLayout.getBreadcrumbs().addItem("Products", ProductListView.class);
+                        Map<String, String> params = new HashMap<>();
+                        params.put("product", String.valueOf(productId));
+                        mainLayout.getBreadcrumbs().addItem("Versions", VersionListView.class, params);
+                    }
+                });
+
+        refreshGrid();
+    }
+
+    private void confirmDelete(Version version) {
+        String message = "Are you sure you want to delete version \"" + version.getName() + "\"?";
+        ConfirmDialog dialog = new ConfirmDialog(
+                "Confirm Delete",
+                message,
+                "Delete",
+                () -> {
+                    versionApi.deleteById(version.getId());
+                    refreshGrid();
+                    Notification.show("Version deleted", 3000, Notification.Position.BOTTOM_START);
+                }
         );
+        dialog.open();
+    }
 
-        titleLayout.add(versionIcon, pageTitle);
-
-        Button createButton = new Button("Create", new Icon(VaadinIcon.PLUS));
-        createButton.setId(CREATE_VERSION_BUTTON);
-        createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        createButton.addClickListener(e -> openVersionDialog(null));
-
-        headerLayout.add(titleLayout, createButton);
-
+    private Grid<Version> createGrid(Clock clock) {
+//        final Grid<Version> grid;
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
         grid = new Grid<>();
@@ -123,7 +141,7 @@ public class VersionListView extends Main implements AfterNavigationObserver {
             return div;
         })).setHeader("Name");
         nameColumn.setId("version-grid-name-column");
-        nameColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.PACKAGE), new Div(new Text("Name"))));
+        nameColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.TAG), new Div(new Text("Name"))));
 
         Grid.Column<Version> createdColumn = grid.addColumn(version -> dateTimeFormatter.format(version.getCreated())).setHeader("Created");
         createdColumn.setId("version-grid-created-column");
@@ -170,50 +188,7 @@ public class VersionListView extends Main implements AfterNavigationObserver {
                     QueryParameters.simple(params)
             );
         });
-
-        setSizeFull();
-        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
-
-        add(headerLayout, grid);
-    }
-
-    @Override
-    public void afterNavigation(AfterNavigationEvent event) {
-        //- Get query parameters
-        Location        location        = event.getLocation();
-        QueryParameters queryParameters = location.getQueryParameters();
-        if (queryParameters.getParameters().containsKey("product")) {
-            this.productId = Long.parseLong(queryParameters.getParameters().get("product").getFirst());
-            pageTitle.setText("Versions of Product ID: " + productId);
-        }
-        //- update breadcrumbs
-        getElement().getParent().getComponent()
-                .ifPresent(component -> {
-                    if (component instanceof MainLayout mainLayout) {
-                        mainLayout.getBreadcrumbs().clear();
-                        mainLayout.getBreadcrumbs().addItem("Products", ProductListView.class);
-                        Map<String, String> params = new HashMap<>();
-                        params.put("product", String.valueOf(productId));
-                        mainLayout.getBreadcrumbs().addItem("Versions", VersionListView.class, params);
-                    }
-                });
-
-        refreshGrid();
-    }
-
-    private void confirmDelete(Version version) {
-        String message = "Are you sure you want to delete version \"" + version.getName() + "\"?";
-        ConfirmDialog dialog = new ConfirmDialog(
-                "Confirm Delete",
-                message,
-                "Delete",
-                () -> {
-                    versionApi.deleteById(version.getId());
-                    refreshGrid();
-                    Notification.show("Version deleted", 3000, Notification.Position.BOTTOM_START);
-                }
-        );
-        dialog.open();
+        return grid;
     }
 
     private void openVersionDialog(Version version) {

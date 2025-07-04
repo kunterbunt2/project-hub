@@ -20,7 +20,6 @@ package de.bushnaq.abdalla.projecthub.ui.view;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
@@ -41,6 +40,7 @@ import de.bushnaq.abdalla.projecthub.rest.api.UserApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.dialog.AvailabilityDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
 import jakarta.annotation.security.PermitAll;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -65,7 +65,7 @@ public class AvailabilityListView extends Main implements BeforeEnterObserver, A
     public static final String             AVAILABILITY_GRID_START_DATE_PREFIX    = "availability-start-";
     public static final String             AVAILABILITY_LIST_PAGE_TITLE           = "availability-page-title";
     public static final String             CREATE_AVAILABILITY_BUTTON             = "create-availability-button";
-    public static final String             INFO_BOX                               = "availability-info-box";
+    //    public static final String             INFO_BOX                               = "availability-info-box";
     public static final String             ROUTE                                  = "availability";
     private final       AvailabilityApi    availabilityApi;
     private             User               currentUser;
@@ -79,7 +79,7 @@ public class AvailabilityListView extends Main implements BeforeEnterObserver, A
 
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
-        add(createHeader(), createGrid());
+        add(VaadinUtils.createHeader("User Availability", AVAILABILITY_LIST_PAGE_TITLE, VaadinIcon.CHART, CREATE_AVAILABILITY_BUTTON, () -> openAvailabilityDialog(null)), createGrid());
     }
 
     @Override
@@ -222,34 +222,6 @@ public class AvailabilityListView extends Main implements BeforeEnterObserver, A
         })).setHeader("Actions").setFlexGrow(0).setWidth("120px");
 
         return grid;
-    }
-
-    private HorizontalLayout createHeader() {
-        // Create title layout with icon
-        HorizontalLayout titleLayout = new HorizontalLayout();
-        titleLayout.setSpacing(true);
-        titleLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-
-        Icon availabilityIcon = new Icon(VaadinIcon.CLOCK);
-        H2   heading          = new H2("Manage Your Availability");
-        heading.setId(AVAILABILITY_LIST_PAGE_TITLE);
-        heading.addClassNames(LumoUtility.Margin.NONE);
-
-        titleLayout.add(availabilityIcon, heading);
-
-        Button addButton = new Button("Add Availability");
-        addButton.setId(CREATE_AVAILABILITY_BUTTON);
-        addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        addButton.setIcon(new Icon(VaadinIcon.PLUS));
-        addButton.addClickListener(e -> openAvailabilityDialog(null));
-
-        HorizontalLayout headerLayout = new HorizontalLayout(titleLayout, addButton);
-        headerLayout.setWidthFull();
-        headerLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
-        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-        headerLayout.addClassNames(LumoUtility.Margin.Bottom.MEDIUM);
-
-        return headerLayout;
     }
 
     private HorizontalLayout createHeaderWithIcon(VaadinIcon icon, String text) {

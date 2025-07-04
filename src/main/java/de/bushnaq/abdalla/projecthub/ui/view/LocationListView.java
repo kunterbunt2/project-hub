@@ -20,7 +20,6 @@ package de.bushnaq.abdalla.projecthub.ui.view;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
@@ -40,6 +39,7 @@ import de.bushnaq.abdalla.projecthub.rest.api.UserApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.LocationDialog;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
 import de.focus_shift.jollyday.core.HolidayManager;
 import de.focus_shift.jollyday.core.ManagerParameters;
 import jakarta.annotation.security.PermitAll;
@@ -59,7 +59,7 @@ import java.util.stream.Collectors;
 @PermitAll
 public class LocationListView extends Main implements BeforeEnterObserver, AfterNavigationObserver {
     public static final String         CREATE_LOCATION_BUTTON             = "create-location-button";
-    public static final String         INFO_BOX                           = "location-info-box";
+    //    public static final String         INFO_BOX                           = "location-info-box";
     public static final String         LOCATION_GRID                      = "location-grid";
     public static final String         LOCATION_GRID_COUNTRY_PREFIX       = "location-country-";
     public static final String         LOCATION_GRID_DELETE_BUTTON_PREFIX = "location-delete-button-";
@@ -80,7 +80,7 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        add(createHeader(), createLocationGrid());
+        add(VaadinUtils.createHeader("User Location", LOCATION_LIST_PAGE_TITLE, VaadinIcon.MAP_MARKER, CREATE_LOCATION_BUTTON, () -> openLocationDialog(null)), createLocationGrid());
     }
 
     @Override
@@ -164,37 +164,6 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
         Location location = new Location("DE", "nw", java.time.LocalDate.now());
         user.addLocation(location);
         return user;
-    }
-
-    private HorizontalLayout createHeader() {
-        HorizontalLayout headerLayout = new HorizontalLayout();
-        headerLayout.setWidthFull();
-        headerLayout.setPadding(false);
-        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-        headerLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
-
-        // Create title layout with icon
-        HorizontalLayout titleLayout = new HorizontalLayout();
-        titleLayout.setSpacing(true);
-        titleLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-
-        Icon locationIcon = new Icon(VaadinIcon.MAP_MARKER);
-        H2   pageTitle    = new H2("Locations");
-        pageTitle.setId(LOCATION_LIST_PAGE_TITLE);
-        pageTitle.addClassNames(
-                LumoUtility.Margin.Top.MEDIUM,
-                LumoUtility.Margin.Bottom.SMALL
-        );
-
-        titleLayout.add(locationIcon, pageTitle);
-
-        Button createButton = new Button("Create", new Icon(VaadinIcon.PLUS));
-        createButton.setId(CREATE_LOCATION_BUTTON);
-        createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        createButton.addClickListener(e -> openLocationDialog(null));
-
-        headerLayout.add(titleLayout, createButton);
-        return headerLayout;
     }
 
     private HorizontalLayout createHeaderWithIcon(VaadinIcon icon, String text) {

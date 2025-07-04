@@ -23,7 +23,6 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -38,6 +37,7 @@ import de.bushnaq.abdalla.projecthub.rest.api.ProductApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ProductDialog;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.http.HttpStatus;
@@ -73,7 +73,7 @@ public class ProductListView extends Main implements AfterNavigationObserver {
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        add(createHeader(), createGrid(clock));
+        add(VaadinUtils.createHeader("Products", PRODUCT_LIST_PAGE_TITLE, VaadinIcon.CUBE, CREATE_PRODUCT_BUTTON, () -> openProductDialog(null)), createGrid(clock));
     }
 
     @Override
@@ -178,37 +178,6 @@ public class ProductListView extends Main implements AfterNavigationObserver {
         return grid;
     }
 
-    private HorizontalLayout createHeader() {
-        HorizontalLayout headerLayout;
-        headerLayout = new HorizontalLayout();
-        headerLayout.setWidthFull();
-        headerLayout.setPadding(false);
-        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-        headerLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
-
-        // Create page title with icon
-        HorizontalLayout titleLayout = new HorizontalLayout();
-        titleLayout.setSpacing(true);
-        titleLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-
-        Icon productIcon = new Icon(VaadinIcon.CUBE);
-        H2   pageTitle   = new H2("Products");
-        pageTitle.setId(PRODUCT_LIST_PAGE_TITLE);
-        pageTitle.addClassNames(
-                LumoUtility.Margin.Top.MEDIUM,
-                LumoUtility.Margin.Bottom.SMALL
-        );
-
-        titleLayout.add(productIcon, pageTitle);
-
-        Button createButton = new Button("Create", new Icon(VaadinIcon.PLUS));
-        createButton.setId(CREATE_PRODUCT_BUTTON);
-        createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        createButton.addClickListener(e -> openProductDialog(null));
-
-        headerLayout.add(titleLayout, createButton);
-        return headerLayout;
-    }
 
     private void openProductDialog(Product product) {
         // Use the new SaveCallback interface that passes both the product and the dialog

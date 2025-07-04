@@ -22,7 +22,6 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -37,6 +36,7 @@ import de.bushnaq.abdalla.projecthub.rest.api.UserApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.UserDialog;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
 import jakarta.annotation.security.PermitAll;
 
 import java.time.Clock;
@@ -55,42 +55,46 @@ public class UserListView extends Main implements AfterNavigationObserver {
     public static final String     USER_GRID_NAME_PREFIX          = "user-grid-name-";
     public static final String     USER_LIST_PAGE_TITLE           = "user-list-page-title";
     private final       Clock      clock;
-    private final       Grid<User> grid;
+    private             Grid<User> grid;
     private final       UserApi    userApi;
 
     public UserListView(UserApi userApi, Clock clock) {
         this.userApi = userApi;
         this.clock   = clock;
 
-        // Create header layout with title and create button
-        HorizontalLayout headerLayout = new HorizontalLayout();
-        headerLayout.setWidthFull();
-        headerLayout.setPadding(false);
-        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-        headerLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+        setSizeFull();
+        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        // Create title layout with icon
-        HorizontalLayout titleLayout = new HorizontalLayout();
-        titleLayout.setSpacing(true);
-        titleLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+        add(VaadinUtils.createHeader("Users", USER_LIST_PAGE_TITLE, VaadinIcon.USERS, CREATE_USER_BUTTON, () -> openUserDialog(null)), createGrid(clock));
+    }
 
-        Icon userIcon  = new Icon(VaadinIcon.USER);
-        H2   pageTitle = new H2("Users");
-        pageTitle.setId(USER_LIST_PAGE_TITLE);
-        pageTitle.addClassNames(
-                LumoUtility.Margin.Top.MEDIUM,
-                LumoUtility.Margin.Bottom.SMALL
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+        getElement().getParent().getComponent()
+                .ifPresent(component -> {
+                    if (component instanceof MainLayout mainLayout) {
+                        mainLayout.getBreadcrumbs().clear();
+                        mainLayout.getBreadcrumbs().addItem("Users", UserListView.class);
+                    }
+                });
+    }
+
+    private void confirmDelete(User user) {
+        String message = "Are you sure you want to delete user \"" + user.getName() + "\"?";
+        ConfirmDialog dialog = new ConfirmDialog(
+                "Confirm Delete",
+                message,
+                "Delete",
+                () -> {
+                    userApi.deleteById(user.getId());
+                    refreshGrid();
+                    Notification.show("User deleted", 3000, Notification.Position.BOTTOM_START);
+                }
         );
+        dialog.open();
+    }
 
-        titleLayout.add(userIcon, pageTitle);
-
-        Button createButton = new Button("Create", new Icon(VaadinIcon.PLUS));
-        createButton.setId(CREATE_USER_BUTTON);
-        createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        createButton.addClickListener(e -> openUserDialog(null));
-
-        headerLayout.add(titleLayout, createButton);
-
+    private Grid<User> createGrid(Clock clock) {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
         grid = new Grid<>();
@@ -171,37 +175,7 @@ public class UserListView extends Main implements AfterNavigationObserver {
         })).setWidth("120px").setFlexGrow(0);
 
         grid.setSizeFull();
-
-        setSizeFull();
-        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
-
-        add(headerLayout, grid);
-    }
-
-    @Override
-    public void afterNavigation(AfterNavigationEvent event) {
-        getElement().getParent().getComponent()
-                .ifPresent(component -> {
-                    if (component instanceof MainLayout mainLayout) {
-                        mainLayout.getBreadcrumbs().clear();
-                        mainLayout.getBreadcrumbs().addItem("Users", UserListView.class);
-                    }
-                });
-    }
-
-    private void confirmDelete(User user) {
-        String message = "Are you sure you want to delete user \"" + user.getName() + "\"?";
-        ConfirmDialog dialog = new ConfirmDialog(
-                "Confirm Delete",
-                message,
-                "Delete",
-                () -> {
-                    userApi.deleteById(user.getId());
-                    refreshGrid();
-                    Notification.show("User deleted", 3000, Notification.Position.BOTTOM_START);
-                }
-        );
-        dialog.open();
+        return grid;
     }
 
     private void openUserDialog(User user) {

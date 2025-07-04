@@ -58,7 +58,7 @@ public class SprintDialog extends Dialog {
         headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
         headerLayout.setSpacing(true);
 
-        Icon titleIcon = new Icon(VaadinIcon.TIMER);
+        Icon titleIcon = new Icon(VaadinIcon.TASKS);
         titleIcon.getStyle().set("margin-right", "0.5em");
 
         com.vaadin.flow.component.html.H3 titleLabel = new com.vaadin.flow.component.html.H3(title);
@@ -80,7 +80,7 @@ public class SprintDialog extends Dialog {
         nameField = new TextField("Sprint Name");
         nameField.setId(SPRINT_NAME_FIELD);
         nameField.setWidthFull();
-        nameField.setPrefixComponent(new Icon(VaadinIcon.TIMER));
+        nameField.setPrefixComponent(new Icon(VaadinIcon.TASKS));
         nameField.setRequired(true);
         // Add helper text explaining the uniqueness requirement
         nameField.setHelperText("Sprint name must be unique");

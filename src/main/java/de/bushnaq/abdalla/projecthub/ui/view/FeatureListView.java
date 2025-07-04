@@ -23,7 +23,6 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -38,6 +37,7 @@ import de.bushnaq.abdalla.projecthub.rest.api.FeatureApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.FeatureDialog;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.http.HttpStatus;
@@ -59,37 +59,78 @@ public class FeatureListView extends Main implements AfterNavigationObserver {
     public static final String        FEATURE_GRID_DELETE_BUTTON_PREFIX = "feature-grid-delete-button-prefix-";
     public static final String        FEATURE_GRID_EDIT_BUTTON_PREFIX   = "feature-grid-edit-button-prefix-";
     public static final String        FEATURE_GRID_NAME_PREFIX          = "feature-grid-name-";
+    public static final String        FEATURE_LIST_PAGE_TITLE           = "feature-list-page-title";
     private final       FeatureApi    featureApi;
     private final       Grid<Feature> grid;
-    private final       H2            pageTitle;
+    //    private             H2            pageTitle;
     private             Long          productId;
     private             Long          versionId;
 
     public FeatureListView(FeatureApi featureApi, Clock clock) {
         this.featureApi = featureApi;
 
-        // Create header layout with title and create button
-        HorizontalLayout headerLayout = new HorizontalLayout();
-        headerLayout.setWidthFull();
-        headerLayout.setPadding(false);
-        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-        headerLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+        grid = createGrid(clock);
 
-        pageTitle = new H2("Features");
-        pageTitle.addClassNames(
-                LumoUtility.Margin.Top.MEDIUM,
-                LumoUtility.Margin.Bottom.SMALL
+        setSizeFull();
+        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
+
+        add(VaadinUtils.createHeader("Features", FEATURE_LIST_PAGE_TITLE, VaadinIcon.LIGHTBULB, CREATE_FEATURE_BUTTON_ID, () -> openFeatureDialog(null)), grid);
+    }
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+        //- Get query parameters
+        Location        location        = event.getLocation();
+        QueryParameters queryParameters = location.getQueryParameters();
+        if (queryParameters.getParameters().containsKey("product")) {
+            this.productId = Long.parseLong(queryParameters.getParameters().get("product").getFirst());
+        }
+        if (queryParameters.getParameters().containsKey("version")) {
+            this.versionId = Long.parseLong(queryParameters.getParameters().get("version").getFirst());
+//            pageTitle.setText("Features of Version " + versionId);
+        }
+        //- update breadcrumbs
+        getElement().getParent().getComponent()
+                .ifPresent(component -> {
+                    if (component instanceof MainLayout mainLayout) {
+                        mainLayout.getBreadcrumbs().clear();
+                        mainLayout.getBreadcrumbs().addItem("Products", ProductListView.class);
+                        {
+                            Map<String, String> params = new HashMap<>();
+                            params.put("product", String.valueOf(productId));
+                            mainLayout.getBreadcrumbs().addItem("Versions", VersionListView.class, params);
+                        }
+                        {
+                            Map<String, String> params = new HashMap<>();
+                            params.put("product", String.valueOf(productId));
+                            params.put("version", String.valueOf(versionId));
+                            mainLayout.getBreadcrumbs().addItem("Features", FeatureListView.class, params);
+                        }
+                    }
+                });
+
+        //- populate grid
+        refreshGrid();
+    }
+
+    private void confirmDelete(Feature feature) {
+        String message = "Are you sure you want to delete feature \"" + feature.getName() + "\"?";
+        ConfirmDialog dialog = new ConfirmDialog(
+                "Confirm Delete",
+                message,
+                "Delete",
+                () -> {
+                    featureApi.deleteById(feature.getId());
+                    refreshGrid();
+                    Notification.show("Feature deleted", 3000, Notification.Position.BOTTOM_START);
+                }
         );
+        dialog.open();
+    }
 
-        // Create button for adding new Features
-        Button createButton = new Button("Create", new Icon(VaadinIcon.PLUS));
-        createButton.setId(CREATE_FEATURE_BUTTON_ID);
-        createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        createButton.addClickListener(e -> openFeatureDialog(null));
-
-        headerLayout.add(pageTitle, createButton);
-
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
+    private Grid<Feature> createGrid(Clock clock) {
+        final Grid<Feature> grid;
+        DateTimeFormatter   dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
         grid = new Grid<>();
         grid.setId(FEATURE_GRID);
@@ -162,62 +203,7 @@ public class FeatureListView extends Main implements AfterNavigationObserver {
                     QueryParameters.simple(params)
             );
         });
-
-        setSizeFull();
-        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
-
-        add(headerLayout, grid);
-    }
-
-    @Override
-    public void afterNavigation(AfterNavigationEvent event) {
-        //- Get query parameters
-        Location        location        = event.getLocation();
-        QueryParameters queryParameters = location.getQueryParameters();
-        if (queryParameters.getParameters().containsKey("product")) {
-            this.productId = Long.parseLong(queryParameters.getParameters().get("product").getFirst());
-        }
-        if (queryParameters.getParameters().containsKey("version")) {
-            this.versionId = Long.parseLong(queryParameters.getParameters().get("version").getFirst());
-            pageTitle.setText("Features of Version " + versionId);
-        }
-        //- update breadcrumbs
-        getElement().getParent().getComponent()
-                .ifPresent(component -> {
-                    if (component instanceof MainLayout mainLayout) {
-                        mainLayout.getBreadcrumbs().clear();
-                        mainLayout.getBreadcrumbs().addItem("Products", ProductListView.class);
-                        {
-                            Map<String, String> params = new HashMap<>();
-                            params.put("product", String.valueOf(productId));
-                            mainLayout.getBreadcrumbs().addItem("Versions", VersionListView.class, params);
-                        }
-                        {
-                            Map<String, String> params = new HashMap<>();
-                            params.put("product", String.valueOf(productId));
-                            params.put("version", String.valueOf(versionId));
-                            mainLayout.getBreadcrumbs().addItem("Features", FeatureListView.class, params);
-                        }
-                    }
-                });
-
-        //- populate grid
-        refreshGrid();
-    }
-
-    private void confirmDelete(Feature feature) {
-        String message = "Are you sure you want to delete feature \"" + feature.getName() + "\"?";
-        ConfirmDialog dialog = new ConfirmDialog(
-                "Confirm Delete",
-                message,
-                "Delete",
-                () -> {
-                    featureApi.deleteById(feature.getId());
-                    refreshGrid();
-                    Notification.show("Feature deleted", 3000, Notification.Position.BOTTOM_START);
-                }
-        );
-        dialog.open();
+        return grid;
     }
 
     private void openFeatureDialog(Feature feature) {

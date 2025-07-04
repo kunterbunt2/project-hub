@@ -58,7 +58,7 @@ public class FeatureDialog extends Dialog {
         headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
         headerLayout.setSpacing(true);
 
-        Icon titleIcon = new Icon(VaadinIcon.PUZZLE_PIECE);
+        Icon titleIcon = new Icon(VaadinIcon.LIGHTBULB);
         titleIcon.getStyle().set("margin-right", "0.5em");
 
         com.vaadin.flow.component.html.H3 titleLabel = new com.vaadin.flow.component.html.H3(title);
@@ -83,7 +83,7 @@ public class FeatureDialog extends Dialog {
         nameField.setRequired(true);
         // Add helper text explaining the uniqueness requirement
         nameField.setHelperText("Feature name must be unique");
-        nameField.setPrefixComponent(new Icon(VaadinIcon.PUZZLE_PIECE));
+        nameField.setPrefixComponent(new Icon(VaadinIcon.LIGHTBULB));
 
         if (isEditMode) {
             nameField.setValue(feature.getName());

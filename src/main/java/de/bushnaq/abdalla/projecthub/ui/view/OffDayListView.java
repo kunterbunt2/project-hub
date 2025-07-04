@@ -20,7 +20,6 @@ package de.bushnaq.abdalla.projecthub.ui.view;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
@@ -40,6 +39,7 @@ import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.component.YearCalendarComponent;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.OffDayDialog;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
 import jakarta.annotation.security.PermitAll;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -56,7 +56,7 @@ import java.util.stream.Collectors;
 @PermitAll
 public class OffDayListView extends Main implements BeforeEnterObserver, AfterNavigationObserver {
     public static final String                CREATE_OFFDAY_BUTTON             = "create-offday-button";
-    public static final String                INFO_BOX                         = "offday-info-box";
+    //    public static final String                INFO_BOX                         = "offday-info-box";
     public static final String                OFFDAY_GRID                      = "offday-grid";
     public static final String                OFFDAY_GRID_DELETE_BUTTON_PREFIX = "offday-delete-button-";
     public static final String                OFFDAY_GRID_EDIT_BUTTON_PREFIX   = "offday-edit-button-";
@@ -79,7 +79,7 @@ public class OffDayListView extends Main implements BeforeEnterObserver, AfterNa
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        add(createHeader(), new HorizontalLayout(createGrid(), createCalendar()));
+        add(VaadinUtils.createHeader("User Off-Days", OFFDAY_LIST_PAGE_TITLE, VaadinIcon.CALENDAR, CREATE_OFFDAY_BUTTON, () -> openOffDayDialog(null)), new HorizontalLayout(createGrid(), createCalendar()));
     }
 
     @Override
@@ -232,37 +232,6 @@ public class OffDayListView extends Main implements BeforeEnterObserver, AfterNa
         })).setHeader(createHeaderWithIcon(VaadinIcon.COG, "Actions")).setFlexGrow(0).setWidth("120px");
 
         return grid;
-    }
-
-    private HorizontalLayout createHeader() {
-        HorizontalLayout headerLayout = new HorizontalLayout();
-        headerLayout.setWidthFull();
-        headerLayout.setPadding(false);
-        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-        headerLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
-
-        // Create title layout with icon
-        HorizontalLayout titleLayout = new HorizontalLayout();
-        titleLayout.setSpacing(true);
-        titleLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-
-        Icon offDayIcon = new Icon(VaadinIcon.CALENDAR_CLOCK);
-        H2   pageTitle  = new H2("Off Days");
-        pageTitle.setId(OFFDAY_LIST_PAGE_TITLE);
-        pageTitle.addClassNames(
-                LumoUtility.Margin.Top.MEDIUM,
-                LumoUtility.Margin.Bottom.SMALL
-        );
-
-        titleLayout.add(offDayIcon, pageTitle);
-
-        Button createButton = new Button("Create", new Icon(VaadinIcon.PLUS));
-        createButton.setId(CREATE_OFFDAY_BUTTON);
-        createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        createButton.addClickListener(e -> openOffDayDialog(null));
-
-        headerLayout.add(titleLayout, createButton);
-        return headerLayout;
     }
 
     private HorizontalLayout createHeaderWithIcon(VaadinIcon icon, String text) {
