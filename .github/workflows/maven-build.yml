@@ -77,19 +77,19 @@ jobs:
           mkdir -p test-results
 
       - name: Build with Maven (skipping tests)
-        run: mvn -B package --file pom.xml -DskipTests -Pproduction
+        run: mvn -B package --file pom.xml -DskipTests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
 
       - name: Run tests with UI tests in headless mode
         run: |
-          mvn test -Dtest=ProductListViewTest -Dselenium.headless=true -Pproduction
+          mvn test -Dtest=ProductListViewTest -Dselenium.headless=true
         env:
           # Set environment variables for headless testing
           SELENIUM_HEADLESS: "true"
           # Ensure Vaadin runs in production mode to avoid dev server issues
-          VAADIN_PRODUCTION_MODE: "true"
+          # VAADIN_PRODUCTION_MODE: "true"
           # Make test containers accessible from GitHub runner
           DOCKER_HOST: "tcp://localhost:2375"
           # Any ports needed for your tests
