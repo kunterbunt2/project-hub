@@ -38,7 +38,6 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Security configuration for REST API endpoints.
@@ -72,7 +71,9 @@ public class OidcApiSecurityConfig {
                 // Configure authorization for API endpoints
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(new AntPathRequestMatcher("/api/**")).authenticated())
-                // Configure JWT token authentication for API endpoints
+                // Configure both JWT token authentication AND HTTP Basic auth for API endpoints
+                .httpBasic() // Add HTTP Basic Authentication support
+                .and()
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter())
@@ -107,33 +108,29 @@ public class OidcApiSecurityConfig {
         JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
         jwtConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
             // Log that this converter is being called
-            logger.info("JWT Authentication Converter called for token with subject: {}, issued by: {}",
-                    jwt.getSubject(), jwt.getIssuer());
+//            logger.info("JWT Authentication Converter called for token with subject: {}, issued by: {}", jwt.getSubject(), jwt.getIssuer());
 
             // Extract roles from the JWT claims
             Map<String, Object> claims = jwt.getClaims();
-            logger.debug("JWT Token claims: {}", claims);
+//            logger.debug("JWT Token claims: {}", claims);
 
             Set<GrantedAuthority> authorities = new HashSet<>();
 
             // Extract realm roles from the token
-            logger.debug("Extracting Keycloak roles from JWT token");
+//            logger.debug("Extracting Keycloak roles from JWT token");
             extractKeycloakRoles(authorities, claims);
 
             // Log the extracted authorities
-            if (!authorities.isEmpty()) {
-                logger.debug("Extracted authorities from JWT: {}",
-                        authorities.stream()
-                                .map(GrantedAuthority::getAuthority)
-                                .collect(Collectors.joining(", ")));
-            } else {
-                logger.warn("No authorities extracted from JWT token");
-            }
+//            if (!authorities.isEmpty()) {
+//                logger.debug("Extracted authorities from JWT: {}", authorities.stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(", ")));
+//            } else {
+//                logger.warn("No authorities extracted from JWT token");
+//            }
 
             // Add default user role if no roles are found
             if (authorities.isEmpty()) {
                 authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
-                logger.debug("Added default ROLE_USER authority");
+//                logger.debug("Added default ROLE_USER authority");
             }
 
             return authorities;
