@@ -470,7 +470,19 @@
                 <configuration>
                     <linkXRef>true</linkXRef>
                     <showSuccess>true</showSuccess>
+                    <!-- Add this property to prevent tests from running again -->
+                    <aggregate>false</aggregate>
+                    <reportsDirectories>
+                        <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+                    </reportsDirectories>
                 </configuration>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>report-only</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

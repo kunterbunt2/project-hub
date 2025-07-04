@@ -102,7 +102,7 @@ jobs:
 
       # Generate Maven site with test reports
       - name: Generate Site Reports
-        run: mvn site -DgenerateReports=true
+        run: mvn site -DgenerateReports=false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
