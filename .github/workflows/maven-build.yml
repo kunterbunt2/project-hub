@@ -21,6 +21,31 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Setup proper authentication for GitHub Packages
+      - name: Setup Maven settings for GitHub Packages
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const settingsXml = `
+            <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                      xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                                         http://maven.apache.org/xsd/settings-1.0.0.xsd">
+              <servers>
+                <server>
+                  <id>github</id>
+                  <username>${process.env.GITHUB_ACTOR}</username>
+                  <password>${process.env.PACKAGES_TOKEN}</password>
+                </server>
+              </servers>
+            </settings>
+            `;
+            fs.mkdirSync('~/.m2', { recursive: true });
+            fs.writeFileSync('~/.m2/settings.xml', settingsXml);
 
       - name: Set up JDK 21 for project
         uses: actions/setup-java@v3
@@ -53,6 +78,9 @@ jobs:
 
       - name: Build with Maven
         run: mvn -B package --file pom.xml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
 
       - name: Run tests with UI tests in headless mode
         run: |
@@ -68,6 +96,8 @@ jobs:
           SERVER_PORT: 8080
           # Java options for memory, etc.
           MAVEN_OPTS: "-Xmx2048m"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
 
       # Upload test recordings and screenshots as artifacts
       - name: Upload test recordings and results
