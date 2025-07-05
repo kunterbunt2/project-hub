@@ -1,3 +1,4 @@
+[![Tests](https://img.shields.io/github/actions/workflow/status/kunterbunt2/project-hub/maven-build.yml?label=tests)](https://github.com/kunterbunt2/project-hub/actions/workflows/maven-build.yml)
 # kassandra
 
 tiny project management server.<br>
