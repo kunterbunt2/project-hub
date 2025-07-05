@@ -33,7 +33,11 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.dto.Feature;
+import de.bushnaq.abdalla.projecthub.dto.Product;
+import de.bushnaq.abdalla.projecthub.dto.Version;
 import de.bushnaq.abdalla.projecthub.rest.api.FeatureApi;
+import de.bushnaq.abdalla.projecthub.rest.api.ProductApi;
+import de.bushnaq.abdalla.projecthub.rest.api.VersionApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.FeatureDialog;
@@ -62,12 +66,16 @@ public class FeatureListView extends Main implements AfterNavigationObserver {
     public static final String        FEATURE_LIST_PAGE_TITLE           = "feature-list-page-title";
     private final       FeatureApi    featureApi;
     private final       Grid<Feature> grid;
+    private final       ProductApi    productApi;
     //    private             H2            pageTitle;
     private             Long          productId;
+    private final       VersionApi    versionApi;
     private             Long          versionId;
 
-    public FeatureListView(FeatureApi featureApi, Clock clock) {
+    public FeatureListView(FeatureApi featureApi, ProductApi productApi, VersionApi versionApi, Clock clock) {
         this.featureApi = featureApi;
+        this.productApi = productApi;
+        this.versionApi = versionApi;
 
         grid = createGrid(clock);
 
@@ -94,11 +102,13 @@ public class FeatureListView extends Main implements AfterNavigationObserver {
                 .ifPresent(component -> {
                     if (component instanceof MainLayout mainLayout) {
                         mainLayout.getBreadcrumbs().clear();
-                        mainLayout.getBreadcrumbs().addItem("Products", ProductListView.class);
+                        Product product = productApi.getById(productId);
+                        mainLayout.getBreadcrumbs().addItem("Products (" + product.getName() + ")", ProductListView.class);
                         {
                             Map<String, String> params = new HashMap<>();
                             params.put("product", String.valueOf(productId));
-                            mainLayout.getBreadcrumbs().addItem("Versions", VersionListView.class, params);
+                            Version version = versionApi.getById(versionId);
+                            mainLayout.getBreadcrumbs().addItem("Versions (" + version.getName() + ")", VersionListView.class, params);
                         }
                         {
                             Map<String, String> params = new HashMap<>();

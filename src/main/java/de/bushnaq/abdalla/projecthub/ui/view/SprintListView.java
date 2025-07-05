@@ -32,8 +32,14 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import de.bushnaq.abdalla.projecthub.dto.Feature;
+import de.bushnaq.abdalla.projecthub.dto.Product;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
+import de.bushnaq.abdalla.projecthub.dto.Version;
+import de.bushnaq.abdalla.projecthub.rest.api.FeatureApi;
+import de.bushnaq.abdalla.projecthub.rest.api.ProductApi;
 import de.bushnaq.abdalla.projecthub.rest.api.SprintApi;
+import de.bushnaq.abdalla.projecthub.rest.api.VersionApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.SprintDialog;
@@ -61,16 +67,22 @@ public class SprintListView extends Main implements AfterNavigationObserver {
     public static final String       SPRINT_GRID_NAME_PREFIX          = "sprint-grid-name-";
     public static final String       SPRINT_LIST_PAGE_TITLE           = "sprint-list-page-title";
     private final       Clock        clock;
+    private final       FeatureApi   featureApi;
     private             Long         featureId;
     private             Grid<Sprint> grid;
+    private final       ProductApi   productApi;
     //    private             H2           pageTitle;
     private             Long         productId;
     private final       SprintApi    sprintApi;
+    private final       VersionApi   versionApi;
     private             Long         versionId;
 
-    public SprintListView(SprintApi sprintApi, Clock clock) {
-        this.sprintApi = sprintApi;
-        this.clock     = clock;
+    public SprintListView(SprintApi sprintApi, ProductApi productApi, VersionApi versionApi, FeatureApi featureApi, Clock clock) {
+        this.sprintApi  = sprintApi;
+        this.productApi = productApi;
+        this.versionApi = versionApi;
+        this.featureApi = featureApi;
+        this.clock      = clock;
 
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
@@ -98,17 +110,23 @@ public class SprintListView extends Main implements AfterNavigationObserver {
                 .ifPresent(component -> {
                     if (component instanceof MainLayout mainLayout) {
                         mainLayout.getBreadcrumbs().clear();
-                        mainLayout.getBreadcrumbs().addItem("Products", ProductListView.class);
+                        Product product = productApi.getById(productId);
+                        mainLayout.getBreadcrumbs().addItem("Products (" + product.getName() + ")", ProductListView.class);
+//                        mainLayout.getBreadcrumbs().addItem("Products", ProductListView.class);
                         {
                             Map<String, String> params = new HashMap<>();
                             params.put("product", String.valueOf(productId));
-                            mainLayout.getBreadcrumbs().addItem("Versions", VersionListView.class, params);
+                            Version version = versionApi.getById(versionId);
+                            mainLayout.getBreadcrumbs().addItem("Versions (" + version.getName() + ")", VersionListView.class, params);
+//                            mainLayout.getBreadcrumbs().addItem("Versions", VersionListView.class, params);
                         }
                         {
                             Map<String, String> params = new HashMap<>();
                             params.put("product", String.valueOf(productId));
                             params.put("version", String.valueOf(versionId));
-                            mainLayout.getBreadcrumbs().addItem("Projects", FeatureListView.class, params);
+                            Feature feature = featureApi.getById(featureId);
+                            mainLayout.getBreadcrumbs().addItem("Features (" + feature.getName() + ")", FeatureListView.class, params);
+//                            mainLayout.getBreadcrumbs().addItem("Features", FeatureListView.class, params);
                         }
                         {
                             Map<String, String> params = new HashMap<>();

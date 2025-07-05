@@ -32,7 +32,9 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import de.bushnaq.abdalla.projecthub.dto.Product;
 import de.bushnaq.abdalla.projecthub.dto.Version;
+import de.bushnaq.abdalla.projecthub.rest.api.ProductApi;
 import de.bushnaq.abdalla.projecthub.rest.api.VersionApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
@@ -62,12 +64,14 @@ public class VersionListView extends Main implements AfterNavigationObserver {
     public static final String        VERSION_LIST_PAGE_TITLE           = "version-list-page-title";
     private final       Clock         clock;
     private             Grid<Version> grid;
+    private final       ProductApi    productApi;
     //    private             H2            pageTitle;
     private             Long          productId;
     private final       VersionApi    versionApi;
 
-    public VersionListView(VersionApi versionApi, Clock clock) {
+    public VersionListView(VersionApi versionApi, ProductApi productApi, Clock clock) {
         this.versionApi = versionApi;
+        this.productApi = productApi;
         this.clock      = clock;
 
         setSizeFull();
@@ -83,14 +87,14 @@ public class VersionListView extends Main implements AfterNavigationObserver {
         QueryParameters queryParameters = location.getQueryParameters();
         if (queryParameters.getParameters().containsKey("product")) {
             this.productId = Long.parseLong(queryParameters.getParameters().get("product").getFirst());
-//            pageTitle.setText("Versions of Product ID: " + productId);
         }
         //- update breadcrumbs
         getElement().getParent().getComponent()
                 .ifPresent(component -> {
                     if (component instanceof MainLayout mainLayout) {
                         mainLayout.getBreadcrumbs().clear();
-                        mainLayout.getBreadcrumbs().addItem("Products", ProductListView.class);
+                        Product product = productApi.getById(productId);
+                        mainLayout.getBreadcrumbs().addItem("Products (" + product.getName() + ")", ProductListView.class);
                         Map<String, String> params = new HashMap<>();
                         params.put("product", String.valueOf(productId));
                         mainLayout.getBreadcrumbs().addItem("Versions", VersionListView.class, params);

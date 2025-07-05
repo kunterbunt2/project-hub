@@ -20,21 +20,16 @@ package de.bushnaq.abdalla.projecthub.ui.view;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
+import com.vaadin.flow.router.Location;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.Context;
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
-import de.bushnaq.abdalla.projecthub.dto.Sprint;
-import de.bushnaq.abdalla.projecthub.dto.Task;
-import de.bushnaq.abdalla.projecthub.dto.User;
-import de.bushnaq.abdalla.projecthub.dto.Worklog;
+import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.report.burndown.BurnDownChart;
 import de.bushnaq.abdalla.projecthub.report.burndown.RenderDao;
 import de.bushnaq.abdalla.projecthub.report.gantt.GanttChart;
-import de.bushnaq.abdalla.projecthub.rest.api.SprintApi;
-import de.bushnaq.abdalla.projecthub.rest.api.TaskApi;
-import de.bushnaq.abdalla.projecthub.rest.api.UserApi;
-import de.bushnaq.abdalla.projecthub.rest.api.WorklogApi;
+import de.bushnaq.abdalla.projecthub.rest.api.*;
 import de.bushnaq.abdalla.projecthub.ui.HtmlColor;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.util.Util;
@@ -76,24 +71,30 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
     @Autowired
     protected           Context       context;
     private final       LocalDateTime created;
+    private final       FeatureApi    featureApi;
     private             Long          featureId;
     final               Logger        logger                  = LoggerFactory.getLogger(this.getClass());
     private final       LocalDateTime now;
     private final       H2            pageTitle;
+    private final       ProductApi    productApi;
     private             Long          productId;
     private             Sprint        sprint;
     private final       SprintApi     sprintApi;
     private             Long          sprintId;
     private final       TaskApi       taskApi;
     private final       UserApi       userApi;
+    private final       VersionApi    versionApi;
     private             Long          versionId;
     private final       WorklogApi    worklogApi;
 
-    public SprintQualityBoard(WorklogApi worklogApi, TaskApi taskApi, SprintApi sprintApi, UserApi userApi, Clock clock) {
+    public SprintQualityBoard(WorklogApi worklogApi, TaskApi taskApi, SprintApi sprintApi, ProductApi productApi, VersionApi versionApi, FeatureApi featureApi, UserApi userApi, Clock clock) {
         created         = LocalDateTime.now(clock);
         this.worklogApi = worklogApi;
         this.taskApi    = taskApi;
         this.sprintApi  = sprintApi;
+        this.productApi = productApi;
+        this.versionApi = versionApi;
+        this.featureApi = featureApi;
         this.userApi    = userApi;
         this.clock      = clock;
         this.now        = LocalDateTime.now(clock);
@@ -134,16 +135,22 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
                 .ifPresent(component -> {
                     if (component instanceof MainLayout mainLayout) {
                         mainLayout.getBreadcrumbs().clear();
-                        mainLayout.getBreadcrumbs().addItem("Products", ProductListView.class);
+                        Product product = productApi.getById(productId);
+                        mainLayout.getBreadcrumbs().addItem("Products (" + product.getName() + ")", ProductListView.class);
+//                        mainLayout.getBreadcrumbs().addItem("Products", ProductListView.class);
                         {
                             Map<String, String> params = new HashMap<>();
                             params.put("product", String.valueOf(productId));
-                            mainLayout.getBreadcrumbs().addItem("Versions", VersionListView.class, params);
+                            Version version = versionApi.getById(versionId);
+                            mainLayout.getBreadcrumbs().addItem("Versions (" + version.getName() + ")", VersionListView.class, params);
+//                            mainLayout.getBreadcrumbs().addItem("Versions", VersionListView.class, params);
                         }
                         {
                             Map<String, String> params = new HashMap<>();
                             params.put("product", String.valueOf(productId));
                             params.put("version", String.valueOf(versionId));
+                            Feature feature = featureApi.getById(featureId);
+                            mainLayout.getBreadcrumbs().addItem("Features (" + feature.getName() + ")", FeatureListView.class, params);
                             mainLayout.getBreadcrumbs().addItem("Features", FeatureListView.class, params);
                         }
                         {
@@ -151,7 +158,9 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
                             params.put("product", String.valueOf(productId));
                             params.put("version", String.valueOf(versionId));
                             params.put("FEATURE", String.valueOf(featureId));
-                            mainLayout.getBreadcrumbs().addItem("Sprints", SprintListView.class, params);
+                            Sprint sprint = sprintApi.getById(sprintId);
+                            mainLayout.getBreadcrumbs().addItem("Sprints (" + sprint.getName() + ")", SprintListView.class, params);
+//                            mainLayout.getBreadcrumbs().addItem("Sprints", SprintListView.class, params);
                         }
                         {
                             Map<String, String> params = new HashMap<>();
