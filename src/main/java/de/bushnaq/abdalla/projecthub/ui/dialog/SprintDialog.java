@@ -19,7 +19,6 @@ package de.bushnaq.abdalla.projecthub.ui.dialog;
 
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -61,7 +60,7 @@ public class SprintDialog extends Dialog {
         headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
         headerLayout.setSpacing(true);
 
-        Icon titleIcon = new Icon(VaadinIcon.TASKS);
+        Icon titleIcon = new Icon("vaadin:exit");
         titleIcon.getStyle().set("margin-right", "0.5em");
 
         com.vaadin.flow.component.html.H3 titleLabel = new com.vaadin.flow.component.html.H3(title);
@@ -83,7 +82,7 @@ public class SprintDialog extends Dialog {
         nameField = new TextField("Sprint Name");
         nameField.setId(SPRINT_NAME_FIELD);
         nameField.setWidthFull();
-        nameField.setPrefixComponent(new Icon(VaadinIcon.TASKS));
+        nameField.setPrefixComponent(new Icon("vaadin:exit"));
         nameField.setRequired(true);
         // Add helper text explaining the uniqueness requirement
         nameField.setHelperText("Sprint name must be unique");

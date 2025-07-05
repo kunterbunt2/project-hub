@@ -82,7 +82,7 @@ public final class VaadinUtils {
     public static HorizontalLayout createHeader(
             String title,
             String titleId,
-            VaadinIcon titleIcon,
+            Icon titleIcon,
             String createButtonId,
             CreateButtonClickHandler createButtonClickHandler) {
         HorizontalLayout headerLayout = new HorizontalLayout();
@@ -96,15 +96,14 @@ public final class VaadinUtils {
         titleLayout.setSpacing(true);
         titleLayout.setAlignItems(FlexComponent.Alignment.CENTER);
 
-        Icon productIcon = new Icon(titleIcon);
-        H2   pageTitle   = new H2(title);
+        H2 pageTitle = new H2(title);
         pageTitle.setId(titleId);
         pageTitle.addClassNames(
                 LumoUtility.Margin.Top.MEDIUM,
                 LumoUtility.Margin.Bottom.SMALL
         );
 
-        titleLayout.add(productIcon, pageTitle);
+        titleLayout.add(titleIcon, pageTitle);
 
         Button createButton = new Button("Create", new Icon(VaadinIcon.PLUS));
         createButton.setId(createButtonId);
@@ -113,6 +112,24 @@ public final class VaadinUtils {
 
         headerLayout.add(titleLayout, createButton);
         return headerLayout;
+    }
+
+    public static HorizontalLayout createHeader(
+            String title,
+            String titleId,
+            String titleIcon,
+            String createButtonId,
+            CreateButtonClickHandler createButtonClickHandler) {
+        return createHeader(title, titleId, new Icon(titleIcon), createButtonId, createButtonClickHandler);
+    }
+
+    public static HorizontalLayout createHeader(
+            String title,
+            String titleId,
+            VaadinIcon titleIcon,
+            String createButtonId,
+            CreateButtonClickHandler createButtonClickHandler) {
+        return createHeader(title, titleId, new Icon(titleIcon), createButtonId, createButtonClickHandler);
     }
 
     /**

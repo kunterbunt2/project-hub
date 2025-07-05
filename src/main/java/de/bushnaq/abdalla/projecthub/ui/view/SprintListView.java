@@ -87,7 +87,7 @@ public class SprintListView extends Main implements AfterNavigationObserver {
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        add(VaadinUtils.createHeader("Sprints", SPRINT_LIST_PAGE_TITLE, VaadinIcon.TASKS, CREATE_SPRINT_BUTTON, () -> openSprintDialog(null)), createGrid(clock));
+        add(VaadinUtils.createHeader("Sprints", SPRINT_LIST_PAGE_TITLE, "vaadin:exit", CREATE_SPRINT_BUTTON, () -> openSprintDialog(null)), createGrid(clock));
     }
 
     @Override
@@ -181,7 +181,7 @@ public class SprintListView extends Main implements AfterNavigationObserver {
             return div;
         })).setHeader("Name");
         nameColumn.setId("sprint-grid-name-column");
-        nameColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.TASKS), new Div(new Text("Name"))));
+        nameColumn.setHeader(new HorizontalLayout(new Icon("vaadin:exit"), new Div(new Text("Name"))));
 
         Grid.Column<Sprint> startColumn = grid.addColumn(sprint -> sprint.getStart() != null ? dateTimeFormatter.format(sprint.getStart()) : "").setHeader("Start");
         startColumn.setId("sprint-grid-start-column");
