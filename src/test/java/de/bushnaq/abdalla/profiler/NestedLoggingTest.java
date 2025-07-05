@@ -50,6 +50,7 @@ class NestedLoggingTest extends BaseUtils {
                 sqlMethod();
                 mockupNetAccess(200);
             }
+            Profiler.log("NestedLoggingTest");
             test(new TestResult[]{//
                     new TestResult(SampleType.JPA, 500),//
                     new TestResult(SampleType.TCP, 500)//
