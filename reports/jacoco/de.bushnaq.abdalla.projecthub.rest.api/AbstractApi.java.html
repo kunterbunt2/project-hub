@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractApi.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.rest.api</a> &gt; <span class="el_source">AbstractApi.java</span></div><h1>AbstractApi.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.rest.api;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import de.bushnaq.abdalla.projecthub.rest.ErrorResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.web.client.DefaultResponseErrorHandler;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.server.ServerErrorException;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.Collection;
+import java.util.stream.Collectors;
+
+/**
+ * Allows us to handle exceptions from server.
+ */
+//@Service
+public class AbstractApi {
+<span class="fc" id="L55">    private static final Logger logger = LoggerFactory.getLogger(AbstractApi.class);</span>
+
+    @Autowired(required = false)
+    protected OAuth2AuthorizedClientService authorizedClientService;
+    @Value(&quot;${projecthub.api.base-url:}&quot;)
+    private   String                        configuredBaseUrl;
+    @Autowired(required = false)
+    private   Environment                   environment;
+    protected ObjectMapper                  objectMapper;
+    @Value(&quot;${server.port:8080}&quot;)
+    private   int                           port;
+    protected RestTemplate                  restTemplate;
+
+    /**
+     * used for uni tests to enforce in-memory db.
+     *
+     * @param restTemplate the rest template
+     * @param objectMapper the object mapper
+     * @param baseUrl      the base url to the local rest server
+     */
+<span class="fc" id="L75">    protected AbstractApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {</span>
+<span class="fc" id="L76">        this.restTemplate      = restTemplate;</span>
+<span class="fc" id="L77">        this.objectMapper      = objectMapper;</span>
+<span class="fc" id="L78">        this.configuredBaseUrl = baseUrl;</span>
+<span class="fc" id="L79">        initialize(restTemplate, objectMapper);</span>
+<span class="fc" id="L80">    }</span>
+
+<span class="fc" id="L82">    protected AbstractApi(RestTemplate restTemplate, ObjectMapper objectMapper) {</span>
+<span class="fc" id="L83">        this.restTemplate = restTemplate;</span>
+<span class="fc" id="L84">        this.objectMapper = objectMapper;</span>
+<span class="fc" id="L85">        initialize(restTemplate, objectMapper);</span>
+<span class="fc" id="L86">    }</span>
+
+<span class="nc" id="L88">    protected AbstractApi() {</span>
+<span class="nc" id="L89">    }</span>
+
+    /**
+     * Creates HTTP headers with authentication using either OIDC token or Basic Auth.
+     * This ensures API calls made from the UI have proper authentication.
+     * Role information is extracted from the security context and logged.
+     * The OIDC token already contains the role information, so roles are handled automatically.
+     */
+    protected HttpHeaders createAuthHeaders() {
+<span class="fc" id="L98">        HttpHeaders headers = new HttpHeaders();</span>
+
+        // Get current authentication from security context
+<span class="fc" id="L101">        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();</span>
+
+<span class="pc bpc" id="L103" title="2 of 4 branches missed.">        if (authentication != null &amp;&amp; authentication.isAuthenticated()) {</span>
+            // Log user roles for debugging purposes
+<span class="fc" id="L105">            Collection&lt;? extends GrantedAuthority&gt; authorities = authentication.getAuthorities();</span>
+<span class="fc" id="L106">            String roles = authorities.stream()</span>
+<span class="fc" id="L107">                    .map(GrantedAuthority::getAuthority)</span>
+<span class="fc" id="L108">                    .collect(Collectors.joining(&quot;, &quot;));</span>
+//            logger.debug(&quot;User {} has roles: {}&quot;, authentication.getName(), roles);
+
+            // Check if the authentication is OAuth2/OIDC
+<span class="pc bpc" id="L112" title="3 of 4 branches missed.">            if (authentication instanceof OAuth2AuthenticationToken oauth2Token &amp;&amp; authorizedClientService != null) {</span>
+<span class="nc" id="L113">                OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(</span>
+<span class="nc" id="L114">                        oauth2Token.getAuthorizedClientRegistrationId(),</span>
+<span class="nc" id="L115">                        oauth2Token.getName());</span>
+
+<span class="nc bnc" id="L117" title="All 4 branches missed.">                if (client != null &amp;&amp; client.getAccessToken() != null) {</span>
+                    // Use OAuth2 Bearer Token authentication
+<span class="nc" id="L119">                    String tokenValue = client.getAccessToken().getTokenValue();</span>
+
+                    // Critical: Ensure token is properly formatted for JWT authentication
+                    // Spring Security's JWT processing expects &quot;Bearer&quot; prefix
+<span class="nc bnc" id="L123" title="All 4 branches missed.">                    if (tokenValue != null &amp;&amp; !tokenValue.isEmpty()) {</span>
+//                        headers.setBearerAuth(tokenValue);
+<span class="nc" id="L125">                        headers.set(&quot;Authorization&quot;, &quot;Bearer &quot; + tokenValue);</span>
+
+                        // Enhanced logging for debugging
+//                        logger.debug(&quot;Bearer token set in headers. Token length: {}&quot;, tokenValue.length());
+
+                        // For debugging: add user information from OAuth2 token
+<span class="nc" id="L131">                        OAuth2User principal = oauth2Token.getPrincipal();</span>
+//                        logger.debug(&quot;OAuth2 user attributes: {}&quot;, principal.getAttributes());
+<span class="nc" id="L133">                    } else {</span>
+<span class="nc" id="L134">                        logger.warn(&quot;Access token value is empty or null&quot;);</span>
+                    }
+
+                    // Ensure we're setting Content-Type for JSON properly
+<span class="nc" id="L138">                    headers.set(&quot;Content-Type&quot;, &quot;application/json&quot;);</span>
+<span class="nc" id="L139">                    headers.set(&quot;Accept&quot;, &quot;application/json&quot;);</span>
+
+<span class="nc" id="L141">                    return headers;</span>
+                } else {
+<span class="nc" id="L143">                    logger.warn(&quot;OAuth2 client or access token is null for user {}&quot;, oauth2Token.getName());</span>
+                }
+            }
+
+            // Fallback to basic auth if no OIDC token is available
+//            logger.debug(&quot;Falling back to basic auth for user {}&quot;, authentication.getName());
+<span class="fc" id="L149">            String username = authentication.getName();</span>
+            // For simplicity in this demo environment, we use a fixed password for API calls
+            // In production, this would need a more secure approach
+<span class="fc" id="L152">            String password = &quot;test-password&quot;;</span>
+
+<span class="fc" id="L154">            String auth        = username + &quot;:&quot; + password;</span>
+<span class="fc" id="L155">            byte[] encodedAuth = Base64.getEncoder().encode(auth.getBytes(StandardCharsets.UTF_8));</span>
+<span class="fc" id="L156">            String authHeader  = &quot;Basic &quot; + new String(encodedAuth);</span>
+
+<span class="fc" id="L158">            headers.set(&quot;Authorization&quot;, authHeader);</span>
+<span class="fc" id="L159">            headers.set(&quot;Content-Type&quot;, &quot;application/json&quot;);</span>
+<span class="fc" id="L160">            headers.set(&quot;Accept&quot;, &quot;application/json&quot;);</span>
+
+            // For basic auth, we can optionally include roles in a custom header for debugging
+<span class="fc" id="L163">            headers.set(&quot;X-User-Roles&quot;, roles);</span>
+//            logger.debug(&quot;Using basic auth with roles: {}&quot;, roles);
+<span class="fc" id="L165">        } else {</span>
+<span class="nc" id="L166">            logger.warn(&quot;No authentication found in SecurityContextHolder&quot;);</span>
+        }
+
+<span class="fc" id="L169">        return headers;</span>
+    }
+
+    /**
+     * Creates an HttpEntity with authentication headers for use with RestTemplate
+     */
+    protected &lt;T&gt; HttpEntity&lt;T&gt; createHttpEntity(T body) {
+<span class="fc" id="L176">        return new HttpEntity&lt;&gt;(body, createAuthHeaders());</span>
+    }
+
+    /**
+     * Creates an HttpEntity with only authentication headers (no body) for use with RestTemplate
+     */
+    protected HttpEntity&lt;?&gt; createHttpEntity() {
+<span class="fc" id="L183">        return new HttpEntity&lt;&gt;(createAuthHeaders());</span>
+    }
+
+    protected &lt;T&gt; T executeWithErrorHandling(RestOperationWithResult&lt;T&gt; operation) {
+        try {
+<span class="fc" id="L188">            return operation.execute();</span>
+<span class="fc" id="L189">        } catch (HttpClientErrorException e) {</span>
+<span class="fc" id="L190">            logger.error(&quot;REST API call failed with status: {} and response: {}&quot;, e.getStatusCode(), e.getResponseBodyAsString());</span>
+<span class="nc" id="L191">            handleExceptions(e);</span>
+<span class="nc" id="L192">            return null;</span>
+<span class="nc" id="L193">        } catch (Exception e) {</span>
+<span class="nc" id="L194">            logger.error(e.getMessage(), e);</span>
+<span class="nc" id="L195">            throw new ServerErrorException(&quot;Failed to execute REST API call&quot;, e);</span>
+        }
+    }
+
+    protected void executeWithErrorHandling(RestOperation operation) {
+        try {
+<span class="nc" id="L201">            operation.execute();</span>
+<span class="nc" id="L202">        } catch (HttpClientErrorException e) {</span>
+<span class="nc" id="L203">            logger.error(&quot;REST API call failed with status: {} and response: {}&quot;, e.getStatusCode(), e.getResponseBodyAsString());</span>
+<span class="nc" id="L204">            handleExceptions(e);</span>
+<span class="nc" id="L205">        } catch (Exception e) {</span>
+<span class="nc" id="L206">            logger.error(e.getMessage(), e);</span>
+<span class="nc" id="L207">            throw new ServerErrorException(&quot;Failed to execute REST API call&quot;, e);</span>
+<span class="nc" id="L208">        }</span>
+<span class="nc" id="L209">    }</span>
+
+    protected String getBaseUrl() {
+<span class="pc bpc" id="L212" title="1 of 4 branches missed.">        if (configuredBaseUrl != null &amp;&amp; !configuredBaseUrl.isBlank()) {</span>
+<span class="fc" id="L213">            return configuredBaseUrl;</span>
+        }
+<span class="pc bpc" id="L215" title="1 of 2 branches missed.">        if (port == 0) {</span>
+<span class="fc" id="L216">            port = 8080;</span>
+            //- we are probably in a test, try to get the port dynamically at runtime
+<span class="fc" id="L218">            String portStr = null;</span>
+<span class="pc bpc" id="L219" title="1 of 2 branches missed.">            if (environment != null) {</span>
+<span class="fc" id="L220">                portStr = environment.getProperty(&quot;local.server.port&quot;);</span>
+<span class="pc bpc" id="L221" title="1 of 2 branches missed.">                if (portStr == null) {</span>
+<span class="nc" id="L222">                    portStr = environment.getProperty(&quot;server.port&quot;);</span>
+                }
+            }
+<span class="pc bpc" id="L225" title="1 of 2 branches missed.">            if (portStr != null) {</span>
+                try {
+<span class="fc" id="L227">                    port = Integer.parseInt(portStr);</span>
+<span class="nc" id="L228">                } catch (NumberFormatException ignored) {</span>
+<span class="nc" id="L229">                    logger.warn(&quot;Invalid port number '{}' from environment, using default port 8080&quot;, portStr);</span>
+<span class="fc" id="L230">                }</span>
+            }
+        }
+<span class="fc" id="L233">        configuredBaseUrl = &quot;http://localhost:&quot; + port + &quot;/api&quot;;</span>
+<span class="fc" id="L234">        return configuredBaseUrl;</span>
+    }
+
+    private void handleExceptions(HttpClientErrorException e) {
+        try {
+            // Handle authentication/authorization errors specifically for test cases
+<span class="pc bpc" id="L240" title="1 of 2 branches missed.">            if (e instanceof HttpClientErrorException.Unauthorized) {</span>
+                // Convert 401 Unauthorized to AuthenticationCredentialsNotFoundException
+<span class="nc" id="L242">                throw new org.springframework.security.authentication.AuthenticationCredentialsNotFoundException(&quot;Authentication credentials not found when accessing API&quot;);</span>
+<span class="pc bpc" id="L243" title="1 of 2 branches missed.">            } else if (e instanceof HttpClientErrorException.Forbidden) {</span>
+                // Convert 403 Forbidden to AccessDeniedException
+<span class="nc" id="L245">                throw new org.springframework.security.access.AccessDeniedException(&quot;Access denied when accessing API&quot;);</span>
+<span class="pc bpc" id="L246" title="1 of 2 branches missed.">            } else if (e instanceof HttpClientErrorException.BadRequest) {</span>
+                // all other exception
+<span class="nc" id="L248">                throw new ServerErrorException(e.getMessage(), e.getCause());</span>
+<span class="pc bpc" id="L249" title="1 of 2 branches missed.">            } else if (e instanceof HttpClientErrorException.NotFound) {</span>
+<span class="nc" id="L250">                throw new ResponseStatusException(e.getStatusCode(), e.getMessage(), e.getCause());</span>
+            } else {
+<span class="fc" id="L252">                ErrorResponse error      = objectMapper.readValue(e.getResponseBodyAsString(), ErrorResponse.class);</span>
+<span class="fc" id="L253">                HttpStatus    httpStatus = error.getHttpStatus();</span>
+<span class="pc bpc" id="L254" title="1 of 2 branches missed.">                throw new ResponseStatusException(httpStatus != null ? httpStatus : HttpStatus.INTERNAL_SERVER_ERROR, error.getMessage(), error.reconstructException());</span>
+            }
+<span class="nc" id="L256">        } catch (JsonProcessingException ex) {</span>
+<span class="nc" id="L257">            throw new IllegalArgumentException(String.format(&quot;Error processing server response '%s'.&quot;, e.getResponseBodyAsString()));</span>
+        }
+    }
+
+    private void initialize(RestTemplate restTemplate, ObjectMapper objectMapper) {
+<span class="fc" id="L262">        this.restTemplate.setErrorHandler(new DefaultResponseErrorHandler());</span>
+        // Configure message converters for JSON
+<span class="fc" id="L264">        restTemplate.getMessageConverters().clear();</span>
+<span class="fc" id="L265">        MappingJackson2HttpMessageConverter messageConverter = new MappingJackson2HttpMessageConverter();</span>
+<span class="fc" id="L266">        messageConverter.setObjectMapper(objectMapper);</span>
+<span class="fc" id="L267">        restTemplate.getMessageConverters().add(messageConverter);</span>
+<span class="fc" id="L268">    }</span>
+
+    @FunctionalInterface
+    protected interface RestOperation {
+        void execute() throws HttpClientErrorException;
+    }
+
+    @FunctionalInterface
+    protected interface RestOperationWithResult&lt;T&gt; {
+        T execute() throws HttpClientErrorException;
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

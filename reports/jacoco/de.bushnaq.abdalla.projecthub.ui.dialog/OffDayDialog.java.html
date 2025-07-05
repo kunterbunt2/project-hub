@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OffDayDialog.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.ui.dialog</a> &gt; <span class="el_source">OffDayDialog.java</span></div><h1>OffDayDialog.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.ui.dialog;
+
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.binder.ValidationException;
+import de.bushnaq.abdalla.projecthub.dto.OffDay;
+import de.bushnaq.abdalla.projecthub.dto.OffDayType;
+import de.bushnaq.abdalla.projecthub.dto.User;
+import de.bushnaq.abdalla.projecthub.rest.api.OffDayApi;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.LocalDate;
+
+public class OffDayDialog extends Dialog {
+    public static final String               CANCEL_BUTTON           = &quot;offday-dialog-cancel&quot;;
+    public static final String               CONFIRM_BUTTON          = &quot;offday-dialog-confirm&quot;;
+    public static final String               OFFDAY_DIALOG           = &quot;offday-dialog&quot;;
+    public static final String               OFFDAY_END_DATE_FIELD   = &quot;offday-end-date-field&quot;;
+    public static final String               OFFDAY_START_DATE_FIELD = &quot;offday-start-date-field&quot;;
+    public static final String               OFFDAY_TYPE_FIELD       = &quot;offday-type-field&quot;;
+<span class="nc" id="L50">    private final       Binder&lt;OffDay&gt;       binder                  = new Binder&lt;&gt;(OffDay.class);</span>
+<span class="nc" id="L51">    private final       DatePicker           firstDayField           = new DatePicker(&quot;First Day&quot;);</span>
+    private final       boolean              isNewOffDay;
+<span class="nc" id="L53">    private final       DatePicker           lastDayField            = new DatePicker(&quot;Last Day&quot;);</span>
+    private final       OffDay               offDay;
+    private final       OffDayApi            offDayApi;
+    private final       Runnable             onSaveCallback;
+<span class="nc" id="L57">    private final       ComboBox&lt;OffDayType&gt; typeField               = new ComboBox&lt;&gt;(&quot;Type&quot;);</span>
+    private final       User                 user;
+
+<span class="nc" id="L60">    public OffDayDialog(OffDay offDay, User user, OffDayApi offDayApi, Runnable onSaveCallback) {</span>
+<span class="nc" id="L61">        this.offDayApi      = offDayApi;</span>
+<span class="nc" id="L62">        this.user           = user;</span>
+<span class="nc" id="L63">        this.onSaveCallback = onSaveCallback;</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        this.isNewOffDay    = (offDay == null);</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        this.offDay         = isNewOffDay ? new OffDay(LocalDate.now(), LocalDate.now(), OffDayType.VACATION) : offDay;</span>
+
+        // Set the dialog title with an icon
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        String title = offDay == null ? &quot;Create Off Day&quot; : &quot;Edit Off Day&quot;;</span>
+
+        // Create a custom header with icon
+<span class="nc" id="L71">        HorizontalLayout headerLayout = new HorizontalLayout();</span>
+<span class="nc" id="L72">        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);</span>
+<span class="nc" id="L73">        headerLayout.setSpacing(true);</span>
+
+<span class="nc" id="L75">        Icon titleIcon = new Icon(VaadinIcon.CALENDAR);</span>
+<span class="nc" id="L76">        titleIcon.getStyle().set(&quot;margin-right&quot;, &quot;0.5em&quot;);</span>
+
+<span class="nc" id="L78">        H3 titleLabel = new H3(title);</span>
+<span class="nc" id="L79">        titleLabel.getStyle().set(&quot;margin&quot;, &quot;0&quot;);</span>
+
+<span class="nc" id="L81">        headerLayout.add(titleIcon, titleLabel);</span>
+
+        // Set the custom header
+<span class="nc" id="L84">        setHeaderTitle(null); // Clear the default title</span>
+<span class="nc" id="L85">        getHeader().add(headerLayout);</span>
+
+<span class="nc" id="L87">        setId(OFFDAY_DIALOG);</span>
+<span class="nc" id="L88">        setWidth(&quot;480px&quot;);</span>
+//        setCloseOnEsc(true);
+//        setCloseOnOutsideClick(false);
+//        setDraggable(true);
+//        setResizable(true);
+
+        // Setup form and actions
+<span class="nc" id="L95">        add(createHeader(), createForm(), VaadinUtils.createDialogButtonLayout(&quot;Save&quot;, CONFIRM_BUTTON, &quot;Cancel&quot;, CANCEL_BUTTON, this::save, this));</span>
+<span class="nc" id="L96">        configureFormBinder();</span>
+<span class="nc" id="L97">    }</span>
+
+    private void configureFormBinder() {
+        // First day binding
+<span class="nc" id="L101">        binder.forField(firstDayField)</span>
+<span class="nc" id="L102">                .asRequired(&quot;First day is required&quot;)</span>
+<span class="nc bnc" id="L103" title="All 4 branches missed.">                .withValidator(date -&gt; date == null || lastDayField.getValue() == null ||</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">                                !date.isAfter(lastDayField.getValue()),</span>
+                        &quot;First day must be before or equal to last day&quot;)
+<span class="nc" id="L106">                .bind(OffDay::getFirstDay, OffDay::setFirstDay);</span>
+
+        // Last day binding
+<span class="nc" id="L109">        binder.forField(lastDayField)</span>
+<span class="nc" id="L110">                .asRequired(&quot;Last day is required&quot;)</span>
+<span class="nc bnc" id="L111" title="All 4 branches missed.">                .withValidator(date -&gt; date == null || firstDayField.getValue() == null ||</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">                                !date.isBefore(firstDayField.getValue()),</span>
+                        &quot;Last day must be after or equal to first day&quot;)
+<span class="nc" id="L114">                .bind(OffDay::getLastDay, OffDay::setLastDay);</span>
+
+        // Type binding
+<span class="nc" id="L117">        binder.forField(typeField)</span>
+<span class="nc" id="L118">                .asRequired(&quot;Type is required&quot;)</span>
+<span class="nc" id="L119">                .bind(OffDay::getType, OffDay::setType);</span>
+
+        // Load data into the form
+<span class="nc bnc" id="L122" title="All 2 branches missed.">        if (!isNewOffDay) {</span>
+<span class="nc" id="L123">            binder.readBean(offDay);</span>
+        }
+<span class="nc" id="L125">    }</span>
+
+    private FormLayout createForm() {
+<span class="nc" id="L128">        FormLayout formLayout = new FormLayout();</span>
+
+        // Configure fields
+<span class="nc" id="L131">        firstDayField.setWidthFull();</span>
+<span class="nc" id="L132">        firstDayField.setHelperText(&quot;The first day of the off period&quot;);</span>
+<span class="nc" id="L133">        firstDayField.setId(OFFDAY_START_DATE_FIELD);</span>
+<span class="nc" id="L134">        firstDayField.setPrefixComponent(new Icon(VaadinIcon.CALENDAR));</span>
+
+<span class="nc" id="L136">        lastDayField.setWidthFull();</span>
+<span class="nc" id="L137">        lastDayField.setHelperText(&quot;The last day of the off period&quot;);</span>
+<span class="nc" id="L138">        lastDayField.setId(OFFDAY_END_DATE_FIELD);</span>
+<span class="nc" id="L139">        lastDayField.setPrefixComponent(new Icon(VaadinIcon.CALENDAR));</span>
+
+<span class="nc" id="L141">        typeField.setWidthFull();</span>
+<span class="nc" id="L142">        typeField.setHelperText(&quot;Type of off day&quot;);</span>
+<span class="nc" id="L143">        typeField.setItems(OffDayType.values());</span>
+<span class="nc" id="L144">        typeField.setId(OFFDAY_TYPE_FIELD);</span>
+<span class="nc" id="L145">        typeField.setPrefixComponent(new Icon(VaadinIcon.TAGS));</span>
+
+        // Add validation for date range relationship
+<span class="nc" id="L148">        firstDayField.addValueChangeListener(e -&gt; lastDayField.setMin(e.getValue()));</span>
+<span class="nc" id="L149">        lastDayField.addValueChangeListener(e -&gt; firstDayField.setMax(e.getValue()));</span>
+
+<span class="nc" id="L151">        formLayout.add(typeField, firstDayField, lastDayField);</span>
+<span class="nc" id="L152">        return formLayout;</span>
+    }
+
+    private H3 createHeader() {
+<span class="nc bnc" id="L156" title="All 2 branches missed.">        String title  = isNewOffDay ? &quot;Add New Off Day&quot; : &quot;Edit Off Day&quot;;</span>
+<span class="nc" id="L157">        H3     header = new H3(title);</span>
+<span class="nc" id="L158">        header.getStyle().set(&quot;margin-top&quot;, &quot;0&quot;);</span>
+<span class="nc" id="L159">        return header;</span>
+    }
+
+    private void save() {
+        try {
+            // Validate all fields first - this will trigger validation and show error messages
+<span class="nc bnc" id="L165" title="All 2 branches missed.">            if (!binder.validate().isOk()) {</span>
+<span class="nc" id="L166">                return; // Stop here if validation fails</span>
+            }
+
+            // Write values to bean
+<span class="nc" id="L170">            binder.writeBean(offDay);</span>
+
+            // Ensure user association is set
+<span class="nc" id="L173">            offDay.setUser(user);</span>
+
+            // Save to backend
+<span class="nc bnc" id="L176" title="All 2 branches missed.">            if (isNewOffDay) {</span>
+<span class="nc" id="L177">                offDayApi.persist(offDay, user.getId());</span>
+            } else {
+<span class="nc" id="L179">                offDayApi.update(offDay, user.getId());</span>
+            }
+            // Notify success
+<span class="nc bnc" id="L182" title="All 2 branches missed.">            String message = isNewOffDay ? &quot;New off day record added&quot; : &quot;Off day record updated&quot;;</span>
+<span class="nc" id="L183">            Notification.show(message, 3000, Notification.Position.MIDDLE);</span>
+
+            // Trigger refresh callback and close dialog
+<span class="nc" id="L186">            onSaveCallback.run();</span>
+<span class="nc" id="L187">            close();</span>
+<span class="nc" id="L188">        } catch (ValidationException e) {</span>
+<span class="nc" id="L189">            System.out.printf(&quot;Validation failed: %s%n&quot;, e.getMessage());</span>
+            // Validation errors will already be displayed next to the fields
+<span class="nc" id="L191">        } catch (Exception e) {</span>
+<span class="nc" id="L192">            System.out.printf(&quot;Validation failed: %s%n&quot;, e.getMessage());</span>
+<span class="nc bnc" id="L193" title="All 4 branches missed.">            if (e instanceof ResponseStatusException &amp;&amp; ((ResponseStatusException) e).getStatusCode().equals(HttpStatus.CONFLICT)) {</span>
+<span class="nc" id="L194">                String errorMessage = ((ResponseStatusException) e).getReason();</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">                firstDayField.setInvalid(errorMessage != null);</span>
+<span class="nc" id="L196">                firstDayField.setErrorMessage(errorMessage);</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">                lastDayField.setInvalid(errorMessage != null);</span>
+<span class="nc" id="L198">                lastDayField.setErrorMessage(errorMessage);</span>
+                // Keep the dialog open so the user can correct the name
+<span class="nc" id="L200">            } else {</span>
+                // For other errors, show generic message and close dialog
+<span class="nc" id="L202">                Notification notification = Notification.show(&quot;Error saving off day: &quot; + e.getMessage(), 3000, Notification.Position.MIDDLE);</span>
+<span class="nc" id="L203">                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);</span>
+<span class="nc" id="L204">                notification.open();</span>
+                // dialogReference.close();
+                // Keep the dialog open so the user can correct the name
+            }
+            // Only show notification for unexpected errors
+<span class="nc" id="L209">        }</span>
+<span class="nc" id="L210">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

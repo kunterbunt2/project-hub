@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GraphicsLightTheme.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.report.dao</a> &gt; <span class="el_source">GraphicsLightTheme.java</span></div><h1>GraphicsLightTheme.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.report.dao;
+
+import java.awt.*;
+
+public class GraphicsLightTheme extends BurnDownGraphicsTheme {
+<span class="fc" id="L23">    public static final Color[] KELLY_COLORS = {</span>
+            //                        Color.decode(&quot;0xFFB300&quot;),    // Vivid Yellow
+            //                        Color.decode(&quot;0x803E75&quot;),    // Strong Purple
+            //                        Color.decode(&quot;0xA6BDD7&quot;),    // Very Light Blue
+            //                        Color.decode(&quot;0xC10020&quot;),    // Vivid Red
+            //                        Color.decode(&quot;0x007D34&quot;),    // Vivid Green
+            //                        Color.decode(&quot;0x00538A&quot;),    // Strong Blue
+            //
+            //                        Color.decode(&quot;0xCEA262&quot;),    // Grayish Yellow
+            //                        Color.decode(&quot;0x817066&quot;),    // Medium Gray
+            //
+            //                        Color.decode(&quot;0xF6768E&quot;),    // Strong Purplish Pink
+            //                        Color.decode(&quot;0xFF7A5C&quot;),    // Strong Yellowish Pink
+            //                        Color.decode(&quot;0x53377A&quot;),    // Strong Violet
+            //                        Color.decode(&quot;0xFF8E00&quot;),    // Vivid Orange Yellow
+            //                        Color.decode(&quot;0xB32851&quot;),    // Strong Purplish Red
+            //                        Color.decode(&quot;0xF4C800&quot;),    // Vivid Greenish Yellow
+            //                        Color.decode(&quot;0x7F180D&quot;),    // Strong Reddish Brown
+            //                        Color.decode(&quot;0x93AA00&quot;),    // Vivid Yellowish Green
+            //                        Color.decode(&quot;0x593315&quot;),    // Deep Yellowish Brown
+            //                        Color.decode(&quot;0xF13A13&quot;),    // Vivid Reddish Orange
+            //                        Color.decode(&quot;0x232C16&quot;),    // Dark Olive Green
+            //                        Color.decode(&quot;0xFF6800&quot;),    // Vivid Orange
+
+            Color.red,//
+            new Color(0, 0xff, 0),//light green
+            Color.blue,//
+            Color.yellow,//
+            Color.cyan,//
+            Color.magenta,//
+            new Color(0xff, 0x7f, 0),//dark red
+            new Color(0x7f, 0xff, 0),//dark green
+            new Color(0, 0x7f, 0xff),//dark blue
+            new Color(0, 0xa0, 0x7f),//dark cyan
+            new Color(0x7f, 0, 0x7f),//dark magenta
+            Color.darkGray
+
+    };
+
+<span class="fc" id="L62">    public GraphicsLightTheme() {</span>
+<span class="fc" id="L63">        ganttGridColor = new Color(0xcce6ff, false);</span>
+
+        // gray
+<span class="fc" id="L66">        Color basicTextColor       = Color.WHITE;</span>
+<span class="fc" id="L67">        Color basicBackgroundColor = new Color(0x7a7a7a);</span>
+<span class="fc" id="L68">        Color basicBorderColor     = Color.WHITE;</span>
+
+<span class="fc" id="L70">        cssTheme             = ETheme.light;</span>
+<span class="fc" id="L71">        chartBackgroundColor = Color.white;</span>
+<span class="fc" id="L72">        chartBorderColor     = new Color(0xaaaaaa);//new Color(0x2c, 0x7b, 0xf4);</span>
+
+<span class="fc" id="L74">        dayOfMonthTextColor        = basicTextColor;</span>
+<span class="fc" id="L75">        dayOfMonthBackgroundColor  = basicBackgroundColor;</span>
+<span class="fc" id="L76">        ganttDayOfMonthBorderColor = ganttGridColor;</span>
+
+<span class="fc" id="L78">        dayTextColor          = Color.BLACK;</span>
+<span class="fc" id="L79">        dayBackgroundColor    = Color.WHITE;</span>
+<span class="fc" id="L80">        ganttDayBorderColor   = ganttGridColor;</span>
+<span class="fc" id="L81">        dayDiagramBorderColor = new Color(0xf6f8ff);</span>
+
+<span class="fc" id="L83">        delayClosedEventColor = new Color(255, 184, 184);</span>
+<span class="fc" id="L84">        delayEventColor       = Color.red;</span>
+<span class="fc" id="L85">        futureEventColor      = Color.blue;</span>
+
+<span class="fc" id="L87">        milestoneFlagColor = chartBackgroundColor;</span>
+<span class="fc" id="L88">        milestoneTextColor = basicTextColor;</span>
+
+<span class="fc" id="L90">        ganntMonthTextColor   = basicTextColor;</span>
+<span class="fc" id="L91">        ganttMonthBorderColor = Color.WHITE;</span>
+
+<span class="fc" id="L93">        nowEventColor        = Color.gray;</span>
+<span class="fc" id="L94">        pastEventColor       = Color.lightGray;</span>
+<span class="fc" id="L95">        ticksBackgroundColor = chartBackgroundColor;</span>
+
+<span class="fc" id="L97">        ganttMondayColor = Color.WHITE;</span>
+<span class="fc" id="L98">        tuesdayColor     = Color.WHITE;</span>
+<span class="fc" id="L99">        wednesdayColor   = Color.WHITE;</span>
+<span class="fc" id="L100">        thursdayColor    = Color.WHITE;</span>
+<span class="fc" id="L101">        fridayColor      = Color.WHITE;</span>
+<span class="fc" id="L102">        saturdayColor    = new Color(0xd7d7d7);//new Color(0xd9, 0xe6, 0xff, 0x88);</span>
+<span class="fc" id="L103">        sundayColor      = new Color(0xd7d7d7);//new Color(0xff, 0xd9, 0xd9, 0x88);</span>
+
+<span class="fc" id="L105">        mondayStripeColor      = Color.WHITE;</span>
+<span class="fc" id="L106">        tuesdayStripeColor     = Color.WHITE;</span>
+<span class="fc" id="L107">        wednesdayStripeColor   = Color.WHITE;</span>
+<span class="fc" id="L108">        thursdayStripeColor    = Color.WHITE;</span>
+<span class="fc" id="L109">        fridayStripeColor      = Color.WHITE;</span>
+<span class="fc" id="L110">        saturdayStripeColor    = new Color(0xfafafa);//new Color(0xd9, 0xe6, 0xff, 0x88);</span>
+<span class="fc" id="L111">        ganttSundayStripeColor = new Color(0xf7f7f7);//new Color(0xff, 0xd9, 0xd9, 0x88);</span>
+
+//        calendarYearBackgroundColor = basicBackgroundColor;
+//        calendarYearTextColor       = basicTextColor;
+//        calendarYearBoderColor = basicBorderColor;
+
+<span class="fc" id="L117">        weekBackgroundColor = basicBackgroundColor;</span>
+<span class="fc" id="L118">        weekTextColor       = basicTextColor;</span>
+<span class="fc" id="L119">        ganttWeekBoderColor = basicBorderColor;</span>
+
+<span class="fc" id="L121">        ganttRelationColor           = new Color(0x34, 0x66, 0xed, 0x7f);</span>
+<span class="fc" id="L122">        ganttCriticalRelationColor   = new Color(0xff, 0, 0, 0x7f);</span>
+<span class="fc" id="L123">        ganttMilestoneColor          = new Color(0x4f, 0xbb, 0xc2, 0xff);</span>
+<span class="fc" id="L124">        ganttMilestoneTextColor      = new Color(0x50, 0x50, 0x50, 0xff);</span>
+<span class="fc" id="L125">        ganttStoryColor              = Color.black;//new Color(64, 64, 64, 0xa0);</span>
+<span class="fc" id="L126">        ganttStoryTextColor          = Color.darkGray;</span>
+<span class="fc" id="L127">        ganttTaskTextColor           = new Color(0x30, 0x30, 0x30, 0xff);</span>
+<span class="fc" id="L128">        ganttTaskBorderColor         = new Color(0x30, 0x30, 0x30, 0x7F);</span>
+<span class="fc" id="L129">        burnDownBorderColor          = new Color(0xff, 0xcc, 0x00, 0x77);</span>
+<span class="fc" id="L130">        ganttIdColor                 = new Color(0xff, 0xff, 0xff, 0xff);</span>
+<span class="fc" id="L131">        ganttIdErrorColor            = new Color(0xff, 0x0, 0x0, 0xff);</span>
+<span class="fc" id="L132">        ganttIdTextColor             = new Color(0xaa, 0xaa, 0xaa, 0xff);</span>
+<span class="fc" id="L133">        ganttIdTextErrorColor        = new Color(0xff, 0xff, 0xff, 0xff);</span>
+<span class="fc" id="L134">        ganttCriticalTaskBorderColor = new Color(0xff, 0x0, 0x0, 0xC0);</span>
+<span class="fc" id="L135">        ganttOutOfOfficeColor        = new Color(0xff, 0x33, 0x33, 0x33);</span>
+
+        int ps;//primary color
+        int pg;//primary color green
+        int ss;//secondary color
+        int sg;//secondary color green
+        int ts;//trinary color
+        int tg;//trinary color green
+
+<span class="fc" id="L144">        int   i     = 0;</span>
+<span class="fc" id="L145">        int[] alpha = {0x7f/*, 0x30*/};</span>
+
+<span class="fc bfc" id="L147" title="All 2 branches covered.">        for (i = 0; i &lt; KELLY_COLORS.length; i++) {</span>
+<span class="fc" id="L148">            burnDownColor[i] = new Color(KELLY_COLORS[i].getRed(), KELLY_COLORS[i].getGreen(), KELLY_COLORS[i].getBlue(), alpha[0]);</span>
+        }
+
+        //gray
+        //        burnDownColor[i++] = new Color(0x0, 0x0, 0x0, 0xa1);
+        //        burnDownColor[i++] = new Color(0x0, 0x0, 0x0, 0x51);
+        //        burnDownColor[i++] = new Color(0x0, 0x0, 0x0, 0x21);
+
+<span class="fc" id="L156">        graphTextBackgroundColor = chartBackgroundColor;</span>
+<span class="fc" id="L157">        tickTextColor            = Color.darkGray;</span>
+<span class="fc" id="L158">        surroundingSquareColor   = new Color(0xaaaaaa);</span>
+<span class="fc" id="L159">        optimaleGuideColor       = new Color(0xa0a0a0);</span>
+<span class="fc" id="L160">        plannedGuideColor        = new Color(0x7f7f7f);</span>
+<span class="fc" id="L161">        ticksColor               = new Color(0xc9c9c9);</span>
+<span class="fc" id="L162">        inTimeColor              = COLOR_DARK_GREEN;</span>
+<span class="fc" id="L163">        watermarkColor           = new Color(0x10, 0x10, 0x10, 0x10);</span>
+
+<span class="fc" id="L165">        pastWorkDayRequestColor    = new Color(0x60, 0x00, 0xff, 0x40);</span>
+<span class="fc" id="L166">        pastWeekendRequestColor    = new Color(0x60, 0x60, 0x60, 0x40);</span>
+<span class="fc" id="L167">        futureWorkDayRequestColor  = new Color(0x00, 0x60, 0xff, 0x40);</span>
+<span class="fc" id="L168">        futureWeekendRequestColor  = new Color(0x60, 0x60, 0x60, 0x40);</span>
+<span class="fc" id="L169">        ganttRequestMilestoneColor = Color.RED/*new Color(0xa7, 0x00, 0x00)*/;</span>
+
+<span class="fc" id="L171">        int ma = 0x7f;</span>
+<span class="fc" id="L172">        monthColor[0]  = new Color(0x18, 0x7d, 0xc3, ma);</span>
+<span class="fc" id="L173">        monthColor[1]  = new Color(0x24, 0xae, 0xef, ma);</span>
+<span class="fc" id="L174">        monthColor[2]  = new Color(0x27, 0x9e, 0x68, ma);</span>
+<span class="fc" id="L175">        monthColor[3]  = new Color(0x62, 0xb7, 0x42, ma);</span>
+<span class="fc" id="L176">        monthColor[4]  = new Color(0xac, 0xc2, 0x31, ma);</span>
+<span class="fc" id="L177">        monthColor[5]  = new Color(0xf9, 0xb7, 0x1b, ma);</span>
+<span class="fc" id="L178">        monthColor[6]  = new Color(0xf1, 0x75, 0x1d, ma);</span>
+<span class="fc" id="L179">        monthColor[7]  = new Color(0xe5, 0x46, 0x29, ma);</span>
+<span class="fc" id="L180">        monthColor[8]  = new Color(0xe7, 0x16, 0x57, ma);</span>
+<span class="fc" id="L181">        monthColor[9]  = new Color(0xad, 0x34, 0x83, ma);</span>
+<span class="fc" id="L182">        monthColor[10] = new Color(0x65, 0x41, 0x98, ma);</span>
+<span class="fc" id="L183">        monthColor[11] = new Color(0x08, 0x55, 0xa3, ma);</span>
+
+<span class="fc" id="L185">        heatColor[0] = new Color(0x27, 0x9e, 0x68, ma);</span>
+<span class="fc" id="L186">        heatColor[1] = new Color(0x62, 0xb7, 0x42, ma);</span>
+<span class="fc" id="L187">        heatColor[2] = new Color(0xac, 0xc2, 0x31, ma);</span>
+<span class="fc" id="L188">        heatColor[3] = new Color(0xf9, 0xb7, 0x1b, ma);</span>
+<span class="fc" id="L189">        heatColor[4] = new Color(0xf1, 0x75, 0x1d, ma);</span>
+<span class="fc" id="L190">        heatColor[5] = new Color(0xe5, 0x46, 0x29, ma);</span>
+
+<span class="fc" id="L192">        linkColor = new Color(0x23, 0x6a, 0x97);</span>
+
+<span class="fc" id="L194">        bankHolidayColor = new Color(0xff, 0, 0, 0x80);</span>
+<span class="fc" id="L195">    }</span>
+
+    private int generateColors(int ps, int pg, int ss, int sg, int ts, int tg, int i, int a) {
+<span class="nc" id="L198">        burnDownColor[i++] = new Color(ps, sg, ts, a);</span>
+<span class="nc" id="L199">        burnDownColor[i++] = new Color(ts, pg, ss, a);</span>
+<span class="nc" id="L200">        burnDownColor[i++] = new Color(ss, tg, ps, a);</span>
+<span class="nc" id="L201">        return i;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

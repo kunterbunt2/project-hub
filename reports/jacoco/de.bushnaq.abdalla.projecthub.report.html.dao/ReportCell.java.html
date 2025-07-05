@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReportCell.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.report.html.dao</a> &gt; <span class="el_source">ReportCell.java</span></div><h1>ReportCell.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.report.html.dao;
+
+<span class="nc" id="L20">enum EStatus {</span>
+<span class="nc" id="L21">    CRITICAL,</span>
+<span class="nc" id="L22">    IDLE,</span>
+<span class="nc" id="L23">    WARNING</span>
+}
+
+public class ReportCell implements Comparable&lt;ReportCell&gt; {
+
+    public static final String  CRITICAL   = &quot;Critical&quot;;
+    public static final String  GOOD       = &quot;Good&quot;;
+    public static final String  IDLE       = &quot;Idle&quot;;
+    public static final String  IGNORE     = &quot;Ignore&quot;;
+    public static final String  INFO       = &quot;Info&quot;;
+    public static final String  WARNING    = &quot;Warning&quot;;
+<span class="nc" id="L34">    public              int     colspan    = 0;</span>
+<span class="nc" id="L35">    public              String  columnName = null;</span>
+<span class="nc" id="L36">    public              String  cssClass   = IDLE;</span>
+<span class="nc" id="L37">    public              boolean hidden     = false;</span>
+<span class="nc" id="L38">    public              String  icon       = null;</span>
+<span class="nc" id="L39">    public              int     rowspan    = 0;</span>
+<span class="nc" id="L40">    public              String  text       = null;</span>
+
+<span class="nc" id="L42">    public ReportCell(String column, String text) {</span>
+<span class="nc" id="L43">        this.columnName = column;</span>
+<span class="nc" id="L44">        this.text       = text;</span>
+<span class="nc" id="L45">    }</span>
+
+    public ReportCell(String column, String text, boolean hidden) {
+<span class="nc" id="L48">        this(column, text);</span>
+<span class="nc" id="L49">        this.hidden = hidden;</span>
+<span class="nc" id="L50">    }</span>
+
+    public ReportCell(String column, String text, String icon) {
+<span class="nc" id="L53">        this(column, text);</span>
+<span class="nc" id="L54">        this.icon = icon;</span>
+<span class="nc" id="L55">    }</span>
+
+    public ReportCell(String column, String text, String icon, boolean hidden) {
+<span class="nc" id="L58">        this(column, text);</span>
+<span class="nc" id="L59">        this.icon   = icon;</span>
+<span class="nc" id="L60">        this.hidden = hidden;</span>
+<span class="nc" id="L61">    }</span>
+
+    public ReportCell(Throwable e) {
+<span class="nc" id="L64">        this(&quot;Exception&quot;, e.getMessage());</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        if (text == null) {</span>
+<span class="nc" id="L66">            text = e.getClass().getName();</span>
+        }
+<span class="nc" id="L68">    }</span>
+
+    @Override
+    public int compareTo(ReportCell other) {
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        if (other == null) {</span>
+<span class="nc" id="L73">            return 1;</span>
+        }
+<span class="nc bnc" id="L75" title="All 4 branches missed.">        if (other.text == null &amp;&amp; text == null) {</span>
+<span class="nc" id="L76">            return 0;</span>
+        }
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        if (other.text == null) {</span>
+<span class="nc" id="L79">            return 1;</span>
+        }
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        if (text == null) {</span>
+<span class="nc" id="L82">            return -1;</span>
+        }
+<span class="nc" id="L84">        return text.compareTo(other.text);</span>
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        if (obj instanceof ReportCell) {</span>
+<span class="nc" id="L90">            return text.equals(((ReportCell) obj).text);</span>
+        }
+<span class="nc" id="L92">        return false;</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="nc" id="L97">        return text.hashCode();</span>
+    }
+
+    public ReportCell setColspan(int colspan) {
+<span class="nc" id="L101">        this.colspan = colspan;</span>
+<span class="nc" id="L102">        return this;</span>
+    }
+
+    public ReportCell setColumnName(String columnName) {
+<span class="nc" id="L106">        this.columnName = columnName;</span>
+<span class="nc" id="L107">        return this;</span>
+    }
+
+    public ReportCell setCritical() {
+<span class="nc" id="L111">        this.cssClass = CRITICAL;</span>
+<span class="nc" id="L112">        return this;</span>
+    }
+
+    public ReportCell setCssClass(String cssClass) {
+<span class="nc" id="L116">        this.cssClass = cssClass;</span>
+<span class="nc" id="L117">        return this;</span>
+    }
+
+    public ReportCell setGood() {
+<span class="nc" id="L121">        this.cssClass = GOOD;</span>
+<span class="nc" id="L122">        return this;</span>
+    }
+
+    public ReportCell setHidden(boolean hidden) {
+<span class="nc" id="L126">        this.hidden = hidden;</span>
+<span class="nc" id="L127">        return this;</span>
+    }
+
+    public ReportCell setIdle() {
+<span class="nc" id="L131">        this.cssClass = IDLE;</span>
+<span class="nc" id="L132">        return this;</span>
+    }
+
+    public ReportCell setRowspan(int rowspan) {
+<span class="nc" id="L136">        this.rowspan = rowspan;</span>
+<span class="nc" id="L137">        return this;</span>
+    }
+
+    public ReportCell setText(String text) {
+<span class="nc" id="L141">        this.text = text;</span>
+<span class="nc" id="L142">        return this;</span>
+    }
+
+    public ReportCell setWarning() {
+<span class="nc" id="L146">        this.cssClass = WARNING;</span>
+<span class="nc" id="L147">        return this;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,303 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head><meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>UserListViewTester xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../../../../testapidocs/de/bushnaq/abdalla/projecthub/ui/view/util/UserListViewTester.html">View Javadoc</a></div><pre>
+<a class="jxr_linenumber" name="L1" href="#L1">1</a>   <em class="jxr_comment">/*</em>
+<a class="jxr_linenumber" name="L2" href="#L2">2</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <em class="jxr_comment"> * Copyright (C) 2025-2025 Abdalla Bushnaq</em>
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <em class="jxr_comment"> * Licensed under the Apache License, Version 2.0 (the "License");</em>
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <em class="jxr_comment"> * you may not use this file except in compliance with the License.</em>
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <em class="jxr_comment"> * You may obtain a copy of the License at</em>
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L8" href="#L8">8</a>   <em class="jxr_comment"> *       <a href="http://www.apache.org/licenses/LICENSE-2.0" target="alexandria_uri">http://www.apache.org/licenses/LICENSE-2.0</a></em>
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <em class="jxr_comment"> *   Unless required by applicable law or agreed to in writing, software</em>
+<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <em class="jxr_comment"> *  distributed under the License is distributed on an "AS IS" BASIS,</em>
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <em class="jxr_comment"> *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</em>
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <em class="jxr_comment"> *  See the License for the specific language governing permissions and</em>
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <em class="jxr_comment"> *  limitations under the License.</em>
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>  <em class="jxr_comment"> */</em>
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>  
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>  <strong class="jxr_keyword">package</strong> de.bushnaq.abdalla.projecthub.ui.view.util;
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">import</strong> de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <strong class="jxr_keyword">import</strong> de.bushnaq.abdalla.projecthub.ui.dialog.UserDialog;
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>  <strong class="jxr_keyword">import</strong> de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>  <strong class="jxr_keyword">import</strong> de.bushnaq.abdalla.projecthub.ui.view.LoginView;
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>  <strong class="jxr_keyword">import</strong> de.bushnaq.abdalla.projecthub.ui.view.ProductListView;
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>  <strong class="jxr_keyword">import</strong> de.bushnaq.abdalla.projecthub.ui.view.UserListView;
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>  <strong class="jxr_keyword">import</strong> org.junit.jupiter.api.Assertions;
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>  <strong class="jxr_keyword">import</strong> org.openqa.selenium.By;
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>  <strong class="jxr_keyword">import</strong> org.openqa.selenium.support.ui.ExpectedConditions;
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>  <strong class="jxr_keyword">import</strong> org.springframework.beans.factory.annotation.Value;
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>  <strong class="jxr_keyword">import</strong> org.springframework.context.annotation.Lazy;
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>  <strong class="jxr_keyword">import</strong> org.springframework.stereotype.Component;
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>  
+<a class="jxr_linenumber" name="L33" href="#L33">33</a>  <strong class="jxr_keyword">import</strong> java.time.LocalDate;
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>  
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>  <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>  <em class="jxr_javadoccomment"> * Test helper class for interacting with the User UI components.</em>
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>  <em class="jxr_javadoccomment"> * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>  <em class="jxr_javadoccomment"> * This class provides methods to test user-related operations in the UI such as</em>
+<a class="jxr_linenumber" name="L39" href="#L39">39</a>  <em class="jxr_javadoccomment"> * creating, editing, deleting users and navigating between views. It uses</em>
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>  <em class="jxr_javadoccomment"> * {@link SeleniumHandler} to interact with UI elements and validate results.</em>
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>  <em class="jxr_javadoccomment"> */</em>
+<a class="jxr_linenumber" name="L42" href="#L42">42</a>  @Component
+<a class="jxr_linenumber" name="L43" href="#L43">43</a>  @Lazy
+<a class="jxr_linenumber" name="L44" href="#L44">44</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a name="UserListViewTester" href="../../../../../../../de/bushnaq/abdalla/projecthub/ui/view/util/UserListViewTester.html#UserListViewTester">UserListViewTester</a> {
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong>             port;
+<a class="jxr_linenumber" name="L46" href="#L46">46</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <a name="SeleniumHandler" href="../../../../../../../de/bushnaq/abdalla/projecthub/ui/util/selenium/SeleniumHandler.html#SeleniumHandler">SeleniumHandler</a> seleniumHandler;
+<a class="jxr_linenumber" name="L47" href="#L47">47</a>  
+<a class="jxr_linenumber" name="L48" href="#L48">48</a>      <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L49" href="#L49">49</a>  <em class="jxr_javadoccomment">     * Constructs a new UserViewTester with the given Selenium handler and server port.</em>
+<a class="jxr_linenumber" name="L50" href="#L50">50</a>  <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L51" href="#L51">51</a>  <em class="jxr_javadoccomment">     * @param seleniumHandler the handler for Selenium operations</em>
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>  <em class="jxr_javadoccomment">     * @param port            the port on which the application server is running</em>
+<a class="jxr_linenumber" name="L53" href="#L53">53</a>  <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L54" href="#L54">54</a>      <strong class="jxr_keyword">public</strong> <a name="UserListViewTester" href="../../../../../../../de/bushnaq/abdalla/projecthub/ui/view/util/UserListViewTester.html#UserListViewTester">UserListViewTester</a>(<a name="SeleniumHandler" href="../../../../../../../de/bushnaq/abdalla/projecthub/ui/util/selenium/SeleniumHandler.html#SeleniumHandler">SeleniumHandler</a> seleniumHandler, @Value(<span class="jxr_string">"${local.server.port:8080}"</span>) <strong class="jxr_keyword">int</strong> port) {
+<a class="jxr_linenumber" name="L55" href="#L55">55</a>          <strong class="jxr_keyword">this</strong>.seleniumHandler = seleniumHandler;
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>          <strong class="jxr_keyword">this</strong>.port            = port;
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>      }
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>  
+<a class="jxr_linenumber" name="L59" href="#L59">59</a>      <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L60" href="#L60">60</a>  <em class="jxr_javadoccomment">     * Tests the creation of a user where the user cancels the operation.</em>
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>  <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>  <em class="jxr_javadoccomment">     * Opens the user creation dialog, enters values for all user fields, then cancels</em>
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>  <em class="jxr_javadoccomment">     * the dialog. Verifies that no user with the specified name appears in the user list</em>
+<a class="jxr_linenumber" name="L64" href="#L64">64</a>  <em class="jxr_javadoccomment">     * and that the cancellation didn't affect any existing data.</em>
+<a class="jxr_linenumber" name="L65" href="#L65">65</a>  <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L66" href="#L66">66</a>  <em class="jxr_javadoccomment">     * @param name            the name of the user to attempt to create</em>
+<a class="jxr_linenumber" name="L67" href="#L67">67</a>  <em class="jxr_javadoccomment">     * @param email           the email of the user to attempt to create</em>
+<a class="jxr_linenumber" name="L68" href="#L68">68</a>  <em class="jxr_javadoccomment">     * @param color           the hex color code (with # prefix) for the user</em>
+<a class="jxr_linenumber" name="L69" href="#L69">69</a>  <em class="jxr_javadoccomment">     * @param firstWorkingDay the first working day for the user</em>
+<a class="jxr_linenumber" name="L70" href="#L70">70</a>  <em class="jxr_javadoccomment">     * @param lastWorkingDay  the last working day for the user</em>
+<a class="jxr_linenumber" name="L71" href="#L71">71</a>  <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> createUserCancel(String name, String email, String color, LocalDate firstWorkingDay, LocalDate lastWorkingDay) {
+<a class="jxr_linenumber" name="L73" href="#L73">73</a>          seleniumHandler.click(UserListView.CREATE_USER_BUTTON);
+<a class="jxr_linenumber" name="L74" href="#L74">74</a>          seleniumHandler.setTextField(UserDialog.USER_NAME_FIELD, name);
+<a class="jxr_linenumber" name="L75" href="#L75">75</a>          seleniumHandler.setTextField(UserDialog.USER_EMAIL_FIELD, email);
+<a class="jxr_linenumber" name="L76" href="#L76">76</a>          seleniumHandler.setColorPickerValue(UserDialog.USER_COLOR_PICKER, color);
+<a class="jxr_linenumber" name="L77" href="#L77">77</a>          seleniumHandler.setDatePickerValue(UserDialog.USER_FIRST_WORKING_DAY_PICKER, firstWorkingDay);
+<a class="jxr_linenumber" name="L78" href="#L78">78</a>          seleniumHandler.setDatePickerValue(UserDialog.USER_LAST_WORKING_DAY_PICKER, lastWorkingDay);
+<a class="jxr_linenumber" name="L79" href="#L79">79</a>          seleniumHandler.click(UserDialog.CANCEL_BUTTON);
+<a class="jxr_linenumber" name="L80" href="#L80">80</a>          seleniumHandler.ensureIsNotInList(UserListView.USER_GRID_NAME_PREFIX, name);
+<a class="jxr_linenumber" name="L81" href="#L81">81</a>      }
+<a class="jxr_linenumber" name="L82" href="#L82">82</a>  
+<a class="jxr_linenumber" name="L83" href="#L83">83</a>      <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>  <em class="jxr_javadoccomment">     * Tests the successful creation of a user with all fields.</em>
+<a class="jxr_linenumber" name="L85" href="#L85">85</a>  <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>  <em class="jxr_javadoccomment">     * Opens the user creation dialog, enters all user data, then confirms</em>
+<a class="jxr_linenumber" name="L87" href="#L87">87</a>  <em class="jxr_javadoccomment">     * the dialog. Verifies that a user with the specified name appears in the user list</em>
+<a class="jxr_linenumber" name="L88" href="#L88">88</a>  <em class="jxr_javadoccomment">     * and that all fields are correctly stored.</em>
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>  <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L90" href="#L90">90</a>  <em class="jxr_javadoccomment">     * @param name            the name of the user to create</em>
+<a class="jxr_linenumber" name="L91" href="#L91">91</a>  <em class="jxr_javadoccomment">     * @param email           the email of the user to create</em>
+<a class="jxr_linenumber" name="L92" href="#L92">92</a>  <em class="jxr_javadoccomment">     * @param color           the hex color code (with # prefix) for the user</em>
+<a class="jxr_linenumber" name="L93" href="#L93">93</a>  <em class="jxr_javadoccomment">     * @param firstWorkingDay the first working day for the user</em>
+<a class="jxr_linenumber" name="L94" href="#L94">94</a>  <em class="jxr_javadoccomment">     * @param lastWorkingDay  the last working day for the user</em>
+<a class="jxr_linenumber" name="L95" href="#L95">95</a>  <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L96" href="#L96">96</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> createUserConfirm(String name, String email, String color, LocalDate firstWorkingDay, LocalDate lastWorkingDay) {
+<a class="jxr_linenumber" name="L97" href="#L97">97</a>          seleniumHandler.click(UserListView.CREATE_USER_BUTTON);
+<a class="jxr_linenumber" name="L98" href="#L98">98</a>          seleniumHandler.setTextField(UserDialog.USER_NAME_FIELD, name);
+<a class="jxr_linenumber" name="L99" href="#L99">99</a>          seleniumHandler.setTextField(UserDialog.USER_EMAIL_FIELD, email);
+<a class="jxr_linenumber" name="L100" href="#L100">100</a>         seleniumHandler.setColorPickerValue(UserDialog.USER_COLOR_PICKER, color);
+<a class="jxr_linenumber" name="L101" href="#L101">101</a>         seleniumHandler.setDatePickerValue(UserDialog.USER_FIRST_WORKING_DAY_PICKER, firstWorkingDay);
+<a class="jxr_linenumber" name="L102" href="#L102">102</a>         seleniumHandler.setDatePickerValue(UserDialog.USER_LAST_WORKING_DAY_PICKER, lastWorkingDay);
+<a class="jxr_linenumber" name="L103" href="#L103">103</a> 
+<a class="jxr_linenumber" name="L104" href="#L104">104</a>         <em class="jxr_comment">// Final verification before submitting</em>
+<a class="jxr_linenumber" name="L105" href="#L105">105</a> <em class="jxr_comment">//        try {</em>
+<a class="jxr_linenumber" name="L106" href="#L106">106</a> <em class="jxr_comment">//            Thread.sleep(500); // Short pause to ensure UI updates</em>
+<a class="jxr_linenumber" name="L107" href="#L107">107</a> <em class="jxr_comment">//        } catch (InterruptedException e) {</em>
+<a class="jxr_linenumber" name="L108" href="#L108">108</a> <em class="jxr_comment">//            Thread.currentThread().interrupt();</em>
+<a class="jxr_linenumber" name="L109" href="#L109">109</a> <em class="jxr_comment">//        }</em>
+<a class="jxr_linenumber" name="L110" href="#L110">110</a>         seleniumHandler.click(UserDialog.CONFIRM_BUTTON);
+<a class="jxr_linenumber" name="L111" href="#L111">111</a>         seleniumHandler.ensureIsInList(UserListView.USER_GRID_NAME_PREFIX, name);
+<a class="jxr_linenumber" name="L112" href="#L112">112</a>     }
+<a class="jxr_linenumber" name="L113" href="#L113">113</a> 
+<a class="jxr_linenumber" name="L114" href="#L114">114</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L115" href="#L115">115</a> <em class="jxr_javadoccomment">     * Tests user deletion where the user cancels the delete confirmation.</em>
+<a class="jxr_linenumber" name="L116" href="#L116">116</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L117" href="#L117">117</a> <em class="jxr_javadoccomment">     * Clicks the delete button for the specified user,</em>
+<a class="jxr_linenumber" name="L118" href="#L118">118</a> <em class="jxr_javadoccomment">     * then cancels the confirmation dialog. Verifies that the user still exists in the list.</em>
+<a class="jxr_linenumber" name="L119" href="#L119">119</a> <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L120" href="#L120">120</a> <em class="jxr_javadoccomment">     * @param name the name of the user to attempt to delete</em>
+<a class="jxr_linenumber" name="L121" href="#L121">121</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L122" href="#L122">122</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> deleteUserCancel(String name) {
+<a class="jxr_linenumber" name="L123" href="#L123">123</a>         seleniumHandler.click(UserListView.USER_GRID_DELETE_BUTTON_PREFIX + name);
+<a class="jxr_linenumber" name="L124" href="#L124">124</a>         seleniumHandler.click(ConfirmDialog.CANCEL_BUTTON);
+<a class="jxr_linenumber" name="L125" href="#L125">125</a>         seleniumHandler.ensureIsInList(UserListView.USER_GRID_NAME_PREFIX, name);
+<a class="jxr_linenumber" name="L126" href="#L126">126</a>     }
+<a class="jxr_linenumber" name="L127" href="#L127">127</a> 
+<a class="jxr_linenumber" name="L128" href="#L128">128</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L129" href="#L129">129</a> <em class="jxr_javadoccomment">     * Tests the successful deletion of a user.</em>
+<a class="jxr_linenumber" name="L130" href="#L130">130</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L131" href="#L131">131</a> <em class="jxr_javadoccomment">     * Clicks the delete button for the specified user,</em>
+<a class="jxr_linenumber" name="L132" href="#L132">132</a> <em class="jxr_javadoccomment">     * then confirms the deletion in the confirmation dialog. Verifies that the user</em>
+<a class="jxr_linenumber" name="L133" href="#L133">133</a> <em class="jxr_javadoccomment">     * is removed from the user list.</em>
+<a class="jxr_linenumber" name="L134" href="#L134">134</a> <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L135" href="#L135">135</a> <em class="jxr_javadoccomment">     * @param name the name of the user to delete</em>
+<a class="jxr_linenumber" name="L136" href="#L136">136</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L137" href="#L137">137</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> deleteUserConfirm(String name) {
+<a class="jxr_linenumber" name="L138" href="#L138">138</a>         seleniumHandler.click(UserListView.USER_GRID_DELETE_BUTTON_PREFIX + name);
+<a class="jxr_linenumber" name="L139" href="#L139">139</a>         seleniumHandler.click(ConfirmDialog.CONFIRM_BUTTON);
+<a class="jxr_linenumber" name="L140" href="#L140">140</a>         seleniumHandler.ensureIsNotInList(UserListView.USER_GRID_NAME_PREFIX, name);
+<a class="jxr_linenumber" name="L141" href="#L141">141</a>     }
+<a class="jxr_linenumber" name="L142" href="#L142">142</a> 
+<a class="jxr_linenumber" name="L143" href="#L143">143</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L144" href="#L144">144</a> <em class="jxr_javadoccomment">     * Tests user editing where the user cancels the edit operation.</em>
+<a class="jxr_linenumber" name="L145" href="#L145">145</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L146" href="#L146">146</a> <em class="jxr_javadoccomment">     * Clicks the edit button for the specified user,</em>
+<a class="jxr_linenumber" name="L147" href="#L147">147</a> <em class="jxr_javadoccomment">     * enters new values for all fields, then cancels the edit dialog. Verifies that the user</em>
+<a class="jxr_linenumber" name="L148" href="#L148">148</a> <em class="jxr_javadoccomment">     * still exists with its original originalName and no user with the new originalName exists.</em>
+<a class="jxr_linenumber" name="L149" href="#L149">149</a> <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L150" href="#L150">150</a> <em class="jxr_javadoccomment">     * @param originalName     the original originalName of the user to edit</em>
+<a class="jxr_linenumber" name="L151" href="#L151">151</a> <em class="jxr_javadoccomment">     * @param newName          the new originalName to attempt to assign to the user</em>
+<a class="jxr_linenumber" name="L152" href="#L152">152</a> <em class="jxr_javadoccomment">     * @param originalEmail    the original email to verify remains unchanged after cancellation</em>
+<a class="jxr_linenumber" name="L153" href="#L153">153</a> <em class="jxr_javadoccomment">     * @param newEmail         the email to attempt to assign to the user</em>
+<a class="jxr_linenumber" name="L154" href="#L154">154</a> <em class="jxr_javadoccomment">     * @param originalColor    the original color to verify remains unchanged after cancellation</em>
+<a class="jxr_linenumber" name="L155" href="#L155">155</a> <em class="jxr_javadoccomment">     * @param newColor         the hex color code to attempt to assign to the user</em>
+<a class="jxr_linenumber" name="L156" href="#L156">156</a> <em class="jxr_javadoccomment">     * @param originalFirstDay the original first working day to verify remains unchanged after cancellation</em>
+<a class="jxr_linenumber" name="L157" href="#L157">157</a> <em class="jxr_javadoccomment">     * @param newFirstDay      the first working day to attempt to assign to the user</em>
+<a class="jxr_linenumber" name="L158" href="#L158">158</a> <em class="jxr_javadoccomment">     * @param originalLastDay  the original last working day to verify remains unchanged after cancellation</em>
+<a class="jxr_linenumber" name="L159" href="#L159">159</a> <em class="jxr_javadoccomment">     * @param newLastDay       the last working day to attempt to assign to the user</em>
+<a class="jxr_linenumber" name="L160" href="#L160">160</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L161" href="#L161">161</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> editUserCancel(String originalName, String newName,
+<a class="jxr_linenumber" name="L162" href="#L162">162</a>                                String originalEmail, String newEmail,
+<a class="jxr_linenumber" name="L163" href="#L163">163</a>                                String originalColor, String newColor,
+<a class="jxr_linenumber" name="L164" href="#L164">164</a>                                LocalDate originalFirstDay, LocalDate newFirstDay,
+<a class="jxr_linenumber" name="L165" href="#L165">165</a>                                LocalDate originalLastDay, LocalDate newLastDay) {
+<a class="jxr_linenumber" name="L166" href="#L166">166</a>         <em class="jxr_comment">// First verify the current field values before starting the edit</em>
+<a class="jxr_linenumber" name="L167" href="#L167">167</a>         verifyUserDialogFields(originalName, originalEmail, originalColor, originalFirstDay, originalLastDay);
+<a class="jxr_linenumber" name="L168" href="#L168">168</a> 
+<a class="jxr_linenumber" name="L169" href="#L169">169</a>         seleniumHandler.click(UserListView.USER_GRID_EDIT_BUTTON_PREFIX + originalName);
+<a class="jxr_linenumber" name="L170" href="#L170">170</a>         seleniumHandler.setTextField(UserDialog.USER_NAME_FIELD, newName);
+<a class="jxr_linenumber" name="L171" href="#L171">171</a>         seleniumHandler.setTextField(UserDialog.USER_EMAIL_FIELD, newEmail);
+<a class="jxr_linenumber" name="L172" href="#L172">172</a>         seleniumHandler.setColorPickerValue(UserDialog.USER_COLOR_PICKER, newColor);
+<a class="jxr_linenumber" name="L173" href="#L173">173</a>         seleniumHandler.setDatePickerValue(UserDialog.USER_FIRST_WORKING_DAY_PICKER, newFirstDay);
+<a class="jxr_linenumber" name="L174" href="#L174">174</a>         seleniumHandler.setDatePickerValue(UserDialog.USER_LAST_WORKING_DAY_PICKER, newLastDay);
+<a class="jxr_linenumber" name="L175" href="#L175">175</a> 
+<a class="jxr_linenumber" name="L176" href="#L176">176</a>         <em class="jxr_comment">// Short pause to ensure UI updates</em>
+<a class="jxr_linenumber" name="L177" href="#L177">177</a>         <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L178" href="#L178">178</a>             Thread.sleep(300);
+<a class="jxr_linenumber" name="L179" href="#L179">179</a>         } <strong class="jxr_keyword">catch</strong> (InterruptedException e) {
+<a class="jxr_linenumber" name="L180" href="#L180">180</a>             Thread.currentThread().interrupt();
+<a class="jxr_linenumber" name="L181" href="#L181">181</a>         }
+<a class="jxr_linenumber" name="L182" href="#L182">182</a>         seleniumHandler.click(UserDialog.CANCEL_BUTTON);
+<a class="jxr_linenumber" name="L183" href="#L183">183</a>         seleniumHandler.ensureIsInList(UserListView.USER_GRID_NAME_PREFIX, originalName);
+<a class="jxr_linenumber" name="L184" href="#L184">184</a>         seleniumHandler.ensureIsNotInList(UserListView.USER_GRID_NAME_PREFIX, newName);
+<a class="jxr_linenumber" name="L185" href="#L185">185</a>     }
+<a class="jxr_linenumber" name="L186" href="#L186">186</a> 
+<a class="jxr_linenumber" name="L187" href="#L187">187</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L188" href="#L188">188</a> <em class="jxr_javadoccomment">     * Tests the successful editing of a user with all fields.</em>
+<a class="jxr_linenumber" name="L189" href="#L189">189</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L190" href="#L190">190</a> <em class="jxr_javadoccomment">     * Clicks the edit button for the specified user,</em>
+<a class="jxr_linenumber" name="L191" href="#L191">191</a> <em class="jxr_javadoccomment">     * enters new values for all fields, then confirms the edit. Verifies that the user with</em>
+<a class="jxr_linenumber" name="L192" href="#L192">192</a> <em class="jxr_javadoccomment">     * the new name appears in the list and the user with the old name is gone.</em>
+<a class="jxr_linenumber" name="L193" href="#L193">193</a> <em class="jxr_javadoccomment">     * Also verifies that all fields were correctly updated with the new values.</em>
+<a class="jxr_linenumber" name="L194" href="#L194">194</a> <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L195" href="#L195">195</a> <em class="jxr_javadoccomment">     * @param name            the original name of the user to edit</em>
+<a class="jxr_linenumber" name="L196" href="#L196">196</a> <em class="jxr_javadoccomment">     * @param newName         the new name to assign to the user</em>
+<a class="jxr_linenumber" name="L197" href="#L197">197</a> <em class="jxr_javadoccomment">     * @param email           the new email to assign to the user</em>
+<a class="jxr_linenumber" name="L198" href="#L198">198</a> <em class="jxr_javadoccomment">     * @param color           the new hex color code (with # prefix) for the user</em>
+<a class="jxr_linenumber" name="L199" href="#L199">199</a> <em class="jxr_javadoccomment">     * @param firstWorkingDay the new first working day for the user</em>
+<a class="jxr_linenumber" name="L200" href="#L200">200</a> <em class="jxr_javadoccomment">     * @param lastWorkingDay  the new last working day for the user</em>
+<a class="jxr_linenumber" name="L201" href="#L201">201</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L202" href="#L202">202</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> editUserConfirm(String name, String newName, String email, String color, LocalDate firstWorkingDay, LocalDate lastWorkingDay) {
+<a class="jxr_linenumber" name="L203" href="#L203">203</a>         seleniumHandler.click(UserListView.USER_GRID_EDIT_BUTTON_PREFIX + name);
+<a class="jxr_linenumber" name="L204" href="#L204">204</a>         seleniumHandler.setTextField(UserDialog.USER_NAME_FIELD, newName);
+<a class="jxr_linenumber" name="L205" href="#L205">205</a>         seleniumHandler.setTextField(UserDialog.USER_EMAIL_FIELD, email);
+<a class="jxr_linenumber" name="L206" href="#L206">206</a>         seleniumHandler.setColorPickerValue(UserDialog.USER_COLOR_PICKER, color);
+<a class="jxr_linenumber" name="L207" href="#L207">207</a>         seleniumHandler.setDatePickerValue(UserDialog.USER_FIRST_WORKING_DAY_PICKER, firstWorkingDay);
+<a class="jxr_linenumber" name="L208" href="#L208">208</a>         seleniumHandler.setDatePickerValue(UserDialog.USER_LAST_WORKING_DAY_PICKER, lastWorkingDay);
+<a class="jxr_linenumber" name="L209" href="#L209">209</a>         seleniumHandler.click(UserDialog.CONFIRM_BUTTON);
+<a class="jxr_linenumber" name="L210" href="#L210">210</a>         seleniumHandler.ensureIsInList(UserListView.USER_GRID_NAME_PREFIX, newName);
+<a class="jxr_linenumber" name="L211" href="#L211">211</a>         seleniumHandler.ensureIsNotInList(UserListView.USER_GRID_NAME_PREFIX, name);
+<a class="jxr_linenumber" name="L212" href="#L212">212</a>     }
+<a class="jxr_linenumber" name="L213" href="#L213">213</a> 
+<a class="jxr_linenumber" name="L214" href="#L214">214</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L215" href="#L215">215</a> <em class="jxr_javadoccomment">     * Navigates to the UserListView.</em>
+<a class="jxr_linenumber" name="L216" href="#L216">216</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L217" href="#L217">217</a> <em class="jxr_javadoccomment">     * Opens the user list URL directly and waits for the page to load</em>
+<a class="jxr_linenumber" name="L218" href="#L218">218</a> <em class="jxr_javadoccomment">     * by checking for the presence of the page title element.</em>
+<a class="jxr_linenumber" name="L219" href="#L219">219</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L220" href="#L220">220</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> switchToUserListView(String recordingFolderName, String testName) {
+<a class="jxr_linenumber" name="L221" href="#L221">221</a>         <em class="jxr_comment">//- Check if we need to log in</em>
+<a class="jxr_linenumber" name="L222" href="#L222">222</a>         <strong class="jxr_keyword">if</strong> (!seleniumHandler.getCurrentUrl().contains(<span class="jxr_string">"/ui/"</span>)) {
+<a class="jxr_linenumber" name="L223" href="#L223">223</a>             seleniumHandler.getAndCheck(<span class="jxr_string">"http://localhost:"</span> + port + <span class="jxr_string">"/ui/"</span> + LoginView.ROUTE);
+<a class="jxr_linenumber" name="L224" href="#L224">224</a>             seleniumHandler.startRecording(recordingFolderName, testName);
+<a class="jxr_linenumber" name="L225" href="#L225">225</a>             seleniumHandler.setLoginUser(<span class="jxr_string">"admin-user"</span>);
+<a class="jxr_linenumber" name="L226" href="#L226">226</a>             seleniumHandler.setLoginPassword(<span class="jxr_string">"test-password"</span>);
+<a class="jxr_linenumber" name="L227" href="#L227">227</a>             seleniumHandler.loginSubmit();
+<a class="jxr_linenumber" name="L228" href="#L228">228</a>             seleniumHandler.waitUntil(ExpectedConditions.elementToBeClickable(By.id(ProductListView.PRODUCT_LIST_PAGE_TITLE)));
+<a class="jxr_linenumber" name="L229" href="#L229">229</a>         }
+<a class="jxr_linenumber" name="L230" href="#L230">230</a>         seleniumHandler.getAndCheck(<span class="jxr_string">"http://localhost:"</span> + port + <span class="jxr_string">"/ui/"</span> + UserListView.ROUTE);
+<a class="jxr_linenumber" name="L231" href="#L231">231</a>         seleniumHandler.waitUntil(ExpectedConditions.elementToBeClickable(By.id(UserListView.USER_LIST_PAGE_TITLE)));
+<a class="jxr_linenumber" name="L232" href="#L232">232</a>     }
+<a class="jxr_linenumber" name="L233" href="#L233">233</a> 
+<a class="jxr_linenumber" name="L234" href="#L234">234</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L235" href="#L235">235</a> <em class="jxr_javadoccomment">     * Verifies that the form is reset after cancellation.</em>
+<a class="jxr_linenumber" name="L236" href="#L236">236</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L237" href="#L237">237</a> <em class="jxr_javadoccomment">     * Opens a new user dialog and verifies that it doesn't contain any values from</em>
+<a class="jxr_linenumber" name="L238" href="#L238">238</a> <em class="jxr_javadoccomment">     * a previous cancelled operation. This method is used to ensure that cancelling</em>
+<a class="jxr_linenumber" name="L239" href="#L239">239</a> <em class="jxr_javadoccomment">     * a user creation or edit truly discards all changes.</em>
+<a class="jxr_linenumber" name="L240" href="#L240">240</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L241" href="#L241">241</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> verifyFormIsReset() {
+<a class="jxr_linenumber" name="L242" href="#L242">242</a>         <em class="jxr_comment">// Open a new user dialog</em>
+<a class="jxr_linenumber" name="L243" href="#L243">243</a>         seleniumHandler.click(UserListView.CREATE_USER_BUTTON);
+<a class="jxr_linenumber" name="L244" href="#L244">244</a>         <em class="jxr_comment">// Read form values</em>
+<a class="jxr_linenumber" name="L245" href="#L245">245</a>         String    formName     = seleniumHandler.getTextField(UserDialog.USER_NAME_FIELD);
+<a class="jxr_linenumber" name="L246" href="#L246">246</a>         String    formEmail    = seleniumHandler.getTextField(UserDialog.USER_EMAIL_FIELD);
+<a class="jxr_linenumber" name="L247" href="#L247">247</a>         String    formColor    = seleniumHandler.getColorPickerValue(UserDialog.USER_COLOR_PICKER);
+<a class="jxr_linenumber" name="L248" href="#L248">248</a>         LocalDate formFirstDay = seleniumHandler.getDatePickerValue(UserDialog.USER_FIRST_WORKING_DAY_PICKER);
+<a class="jxr_linenumber" name="L249" href="#L249">249</a>         LocalDate formLastDay  = seleniumHandler.getDatePickerValue(UserDialog.USER_LAST_WORKING_DAY_PICKER);
+<a class="jxr_linenumber" name="L250" href="#L250">250</a>         <em class="jxr_comment">// Close the dialog</em>
+<a class="jxr_linenumber" name="L251" href="#L251">251</a>         seleniumHandler.click(UserDialog.CANCEL_BUTTON);
+<a class="jxr_linenumber" name="L252" href="#L252">252</a>         <em class="jxr_comment">// Assert that all form fields are empty or default values</em>
+<a class="jxr_linenumber" name="L253" href="#L253">253</a>         Assertions.assertTrue(formName.isEmpty(), <span class="jxr_string">"Name field should be empty in new dialog"</span>);
+<a class="jxr_linenumber" name="L254" href="#L254">254</a>         Assertions.assertTrue(formEmail.isEmpty(), <span class="jxr_string">"Email field should be empty in new dialog"</span>);
+<a class="jxr_linenumber" name="L255" href="#L255">255</a>         Assertions.assertEquals(<span class="jxr_string">"#000000"</span>, formColor, <span class="jxr_string">"Color picker should have default value black"</span>);
+<a class="jxr_linenumber" name="L256" href="#L256">256</a>         Assertions.assertNull(formFirstDay, <span class="jxr_string">"First working day picker should be null in new dialog"</span>);
+<a class="jxr_linenumber" name="L257" href="#L257">257</a>         Assertions.assertNull(formLastDay, <span class="jxr_string">"Last working day picker should be null in new dialog"</span>);
+<a class="jxr_linenumber" name="L258" href="#L258">258</a>     }
+<a class="jxr_linenumber" name="L259" href="#L259">259</a> 
+<a class="jxr_linenumber" name="L260" href="#L260">260</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L261" href="#L261">261</a> <em class="jxr_javadoccomment">     * Verifies all fields in the UserDialog for a specific user.</em>
+<a class="jxr_linenumber" name="L262" href="#L262">262</a> <em class="jxr_javadoccomment">     * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L263" href="#L263">263</a> <em class="jxr_javadoccomment">     * Opens the edit dialog for the specified user and verifies that all fields</em>
+<a class="jxr_linenumber" name="L264" href="#L264">264</a> <em class="jxr_javadoccomment">     * (name, email, color, first working day, last working day) have the expected values.</em>
+<a class="jxr_linenumber" name="L265" href="#L265">265</a> <em class="jxr_javadoccomment">     * Cancels the dialog after verification to avoid making changes.</em>
+<a class="jxr_linenumber" name="L266" href="#L266">266</a> <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L267" href="#L267">267</a> <em class="jxr_javadoccomment">     * @param name             the name of the user to verify</em>
+<a class="jxr_linenumber" name="L268" href="#L268">268</a> <em class="jxr_javadoccomment">     * @param expectedEmail    the expected email of the user</em>
+<a class="jxr_linenumber" name="L269" href="#L269">269</a> <em class="jxr_javadoccomment">     * @param expectedColor    the expected hex color code (with # prefix) for the user</em>
+<a class="jxr_linenumber" name="L270" href="#L270">270</a> <em class="jxr_javadoccomment">     * @param expectedFirstDay the expected first working day for the user</em>
+<a class="jxr_linenumber" name="L271" href="#L271">271</a> <em class="jxr_javadoccomment">     * @param expectedLastDay  the expected last working day for the user</em>
+<a class="jxr_linenumber" name="L272" href="#L272">272</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L273" href="#L273">273</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> verifyUserDialogFields(String name, String expectedEmail, String expectedColor, LocalDate expectedFirstDay, LocalDate expectedLastDay) {
+<a class="jxr_linenumber" name="L274" href="#L274">274</a>         <em class="jxr_comment">// Open the edit dialog for the specified user</em>
+<a class="jxr_linenumber" name="L275" href="#L275">275</a>         seleniumHandler.click(UserListView.USER_GRID_EDIT_BUTTON_PREFIX + name);
+<a class="jxr_linenumber" name="L276" href="#L276">276</a>         <em class="jxr_comment">// Read actual values from the dialog</em>
+<a class="jxr_linenumber" name="L277" href="#L277">277</a>         String    actualName     = seleniumHandler.getTextField(UserDialog.USER_NAME_FIELD);
+<a class="jxr_linenumber" name="L278" href="#L278">278</a>         String    actualEmail    = seleniumHandler.getTextField(UserDialog.USER_EMAIL_FIELD);
+<a class="jxr_linenumber" name="L279" href="#L279">279</a>         String    actualColor    = seleniumHandler.getColorPickerValue(UserDialog.USER_COLOR_PICKER);
+<a class="jxr_linenumber" name="L280" href="#L280">280</a>         LocalDate actualFirstDay = seleniumHandler.getDatePickerValue(UserDialog.USER_FIRST_WORKING_DAY_PICKER);
+<a class="jxr_linenumber" name="L281" href="#L281">281</a>         LocalDate actualLastDay  = seleniumHandler.getDatePickerValue(UserDialog.USER_LAST_WORKING_DAY_PICKER);
+<a class="jxr_linenumber" name="L282" href="#L282">282</a>         <em class="jxr_comment">// Cancel the dialog to avoid making changes</em>
+<a class="jxr_linenumber" name="L283" href="#L283">283</a>         seleniumHandler.click(UserDialog.CANCEL_BUTTON);
+<a class="jxr_linenumber" name="L284" href="#L284">284</a>         Assertions.assertEquals(name, actualName, <span class="jxr_string">"Name mismatch"</span>);
+<a class="jxr_linenumber" name="L285" href="#L285">285</a>         Assertions.assertEquals(expectedEmail, actualEmail, <span class="jxr_string">"Email mismatch"</span>);
+<a class="jxr_linenumber" name="L286" href="#L286">286</a>         Assertions.assertEquals(expectedColor, actualColor, <span class="jxr_string">"Color mismatch"</span>);
+<a class="jxr_linenumber" name="L287" href="#L287">287</a>         Assertions.assertEquals(expectedFirstDay, actualFirstDay, <span class="jxr_string">"First working day mismatch"</span>);
+<a class="jxr_linenumber" name="L288" href="#L288">288</a>         Assertions.assertEquals(expectedLastDay, actualLastDay, <span class="jxr_string">"Last working day mismatch"</span>);
+<a class="jxr_linenumber" name="L289" href="#L289">289</a>     }
+<a class="jxr_linenumber" name="L290" href="#L290">290</a> }
+</pre>
+<hr/>
+<div id="footer">© 2025</div>
+</body>
+</html>

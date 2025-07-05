@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AvailabilityDialog.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.ui.dialog</a> &gt; <span class="el_source">AvailabilityDialog.java</span></div><h1>AvailabilityDialog.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.ui.dialog;
+
+import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.binder.ValidationException;
+import com.vaadin.flow.data.validator.RangeValidator;
+import de.bushnaq.abdalla.projecthub.dto.Availability;
+import de.bushnaq.abdalla.projecthub.dto.User;
+import de.bushnaq.abdalla.projecthub.rest.api.AvailabilityApi;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+
+import java.time.LocalDate;
+
+public class AvailabilityDialog extends Dialog {
+    public static final String               AVAILABILITY_DIALOG           = &quot;availability-dialog&quot;;
+    public static final String               AVAILABILITY_PERCENTAGE_FIELD = &quot;availability-percentage-field&quot;;
+    public static final String               AVAILABILITY_START_DATE_FIELD = &quot;availability-start-date-field&quot;;
+    public static final String               CANCEL_BUTTON                 = &quot;availability-dialog-cancel&quot;;
+    public static final String               CONFIRM_BUTTON                = &quot;availability-dialog-confirm&quot;;
+    private final       Availability         availability;
+    private final       AvailabilityApi      availabilityApi;
+<span class="nc" id="L50">    private final       IntegerField         availabilityField             = new IntegerField(&quot;Availability (%)&quot;);</span>
+<span class="nc" id="L51">    private final       Binder&lt;Availability&gt; binder                        = new Binder&lt;&gt;(Availability.class);</span>
+    private final       boolean              isNewAvailability;
+    private final       Runnable             onSaveCallback;
+<span class="nc" id="L54">    private final       DatePicker           startDateField                = new DatePicker(&quot;Start Date&quot;);</span>
+    private final       User                 user;
+
+<span class="nc" id="L57">    public AvailabilityDialog(Availability availability, User user, AvailabilityApi availabilityApi, Runnable onSaveCallback) {</span>
+<span class="nc" id="L58">        this.availabilityApi   = availabilityApi;</span>
+<span class="nc" id="L59">        this.user              = user;</span>
+<span class="nc" id="L60">        this.onSaveCallback    = onSaveCallback;</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">        this.isNewAvailability = (availability == null);</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        this.availability      = isNewAvailability ? new Availability() : availability;</span>
+
+        // Set the dialog title with an icon
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        String title = availability == null ? &quot;Create Availability&quot; : &quot;Edit Availability&quot;;</span>
+
+        // Create a custom header with icon
+<span class="nc" id="L68">        HorizontalLayout headerLayout = new HorizontalLayout();</span>
+<span class="nc" id="L69">        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);</span>
+<span class="nc" id="L70">        headerLayout.setSpacing(true);</span>
+
+<span class="nc" id="L72">        Icon titleIcon = new Icon(VaadinIcon.CHART);</span>
+<span class="nc" id="L73">        titleIcon.getStyle().set(&quot;margin-right&quot;, &quot;0.5em&quot;);</span>
+
+<span class="nc" id="L75">        H3 titleLabel = new H3(title);</span>
+<span class="nc" id="L76">        titleLabel.getStyle().set(&quot;margin&quot;, &quot;0&quot;);</span>
+
+<span class="nc" id="L78">        headerLayout.add(titleIcon, titleLabel);</span>
+
+        // Set the custom header
+<span class="nc" id="L81">        setHeaderTitle(null); // Clear the default title</span>
+<span class="nc" id="L82">        getHeader().add(headerLayout);</span>
+
+<span class="nc" id="L84">        setId(AVAILABILITY_DIALOG);</span>
+<span class="nc" id="L85">        setWidth(&quot;480px&quot;);</span>
+//        setCloseOnEsc(true);
+//        setCloseOnOutsideClick(false);
+//        setDraggable(true);
+//        setResizable(true);
+
+        // Setup form and actions
+<span class="nc" id="L92">        add(createHeader(), createForm(), VaadinUtils.createDialogButtonLayout(&quot;Save&quot;, CONFIRM_BUTTON, &quot;Cancel&quot;, CANCEL_BUTTON, this::save, this));</span>
+<span class="nc" id="L93">        configureFormBinder();</span>
+<span class="nc" id="L94">    }</span>
+
+    private void configureFormBinder() {
+        // Start date binding with custom validator to ensure uniqueness
+<span class="nc" id="L98">        binder.forField(startDateField)</span>
+<span class="nc" id="L99">                .asRequired(&quot;Start date is required&quot;)</span>
+<span class="nc" id="L100">                .withValidator(this::validateStartDateUniqueness, &quot;Another availability record already exists with this date&quot;)</span>
+<span class="nc" id="L101">                .withValidationStatusHandler(status -&gt; {</span>
+<span class="nc" id="L102">                    startDateField.setInvalid(status.getMessage().isPresent());</span>
+<span class="nc" id="L103">                    startDateField.setErrorMessage(status.getMessage().orElse(&quot;&quot;));</span>
+<span class="nc" id="L104">                })</span>
+<span class="nc" id="L105">                .bind(Availability::getStart, Availability::setStart);</span>
+
+        // Availability binding (as percentage, converting between 0-150% display and 0-1.5 stored value)
+<span class="nc" id="L108">        binder.forField(availabilityField)</span>
+<span class="nc" id="L109">                .asRequired(&quot;Availability is required&quot;)</span>
+<span class="nc" id="L110">                .withConverter(</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">                        value -&gt; value != null ? value.floatValue() / 100 : 0.0f,  // Double to float and convert from percentage</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">                        value -&gt; value != null ? (int) (value * 100) : 0  // float to Double and convert to percentage</span>
+                )
+<span class="nc" id="L114">                .withValidator(new RangeValidator&lt;&gt;(&quot;Availability must be between 0% and 150%&quot;, Float::compare, 0.0f, 1.5f))</span>
+<span class="nc" id="L115">                .withValidationStatusHandler(status -&gt; {</span>
+<span class="nc" id="L116">                    availabilityField.setInvalid(status.getMessage().isPresent());</span>
+<span class="nc" id="L117">                    availabilityField.setErrorMessage(status.getMessage().orElse(&quot;&quot;));</span>
+<span class="nc" id="L118">                })</span>
+<span class="nc" id="L119">                .bind(Availability::getAvailability, Availability::setAvailability);</span>
+
+        // Load data into the form
+<span class="nc bnc" id="L122" title="All 2 branches missed.">        if (!isNewAvailability) {</span>
+<span class="nc" id="L123">            binder.readBean(availability);</span>
+            // If editing, convert the stored value (0-1.5) to percentage display (0-150)
+<span class="nc" id="L125">            availabilityField.setValue((int) (availability.getAvailability() * 100));</span>
+        }
+<span class="nc" id="L127">    }</span>
+
+    private FormLayout createForm() {
+<span class="nc" id="L130">        FormLayout formLayout = new FormLayout();</span>
+
+        // Configure fields
+<span class="nc" id="L133">        startDateField.setWidthFull();</span>
+<span class="nc" id="L134">        startDateField.setHelperText(&quot;The date when this availability level begins&quot;);</span>
+<span class="nc" id="L135">        startDateField.setId(AVAILABILITY_START_DATE_FIELD);</span>
+<span class="nc" id="L136">        startDateField.setPrefixComponent(new Icon(VaadinIcon.CALENDAR));</span>
+
+<span class="nc" id="L138">        availabilityField.setWidthFull();</span>
+<span class="nc" id="L139">        availabilityField.setHelperText(&quot;Value between 0-150% (e.g., 100 = full time)&quot;);</span>
+<span class="nc" id="L140">        availabilityField.setSuffixComponent(new Span(&quot;%&quot;));</span>
+<span class="nc" id="L141">        availabilityField.setPrefixComponent(new Icon(VaadinIcon.CHART));</span>
+<span class="nc" id="L142">        availabilityField.setId(AVAILABILITY_PERCENTAGE_FIELD);</span>
+
+<span class="nc" id="L144">        formLayout.add(startDateField, availabilityField);</span>
+<span class="nc" id="L145">        return formLayout;</span>
+    }
+
+    private H3 createHeader() {
+<span class="nc bnc" id="L149" title="All 2 branches missed.">        String title  = isNewAvailability ? &quot;Add New Availability&quot; : &quot;Edit Availability&quot;;</span>
+<span class="nc" id="L150">        H3     header = new H3(title);</span>
+<span class="nc" id="L151">        header.getStyle().set(&quot;margin-top&quot;, &quot;0&quot;);</span>
+<span class="nc" id="L152">        return header;</span>
+    }
+
+    private void save() {
+        try {
+            // Validate all fields first - this will trigger validation and show error messages
+<span class="nc bnc" id="L158" title="All 2 branches missed.">            if (!binder.validate().isOk()) {</span>
+<span class="nc" id="L159">                return; // Stop here if validation fails</span>
+            }
+
+            // Write values to bean
+<span class="nc" id="L163">            binder.writeBean(availability);</span>
+
+            // Ensure user association is set
+<span class="nc" id="L166">            availability.setUser(user);</span>
+
+            // Save to backend
+<span class="nc bnc" id="L169" title="All 2 branches missed.">            if (isNewAvailability) {</span>
+<span class="nc" id="L170">                availabilityApi.persist(availability, user.getId());</span>
+            } else {
+<span class="nc" id="L172">                availabilityApi.update(availability, user.getId());</span>
+            }
+
+            // Notify success
+<span class="nc bnc" id="L176" title="All 2 branches missed.">            String message = isNewAvailability ? &quot;New availability record added&quot; : &quot;Availability record updated&quot;;</span>
+<span class="nc" id="L177">            Notification.show(message, 3000, Notification.Position.MIDDLE);</span>
+
+            // Trigger refresh callback and close dialog
+<span class="nc" id="L180">            onSaveCallback.run();</span>
+<span class="nc" id="L181">            close();</span>
+<span class="nc" id="L182">        } catch (ValidationException e) {</span>
+<span class="nc" id="L183">            System.out.printf(&quot;Validation failed: %s%n&quot;, e.getMessage());</span>
+            // Validation errors will already be displayed next to the fields
+            // No need for additional notification
+<span class="nc" id="L186">        } catch (Exception e) {</span>
+<span class="nc" id="L187">            System.out.printf(&quot;Validation failed: %s%n&quot;, e.getMessage());</span>
+            // Only show notification for unexpected errors
+<span class="nc" id="L189">            Notification notification = Notification.show(&quot;Error saving availability: &quot; + e.getMessage(), 3000, Notification.Position.MIDDLE);</span>
+<span class="nc" id="L190">            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);</span>
+<span class="nc" id="L191">        }</span>
+<span class="nc" id="L192">    }</span>
+
+    private boolean validateStartDateUniqueness(LocalDate date) {
+<span class="nc bnc" id="L195" title="All 2 branches missed.">        if (date == null) return true; // Let the required validator handle null values</span>
+
+        // If editing existing record and date hasn't changed, it's valid
+<span class="nc bnc" id="L198" title="All 4 branches missed.">        if (!isNewAvailability &amp;&amp; availability.getStart().equals(date)) {</span>
+<span class="nc" id="L199">            return true;</span>
+        }
+
+        // Check if any other availability record exists with the same date
+<span class="nc bnc" id="L203" title="All 4 branches missed.">        return user.getAvailabilities().stream().noneMatch(a -&gt; date.equals(a.getStart()) &amp;&amp; !a.equals(availability));</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

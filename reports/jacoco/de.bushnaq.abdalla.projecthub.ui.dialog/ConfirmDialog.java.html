@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConfirmDialog.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.ui.dialog</a> &gt; <span class="el_source">ConfirmDialog.java</span></div><h1>ConfirmDialog.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.ui.dialog;
+
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+
+/**
+ * A reusable dialog for confirming delete operations.
+ */
+public class ConfirmDialog extends Dialog {
+
+    public static final String CANCEL_BUTTON  = &quot;cancel-confirm-button&quot;;
+    public static final String CONFIRM_BUTTON = &quot;confirm-button&quot;;
+    public static final String CONFIRM_DIALOG = &quot;confirm-dialog&quot;;
+
+    /**
+     * Creates a confirmation dialog for delete operations.
+     *
+     * @param title             The dialog title
+     * @param message           The confirmation message to display
+     * @param confirmButtonText Text for the delete/confirm button
+     * @param action            Runnable to execute when confirmed
+     */
+<span class="fc" id="L44">    public ConfirmDialog(String title, String message, String confirmButtonText, Runnable action) {</span>
+<span class="fc" id="L45">        setHeaderTitle(title);</span>
+<span class="fc" id="L46">        setId(CONFIRM_DIALOG);</span>
+<span class="fc" id="L47">        setWidth(&quot;480px&quot;);</span>
+
+<span class="fc" id="L49">        VerticalLayout dialogLayout = new VerticalLayout();</span>
+<span class="fc" id="L50">        dialogLayout.add(message);</span>
+<span class="fc" id="L51">        dialogLayout.setPadding(true);</span>
+
+<span class="fc" id="L53">        Button confirmButton = new Button(confirmButtonText, e -&gt; {</span>
+<span class="fc" id="L54">            action.run();</span>
+<span class="fc" id="L55">            close();</span>
+<span class="fc" id="L56">        });</span>
+<span class="fc" id="L57">        confirmButton.setId(CONFIRM_BUTTON);</span>
+<span class="fc" id="L58">        confirmButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);</span>
+
+<span class="fc" id="L60">        Button cancelButton = new Button(&quot;Cancel&quot;, e -&gt; close());</span>
+<span class="fc" id="L61">        cancelButton.setId(CANCEL_BUTTON);</span>
+
+<span class="fc" id="L63">        HorizontalLayout buttonLayout = new HorizontalLayout();</span>
+<span class="fc" id="L64">        buttonLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);</span>
+<span class="fc" id="L65">        buttonLayout.add(cancelButton, confirmButton);</span>
+<span class="fc" id="L66">        buttonLayout.setWidthFull();</span>
+
+<span class="fc" id="L68">        dialogLayout.add(buttonLayout);</span>
+<span class="fc" id="L69">        add(dialogLayout);</span>
+<span class="fc" id="L70">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

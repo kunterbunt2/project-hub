@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AvailabilityController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.rest.controller</a> &gt; <span class="el_source">AvailabilityController.java</span></div><h1>AvailabilityController.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.rest.controller;
+
+import de.bushnaq.abdalla.projecthub.dao.AvailabilityDAO;
+import de.bushnaq.abdalla.projecthub.repository.AvailabilityRepository;
+import de.bushnaq.abdalla.projecthub.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Objects;
+
+@RestController
+@RequestMapping(&quot;/api/availability&quot;)
+<span class="fc" id="L32">public class AvailabilityController {</span>
+
+    @Autowired
+    private AvailabilityRepository availabilityRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @DeleteMapping(&quot;/{userId}/{id}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    public ResponseEntity&lt;Object&gt; delete(@PathVariable Long userId, @PathVariable Long id) {
+<span class="nc" id="L43">        return userRepository.findById(userId).map(user -&gt;</span>
+<span class="nc" id="L44">                availabilityRepository.findById(id).map(availability -&gt; {</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">                    if (Objects.equals(user.getAvailabilities().getFirst().getId(), id))</span>
+<span class="nc" id="L46">                        throw new IllegalArgumentException(&quot;Cannot delete the first availability&quot;);</span>
+<span class="nc" id="L47">                    user.getAvailabilities().remove(availability);</span>
+<span class="nc" id="L48">                    userRepository.save(user);</span>
+<span class="nc" id="L49">                    availabilityRepository.deleteById(id);</span>
+<span class="nc" id="L50">                    return ResponseEntity.ok().build();</span>
+<span class="nc" id="L51">                }).orElse(ResponseEntity.notFound().build()) // Return 404 if availability not found</span>
+<span class="nc" id="L52">        ).orElse(ResponseEntity.notFound().build());</span>
+    }
+
+    @GetMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMIN', 'USER')&quot;)
+    public ResponseEntity&lt;AvailabilityDAO&gt; getById(@PathVariable Long id) {
+<span class="nc" id="L58">        return availabilityRepository.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());</span>
+    }
+
+    @PostMapping(&quot;/{userId}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    public ResponseEntity&lt;AvailabilityDAO&gt; save(@RequestBody AvailabilityDAO availability, @PathVariable Long userId) {
+<span class="nc" id="L64">        return userRepository.findById(userId).map(user -&gt; {</span>
+<span class="nc" id="L65">            availability.setUser(user);</span>
+<span class="nc" id="L66">            AvailabilityDAO save = availabilityRepository.save(availability);</span>
+<span class="nc" id="L67">            return ResponseEntity.ok(save);</span>
+<span class="nc" id="L68">        }).orElse(ResponseEntity.notFound().build());</span>
+    }
+
+    @PutMapping(&quot;/{userId}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    public ResponseEntity&lt;Object&gt; update(@RequestBody AvailabilityDAO availability, @PathVariable Long userId) {
+<span class="nc" id="L74">        return userRepository.findById(userId).map(user -&gt; {</span>
+<span class="nc" id="L75">            availability.setUser(user);</span>
+<span class="nc" id="L76">            AvailabilityDAO save = availabilityRepository.save(availability);</span>
+<span class="nc" id="L77">            return ResponseEntity.ok().build();</span>
+<span class="nc" id="L78">        }).orElse(ResponseEntity.notFound().build());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

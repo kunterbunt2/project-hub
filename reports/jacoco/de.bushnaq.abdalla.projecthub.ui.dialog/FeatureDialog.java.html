@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FeatureDialog.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.ui.dialog</a> &gt; <span class="el_source">FeatureDialog.java</span></div><h1>FeatureDialog.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.ui.dialog;
+
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import de.bushnaq.abdalla.projecthub.dto.Feature;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+
+/**
+ * A reusable dialog for creating and editing features.
+ */
+public class FeatureDialog extends Dialog {
+
+    public static final String       CANCEL_BUTTON      = &quot;cancel-feature-button&quot;;
+    public static final String       CONFIRM_BUTTON     = &quot;save-feature-button&quot;;
+    public static final String       FEATURE_DIALOG     = &quot;feature-dialog&quot;;
+    public static final String       FEATURE_NAME_FIELD = &quot;feature-name-field&quot;;
+    private final       Feature      feature;
+    private final       boolean      isEditMode;
+    private final       TextField    nameField;
+    private final       SaveCallback onSaveCallback;
+
+    /**
+     * Creates a dialog for creating or editing a feature.
+     *
+     * @param feature        The feature to edit, or null for creating a new feature
+     * @param onSaveCallback Callback that receives the feature with updated values and a reference to this dialog
+     */
+<span class="nc" id="L51">    public FeatureDialog(Feature feature, SaveCallback onSaveCallback) {</span>
+<span class="nc" id="L52">        this.feature        = feature;</span>
+<span class="nc" id="L53">        this.onSaveCallback = onSaveCallback;</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">        isEditMode          = feature != null;</span>
+
+        // Set the dialog title with an icon
+<span class="nc bnc" id="L57" title="All 2 branches missed.">        String title = isEditMode ? &quot;Edit Feature&quot; : &quot;Create Feature&quot;;</span>
+
+        // Create a custom header with icon
+<span class="nc" id="L60">        HorizontalLayout headerLayout = new HorizontalLayout();</span>
+<span class="nc" id="L61">        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);</span>
+<span class="nc" id="L62">        headerLayout.setSpacing(true);</span>
+
+<span class="nc" id="L64">        Icon titleIcon = new Icon(VaadinIcon.LIGHTBULB);</span>
+<span class="nc" id="L65">        titleIcon.getStyle().set(&quot;margin-right&quot;, &quot;0.5em&quot;);</span>
+
+<span class="nc" id="L67">        com.vaadin.flow.component.html.H3 titleLabel = new com.vaadin.flow.component.html.H3(title);</span>
+<span class="nc" id="L68">        titleLabel.getStyle().set(&quot;margin&quot;, &quot;0&quot;);</span>
+
+<span class="nc" id="L70">        headerLayout.add(titleIcon, titleLabel);</span>
+
+        // Set the custom header
+<span class="nc" id="L73">        setHeaderTitle(null); // Clear the default title</span>
+<span class="nc" id="L74">        getHeader().add(headerLayout);</span>
+
+<span class="nc" id="L76">        setId(FEATURE_DIALOG);</span>
+<span class="nc" id="L77">        setWidth(&quot;480px&quot;);</span>
+
+<span class="nc" id="L79">        VerticalLayout dialogLayout = new VerticalLayout();</span>
+<span class="nc" id="L80">        dialogLayout.setPadding(false);</span>
+<span class="nc" id="L81">        dialogLayout.setSpacing(true);</span>
+
+<span class="nc" id="L83">        nameField = new TextField(&quot;Feature Name&quot;);</span>
+<span class="nc" id="L84">        nameField.setId(FEATURE_NAME_FIELD);</span>
+<span class="nc" id="L85">        nameField.setWidthFull();</span>
+<span class="nc" id="L86">        nameField.setRequired(true);</span>
+        // Add helper text explaining the uniqueness requirement
+<span class="nc" id="L88">        nameField.setHelperText(&quot;Feature name must be unique&quot;);</span>
+<span class="nc" id="L89">        nameField.setPrefixComponent(new Icon(VaadinIcon.LIGHTBULB));</span>
+
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        if (isEditMode) {</span>
+<span class="nc" id="L92">            nameField.setValue(feature.getName());</span>
+        }
+
+<span class="nc" id="L95">        dialogLayout.add(nameField);</span>
+
+<span class="nc" id="L97">        dialogLayout.add(VaadinUtils.createDialogButtonLayout(&quot;Save&quot;, CONFIRM_BUTTON, &quot;Cancel&quot;, CANCEL_BUTTON, this::save, this));</span>
+<span class="nc" id="L98">        add(dialogLayout);</span>
+<span class="nc" id="L99">    }</span>
+
+    private void save() {
+<span class="nc bnc" id="L102" title="All 2 branches missed.">        if (nameField.getValue().trim().isEmpty()) {</span>
+<span class="nc" id="L103">            Notification.show(&quot;Please enter a feature name&quot;, 3000, Notification.Position.MIDDLE);</span>
+<span class="nc" id="L104">            return;</span>
+        }
+
+        Feature featureToSave;
+<span class="nc bnc" id="L108" title="All 2 branches missed.">        if (isEditMode) {</span>
+<span class="nc" id="L109">            featureToSave = feature;</span>
+<span class="nc" id="L110">            featureToSave.setName(nameField.getValue().trim());</span>
+        } else {
+<span class="nc" id="L112">            featureToSave = new Feature();</span>
+<span class="nc" id="L113">            featureToSave.setName(nameField.getValue().trim());</span>
+        }
+
+        // Call the save callback with the feature and a reference to this dialog
+<span class="nc" id="L117">        onSaveCallback.save(featureToSave, this);</span>
+<span class="nc" id="L118">    }</span>
+
+
+    /**
+     * Sets an error message on the name field to indicate uniqueness violation
+     *
+     * @param errorMessage The error message to show
+     */
+    public void setErrorMessage(String errorMessage) {
+<span class="nc" id="L127">        nameField.setErrorMessage(errorMessage);</span>
+<span class="nc" id="L128">        nameField.setInvalid(true);</span>
+<span class="nc" id="L129">    }</span>
+
+    /**
+     * Functional interface for the save callback that receives the edited feature and a reference to this dialog
+     */
+    @FunctionalInterface
+    public interface SaveCallback {
+        void save(Feature feature, FeatureDialog dialog);
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

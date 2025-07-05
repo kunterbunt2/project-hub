@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VaadinUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.ui.util</a> &gt; <span class="el_source">VaadinUtils.java</span></div><h1>VaadinUtils.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.ui.util;
+
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+
+/**
+ * Utility class for common Vaadin UI components and layouts
+ */
+<span class="nc" id="L33">public final class VaadinUtils {</span>
+
+    /**
+     * Creates a standardized dialog button layout with save and cancel buttons
+     *
+     * @param saveButtonText   Text for the save button (e.g., &quot;Save&quot;, &quot;Create&quot;, &quot;Confirm&quot;)
+     * @param saveButtonId     ID for the save button
+     * @param cancelButtonText Text for the cancel button (e.g., &quot;Cancel&quot;, &quot;Close&quot;)
+     * @param cancelButtonId   ID for the cancel button
+     * @param saveClickHandler Click handler for the save button
+     * @param dialog           The dialog instance that contains these buttons (for closing when cancel is clicked)
+     * @return A configured HorizontalLayout containing the dialog buttons
+     */
+    public static HorizontalLayout createDialogButtonLayout(
+            String saveButtonText,
+            String saveButtonId,
+            String cancelButtonText,
+            String cancelButtonId,
+            SaveButtonClickHandler saveClickHandler,
+            Dialog dialog) {
+
+<span class="fc" id="L54">        Button saveButton = new Button(saveButtonText, new Icon(VaadinIcon.CHECK));</span>
+<span class="fc" id="L55">        saveButton.setId(saveButtonId);</span>
+<span class="fc" id="L56">        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);</span>
+<span class="fc" id="L57">        saveButton.addClickListener(event -&gt; saveClickHandler.onClick());</span>
+
+<span class="fc" id="L59">        Button cancelButton = new Button(cancelButtonText, new Icon(VaadinIcon.CLOSE));</span>
+<span class="fc" id="L60">        cancelButton.setId(cancelButtonId);</span>
+<span class="fc" id="L61">        cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);</span>
+<span class="fc" id="L62">        cancelButton.addClickListener(event -&gt; dialog.close());</span>
+
+<span class="fc" id="L64">        HorizontalLayout buttonLayout = new HorizontalLayout(saveButton, cancelButton);</span>
+<span class="fc" id="L65">        buttonLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);</span>
+<span class="fc" id="L66">        buttonLayout.setWidthFull();</span>
+<span class="fc" id="L67">        buttonLayout.getStyle().set(&quot;margin-top&quot;, &quot;var(--lumo-space-m)&quot;);</span>
+
+<span class="fc" id="L69">        return buttonLayout;</span>
+    }
+
+    /**
+     * Creates a standardized header layout with a title, icon, and create button
+     *
+     * @param title                    The title text to display
+     * @param titleId                  ID for the title component
+     * @param titleIcon                Icon to display next to the title
+     * @param createButtonId           ID for the create button
+     * @param createButtonClickHandler Click handler for the create button
+     * @return A configured HorizontalLayout containing the header elements
+     */
+    public static HorizontalLayout createHeader(
+            String title,
+            String titleId,
+            Icon titleIcon,
+            String createButtonId,
+            CreateButtonClickHandler createButtonClickHandler) {
+<span class="fc" id="L88">        HorizontalLayout headerLayout = new HorizontalLayout();</span>
+<span class="fc" id="L89">        headerLayout.setWidthFull();</span>
+<span class="fc" id="L90">        headerLayout.setPadding(false);</span>
+<span class="fc" id="L91">        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);</span>
+<span class="fc" id="L92">        headerLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);</span>
+
+        // Create page title with icon
+<span class="fc" id="L95">        HorizontalLayout titleLayout = new HorizontalLayout();</span>
+<span class="fc" id="L96">        titleLayout.setSpacing(true);</span>
+<span class="fc" id="L97">        titleLayout.setAlignItems(FlexComponent.Alignment.CENTER);</span>
+
+<span class="fc" id="L99">        H2 pageTitle = new H2(title);</span>
+<span class="fc" id="L100">        pageTitle.setId(titleId);</span>
+<span class="fc" id="L101">        pageTitle.addClassNames(</span>
+                LumoUtility.Margin.Top.MEDIUM,
+                LumoUtility.Margin.Bottom.SMALL
+        );
+
+<span class="fc" id="L106">        titleLayout.add(titleIcon, pageTitle);</span>
+
+<span class="fc" id="L108">        Button createButton = new Button(&quot;Create&quot;, new Icon(VaadinIcon.PLUS));</span>
+<span class="fc" id="L109">        createButton.setId(createButtonId);</span>
+<span class="fc" id="L110">        createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);</span>
+<span class="fc" id="L111">        createButton.addClickListener(e -&gt; createButtonClickHandler.onClick());</span>
+
+<span class="fc" id="L113">        headerLayout.add(titleLayout, createButton);</span>
+<span class="fc" id="L114">        return headerLayout;</span>
+    }
+
+    public static HorizontalLayout createHeader(
+            String title,
+            String titleId,
+            String titleIcon,
+            String createButtonId,
+            CreateButtonClickHandler createButtonClickHandler) {
+<span class="nc" id="L123">        return createHeader(title, titleId, new Icon(titleIcon), createButtonId, createButtonClickHandler);</span>
+    }
+
+    public static HorizontalLayout createHeader(
+            String title,
+            String titleId,
+            VaadinIcon titleIcon,
+            String createButtonId,
+            CreateButtonClickHandler createButtonClickHandler) {
+<span class="fc" id="L132">        return createHeader(title, titleId, new Icon(titleIcon), createButtonId, createButtonClickHandler);</span>
+    }
+
+    /**
+     * Functional interface for create button click handlers
+     */
+    @FunctionalInterface
+    public interface CreateButtonClickHandler {
+        void onClick();
+    }
+
+    /**
+     * Functional interface for dialog save button click handlers
+     */
+    @FunctionalInterface
+    public interface SaveButtonClickHandler {
+        void onClick();
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

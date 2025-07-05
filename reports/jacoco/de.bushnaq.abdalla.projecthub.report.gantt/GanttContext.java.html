@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GanttContext.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.report.gantt</a> &gt; <span class="el_source">GanttContext.java</span></div><h1>GanttContext.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.report.gantt;
+
+import de.bushnaq.abdalla.projecthub.dto.*;
+import de.bushnaq.abdalla.projecthub.dto.Task;
+import lombok.Getter;
+import net.sf.mpxj.*;
+
+import java.time.DayOfWeek;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Getter
+<span class="nc" id="L31">public class GanttContext {</span>
+<span class="nc" id="L32">    public        List&lt;Product&gt; allProducts = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L33">    public        List&lt;Feature&gt; allFeatures = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L34">    public        List&lt;Sprint&gt;  allSprints  = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L35">    public        List&lt;Task&gt;      allTasks    = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L36">    public        List&lt;User&gt;      allUsers    = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L37">    public        List&lt;Version&gt;   allVersions = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L38">    public        List&lt;Worklog&gt;   allWorklogs = new ArrayList&lt;&gt;();</span>
+    private       ProjectCalendar calendar;
+<span class="nc" id="L40">    private final ProjectFile     projectFile = new ProjectFile();</span>
+
+    private void defineCalendar() {
+<span class="nc" id="L43">        final boolean[] DEFAULT_WORKING_WEEK = {false, true, true, true, true, true, false};</span>
+        // HolidaysDownloader hd = new HolidaysDownloader();
+        // Map&lt;LocalDate, String&gt; downloadHolidays = hd.downloadHolidays();
+
+        // define the base calendar
+<span class="nc" id="L48">        calendar = projectFile.addDefaultBaseCalendar();</span>
+<span class="nc" id="L49">        calendar.setWorkingDay(DayOfWeek.SATURDAY, false);</span>
+<span class="nc" id="L50">        calendar.setWorkingDay(DayOfWeek.SUNDAY, false);</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">        for (int index = 0; index &lt; 7; index++) {</span>
+<span class="nc" id="L52">            DayOfWeek day = DayOfWeek.of(index + 1);</span>
+            //            calendar.setWorkingDay(day, DEFAULT_WORKING_WEEK[index]);
+<span class="nc bnc" id="L54" title="All 2 branches missed.">            if (calendar.isWorkingDay(day)) {</span>
+<span class="nc" id="L55">                ProjectCalendarHours hours = calendar.addCalendarHours(DayOfWeek.of(index + 1));</span>
+<span class="nc" id="L56">                hours.add(new LocalTimeRange(LocalTime.of(8, 0), LocalTime.of(12, 0)));</span>
+<span class="nc" id="L57">                hours.add(new LocalTimeRange(LocalTime.of(13, 0), LocalTime.of(16, 30)));</span>
+            }
+        }
+//        BankHolidayReader bhr = new BankHolidayReader();
+//        context.bankHolidays = bhr.read(context.parameters.smbParameters, ParameterOptions.now.toLocalDate());
+//        for (LocalDate ld : context.bankHolidays.keySet()) {
+//            // System.out.println(ld.toString() + &quot; &quot; + bankHolidays.get(ld));
+//            ProjectCalendarException calendarException = calendar.addCalendarException(ld, ld);
+//            calendarException.setName(context.bankHolidays.get(ld));
+//        }
+<span class="nc" id="L67">    }</span>
+
+    public void initialize() {
+<span class="nc" id="L70">        setProjectProperties();</span>
+<span class="nc" id="L71">        initializeCalendar();</span>
+
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        if (!allUsers.isEmpty())</span>
+<span class="nc" id="L74">            allUsers.forEach(user -&gt; user.initialize(this));</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">        if (!allProducts.isEmpty())</span>
+<span class="nc" id="L76">            allProducts.forEach(product -&gt; product.initialize(this));</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        else if (!allVersions.isEmpty())</span>
+<span class="nc" id="L78">            allVersions.forEach(version -&gt; version.initialize(this));</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        else if (!allFeatures.isEmpty())</span>
+<span class="nc" id="L80">            allFeatures.forEach(project -&gt; project.initialize(this));</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        else if (!allSprints.isEmpty())</span>
+<span class="nc" id="L82">            allSprints.forEach(sprint -&gt; sprint.initialize(this));</span>
+<span class="nc" id="L83">    }</span>
+
+    private void initializeCalendar() {
+<span class="nc" id="L86">        defineCalendar();</span>
+<span class="nc" id="L87">        ProjectProperties projectProperties = projectFile.getProjectProperties();</span>
+<span class="nc" id="L88">        ProjectCalendar   projectCalendar   = projectFile.getCalendarByName(ProjectCalendar.DEFAULT_BASE_CALENDAR_NAME);</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        if (projectCalendar == null) {</span>
+<span class="nc" id="L90">            projectCalendar = projectFile.getDefaultCalendar();</span>
+        }
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        if (projectCalendar == null) {</span>
+<span class="nc" id="L93">            projectCalendar = projectFile.addDefaultBaseCalendar();</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">            for (DayOfWeek day : DayOfWeek.values()) {</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">                if (projectCalendar.getCalendarDayType(day) == DayType.WORKING) {</span>
+<span class="nc" id="L96">                    ProjectCalendarHours hours = projectCalendar.getCalendarHours(day);</span>
+<span class="nc" id="L97">                    hours.clear();</span>
+<span class="nc" id="L98">                    hours.add(new LocalTimeRange(LocalTime.of(8, 0), LocalTime.of(12, 0)));</span>
+<span class="nc" id="L99">                    hours.add(new LocalTimeRange(LocalTime.of(13, 0), LocalTime.of(16, 30)));</span>
+                }
+            }
+//            BankHolidayReader bhr = new BankHolidayReader();
+//            context.bankHolidays = bhr.read(context.parameters.smbParameters, ParameterOptions.now.toLocalDate());
+//            for (LocalDate ld : context.bankHolidays.keySet()) {
+//                // System.out.println(ld.toString() + &quot; &quot; + bankHolidays.get(ld));
+//                ProjectCalendarException calendarException = projectCalendar.addCalendarException(ld, ld);
+//                calendarException.setName(context.bankHolidays.get(ld));
+//            }
+
+        }
+<span class="nc" id="L111">        ProjectCalendar projectPropertiesCalendar = projectProperties.getDefaultCalendar();</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">        if (projectPropertiesCalendar == null) {</span>
+<span class="nc" id="L113">            projectProperties.setDefaultCalendar(projectCalendar);</span>
+        }
+
+<span class="nc" id="L116">    }</span>
+
+    private void setProjectProperties() {
+<span class="nc" id="L119">        ProjectProperties properties = projectFile.getProjectProperties();</span>
+//        properties.setProjectTitle(new File(XlsxUtil.removeExtension(xlsxFile)).getName());
+//        properties.setAuthor(&quot;XLSX-to-MPP &quot; + moduleVersion);
+<span class="nc" id="L122">        properties.setCurrentDate(null);</span>
+<span class="nc" id="L123">        properties.setDefaultStartTime(LocalTime.of(8, 0));</span>
+<span class="nc" id="L124">        properties.setDefaultEndTime(LocalTime.of(16, 30));</span>
+<span class="nc" id="L125">        properties.setMinutesPerDay((int) (7.5 * 60));</span>
+<span class="nc" id="L126">        properties.setMinutesPerWeek(5 * (int) (7.5 * 60));</span>
+        //        properties.setDefaultDurationUnits(TimeUnit.HOURS);
+        //        TaskUtil.createMetaData(projectFile);
+        //        Map&lt;String, Object&gt; customProperties = new HashMap&lt;&gt;();
+        //        HashMap&lt;Task, MetaData&gt; mdMap = new HashMap&lt;&gt;();
+        //        customProperties.put(MetaData.METADATA, mdMap);
+        //        properties.setCustomProperties(customProperties);
+        //        HashMap&lt;Task, MetaData&gt; mdMap1 = (HashMap&lt;Task, MetaData&gt;)projectfile.getProjectProperties().getCustomProperties().get(MetaData.METADATA);
+<span class="nc" id="L134">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

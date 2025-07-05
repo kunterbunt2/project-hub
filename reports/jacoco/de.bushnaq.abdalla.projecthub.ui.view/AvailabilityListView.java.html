@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AvailabilityListView.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.ui.view</a> &gt; <span class="el_source">AvailabilityListView.java</span></div><h1>AvailabilityListView.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.ui.view;
+
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.data.renderer.NumberRenderer;
+import com.vaadin.flow.router.*;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+import de.bushnaq.abdalla.projecthub.dto.Availability;
+import de.bushnaq.abdalla.projecthub.dto.Location;
+import de.bushnaq.abdalla.projecthub.dto.User;
+import de.bushnaq.abdalla.projecthub.rest.api.AvailabilityApi;
+import de.bushnaq.abdalla.projecthub.rest.api.UserApi;
+import de.bushnaq.abdalla.projecthub.ui.MainLayout;
+import de.bushnaq.abdalla.projecthub.ui.dialog.AvailabilityDialog;
+import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+import jakarta.annotation.security.PermitAll;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.text.NumberFormat;
+import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
+
+@Route(value = &quot;availability/:username?&quot;, layout = MainLayout.class)
+@PageTitle(&quot;User Availability&quot;)
+@PermitAll
+public class AvailabilityListView extends Main implements BeforeEnterObserver, AfterNavigationObserver {
+    public static final String             AVAILABILITY_GRID                      = &quot;availability-grid&quot;;
+    public static final String             AVAILABILITY_GRID_AVAILABILITY_PREFIX  = &quot;availability-value-&quot;;
+    public static final String             AVAILABILITY_GRID_DELETE_BUTTON_PREFIX = &quot;availability-delete-button-&quot;;
+    public static final String             AVAILABILITY_GRID_EDIT_BUTTON_PREFIX   = &quot;availability-edit-button-&quot;;
+    public static final String             AVAILABILITY_GRID_START_DATE_PREFIX    = &quot;availability-start-&quot;;
+    public static final String             AVAILABILITY_LIST_PAGE_TITLE           = &quot;availability-page-title&quot;;
+    public static final String             CREATE_AVAILABILITY_BUTTON             = &quot;create-availability-button&quot;;
+    //    public static final String             INFO_BOX                               = &quot;availability-info-box&quot;;
+    public static final String             ROUTE                                  = &quot;availability&quot;;
+    private final       AvailabilityApi    availabilityApi;
+    private             User               currentUser;
+<span class="nc" id="L72">    private final       Grid&lt;Availability&gt; grid                                   = new Grid&lt;&gt;(Availability.class, false);</span>
+    //    private final       Div                infoBox                                = new Div();
+    private final       UserApi            userApi;
+
+<span class="nc" id="L76">    public AvailabilityListView(AvailabilityApi availabilityApi, UserApi userApi) {</span>
+<span class="nc" id="L77">        this.availabilityApi = availabilityApi;</span>
+<span class="nc" id="L78">        this.userApi         = userApi;</span>
+
+<span class="nc" id="L80">        setSizeFull();</span>
+<span class="nc" id="L81">        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);</span>
+<span class="nc" id="L82">        add(VaadinUtils.createHeader(&quot;User Availability&quot;, AVAILABILITY_LIST_PAGE_TITLE, VaadinIcon.CHART, CREATE_AVAILABILITY_BUTTON, () -&gt; openAvailabilityDialog(null)), createGrid());</span>
+<span class="nc" id="L83">    }</span>
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+<span class="nc" id="L87">        refreshAvailabilityGrid();</span>
+<span class="nc" id="L88">    }</span>
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        // Get username from URL parameter or use the currently authenticated user
+<span class="nc" id="L93">        String usernameParam = event.getRouteParameters().get(&quot;username&quot;).orElse(null);</span>
+
+<span class="nc" id="L95">        Authentication authentication  = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        String         currentUsername = authentication != null ? authentication.getName() : null;</span>
+
+        // If no username is provided, use the current authenticated user
+        // Store in a final variable to use in lambda
+<span class="nc bnc" id="L100" title="All 4 branches missed.">        final String username = (usernameParam == null &amp;&amp; currentUsername != null) ? currentUsername : usernameParam;</span>
+
+<span class="nc bnc" id="L102" title="All 2 branches missed.">        if (username != null) {</span>
+            try {
+                // Find user by username using the direct getByName method
+<span class="nc" id="L105">                currentUser = userApi.getByName(username);</span>
+<span class="nc" id="L106">            } catch (ResponseStatusException ex) {</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">                if (ex.getStatusCode().equals(HttpStatus.NOT_FOUND)) {</span>
+                    // Create a new user since one wasn't found
+<span class="nc" id="L109">                    User newUser = createDefaultUser(username);</span>
+<span class="nc" id="L110">                    currentUser = userApi.persist(newUser);</span>
+<span class="nc" id="L111">                    Notification notification = Notification.show(&quot;Created new user: &quot; + username, 3000, Notification.Position.MIDDLE);</span>
+<span class="nc" id="L112">                    notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);</span>
+<span class="nc" id="L113">                } else {</span>
+<span class="nc" id="L114">                    throw ex;</span>
+                }
+<span class="nc" id="L116">            }</span>
+        } else {
+            // Redirect to main page if no username and not authenticated
+<span class="nc" id="L119">            event.forwardTo(&quot;&quot;);</span>
+        }
+<span class="nc" id="L121">    }</span>
+
+    private void confirmDelete(Availability availability) {
+<span class="nc bnc" id="L124" title="All 2 branches missed.">        if (grid.getListDataView().getItems().count() &lt;= 1) {</span>
+<span class="nc" id="L125">            Notification notification = Notification.show(&quot;Cannot delete - Users must have at least one availability&quot;, 3000, Notification.Position.MIDDLE);</span>
+<span class="nc" id="L126">            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);</span>
+<span class="nc" id="L127">            return;</span>
+        }
+
+<span class="nc" id="L130">        ConfirmDialog dialog = new ConfirmDialog(&quot;Confirm Delete&quot;,</span>
+                &quot;Are you sure you want to delete this availability record?&quot;,
+                &quot;Delete&quot;,
+                () -&gt; {
+                    try {
+<span class="nc" id="L135">                        availabilityApi.deleteById(currentUser, availability);</span>
+<span class="nc" id="L136">                        refreshAvailabilityGrid();</span>
+<span class="nc" id="L137">                        Notification.show(&quot;Availability deleted&quot;, 3000, Notification.Position.MIDDLE);</span>
+<span class="nc" id="L138">                    } catch (Exception ex) {</span>
+<span class="nc" id="L139">                        Notification notification = Notification.show(&quot;Failed to delete: &quot; + ex.getMessage(), 3000, Notification.Position.MIDDLE);</span>
+<span class="nc" id="L140">                        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);</span>
+<span class="nc" id="L141">                    }</span>
+<span class="nc" id="L142">                });</span>
+<span class="nc" id="L143">        dialog.open();</span>
+<span class="nc" id="L144">    }</span>
+
+    /**
+     * Creates a default user with standard availability and location
+     *
+     * @param username The name for the new user
+     * @return A new User object with default settings
+     */
+    private User createDefaultUser(String username) {
+<span class="nc" id="L153">        User user = new User();</span>
+<span class="nc" id="L154">        user.setName(username);</span>
+<span class="nc" id="L155">        user.setEmail(username);</span>
+<span class="nc" id="L156">        user.setFirstWorkingDay(java.time.LocalDate.now());</span>
+<span class="nc" id="L157">        user.setColor(new java.awt.Color(51, 102, 204));</span>
+<span class="nc" id="L158">        Availability availability = new Availability(1.0f, java.time.LocalDate.now());</span>
+<span class="nc" id="L159">        user.addAvailability(availability);</span>
+<span class="nc" id="L160">        Location location = new Location(&quot;DE&quot;, &quot;nw&quot;, java.time.LocalDate.now());</span>
+<span class="nc" id="L161">        user.addLocation(location);</span>
+<span class="nc" id="L162">        return user;</span>
+    }
+
+    private Grid&lt;Availability&gt; createGrid() {
+<span class="nc" id="L166">        grid.setId(AVAILABILITY_GRID);</span>
+//        grid.setWidthFull();
+<span class="nc" id="L168">        grid.setSizeFull();</span>
+<span class="nc" id="L169">        grid.addClassNames(LumoUtility.Border.ALL, LumoUtility.BorderColor.CONTRAST_10);</span>
+
+        // Add columns
+<span class="nc" id="L172">        grid.addColumn(new ComponentRenderer&lt;&gt;(availability -&gt; {</span>
+<span class="nc" id="L173">                    String startDateStr = availability.getStart().format(DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd&quot;));</span>
+<span class="nc" id="L174">                    Span   span         = new Span(startDateStr);</span>
+<span class="nc" id="L175">                    span.setId(AVAILABILITY_GRID_START_DATE_PREFIX + startDateStr);</span>
+<span class="nc" id="L176">                    span.setId(AVAILABILITY_GRID_START_DATE_PREFIX + startDateStr);</span>
+<span class="nc" id="L177">                    return span;</span>
+                }))
+<span class="nc" id="L179">                .setHeader(createHeaderWithIcon(VaadinIcon.CALENDAR, &quot;Start Date&quot;))</span>
+<span class="nc" id="L180">                .setSortable(true)</span>
+<span class="nc" id="L181">                .setKey(&quot;start&quot;);</span>
+
+<span class="nc" id="L183">        NumberFormat percentageFormat = NumberFormat.getPercentInstance(Locale.US);</span>
+<span class="nc" id="L184">        grid.addColumn(new NumberRenderer&lt;&gt;(</span>
+                        availability -&gt; {
+<span class="nc" id="L186">                            Span span = new Span(percentageFormat.format(availability.getAvailability()));</span>
+<span class="nc" id="L187">                            span.setId(AVAILABILITY_GRID_AVAILABILITY_PREFIX + availability.getAvailability());</span>
+<span class="nc" id="L188">                            return availability.getAvailability();</span>
+                        }, percentageFormat))
+<span class="nc" id="L190">                .setHeader(createHeaderWithIcon(VaadinIcon.CHART, &quot;Availability&quot;))</span>
+<span class="nc" id="L191">                .setSortable(true)</span>
+<span class="nc" id="L192">                .setKey(&quot;availability&quot;);</span>
+
+        // Add action column
+<span class="nc" id="L195">        grid.addColumn(new ComponentRenderer&lt;&gt;(availability -&gt; {</span>
+<span class="nc" id="L196">            String startDateStr = availability.getStart().format(DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd&quot;));</span>
+
+<span class="nc" id="L198">            HorizontalLayout layout = new HorizontalLayout();</span>
+<span class="nc" id="L199">            layout.setAlignItems(FlexComponent.Alignment.CENTER);</span>
+<span class="nc" id="L200">            layout.setSpacing(true);</span>
+
+<span class="nc" id="L202">            Button editButton = new Button(new Icon(VaadinIcon.EDIT));</span>
+<span class="nc" id="L203">            editButton.setId(AVAILABILITY_GRID_EDIT_BUTTON_PREFIX + startDateStr);</span>
+<span class="nc" id="L204">            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);</span>
+<span class="nc" id="L205">            editButton.addClickListener(e -&gt; openAvailabilityDialog(availability));</span>
+<span class="nc" id="L206">            editButton.getElement().setAttribute(&quot;title&quot;, &quot;Edit&quot;);</span>
+
+<span class="nc" id="L208">            Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));</span>
+<span class="nc" id="L209">            deleteButton.setId(AVAILABILITY_GRID_DELETE_BUTTON_PREFIX + startDateStr);</span>
+<span class="nc" id="L210">            deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);</span>
+<span class="nc" id="L211">            deleteButton.addClickListener(e -&gt; confirmDelete(availability));</span>
+<span class="nc" id="L212">            deleteButton.getElement().setAttribute(&quot;title&quot;, &quot;Delete&quot;);</span>
+
+            // Disable delete if this is the user's only availability
+<span class="nc bnc" id="L215" title="All 2 branches missed.">            if (grid.getListDataView().getItems().count() &lt;= 1) {</span>
+<span class="nc" id="L216">                deleteButton.setEnabled(false);</span>
+<span class="nc" id="L217">                deleteButton.getElement().setAttribute(&quot;title&quot;, &quot;Cannot delete - Users must have at least one availability&quot;);</span>
+            }
+
+<span class="nc" id="L220">            layout.add(editButton, deleteButton);</span>
+<span class="nc" id="L221">            return layout;</span>
+<span class="nc" id="L222">        })).setHeader(&quot;Actions&quot;).setFlexGrow(0).setWidth(&quot;120px&quot;);</span>
+
+<span class="nc" id="L224">        return grid;</span>
+    }
+
+    private HorizontalLayout createHeaderWithIcon(VaadinIcon icon, String text) {
+<span class="nc" id="L228">        Icon headerIcon = new Icon(icon);</span>
+<span class="nc" id="L229">        headerIcon.setSize(&quot;16px&quot;);</span>
+
+<span class="nc" id="L231">        Span headerText = new Span(text);</span>
+<span class="nc" id="L232">        headerText.addClassNames(LumoUtility.Margin.XSMALL);</span>
+
+<span class="nc" id="L234">        HorizontalLayout headerLayout = new HorizontalLayout(headerIcon, headerText);</span>
+<span class="nc" id="L235">        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);</span>
+<span class="nc" id="L236">        headerLayout.setSpacing(false);</span>
+
+<span class="nc" id="L238">        return headerLayout;</span>
+    }
+
+    private void openAvailabilityDialog(Availability availability) {
+        // Create new or edit existing availability
+<span class="nc" id="L243">        AvailabilityDialog dialog = new AvailabilityDialog(</span>
+                availability,
+                this.currentUser,
+                this.availabilityApi,
+                this::refreshAvailabilityGrid);
+<span class="nc" id="L248">        dialog.open();</span>
+<span class="nc" id="L249">    }</span>
+
+    private void refreshAvailabilityGrid() {
+<span class="nc bnc" id="L252" title="All 2 branches missed.">        if (currentUser != null) {</span>
+            // Get a fresh copy of the user to ensure we have the latest data
+<span class="nc" id="L254">            User refreshedUser = userApi.getById(currentUser.getId());</span>
+<span class="nc" id="L255">            currentUser = refreshedUser;</span>
+
+            // Sort availabilities by start date in descending order (latest first)
+<span class="nc" id="L258">            List&lt;Availability&gt; sortedAvailabilities = currentUser.getAvailabilities().stream()</span>
+<span class="nc" id="L259">                    .sorted(Comparator.comparing(Availability::getStart).reversed())</span>
+<span class="nc" id="L260">                    .collect(Collectors.toList());</span>
+
+<span class="nc" id="L262">            grid.setItems(sortedAvailabilities);</span>
+//            updateInfoBox();
+        }
+<span class="nc" id="L265">    }</span>
+
+//    private void updateInfoBox() {
+//        infoBox.removeAll();
+//        infoBox.setId(INFO_BOX);
+//
+//        VerticalLayout infoContent = new VerticalLayout();
+//        infoContent.setSpacing(false);
+//        infoContent.setPadding(false);
+//
+//        Span heading = new Span(&quot;Availability Information&quot;);
+//        heading.getElement().getStyle().set(&quot;font-weight&quot;, &quot;bold&quot;);
+//
+//        Span info = new Span(&quot;Availability represents the percentage of time you are available for work. &quot; +
+//                &quot;Values should be between 0 (unavailable) and 150% availability.&quot;);
+//        Span instruction = new Span(&quot;Start dates must be unique. The most recent availability will be used for current tasks. +&quot; +
+//                &quot;Your availability list should cover all your time you are working for this organization.&quot;);
+//
+//        infoContent.add(heading, info, instruction);
+//        infoContent.addClassNames(
+//                LumoUtility.Padding.SMALL,
+//                LumoUtility.Background.CONTRAST_5,
+//                LumoUtility.Border.ALL,
+//                LumoUtility.BorderColor.CONTRAST_10,
+//                LumoUtility.Margin.Bottom.MEDIUM
+//        );
+//
+//        infoBox.add(infoContent);
+//    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

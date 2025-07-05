@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ViewToolbar.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.ui.component</a> &gt; <span class="el_source">ViewToolbar.java</span></div><h1>ViewToolbar.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.ui.component;
+
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.applayout.DrawerToggle;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.Header;
+import com.vaadin.flow.theme.lumo.LumoUtility.*;
+
+public final class ViewToolbar extends Composite&lt;Header&gt; {
+
+<span class="nc" id="L30">    public ViewToolbar(String viewTitle, Component... components) {</span>
+<span class="nc" id="L31">        addClassNames(Display.FLEX, FlexDirection.COLUMN, JustifyContent.BETWEEN, AlignItems.STRETCH, Gap.MEDIUM,</span>
+                FlexDirection.Breakpoint.Medium.ROW, AlignItems.Breakpoint.Medium.CENTER);
+
+<span class="nc" id="L34">        var drawerToggle = new DrawerToggle();</span>
+<span class="nc" id="L35">        drawerToggle.addClassNames(Margin.NONE);</span>
+
+<span class="nc" id="L37">        var title = new H1(viewTitle);</span>
+<span class="nc" id="L38">        title.addClassNames(FontSize.XLARGE, Margin.NONE, FontWeight.LIGHT);</span>
+
+<span class="nc" id="L40">        var toggleAndTitle = new Div(drawerToggle, title);</span>
+<span class="nc" id="L41">        toggleAndTitle.addClassNames(Display.FLEX, AlignItems.CENTER);</span>
+<span class="nc" id="L42">        getContent().add(toggleAndTitle);</span>
+
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        if (components.length &gt; 0) {</span>
+<span class="nc" id="L45">            var actions = new Div(components);</span>
+<span class="nc" id="L46">            actions.addClassNames(Display.FLEX, FlexDirection.COLUMN, JustifyContent.BETWEEN, Flex.GROW, Gap.SMALL,</span>
+                    FlexDirection.Breakpoint.Medium.ROW);
+<span class="nc" id="L48">            getContent().add(actions);</span>
+        }
+<span class="nc" id="L50">    }</span>
+
+    public static Component group(Component... components) {
+<span class="nc" id="L53">        var group = new Div(components);</span>
+<span class="nc" id="L54">        group.addClassNames(Display.FLEX, FlexDirection.COLUMN, AlignItems.STRETCH, Gap.SMALL,</span>
+                FlexDirection.Breakpoint.Medium.ROW, AlignItems.Breakpoint.Medium.CENTER);
+<span class="nc" id="L56">        return group;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

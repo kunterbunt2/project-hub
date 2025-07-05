@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProjectHubParameterOptions.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub</a> &gt; <span class="el_source">ProjectHubParameterOptions.java</span></div><h1>ProjectHubParameterOptions.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub;
+
+import de.bushnaq.abdalla.projecthub.report.dao.GraphicsLightTheme;
+import de.bushnaq.abdalla.util.date.DateUtil;
+import org.apache.commons.cli.*;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+<span class="fc" id="L27">public class ProjectHubParameterOptions extends ParameterOptions {</span>
+
+    @Override
+    public void start(String[] args) throws Exception {
+<span class="nc" id="L31">        Options options = new Options();</span>
+<span class="nc" id="L32">        options.addOption(Option.builder(CLI_OPTION_ENV).hasArgs().desc(&quot;Jira connection configuration file list. This parameter is not optional.&quot;).build());</span>
+<span class="nc" id="L33">        options.addOption(Option.builder(CLI_OPTION_THEME).hasArg().desc(&quot;Graphic theme. possible options are dark/light. Default is dark.&quot;).build());</span>
+<span class="nc" id="L34">        options.addOption(</span>
+<span class="nc" id="L35">                Option.builder(CLI_OPTION_DATE).hasArg().desc(&quot;Creates a report back in time for a specific date. Format should be 'yyyy.MM.dd'.&quot;).build());</span>
+<span class="nc" id="L36">        options.addOption(Option.builder(CLI_OPTION_DETAILED).desc(&quot;Detailed author speration in burn down chart. This parameter is optional.&quot;).build());</span>
+<span class="nc" id="L37">        options.addOption(Option.builder(CLI_OPTION_INDIVIDUAL_LOG).desc(&quot;Individual log entires will be reported. This parameter is optional.&quot;).build());</span>
+<span class="nc" id="L38">        options.addOption(Option.builder(CLI_OPTION_QUICK_MODE).desc(&quot;Quick mode, only updating active project requests. This parameter is optional.&quot;).build());</span>
+<span class="nc" id="L39">        options.addOption(Option.builder(CLI_OPTION_RESOURCE_MAP)</span>
+<span class="nc" id="L40">                .desc(&quot;Resource map mode, adds a tab that shows which resource is busy at what day. This parameter is optional.&quot;).build());</span>
+<span class="nc" id="L41">        options.addOption(Option.builder(CLI_OPTION_CAPTURE_COST)</span>
+<span class="nc" id="L42">                .desc(&quot;Capture project cost stored in Resource Allocation database. This parameter is optional.&quot;).build());</span>
+<span class="nc" id="L43">        options.addOption(Option.builder(CLI_OPTION_REPORT_FOLDER).hasArg()</span>
+<span class="nc" id="L44">                .desc(&quot;relative or absolute path to root of reporting folder (projects.dashbaord root). This parameter is optional.&quot;).build());</span>
+<span class="nc" id="L45">        options.addOption(Option.builder(CLI_OPTION_CAPTURE_OUT_OF_OFFICE_FROM_GANTT)</span>
+<span class="nc" id="L46">                .desc(&quot;Capture out-of-office information from stored in gantt chart files. This parameter is optional.&quot;).build());</span>
+        // create the parser
+<span class="nc" id="L48">        CommandLineParser parser = new DefaultParser();</span>
+        // parse the command line arguments
+<span class="nc" id="L50">        CommandLine line = parser.parse(options, args);</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">        if (line.hasOption(CLI_OPTION_THEME)) {</span>
+<span class="nc" id="L52">            String theme = line.getOptionValue(CLI_OPTION_THEME);</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">            if (theme.equals(&quot;dark&quot;)) {</span>
+
+<span class="nc bnc" id="L55" title="All 2 branches missed.">            } else if (theme.equals(&quot;light&quot;)) {</span>
+<span class="nc" id="L56">                graphicsTheme = new GraphicsLightTheme();</span>
+            }
+        } else {
+            //revert to default
+        }
+<span class="nc bnc" id="L61" title="All 2 branches missed.">        if (line.hasOption(CLI_OPTION_DATE)) {</span>
+<span class="nc" id="L62">            String            dateString    = line.getOptionValue(CLI_OPTION_DATE);</span>
+<span class="nc" id="L63">            DateTimeFormatter dtf           = DateTimeFormatter.ofPattern(&quot;yyyy.MMM.dd HH:mm&quot;);</span>
+<span class="nc" id="L64">            LocalDateTime     localDateTime = LocalDateTime.parse(dateString, dtf);</span>
+<span class="nc" id="L65">            localDateTime.minusHours(localDateTime.getHour() - 8);</span>
+<span class="nc" id="L66">            localDateTime.minusMinutes(localDateTime.getMinute());</span>
+<span class="nc" id="L67">            now = DateUtil.localDateTimeToOffsetDateTime(localDateTime);</span>
+<span class="nc" id="L68">            logger.info(&quot;simulating report for &quot; + dtf.format(now));</span>
+        } else {
+            //revert to default, which is now
+        }
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        if (line.hasOption(CLI_OPTION_DETAILED)) {</span>
+<span class="nc" id="L73">            detailed = true;</span>
+<span class="nc" id="L74">            logger.info(&quot;detailed report enabled.&quot;);</span>
+        } else {
+<span class="nc" id="L76">            logger.info(&quot;detailed report disabled.&quot;);</span>
+        }
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        if (line.hasOption(CLI_OPTION_INDIVIDUAL_LOG)) {</span>
+<span class="nc" id="L79">            individualLog = true;</span>
+<span class="nc" id="L80">            logger.info(&quot;individual log report enabled.&quot;);</span>
+        } else {
+<span class="nc" id="L82">            logger.info(&quot;individual log report disabled.&quot;);</span>
+        }
+<span class="nc bnc" id="L84" title="All 2 branches missed.">        if (line.hasOption(CLI_OPTION_QUICK_MODE)) {</span>
+<span class="nc" id="L85">            quickMode = true;</span>
+<span class="nc" id="L86">            logger.info(&quot;quick mode enabled.&quot;);</span>
+        } else {
+<span class="nc" id="L88">            logger.info(&quot;quick mode disabled.&quot;);</span>
+        }
+<span class="nc bnc" id="L90" title="All 2 branches missed.">        if (line.hasOption(CLI_OPTION_CAPTURE_COST)) {</span>
+<span class="nc" id="L91">            captureCost = true;</span>
+<span class="nc" id="L92">            logger.info(&quot;capture cost enabled.&quot;);</span>
+        } else {
+<span class="nc" id="L94">            logger.info(&quot;capture cost disabled.&quot;);</span>
+        }
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        if (line.hasOption(CLI_OPTION_RESOURCE_MAP)) {</span>
+<span class="nc" id="L97">            resourceMap    = true;</span>
+<span class="nc" id="L98">            activeRequests = true;//activeDevelopmentRequestList needed as resource</span>
+<span class="nc" id="L99">            logger.info(&quot;resource map mode enabled.&quot;);</span>
+        } else {
+<span class="nc" id="L101">            logger.info(&quot;resource map mode disabled.&quot;);</span>
+        }
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        if (line.hasOption(CLI_OPTION_REPORT_FOLDER)) {</span>
+<span class="nc" id="L104">            reportFolder = line.getOptionValue(CLI_OPTION_REPORT_FOLDER);</span>
+        }
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        if (line.hasOption(CLI_OPTION_ENV)) {</span>
+<span class="nc" id="L107">            files = line.getOptionValues(CLI_OPTION_ENV);</span>
+        }
+        //        {
+        //            // automatically generate the help statement
+        //            HelpFormatter formatter = new HelpFormatter();
+        //            formatter.printHelp(&quot;Projects Dashboard&quot;, &quot;&quot;, options, &quot;&quot;, true);
+        //            return;
+        //        }
+<span class="nc bnc" id="L115" title="All 2 branches missed.">        if (line.hasOption(CLI_OPTION_CAPTURE_OUT_OF_OFFICE_FROM_GANTT)) {</span>
+<span class="nc" id="L116">            captureOutOfOfficeFromGantt = true;</span>
+<span class="nc" id="L117">            logger.info(&quot;capture out of office from gantt enabled.&quot;);</span>
+        } else {
+<span class="nc" id="L119">            logger.info(&quot;capture out of office from gantt disabled.&quot;);</span>
+        }
+<span class="nc bnc" id="L121" title="All 2 branches missed.">        if (line.hasOption(CLI_OPTION_CAPTURE_OUT_OF_OFFICE_FROM_RAM)) {</span>
+<span class="nc" id="L122">            captureOutOfOfficeFromRam = true;</span>
+<span class="nc" id="L123">            logger.info(&quot;capture out of office from ram enabled.&quot;);</span>
+        } else {
+<span class="nc" id="L125">            logger.info(&quot;capture out of office from ram disabled.&quot;);</span>
+        }
+
+        //        } catch (ParseException exp) {
+        //            System.err.println(&quot;Parsing failed.  Reason: &quot; + exp.getMessage());
+        //        }
+
+<span class="nc bnc" id="L132" title="All 2 branches missed.">        if (activeRequests) {</span>
+<span class="nc" id="L133">            logger.info(&quot;capture closed requests enabled.&quot;);</span>
+        }
+<span class="nc bnc" id="L135" title="All 2 branches missed.">        if (closingRequests) {</span>
+<span class="nc" id="L136">            logger.info(&quot;capture closed requests enabled.&quot;);</span>
+        }
+<span class="nc bnc" id="L138" title="All 2 branches missed.">        if (closedRequests) {</span>
+<span class="nc" id="L139">            logger.info(&quot;capture closed requests enabled.&quot;);</span>
+        }
+<span class="nc" id="L141">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

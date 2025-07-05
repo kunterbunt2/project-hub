@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SecurityUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.security</a> &gt; <span class="el_source">SecurityUtils.java</span></div><h1>SecurityUtils.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.security;
+
+import com.vaadin.flow.server.VaadinServletRequest;
+import com.vaadin.flow.server.VaadinServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
+
+@Component
+<span class="fc" id="L30">public class SecurityUtils {</span>
+
+    /**
+     * Gets the currently authenticated user.
+     *
+     * @return The UserDetails of the authenticated user or null if not authenticated
+     */
+    public static UserDetails getCurrentUser() {
+<span class="nc" id="L38">        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="nc bnc" id="L39" title="All 2 branches missed.">        if (authentication == null) {</span>
+<span class="nc" id="L40">            return null;</span>
+        }
+
+<span class="nc" id="L43">        Object principal = authentication.getPrincipal();</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        if (principal instanceof UserDetails) {</span>
+<span class="nc" id="L45">            return (UserDetails) principal;</span>
+        }
+
+<span class="nc" id="L48">        return null;</span>
+    }
+
+    /**
+     * Gets the current HttpServletRequest
+     *
+     * @return the current HttpServletRequest
+     */
+    public static HttpServletRequest getHttpServletRequest() {
+<span class="nc" id="L57">        return VaadinServletRequest.getCurrent();</span>
+    }
+
+    /**
+     * Gets the current HttpServletResponse
+     *
+     * @return the current HttpServletResponse
+     */
+    public static HttpServletResponse getHttpServletResponse() {
+<span class="nc" id="L66">        return VaadinServletResponse.getCurrent();</span>
+    }
+
+    /**
+     * Checks if the current user has the ADMIN role.
+     *
+     * @return true if the user is an admin, false otherwise
+     */
+    public static boolean isAdmin() {
+<span class="nc" id="L75">        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">        if (authentication == null) {</span>
+<span class="nc" id="L77">            return false;</span>
+        }
+
+<span class="nc" id="L80">        return authentication.getAuthorities().stream()</span>
+<span class="nc" id="L81">                .anyMatch(grantedAuthority -&gt; &quot;ROLE_ADMIN&quot;.equals(grantedAuthority.getAuthority()));</span>
+    }
+
+    /**
+     * Checks if the current user has the USER role.
+     *
+     * @return true if the user has user access, false otherwise
+     */
+    public static boolean isUser() {
+<span class="nc" id="L90">        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        if (authentication == null) {</span>
+<span class="nc" id="L92">            return false;</span>
+        }
+
+<span class="nc" id="L95">        return authentication.getAuthorities().stream()</span>
+<span class="nc" id="L96">                .anyMatch(grantedAuthority -&gt; &quot;ROLE_USER&quot;.equals(grantedAuthority.getAuthority()));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

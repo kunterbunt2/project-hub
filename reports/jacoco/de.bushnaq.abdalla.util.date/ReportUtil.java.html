@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReportUtil.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.util.date</a> &gt; <span class="el_source">ReportUtil.java</span></div><h1>ReportUtil.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.util.date;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
+
+<span class="nc" id="L26">public class ReportUtil {</span>
+<span class="nc" id="L27">    private static final Logger logger                  = LoggerFactory.getLogger(ReportUtil.class);</span>
+<span class="nc" id="L28">    static               long   ONE_WORKING_DAY_MINUTES = 75 * 6;</span>
+
+    public static double calcualteDelayFraction(LocalDateTime startDate, LocalDateTime now, LocalDateTime endDate, Duration worked, Duration estimated) {
+<span class="nc" id="L31">        return (double) calcualteManDelay(startDate, now, endDate, worked, estimated).getSeconds() / (double) (estimated.getSeconds());</span>
+    }
+
+    /**
+     * Hardened
+     *
+     * @param start
+     * @param now
+     * @param end
+     * @param worked
+     * @param remaining
+     * @return
+     */
+    public static Double calcualteEfficiency(LocalDateTime start, LocalDateTime now, LocalDateTime end, Duration worked, Duration remaining) {
+<span class="nc" id="L45">        Duration duration = Duration.ofHours(DateUtil.calculateWorkingDaysIncluding(start.toLocalDate(), now.toLocalDate()) * ONE_WORKING_DAY_MINUTES);</span>
+<span class="nc bnc" id="L46" title="All 6 branches missed.">        if (!duration.isZero() &amp;&amp; remaining != null &amp;&amp; !worked.isZero()) {</span>
+<span class="nc" id="L47">            double efficiency = ((double) worked.getSeconds()) / duration.getSeconds();</span>
+<span class="nc" id="L48">            return efficiency;</span>
+        }
+<span class="nc" id="L50">        return 0d;</span>
+    }
+
+    public static double calcualteExpectedProgress(LocalDateTime start, LocalDateTime now, LocalDateTime end) {
+        //        logger.trace(String.format(&quot;start=%s now=%s end=%s&quot;, DateUtil.createDateString(start, DateUtil.sdfymdhm), DateUtil.createDateString(now, DateUtil.sdfymdhm), DateUtil.createDateString(end, DateUtil.sdfymdhm)));
+<span class="nc" id="L55">        double   timeProgress   = 0;</span>
+<span class="nc" id="L56">        Duration sprintDuration = Duration.ofHours(DateUtil.calculateWorkingDaysIncluding(start.toLocalDate(), end.toLocalDate()) * ONE_WORKING_DAY_MINUTES);</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">        if (!sprintDuration.isZero()) {</span>
+<span class="nc" id="L58">            Duration timePast = Duration.ofHours(DateUtil.calculateWorkingDaysIncluding(start.toLocalDate(), now.toLocalDate()) * ONE_WORKING_DAY_MINUTES);</span>
+
+<span class="nc bnc" id="L60" title="All 2 branches missed.">            if (now.isAfter(end)) {</span>
+<span class="nc" id="L61">                timeProgress = 1.0d;</span>
+            } else {
+<span class="nc" id="L63">                timeProgress = (double) (timePast.getSeconds()) / (double) sprintDuration.getSeconds();</span>
+            }
+        }
+<span class="nc" id="L66">        return timeProgress;</span>
+    }
+
+    /**
+     * Hardened
+     *
+     * @param start
+     * @param now
+     * @param end
+     * @param worked
+     * @param originalEstimation
+     * @param estimation
+     * @param remaining
+     * @return
+     */
+    public static double calcualteExpectedProgress(LocalDateTime start, LocalDateTime now, LocalDateTime end, Duration worked, Duration originalEstimation,
+                                                   Duration estimation, Duration remaining) {
+<span class="nc" id="L83">        double   timeProgress   = 0;</span>
+<span class="nc" id="L84">        Duration sprintDuration = Duration.ofHours(DateUtil.calculateWorkingDaysIncluding(start.toLocalDate(), end.toLocalDate()) * ONE_WORKING_DAY_MINUTES);</span>
+<span class="nc bnc" id="L85" title="All 6 branches missed.">        if (!sprintDuration.isZero() &amp;&amp; remaining != null &amp;&amp; !worked.isZero()) {</span>
+<span class="nc" id="L86">            Duration timePast = Duration.ofHours(DateUtil.calculateWorkingDaysIncluding(start.toLocalDate(), now.toLocalDate()) * ONE_WORKING_DAY_MINUTES);</span>
+
+<span class="nc bnc" id="L88" title="All 2 branches missed.">            if (now.isAfter(end)) {</span>
+<span class="nc" id="L89">                timeProgress = 1.0d;</span>
+            } else {
+<span class="nc" id="L91">                timeProgress = (double) (timePast.getSeconds()) / (double) sprintDuration.getSeconds();</span>
+            }
+        }
+<span class="nc" id="L94">        return timeProgress;</span>
+    }
+
+    /**
+     * Hardened
+     *
+     * @param start
+     * @param now
+     * @param end
+     * @param worked
+     * @param remaining
+     * @return
+     */
+    public static Duration calcualteManDelay(LocalDateTime start, LocalDateTime now, LocalDateTime end, Duration worked, Duration total) {
+<span class="nc" id="L108">        long totalSprintWorkingDays = DateUtil.calculateWorkingDaysIncluding(start.toLocalDate(), end.toLocalDate());</span>
+<span class="nc bnc" id="L109" title="All 4 branches missed.">        if (totalSprintWorkingDays != 0 &amp;&amp; total != null) {</span>
+            double timeProgress;
+<span class="nc bnc" id="L111" title="All 2 branches missed.">            if (now.isAfter(end)) {</span>
+<span class="nc" id="L112">                timeProgress = 1.0d;</span>
+            } else {
+<span class="nc" id="L114">                long workingDaysPast = DateUtil.calculateWorkingDaysIncluding(start.toLocalDate(), now.toLocalDate());</span>
+<span class="nc" id="L115">                timeProgress = ((double) (workingDaysPast)) / ((double) totalSprintWorkingDays);</span>
+            }
+<span class="nc" id="L117">            Duration expectedWork = Duration.ofSeconds((long) (timeProgress * (total.getSeconds())));</span>
+<span class="nc" id="L118">            Duration manDaysDelay = expectedWork.minus(worked);</span>
+<span class="nc" id="L119">            return manDaysDelay;</span>
+        }
+<span class="nc" id="L121">        return Duration.ZERO;</span>
+    }
+
+    public static String calcualteManDelayString(LocalDateTime start, LocalDateTime now, LocalDateTime end, Duration worked, Duration estimated) {
+<span class="nc" id="L125">        Duration duration = Duration.between(start, end);</span>
+<span class="nc bnc" id="L126" title="All 4 branches missed.">        if (!duration.isZero() &amp;&amp; estimated != null) {</span>
+<span class="nc" id="L127">            Duration manDaysDelay = calcualteManDelay(start, now, end, worked, estimated);</span>
+<span class="nc" id="L128">            String   delay        = DateUtil.createWorkDayDurationString(manDaysDelay, false, true, false);</span>
+<span class="nc" id="L129">            return delay;</span>
+        }
+<span class="nc" id="L131">        return &quot;&quot;;</span>
+    }
+
+    /**
+     * Hardened
+     *
+     * @param start
+     * @param end
+     * @param estimated
+     * @return
+     */
+    public static Double calcualteOptimaleEfficiency(LocalDateTime start, LocalDateTime end, Duration estimated) {
+<span class="nc" id="L143">        Duration duration = Duration.ofMinutes(DateUtil.calculateWorkingDaysIncluding(start.toLocalDate(), end.toLocalDate()) * ONE_WORKING_DAY_MINUTES);</span>
+<span class="nc bnc" id="L144" title="All 4 branches missed.">        if (!duration.isZero() &amp;&amp; estimated != null /*&amp;&amp; worked.longValue() != 0*/) {</span>
+<span class="nc" id="L145">            double efficiency = ((double) estimated.getSeconds()) / duration.getSeconds();</span>
+<span class="nc" id="L146">            return efficiency;</span>
+        }
+<span class="nc" id="L148">        return 0d;</span>
+    }
+
+    /**
+     * Hardened
+     *
+     * @param worked
+     * @param estimated
+     * @return
+     */
+    public static double calcualteProgress(Duration worked, Duration estimated) {
+<span class="nc bnc" id="L159" title="All 4 branches missed.">        if ((estimated == null) || (worked == null)) {</span>
+<span class="nc" id="L160">            return -1f;</span>
+        }
+        //        if (worked.longValue() &gt; (worked.longValue() + remaining.longValue())) {
+        //            return 1.d;
+        //        }
+<span class="nc" id="L165">        return (double) worked.getSeconds() / (double) (estimated.getSeconds());</span>
+    }
+
+    public static Duration calcualteTestCaseDelay(LocalDateTime start, LocalDateTime now, LocalDateTime end, Duration worked, Duration remaining) {
+<span class="nc" id="L169">        long totalSprintWorkingDays = DateUtil.calculateWorkingDaysIncluding(start.toLocalDate(), end.toLocalDate());</span>
+        //        long duration = end - start;
+<span class="nc bnc" id="L171" title="All 4 branches missed.">        if (totalSprintWorkingDays != 0 &amp;&amp; remaining != null) {</span>
+            double timeProgress;
+            //            if(now &lt; start)
+            //                return  0;
+<span class="nc bnc" id="L175" title="All 2 branches missed.">            if (now.isAfter(end)) {</span>
+<span class="nc" id="L176">                timeProgress = 1.0d;</span>
+                //                long expectedWork = (long) timeProgress * (worked.longValue() + remaining.longValue());
+                //                long manDaysDelay = expectedWork - worked.longValue();//in man days
+                //                String delay = Util.createDurationString(manDaysDelay, false, true, false);
+                //                return delay;
+            } else {
+<span class="nc" id="L182">                long workingDaysPast = DateUtil.calculateWorkingDaysIncluding(start.toLocalDate(), now.toLocalDate());</span>
+<span class="nc" id="L183">                timeProgress = ((double) (workingDaysPast)) / ((double) totalSprintWorkingDays);</span>
+            }
+<span class="nc" id="L185">            Duration expectedWork = Duration.ofSeconds((long) (timeProgress * (worked.getSeconds() + remaining.getSeconds())));</span>
+<span class="nc" id="L186">            Duration manDaysDelay = expectedWork.minus(worked);</span>
+<span class="nc" id="L187">            return manDaysDelay;</span>
+        }
+<span class="nc" id="L189">        return Duration.ZERO;</span>
+    }
+
+    public static Duration calcualteWorkDaysMiliseconsDelay(LocalDateTime start, LocalDateTime now, LocalDateTime end, Duration worked,
+                                                            Duration originalEstimation, Duration estimation, Duration remaining) {
+
+<span class="nc" id="L195">        int      sprintDays     = DateUtil.calculateWorkingDaysIncluding(start.toLocalDate(), end.toLocalDate());</span>
+<span class="nc" id="L196">        Duration sprintDuration = Duration.ofMinutes(sprintDays * ONE_WORKING_DAY_MINUTES);</span>
+        //        logger.info(DateUtil.createWorkDayDurationString(sprintDuration, false, true, false));
+<span class="nc bnc" id="L198" title="All 6 branches missed.">        if (!sprintDuration.isZero() &amp;&amp; remaining != null &amp;&amp; !worked.isZero()) {</span>
+<span class="nc" id="L199">            int      daysSpent = DateUtil.calculateWorkingDaysIncluding(start.toLocalDate(), now.toLocalDate());</span>
+<span class="nc" id="L200">            Duration timePast  = Duration.ofMinutes(daysSpent * ONE_WORKING_DAY_MINUTES);</span>
+<span class="nc" id="L201">            double   workforce = ((double) worked.getSeconds()) / timePast.getSeconds();//how much work per working days duration</span>
+
+            double timeProgress;
+<span class="nc bnc" id="L204" title="All 2 branches missed.">            if (now.isAfter(end)) {</span>
+<span class="nc" id="L205">                timeProgress = 1.0d;</span>
+            } else {
+<span class="nc" id="L207">                timeProgress = (double) (timePast.getSeconds()) / (double) sprintDuration.getSeconds();</span>
+            }
+<span class="nc" id="L209">            Duration expectedWork = Duration.ofSeconds((long) (timeProgress * (worked.getSeconds() + remaining.getSeconds())));</span>
+<span class="nc bnc" id="L210" title="All 2 branches missed.">            if (expectedWork.compareTo(remaining.plus(worked)) &gt; 0) {</span>
+<span class="nc" id="L211">                logger.error(&quot;Exception!!!!!&quot;);</span>
+            }
+
+            //            logger.trace(String.format(&quot;past working days=%d Efficency=%.1fPD timeProgress=%02.0f%% expectedwork=%s work=%s&quot;, timePast / ONE_WORKING_DAY_MILLIS, workforce, timeProgress * 100, Util.createDurationString(expectedWork, false, true, true), Util.createDurationString(worked, false, true, true)));
+<span class="nc" id="L215">            Duration workDayMillisecondsDelay = Duration.ofSeconds((long) ((expectedWork.minus(worked).getSeconds() / workforce)));</span>
+<span class="nc" id="L216">            return workDayMillisecondsDelay;</span>
+        }
+<span class="nc" id="L218">        return null;</span>
+    }
+
+    public static Double calculateExtrapolatedScheduleDelayFraction(LocalDateTime start, LocalDateTime now, LocalDateTime end, Duration worked,
+                                                                    Duration estimated) {
+<span class="nc" id="L223">        Duration duration = Duration.between(start, end);</span>
+<span class="nc bnc" id="L224" title="All 4 branches missed.">        if (!duration.isZero() &amp;&amp; estimated != null) {</span>
+<span class="nc" id="L225">            LocalDateTime releaseDate = calculateReleaseDate(start, now, worked, estimated);</span>
+            //            String debug1 = DateUtil.createDateString(releaseDate);
+<span class="nc bnc" id="L227" title="All 2 branches missed.">            if (releaseDate == null) {</span>
+<span class="nc" id="L228">                return null;</span>
+            }
+<span class="nc" id="L230">            int scheduledWorkingDays = DateUtil.calculateWorkingDaysIncluding(start.toLocalDate(), end.toLocalDate());</span>
+<span class="nc" id="L231">            int workingDays          = DateUtil.calculateWorkingDaysIncluding(end.toLocalDate(), releaseDate.toLocalDate());</span>
+<span class="nc" id="L232">            return (double) workingDays / (double) scheduledWorkingDays;</span>
+        }
+<span class="nc" id="L234">        return null;</span>
+    }
+
+    public static String calculateExtrapolatedScheduleDelayString(LocalDateTime start, LocalDateTime now, LocalDateTime end, Duration worked,
+                                                                  Duration estimated) {
+<span class="nc" id="L239">        Duration duration = Duration.between(start, end);</span>
+<span class="nc bnc" id="L240" title="All 4 branches missed.">        if (!duration.isZero() &amp;&amp; estimated != null) {</span>
+<span class="nc" id="L241">            LocalDateTime releaseDate = calculateReleaseDate(start, now, worked, estimated);</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">            if (releaseDate == null) {</span>
+<span class="nc" id="L243">                return null;</span>
+            }
+<span class="nc" id="L245">            int    workingDays = DateUtil.calculateWorkingDaysIncluding(end.toLocalDate(), releaseDate.toLocalDate());</span>
+<span class="nc" id="L246">            String delay       = DateUtil.createWorkDayDurationString(Duration.ofMinutes(workingDays * ONE_WORKING_DAY_MINUTES), false, true, false);</span>
+<span class="nc" id="L247">            return delay;</span>
+        }
+<span class="nc" id="L249">        return null;</span>
+    }
+
+    public static Duration calculateExtrapolatedTimeSpent(LocalDateTime start, LocalDateTime now, LocalDateTime end, Duration spent, Duration planned) {
+
+<span class="nc" id="L254">        Duration duration               = Duration.between(start, end);</span>
+<span class="nc" id="L255">        Duration past                   = Duration.between(start, now);</span>
+<span class="nc" id="L256">        Duration extrapolcatedTimeSpent = Duration.ofSeconds(duration.getSeconds() * spent.getSeconds() / past.getSeconds());</span>
+        //        long extrapolcatedTimeSpent = (end - start) * spent / (now - start);
+        //        String debug1 = DateUtil.createDurationString(extrapolcatedTimeSpent, false, true, true);
+<span class="nc" id="L259">        return extrapolcatedTimeSpent;</span>
+    }
+
+    /**
+     * Hardened
+     *
+     * @param start
+     * @param now
+     * @param worked
+     * @param estimated
+     * @return
+     */
+    public static LocalDateTime calculateReleaseDate(LocalDateTime start, LocalDateTime now, Duration worked, Duration estimated) {
+        //        logger.trace(String.format(&quot;start=%s now=%s end=%s worked=%s remaining=%s&quot;, Util.createDateString(start, sdtf), Util.createDateString(now, sdtf), Util.createDateString(end, sdtf), Util.createDurationString(worked, false, true, true), Util.createDurationString(remaining, false, true, true)));
+<span class="nc bnc" id="L273" title="All 4 branches missed.">        if ((worked == null) || worked.isZero()) {</span>
+<span class="nc" id="L274">            return null;</span>
+        }
+<span class="nc" id="L276">        LocalDateTime releaseDate = LocalDateTime.parse(&quot;1900-01-01T08:00:00&quot;);</span>
+<span class="nc bnc" id="L277" title="All 6 branches missed.">        if (worked != null &amp;&amp; estimated != null &amp;&amp; !worked.isZero()) {</span>
+<span class="nc" id="L278">            long workingDaysSpent = DateUtil.calculateWorkingDaysIncluding(start.toLocalDate(), now.toLocalDate());</span>
+            //You spent workingDaysSpent to get worked done. Now how many days will you need to get remaining done?
+<span class="nc" id="L280">            long expectedTotalWorkingDaysToSpend = (long) Math.ceil((((double) estimated.getSeconds()) * (workingDaysSpent)) / (worked.getSeconds()));</span>
+            //            logger.trace(String.format(&quot;total expected working days=%d&quot;, expectedTotalWorkingDaysToSpend));
+<span class="nc" id="L282">            releaseDate = DateUtil.addNoneWorkingDays(start, expectedTotalWorkingDaysToSpend);</span>
+        } else {
+        }
+<span class="nc" id="L285">        return releaseDate;</span>
+
+    }
+
+    public static String createPersonDayEfficiencyString(Double efficiency) {
+<span class="nc bnc" id="L290" title="All 2 branches missed.">        if (efficiency == null) {</span>
+<span class="nc" id="L291">            return &quot;&quot;;</span>
+        } else {
+<span class="nc" id="L293">            return String.format(&quot;%d%% Person&quot;, Math.round(efficiency.doubleValue() * 100));</span>
+        }
+
+    }
+
+    //    public static String createTestCaseEfficiencyString(Double efficiency) {
+    //        if (efficiency == null) {
+    //            return &quot;&quot;;
+    //        } else {
+    //            return String.format(&quot;%d Test Cases&quot;, Math.round(efficiency.doubleValue() * Util.ONE_WORKING_DAY_MILLIS));
+    //        }
+    //
+    //    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

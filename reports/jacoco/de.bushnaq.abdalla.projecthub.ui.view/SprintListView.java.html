@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SprintListView.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.ui.view</a> &gt; <span class="el_source">SprintListView.java</span></div><h1>SprintListView.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.ui.view;
+
+import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.router.*;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+import de.bushnaq.abdalla.projecthub.dto.Feature;
+import de.bushnaq.abdalla.projecthub.dto.Product;
+import de.bushnaq.abdalla.projecthub.dto.Sprint;
+import de.bushnaq.abdalla.projecthub.dto.Version;
+import de.bushnaq.abdalla.projecthub.rest.api.FeatureApi;
+import de.bushnaq.abdalla.projecthub.rest.api.ProductApi;
+import de.bushnaq.abdalla.projecthub.rest.api.SprintApi;
+import de.bushnaq.abdalla.projecthub.rest.api.VersionApi;
+import de.bushnaq.abdalla.projecthub.ui.MainLayout;
+import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
+import de.bushnaq.abdalla.projecthub.ui.dialog.SprintDialog;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+import de.bushnaq.abdalla.util.date.DateUtil;
+import jakarta.annotation.security.PermitAll;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.Clock;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.HashMap;
+import java.util.Map;
+
+@Route(&quot;sprint-list&quot;)
+@PageTitle(&quot;Sprint List Page&quot;)
+//@Menu(order = 1, icon = &quot;vaadin:factory&quot;, title = &quot;project List&quot;)
+@PermitAll // When security is enabled, allow all authenticated users
+public class SprintListView extends Main implements AfterNavigationObserver {
+    public static final String       CREATE_SPRINT_BUTTON             = &quot;create-sprint-button&quot;;
+    public static final String       SPRINT_GRID                      = &quot;sprint-grid&quot;;
+    public static final String       SPRINT_GRID_DELETE_BUTTON_PREFIX = &quot;sprint-grid-delete-button-prefix-&quot;;
+    public static final String       SPRINT_GRID_EDIT_BUTTON_PREFIX   = &quot;sprint-grid-edit-button-prefix-&quot;;
+    public static final String       SPRINT_GRID_NAME_PREFIX          = &quot;sprint-grid-name-&quot;;
+    public static final String       SPRINT_LIST_PAGE_TITLE           = &quot;sprint-list-page-title&quot;;
+    private final       Clock        clock;
+    private final       FeatureApi   featureApi;
+    private             Long         featureId;
+    private             Grid&lt;Sprint&gt; grid;
+    private final       ProductApi   productApi;
+    //    private             H2           pageTitle;
+    private             Long         productId;
+    private final       SprintApi    sprintApi;
+    private final       VersionApi   versionApi;
+    private             Long         versionId;
+
+<span class="nc" id="L80">    public SprintListView(SprintApi sprintApi, ProductApi productApi, VersionApi versionApi, FeatureApi featureApi, Clock clock) {</span>
+<span class="nc" id="L81">        this.sprintApi  = sprintApi;</span>
+<span class="nc" id="L82">        this.productApi = productApi;</span>
+<span class="nc" id="L83">        this.versionApi = versionApi;</span>
+<span class="nc" id="L84">        this.featureApi = featureApi;</span>
+<span class="nc" id="L85">        this.clock      = clock;</span>
+
+<span class="nc" id="L87">        setSizeFull();</span>
+<span class="nc" id="L88">        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);</span>
+
+<span class="nc" id="L90">        add(VaadinUtils.createHeader(&quot;Sprints&quot;, SPRINT_LIST_PAGE_TITLE, &quot;vaadin:exit&quot;, CREATE_SPRINT_BUTTON, () -&gt; openSprintDialog(null)), createGrid(clock));</span>
+<span class="nc" id="L91">    }</span>
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+        //- Get query parameters
+<span class="nc" id="L96">        Location        location        = event.getLocation();</span>
+<span class="nc" id="L97">        QueryParameters queryParameters = location.getQueryParameters();</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">        if (queryParameters.getParameters().containsKey(&quot;product&quot;)) {</span>
+<span class="nc" id="L99">            this.productId = Long.parseLong(queryParameters.getParameters().get(&quot;product&quot;).getFirst());</span>
+        }
+<span class="nc bnc" id="L101" title="All 2 branches missed.">        if (queryParameters.getParameters().containsKey(&quot;version&quot;)) {</span>
+<span class="nc" id="L102">            this.versionId = Long.parseLong(queryParameters.getParameters().get(&quot;version&quot;).getFirst());</span>
+        }
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        if (queryParameters.getParameters().containsKey(&quot;feature&quot;)) {</span>
+<span class="nc" id="L105">            this.featureId = Long.parseLong(queryParameters.getParameters().get(&quot;feature&quot;).getFirst());</span>
+//            pageTitle.setText(&quot;Sprints of Feature ID: &quot; + featureId);
+        }
+        //- update breadcrumbs
+<span class="nc" id="L109">        getElement().getParent().getComponent()</span>
+<span class="nc" id="L110">                .ifPresent(component -&gt; {</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">                    if (component instanceof MainLayout mainLayout) {</span>
+<span class="nc" id="L112">                        mainLayout.getBreadcrumbs().clear();</span>
+<span class="nc" id="L113">                        Product product = productApi.getById(productId);</span>
+<span class="nc" id="L114">                        mainLayout.getBreadcrumbs().addItem(&quot;Products (&quot; + product.getName() + &quot;)&quot;, ProductListView.class);</span>
+//                        mainLayout.getBreadcrumbs().addItem(&quot;Products&quot;, ProductListView.class);
+                        {
+<span class="nc" id="L117">                            Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L118">                            params.put(&quot;product&quot;, String.valueOf(productId));</span>
+<span class="nc" id="L119">                            Version version = versionApi.getById(versionId);</span>
+<span class="nc" id="L120">                            mainLayout.getBreadcrumbs().addItem(&quot;Versions (&quot; + version.getName() + &quot;)&quot;, VersionListView.class, params);</span>
+//                            mainLayout.getBreadcrumbs().addItem(&quot;Versions&quot;, VersionListView.class, params);
+                        }
+                        {
+<span class="nc" id="L124">                            Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L125">                            params.put(&quot;product&quot;, String.valueOf(productId));</span>
+<span class="nc" id="L126">                            params.put(&quot;version&quot;, String.valueOf(versionId));</span>
+<span class="nc" id="L127">                            Feature feature = featureApi.getById(featureId);</span>
+<span class="nc" id="L128">                            mainLayout.getBreadcrumbs().addItem(&quot;Features (&quot; + feature.getName() + &quot;)&quot;, FeatureListView.class, params);</span>
+//                            mainLayout.getBreadcrumbs().addItem(&quot;Features&quot;, FeatureListView.class, params);
+                        }
+                        {
+<span class="nc" id="L132">                            Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L133">                            params.put(&quot;product&quot;, String.valueOf(productId));</span>
+<span class="nc" id="L134">                            params.put(&quot;version&quot;, String.valueOf(versionId));</span>
+<span class="nc" id="L135">                            params.put(&quot;feature&quot;, String.valueOf(featureId));</span>
+<span class="nc" id="L136">                            mainLayout.getBreadcrumbs().addItem(&quot;Sprints&quot;, SprintListView.class, params);</span>
+                        }
+                    }
+<span class="nc" id="L139">                });</span>
+
+<span class="nc" id="L141">        refreshGrid();</span>
+<span class="nc" id="L142">    }</span>
+
+    private void confirmDelete(Sprint sprint) {
+<span class="nc" id="L145">        String message = &quot;Are you sure you want to delete sprint \&quot;&quot; + sprint.getName() + &quot;\&quot;?&quot;;</span>
+<span class="nc" id="L146">        ConfirmDialog dialog = new ConfirmDialog(</span>
+                &quot;Confirm Delete&quot;,
+                message,
+                &quot;Delete&quot;,
+                () -&gt; {
+<span class="nc" id="L151">                    sprintApi.deleteById(sprint.getId());</span>
+<span class="nc" id="L152">                    refreshGrid();</span>
+<span class="nc" id="L153">                    Notification.show(&quot;Sprint deleted&quot;, 3000, Notification.Position.BOTTOM_START);</span>
+<span class="nc" id="L154">                }</span>
+        );
+<span class="nc" id="L156">        dialog.open();</span>
+<span class="nc" id="L157">    }</span>
+
+    private Grid&lt;Sprint&gt; createGrid(Clock clock) {
+<span class="nc" id="L160">        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());</span>
+
+<span class="nc" id="L162">        grid = new Grid&lt;&gt;();</span>
+<span class="nc" id="L163">        grid.setId(SPRINT_GRID);</span>
+
+<span class="nc" id="L165">        Grid.Column&lt;Sprint&gt; keyColumn = grid.addColumn(Sprint::getKey).setHeader(&quot;Key&quot;);</span>
+<span class="nc" id="L166">        keyColumn.setId(&quot;sprint-grid-key-column&quot;);</span>
+<span class="nc" id="L167">        keyColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.KEY), new Div(new Text(&quot;Key&quot;))));</span>
+
+<span class="nc" id="L169">        Grid.Column&lt;Sprint&gt; nameColumn = grid.addColumn(new ComponentRenderer&lt;&gt;(sprint -&gt; {</span>
+<span class="nc" id="L170">            Div div    = new Div();</span>
+<span class="nc" id="L171">            Div square = new Div();</span>
+<span class="nc" id="L172">            square.setMinHeight(&quot;16px&quot;);</span>
+<span class="nc" id="L173">            square.setMaxHeight(&quot;16px&quot;);</span>
+<span class="nc" id="L174">            square.setMinWidth(&quot;16px&quot;);</span>
+<span class="nc" id="L175">            square.setMaxWidth(&quot;16px&quot;);</span>
+<span class="nc" id="L176">            square.getStyle().set(&quot;float&quot;, &quot;left&quot;);</span>
+<span class="nc" id="L177">            square.getStyle().set(&quot;margin&quot;, &quot;1px&quot;);</span>
+<span class="nc" id="L178">            div.add(square);</span>
+<span class="nc" id="L179">            div.add(sprint.getName());</span>
+<span class="nc" id="L180">            div.setId(SPRINT_GRID_NAME_PREFIX + sprint.getName());</span>
+<span class="nc" id="L181">            return div;</span>
+<span class="nc" id="L182">        })).setHeader(&quot;Name&quot;);</span>
+<span class="nc" id="L183">        nameColumn.setId(&quot;sprint-grid-name-column&quot;);</span>
+<span class="nc" id="L184">        nameColumn.setHeader(new HorizontalLayout(new Icon(&quot;vaadin:exit&quot;), new Div(new Text(&quot;Name&quot;))));</span>
+
+<span class="nc bnc" id="L186" title="All 2 branches missed.">        Grid.Column&lt;Sprint&gt; startColumn = grid.addColumn(sprint -&gt; sprint.getStart() != null ? dateTimeFormatter.format(sprint.getStart()) : &quot;&quot;).setHeader(&quot;Start&quot;);</span>
+<span class="nc" id="L187">        startColumn.setId(&quot;sprint-grid-start-column&quot;);</span>
+<span class="nc" id="L188">        startColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text(&quot;Start&quot;))));</span>
+
+<span class="nc bnc" id="L190" title="All 2 branches missed.">        Grid.Column&lt;Sprint&gt; endColumn = grid.addColumn(sprint -&gt; sprint.getEnd() != null ? dateTimeFormatter.format(sprint.getEnd()) : &quot;&quot;).setHeader(&quot;End&quot;);</span>
+<span class="nc" id="L191">        endColumn.setId(&quot;sprint-grid-end-column&quot;);</span>
+<span class="nc" id="L192">        endColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text(&quot;End&quot;))));</span>
+
+<span class="nc" id="L194">        Grid.Column&lt;Sprint&gt; statusColumn = grid.addColumn(sprint -&gt; sprint.getStatus().name()).setHeader(&quot;Status&quot;);</span>
+<span class="nc" id="L195">        statusColumn.setId(&quot;sprint-grid-status-column&quot;);</span>
+<span class="nc" id="L196">        statusColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.FLAG), new Div(new Text(&quot;Status&quot;))));</span>
+
+<span class="nc bnc" id="L198" title="All 2 branches missed.">        Grid.Column&lt;Sprint&gt; originalEstimationColumn = grid.addColumn(sprint -&gt; sprint.getOriginalEstimation() != null ? DateUtil.createDurationString(sprint.getOriginalEstimation(), false, true, true) : &quot;&quot;).setHeader(&quot;Original Estimation&quot;);</span>
+<span class="nc" id="L199">        originalEstimationColumn.setId(&quot;sprint-grid-original-estimation-column&quot;);</span>
+<span class="nc" id="L200">        originalEstimationColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CLOCK), new Div(new Text(&quot;Original Estimation&quot;))));</span>
+
+<span class="nc bnc" id="L202" title="All 2 branches missed.">        Grid.Column&lt;Sprint&gt; workedColumn = grid.addColumn(sprint -&gt; sprint.getWorked() != null ? DateUtil.createDurationString(sprint.getWorked(), false, true, true) : &quot;&quot;).setHeader(&quot;Worked&quot;);</span>
+<span class="nc" id="L203">        workedColumn.setId(&quot;sprint-grid-worked-column&quot;);</span>
+<span class="nc" id="L204">        workedColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.TIMER), new Div(new Text(&quot;Worked&quot;))));</span>
+
+<span class="nc bnc" id="L206" title="All 2 branches missed.">        Grid.Column&lt;Sprint&gt; remainingColumn = grid.addColumn(sprint -&gt; sprint.getRemaining() != null ? DateUtil.createDurationString(sprint.getRemaining(), false, true, true) : &quot;&quot;).setHeader(&quot;Remaining&quot;);</span>
+<span class="nc" id="L207">        remainingColumn.setId(&quot;sprint-grid-remaining-column&quot;);</span>
+<span class="nc" id="L208">        remainingColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.HOURGLASS), new Div(new Text(&quot;Remaining&quot;))));</span>
+
+        // Add actions column with direct buttons instead of context menu
+<span class="nc" id="L211">        grid.addColumn(new ComponentRenderer&lt;&gt;(sprint -&gt; {</span>
+<span class="nc" id="L212">            HorizontalLayout layout = new HorizontalLayout();</span>
+<span class="nc" id="L213">            layout.setAlignItems(FlexComponent.Alignment.CENTER);</span>
+<span class="nc" id="L214">            layout.setSpacing(true);</span>
+
+<span class="nc" id="L216">            Button editButton = new Button(new Icon(VaadinIcon.EDIT));</span>
+<span class="nc" id="L217">            editButton.setId(SPRINT_GRID_EDIT_BUTTON_PREFIX + sprint.getName());</span>
+<span class="nc" id="L218">            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);</span>
+<span class="nc" id="L219">            editButton.addClickListener(e -&gt; openSprintDialog(sprint));</span>
+<span class="nc" id="L220">            editButton.getElement().setAttribute(&quot;title&quot;, &quot;Edit&quot;);</span>
+
+<span class="nc" id="L222">            Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));</span>
+<span class="nc" id="L223">            deleteButton.setId(SPRINT_GRID_DELETE_BUTTON_PREFIX + sprint.getName());</span>
+<span class="nc" id="L224">            deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);</span>
+<span class="nc" id="L225">            deleteButton.addClickListener(e -&gt; confirmDelete(sprint));</span>
+<span class="nc" id="L226">            deleteButton.getElement().setAttribute(&quot;title&quot;, &quot;Delete&quot;);</span>
+
+<span class="nc" id="L228">            layout.add(editButton, deleteButton);</span>
+<span class="nc" id="L229">            return layout;</span>
+<span class="nc" id="L230">        })).setWidth(&quot;120px&quot;).setFlexGrow(0);</span>
+
+<span class="nc" id="L232">        grid.setSizeFull();</span>
+        //- Add click listener to navigate to TaskView with the selected version ID
+<span class="nc" id="L234">        grid.addItemClickListener(event -&gt; {</span>
+<span class="nc" id="L235">            Sprint selectedSprint = event.getItem();</span>
+            //- Create parameters map
+<span class="nc" id="L237">            Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L238">            params.put(&quot;product&quot;, String.valueOf(productId));</span>
+<span class="nc" id="L239">            params.put(&quot;version&quot;, String.valueOf(versionId));</span>
+<span class="nc" id="L240">            params.put(&quot;feature&quot;, String.valueOf(featureId));</span>
+<span class="nc" id="L241">            params.put(&quot;sprint&quot;, String.valueOf(selectedSprint.getId()));</span>
+            //- Navigate with query parameters
+<span class="nc" id="L243">            UI.getCurrent().navigate(</span>
+                    SprintQualityBoard.class,
+<span class="nc" id="L245">                    QueryParameters.simple(params)</span>
+            );
+<span class="nc" id="L247">        });</span>
+<span class="nc" id="L248">        return grid;</span>
+    }
+
+    private void openSprintDialog(Sprint sprint) {
+<span class="nc" id="L252">        SprintDialog dialog = new SprintDialog(sprint, (savedSprint, sprintDialog) -&gt; {</span>
+            try {
+<span class="nc bnc" id="L254" title="All 2 branches missed.">                if (sprint != null) {</span>
+                    // Edit mode
+<span class="nc" id="L256">                    sprintApi.update(savedSprint);</span>
+<span class="nc" id="L257">                    Notification.show(&quot;Sprint updated&quot;, 3000, Notification.Position.BOTTOM_START);</span>
+<span class="nc" id="L258">                    sprintDialog.close();</span>
+                } else {
+                    // Create mode
+<span class="nc" id="L261">                    savedSprint.setFeatureId(featureId);</span>
+<span class="nc" id="L262">                    sprintApi.persist(savedSprint);</span>
+<span class="nc" id="L263">                    Notification.show(&quot;Sprint created&quot;, 3000, Notification.Position.BOTTOM_START);</span>
+<span class="nc" id="L264">                    sprintDialog.close();</span>
+                }
+<span class="nc" id="L266">                refreshGrid();</span>
+<span class="nc" id="L267">            } catch (ResponseStatusException ex) {</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">                if (ex.getStatusCode() == HttpStatus.CONFLICT) {</span>
+                    // This is a name uniqueness violation
+<span class="nc" id="L270">                    sprintDialog.setErrorMessage(&quot;A sprint with this name already exists&quot;);</span>
+                } else {
+                    // Some other error
+<span class="nc" id="L273">                    Notification.show(&quot;Error: &quot; + ex.getMessage(), 3000, Notification.Position.MIDDLE);</span>
+<span class="nc" id="L274">                    sprintDialog.close();</span>
+                }
+<span class="nc" id="L276">            } catch (Exception ex) {</span>
+<span class="nc" id="L277">                Notification.show(&quot;Unexpected error: &quot; + ex.getMessage(), 3000, Notification.Position.MIDDLE);</span>
+<span class="nc" id="L278">                sprintDialog.close();</span>
+<span class="nc" id="L279">            }</span>
+<span class="nc" id="L280">        });</span>
+<span class="nc" id="L281">        dialog.open();</span>
+<span class="nc" id="L282">    }</span>
+
+    private void refreshGrid() {
+        // Only show sprints for the selected project
+<span class="nc bnc" id="L286" title="All 2 branches missed.">        if (featureId != null) {</span>
+<span class="nc" id="L287">            grid.setItems(sprintApi.getAll(featureId));</span>
+        } else {
+<span class="nc" id="L289">            grid.setItems(sprintApi.getAll());</span>
+        }
+<span class="nc" id="L291">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

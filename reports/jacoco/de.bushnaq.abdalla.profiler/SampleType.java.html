@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SampleType.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.profiler</a> &gt; <span class="el_source">SampleType.java</span></div><h1>SampleType.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.profiler;
+
+/**
+ * Categorises a code block to mainly spending time on one of the following activities.
+ *
+ * @author abdalla
+ */
+<span class="nc" id="L25">public enum SampleType {</span>
+<span class="nc" id="L26">    CPU,//mainly cpu intense code, e.g. searching or number crunching (very fast)</span>
+<span class="nc" id="L27">    FILE,//mainly file access intense code (very slow)</span>
+<span class="nc" id="L28">    GPU,//mainly drawing images 2D or 3D</span>
+<span class="nc" id="L29">    OTHR,//all the rest (should be ~1%),//mainly accessing network, but not using rest api or smb</span>
+<span class="nc" id="L30">    REST,//rest api calls or serving</span>
+<span class="nc" id="L31">    SMB,//access files using smb protocol</span>
+<span class="nc" id="L32">    JPA,//accessign a db using sql</span>
+<span class="nc" id="L33">    TCP</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

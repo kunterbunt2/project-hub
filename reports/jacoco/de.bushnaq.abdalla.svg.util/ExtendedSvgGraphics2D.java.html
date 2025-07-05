@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExtendedSvgGraphics2D.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.svg.util</a> &gt; <span class="el_source">ExtendedSvgGraphics2D.java</span></div><h1>ExtendedSvgGraphics2D.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.svg.util;
+
+import org.apache.batik.svggen.*;
+import org.apache.batik.util.SVGConstants;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import java.awt.*;
+import java.awt.font.GlyphVector;
+import java.awt.geom.AffineTransform;
+
+public class ExtendedSvgGraphics2D extends SVGGraphics2D {
+    public ExtendedSvgGraphics2D(Document domFactory) {
+<span class="nc" id="L31">        super(domFactory);</span>
+<span class="nc" id="L32">        super.shapeConverter = new ExtendedSvgShape(super.generatorCtx);</span>
+<span class="nc" id="L33">    }</span>
+
+    public ExtendedSvgGraphics2D(Document domFactory, ImageHandler imageHandler, ExtensionHandler extensionHandler, boolean textAsShapes) {
+<span class="nc" id="L36">        super(domFactory, imageHandler, extensionHandler, textAsShapes);</span>
+<span class="nc" id="L37">        super.shapeConverter = new ExtendedSvgShape(buildSVGGeneratorContext(domFactory, imageHandler, extensionHandler));</span>
+<span class="nc" id="L38">    }</span>
+
+    public ExtendedSvgGraphics2D(ExtendedSvgGraphics2D g) {
+<span class="nc" id="L41">        super(g);</span>
+<span class="nc" id="L42">        super.shapeConverter = g.shapeConverter;</span>
+<span class="nc" id="L43">    }</span>
+
+    public ExtendedSvgGraphics2D(SVGGeneratorContext generatorCtx, boolean textAsShapes) {
+<span class="nc" id="L46">        super(generatorCtx, textAsShapes);</span>
+<span class="nc" id="L47">        super.shapeConverter = new ExtendedSvgShape(generatorCtx);</span>
+<span class="nc" id="L48">    }</span>
+
+    public void drawString(String s, float x, float y, String toolTip) {
+<span class="nc bnc" id="L51" title="All 2 branches missed.">        if (textAsShapes) {</span>
+<span class="nc" id="L52">            GlyphVector gv = getFont().createGlyphVector(getFontRenderContext(), s);</span>
+<span class="nc" id="L53">            drawGlyphVector(gv, x, y);</span>
+<span class="nc" id="L54">            return;</span>
+        }
+
+<span class="nc bnc" id="L57" title="All 2 branches missed.">        if (generatorCtx.isEmbeddedFontsOn()) {</span>
+            // record that the font is being used to draw this
+            // string, this is so that the SVG Font element will
+            // only create glyphs for the characters that are
+            // needed
+<span class="nc" id="L62">            domTreeManager.getGraphicContextConverter().getFontConverter().recordFontUsage(s, getFont());</span>
+        }
+
+        // Account for the font transform if there is one
+<span class="nc" id="L66">        AffineTransform savTxf = getTransform();</span>
+<span class="nc" id="L67">        AffineTransform txtTxf = transformText(x, y);</span>
+
+<span class="nc" id="L69">        Element text = getDOMFactory().createElementNS(SVG_NAMESPACE_URI, SVG_TEXT_TAG);</span>
+<span class="nc" id="L70">        text.setAttributeNS(null, SVG_X_ATTRIBUTE, generatorCtx.doubleString(x));</span>
+<span class="nc" id="L71">        text.setAttributeNS(null, SVG_Y_ATTRIBUTE, generatorCtx.doubleString(y));</span>
+
+<span class="nc" id="L73">        text.setAttributeNS(XML_NAMESPACE_URI, XML_SPACE_QNAME, XML_PRESERVE_VALUE);</span>
+<span class="nc" id="L74">        text.appendChild(getDOMFactory().createTextNode(s));</span>
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">        if (toolTip != null) {</span>
+<span class="nc" id="L77">            text.setAttribute(&quot;alt&quot;, toolTip);</span>
+        }
+
+<span class="nc" id="L80">        domGroupManager.addElement(text, DOMGroupManager.FILL);</span>
+
+<span class="nc bnc" id="L82" title="All 2 branches missed.">        if (txtTxf != null) {</span>
+<span class="nc" id="L83">            this.setTransform(savTxf);</span>
+        }
+<span class="nc" id="L85">    }</span>
+
+    public void drawString(String s, float x, float y, String toolTip, String link) {
+<span class="nc bnc" id="L88" title="All 2 branches missed.">        if (textAsShapes) {</span>
+<span class="nc" id="L89">            GlyphVector gv = getFont().createGlyphVector(getFontRenderContext(), s);</span>
+<span class="nc" id="L90">            drawGlyphVector(gv, x, y);</span>
+<span class="nc" id="L91">            return;</span>
+        }
+
+<span class="nc bnc" id="L94" title="All 2 branches missed.">        if (generatorCtx.isEmbeddedFontsOn()) {</span>
+            // record that the font is being used to draw this
+            // string, this is so that the SVG Font element will
+            // only create glyphs for the characters that are
+            // needed
+<span class="nc" id="L99">            domTreeManager.getGraphicContextConverter().getFontConverter().recordFontUsage(s, getFont());</span>
+        }
+
+        // Account for the font transform if there is one
+<span class="nc" id="L103">        AffineTransform savTxf = getTransform();</span>
+<span class="nc" id="L104">        AffineTransform txtTxf = transformText(x, y);</span>
+
+<span class="nc" id="L106">        Element text = getDOMFactory().createElementNS(SVG_NAMESPACE_URI, SVG_TEXT_TAG);</span>
+<span class="nc" id="L107">        text.setAttributeNS(null, SVG_X_ATTRIBUTE, generatorCtx.doubleString(x));</span>
+<span class="nc" id="L108">        text.setAttributeNS(null, SVG_Y_ATTRIBUTE, generatorCtx.doubleString(y));</span>
+
+<span class="nc" id="L110">        text.setAttributeNS(XML_NAMESPACE_URI, XML_SPACE_QNAME, XML_PRESERVE_VALUE);</span>
+<span class="nc" id="L111">        text.appendChild(getDOMFactory().createTextNode(s));</span>
+
+<span class="nc bnc" id="L113" title="All 2 branches missed.">        if (toolTip != null) {</span>
+<span class="nc" id="L114">            text.setAttribute(&quot;alt&quot;, toolTip);</span>
+        }
+<span class="nc bnc" id="L116" title="All 2 branches missed.">        if (link != null) {</span>
+<span class="nc" id="L117">            Element anchor = getDOMFactory().createElementNS(&quot;http://www.w3.org/2000/svg&quot;, &quot;a&quot;);</span>
+<span class="nc" id="L118">            anchor.setAttributeNS(null, SVGConstants.XLINK_HREF_ATTRIBUTE, link);</span>
+<span class="nc" id="L119">            anchor.appendChild(text);</span>
+<span class="nc" id="L120">            domGroupManager.addElement(anchor, DOMGroupManager.FILL);</span>
+<span class="nc" id="L121">        } else {</span>
+<span class="nc" id="L122">            domGroupManager.addElement(text, DOMGroupManager.FILL);</span>
+        }
+
+<span class="nc bnc" id="L125" title="All 2 branches missed.">        if (txtTxf != null) {</span>
+<span class="nc" id="L126">            this.setTransform(savTxf);</span>
+        }
+<span class="nc" id="L128">    }</span>
+
+    public void drawStringWithLink(String s, float x, float y, String link) {
+<span class="nc bnc" id="L131" title="All 2 branches missed.">        if (textAsShapes) {</span>
+<span class="nc" id="L132">            GlyphVector gv = getFont().createGlyphVector(getFontRenderContext(), s);</span>
+<span class="nc" id="L133">            drawGlyphVector(gv, x, y);</span>
+<span class="nc" id="L134">            return;</span>
+        }
+
+<span class="nc bnc" id="L137" title="All 2 branches missed.">        if (generatorCtx.isEmbeddedFontsOn()) {</span>
+            // record that the font is being used to draw this
+            // string, this is so that the SVG Font element will
+            // only create glyphs for the characters that are
+            // needed
+<span class="nc" id="L142">            domTreeManager.getGraphicContextConverter().getFontConverter().recordFontUsage(s, getFont());</span>
+        }
+
+        // Account for the font transform if there is one
+<span class="nc" id="L146">        AffineTransform savTxf = getTransform();</span>
+<span class="nc" id="L147">        AffineTransform txtTxf = transformText(x, y);</span>
+
+<span class="nc" id="L149">        Element text = getDOMFactory().createElementNS(SVG_NAMESPACE_URI, SVG_TEXT_TAG);</span>
+<span class="nc" id="L150">        text.setAttributeNS(null, SVG_X_ATTRIBUTE, generatorCtx.doubleString(x));</span>
+<span class="nc" id="L151">        text.setAttributeNS(null, SVG_Y_ATTRIBUTE, generatorCtx.doubleString(y));</span>
+
+<span class="nc" id="L153">        text.setAttributeNS(XML_NAMESPACE_URI, XML_SPACE_QNAME, XML_PRESERVE_VALUE);</span>
+<span class="nc" id="L154">        text.appendChild(getDOMFactory().createTextNode(s));</span>
+
+<span class="nc bnc" id="L156" title="All 2 branches missed.">        if (link != null) {</span>
+<span class="nc" id="L157">            Element anchor = getDOMFactory().createElementNS(&quot;http://www.w3.org/2000/svg&quot;, &quot;a&quot;);</span>
+<span class="nc" id="L158">            anchor.setAttributeNS(null, SVGConstants.XLINK_HREF_ATTRIBUTE, link);</span>
+<span class="nc" id="L159">            anchor.appendChild(text);</span>
+<span class="nc" id="L160">            domGroupManager.addElement(anchor, DOMGroupManager.FILL);</span>
+<span class="nc" id="L161">        } else {</span>
+<span class="nc" id="L162">            domGroupManager.addElement(text, DOMGroupManager.FILL);</span>
+        }
+
+<span class="nc bnc" id="L165" title="All 2 branches missed.">        if (txtTxf != null) {</span>
+<span class="nc" id="L166">            this.setTransform(savTxf);</span>
+        }
+<span class="nc" id="L168">    }</span>
+
+    private AffineTransform transformText(float x, float y) {
+<span class="nc" id="L171">        AffineTransform txtTxf = null;</span>
+<span class="nc" id="L172">        Font            font   = getFont();</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">        if (font != null) {</span>
+<span class="nc" id="L174">            txtTxf = font.getTransform();</span>
+<span class="nc bnc" id="L175" title="All 4 branches missed.">            if (txtTxf != null &amp;&amp; !txtTxf.isIdentity()) {</span>
+                //
+                // The additional transform applies about the text's origin
+                //
+<span class="nc" id="L179">                AffineTransform t = new AffineTransform();</span>
+<span class="nc" id="L180">                t.translate(x, y);</span>
+<span class="nc" id="L181">                t.concatenate(txtTxf);</span>
+<span class="nc" id="L182">                t.translate(-x, -y);</span>
+<span class="nc" id="L183">                this.transform(t);</span>
+<span class="nc" id="L184">            } else {</span>
+<span class="nc" id="L185">                txtTxf = null;</span>
+            }
+        }
+<span class="nc" id="L188">        return txtTxf;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

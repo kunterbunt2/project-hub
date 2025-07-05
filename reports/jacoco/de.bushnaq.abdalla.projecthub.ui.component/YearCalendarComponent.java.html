@@ -1,0 +1,396 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>YearCalendarComponent.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.ui.component</a> &gt; <span class="el_source">YearCalendarComponent.java</span></div><h1>YearCalendarComponent.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.ui.component;
+
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H4;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+import de.bushnaq.abdalla.projecthub.dto.OffDay;
+import de.bushnaq.abdalla.projecthub.dto.OffDayType;
+import de.bushnaq.abdalla.projecthub.dto.User;
+import net.sf.mpxj.ProjectCalendar;
+import net.sf.mpxj.ProjectCalendarException;
+
+import java.time.LocalDate;
+import java.time.Month;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Consumer;
+
+/**
+ * A component that displays a year calendar with user's off days
+ * highlighted according to their type.
+ */
+public class YearCalendarComponent extends VerticalLayout {
+
+    private static final String                     CLASS_FILLING_DAY  = &quot;calendar-filling-day&quot;;
+    private static final String                     CLASS_HOLIDAY_DAY  = &quot;calendar-holiday-day&quot;;
+    private static final String                     CLASS_MONTH_NAME   = &quot;calendar-month-name&quot;;
+    private static final String                     CLASS_NORMAL_DAY   = &quot;calendar-normal-day&quot;;
+    private static final String                     CLASS_SICK_DAY     = &quot;calendar-sick-day&quot;;
+    private static final String                     CLASS_TODAY        = &quot;calendar-today&quot;;
+    private static final String                     CLASS_TRIP_DAY     = &quot;calendar-trip-day&quot;;
+    private static final String                     CLASS_VACATION_DAY = &quot;calendar-vacation-day&quot;;
+    private static final String                     CLASS_WEEKEND_DAY  = &quot;calendar-weekend-day&quot;;
+    private static final String                     DAY_SIZE_PX        = &quot;36px&quot;; // Increased from 24px (50% larger)
+    private static final int                        MONTHS_PER_ROW     = 4;
+    private              int                        currentYear;
+    private final        Consumer&lt;LocalDate&gt;        dayClickHandler;
+<span class="nc" id="L63">    private final        Map&lt;LocalDate, OffDayType&gt; offDayMap          = new HashMap&lt;&gt;();</span>
+    private              User                       user;
+
+    /**
+     * Creates a new year calendar component for the given user and year.
+     *
+     * @param user            The user whose calendar should be displayed
+     * @param year            The year to display
+     * @param dayClickHandler Consumer that handles clicks on calendar days that have off days
+     */
+<span class="nc" id="L73">    public YearCalendarComponent(User user, int year, Consumer&lt;LocalDate&gt; dayClickHandler) {</span>
+<span class="nc" id="L74">        this.user            = user;</span>
+<span class="nc" id="L75">        this.currentYear     = year;</span>
+<span class="nc" id="L76">        this.dayClickHandler = dayClickHandler;</span>
+
+        // Set fixed width that won't resize
+<span class="nc" id="L79">        setWidth(&quot;1200px&quot;);</span>
+<span class="nc" id="L80">        setHeight(&quot;auto&quot;);</span>
+<span class="nc" id="L81">        setPadding(false);</span>
+<span class="nc" id="L82">        setSpacing(false);</span>
+
+        // Prevent resizing of the component
+<span class="nc" id="L85">        getStyle()</span>
+<span class="nc" id="L86">                .set(&quot;flex-shrink&quot;, &quot;0&quot;)</span>
+<span class="nc" id="L87">                .set(&quot;flex-grow&quot;, &quot;0&quot;);</span>
+<span class="nc" id="L88">    }</span>
+
+    /**
+     * Builds a map of dates to off day types for quick lookup.
+     */
+    private void buildOffDayMap() {
+<span class="nc" id="L94">        offDayMap.clear();</span>
+
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        for (OffDay offDay : user.getOffDays()) {</span>
+<span class="nc" id="L97">            LocalDate  start = offDay.getFirstDay();</span>
+<span class="nc" id="L98">            LocalDate  end   = offDay.getLastDay();</span>
+<span class="nc" id="L99">            OffDayType type  = offDay.getType();</span>
+
+            // Add each day in the range to the map
+<span class="nc" id="L102">            LocalDate current = start;</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">            while (!current.isAfter(end)) {</span>
+                // Only include days for the current year
+<span class="nc bnc" id="L105" title="All 2 branches missed.">                if (current.getYear() == currentYear) {</span>
+<span class="nc" id="L106">                    offDayMap.put(current, type);</span>
+                }
+<span class="nc" id="L108">                current = current.plusDays(1);</span>
+            }
+<span class="nc" id="L110">        }</span>
+<span class="nc" id="L111">    }</span>
+
+    /**
+     * Creates a component representing a single day in the calendar.
+     */
+    private Component createDayComponent(int day, LocalDate date, boolean isWeekend, boolean isFillingDay) {
+<span class="nc" id="L117">        return createDayComponent(day, date, isWeekend, isFillingDay, false);</span>
+    }
+
+    /**
+     * Creates a component representing a single day in the calendar.
+     */
+    private Component createDayComponent(int day, LocalDate date, boolean isWeekend, boolean isFillingDay, boolean isToday) {
+<span class="nc" id="L124">        Div dayComponent = new Div();</span>
+<span class="nc" id="L125">        dayComponent.setText(String.valueOf(day));</span>
+
+        // Set common styles for all day components
+<span class="nc" id="L128">        dayComponent.getStyle()</span>
+<span class="nc" id="L129">                .set(&quot;width&quot;, DAY_SIZE_PX)</span>
+<span class="nc" id="L130">                .set(&quot;height&quot;, DAY_SIZE_PX)</span>
+<span class="nc" id="L131">                .set(&quot;line-height&quot;, DAY_SIZE_PX)</span>
+<span class="nc" id="L132">                .set(&quot;text-align&quot;, &quot;center&quot;)</span>
+<span class="nc" id="L133">                .set(&quot;cursor&quot;, &quot;default&quot;)</span>
+<span class="nc" id="L134">                .set(&quot;font-weight&quot;, &quot;bold&quot;)</span>
+<span class="nc" id="L135">                .set(&quot;font-size&quot;, &quot;0.85rem&quot;)</span>
+<span class="nc" id="L136">                .set(&quot;box-sizing&quot;, &quot;border-box&quot;); // Ensure padding is included in the element's dimensions</span>
+
+        // Apply appropriate class based on day type
+<span class="nc bnc" id="L139" title="All 2 branches missed.">        if (isFillingDay) {</span>
+<span class="nc" id="L140">            dayComponent.addClassName(CLASS_FILLING_DAY);</span>
+        } else {
+            // Use the user's calendar directly to determine the day type
+<span class="nc" id="L143">            ProjectCalendar calendar = user.getCalendar();</span>
+
+            // Check if it's a weekend or special day
+<span class="nc bnc" id="L146" title="All 2 branches missed.">            if (!isFillingDay) {</span>
+<span class="nc" id="L147">                ProjectCalendarException exception = calendar.getException(date);</span>
+
+<span class="nc bnc" id="L149" title="All 2 branches missed.">                if (exception != null) {</span>
+                    // This is a special day (vacation, sick, holiday, trip)
+<span class="nc" id="L151">                    String name = exception.getName();</span>
+
+<span class="nc bnc" id="L153" title="All 2 branches missed.">                    if (name.equals(OffDayType.VACATION.name())) {</span>
+<span class="nc" id="L154">                        dayComponent.addClassName(CLASS_VACATION_DAY);</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">                    } else if (name.equals(OffDayType.SICK.name())) {</span>
+<span class="nc" id="L156">                        dayComponent.addClassName(CLASS_SICK_DAY);</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">                    } else if (name.equals(OffDayType.TRIP.name())) {</span>
+<span class="nc" id="L158">                        dayComponent.addClassName(CLASS_TRIP_DAY);</span>
+                    } else {
+<span class="nc" id="L160">                        dayComponent.addClassName(CLASS_HOLIDAY_DAY);</span>
+                    }
+
+                    // Make special days clickable for editing
+<span class="nc" id="L164">                    dayComponent.getStyle().set(&quot;cursor&quot;, &quot;pointer&quot;);</span>
+<span class="nc" id="L165">                    dayComponent.getElement().addEventListener(&quot;click&quot;, event -&gt; {</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">                        if (dayClickHandler != null) {</span>
+<span class="nc" id="L167">                            dayClickHandler.accept(date);</span>
+                        }
+<span class="nc" id="L169">                    });</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">                } else if (!calendar.isWorkingDay(date.getDayOfWeek())) {</span>
+                    // Weekend based on calendar definition
+<span class="nc" id="L172">                    dayComponent.addClassName(CLASS_WEEKEND_DAY);</span>
+                } else {
+                    // Normal working day
+<span class="nc" id="L175">                    dayComponent.addClassName(CLASS_NORMAL_DAY);</span>
+                }
+            }
+        }
+
+        // Mark today with a special highlight
+<span class="nc bnc" id="L181" title="All 2 branches missed.">        if (isToday) {</span>
+<span class="nc" id="L182">            dayComponent.addClassName(CLASS_TODAY);</span>
+        }
+
+<span class="nc" id="L185">        return dayComponent;</span>
+    }
+
+    /**
+     * Creates a legend explaining the color coding in the calendar.
+     */
+    private Component createLegend() {
+<span class="nc" id="L192">        HorizontalLayout legend = new HorizontalLayout();</span>
+<span class="nc" id="L193">        legend.setWidthFull();</span>
+<span class="nc" id="L194">        legend.addClassNames(</span>
+                LumoUtility.Padding.SMALL,
+                LumoUtility.Margin.Top.MEDIUM);
+
+        // Removed &quot;Normal Day&quot; and &quot;Weekend&quot; from the legend as requested
+<span class="nc" id="L199">        legend.add(createLegendItem(&quot;Vacation&quot;, CLASS_VACATION_DAY));</span>
+<span class="nc" id="L200">        legend.add(createLegendItem(&quot;Sick Leave&quot;, CLASS_SICK_DAY));</span>
+<span class="nc" id="L201">        legend.add(createLegendItem(&quot;Holiday&quot;, CLASS_HOLIDAY_DAY));</span>
+<span class="nc" id="L202">        legend.add(createLegendItem(&quot;Business Trip&quot;, CLASS_TRIP_DAY));</span>
+
+<span class="nc" id="L204">        return legend;</span>
+    }
+
+    /**
+     * Creates a single legend item with a color box and label.
+     */
+    private Component createLegendItem(String label, String colorClass) {
+<span class="nc" id="L211">        HorizontalLayout item = new HorizontalLayout();</span>
+<span class="nc" id="L212">        item.setSpacing(true);</span>
+<span class="nc" id="L213">        item.setAlignItems(FlexComponent.Alignment.CENTER);</span>
+
+        // Color box
+<span class="nc" id="L216">        Div colorBox = new Div();</span>
+<span class="nc" id="L217">        colorBox.addClassName(colorClass);</span>
+<span class="nc" id="L218">        colorBox.getStyle()</span>
+<span class="nc" id="L219">                .set(&quot;width&quot;, &quot;16px&quot;)</span>
+<span class="nc" id="L220">                .set(&quot;height&quot;, &quot;16px&quot;);</span>
+
+        // Label
+<span class="nc" id="L223">        Span labelSpan = new Span(label);</span>
+
+<span class="nc" id="L225">        item.add(colorBox, labelSpan);</span>
+<span class="nc" id="L226">        return item;</span>
+    }
+
+    /**
+     * Creates a component representing a single month.
+     */
+    private Component createMonthComponent(Month month) {
+<span class="nc" id="L233">        Div monthComponent = new Div();</span>
+<span class="nc" id="L234">        monthComponent.addClassNames(</span>
+                LumoUtility.Padding.SMALL,
+                LumoUtility.Margin.SMALL);
+
+        // Use fixed width for consistent sizing across all containers
+        // With 4 months per row and total width of 1067px, each month gets ~266px
+        // Subtracting margin and padding
+<span class="nc" id="L241">        monthComponent.getStyle().set(&quot;width&quot;, &quot;272px&quot;);</span>
+<span class="nc" id="L242">        monthComponent.getStyle().set(&quot;box-sizing&quot;, &quot;border-box&quot;);</span>
+
+        // Month name header
+<span class="nc" id="L245">        Span monthName = new Span(month.toString());</span>
+<span class="nc" id="L246">        monthName.addClassNames(</span>
+                CLASS_MONTH_NAME,
+                LumoUtility.Display.BLOCK,
+                LumoUtility.FontWeight.BOLD,
+                LumoUtility.Padding.XSMALL);
+<span class="nc" id="L251">        monthComponent.add(monthName);</span>
+
+        // Days of week header (Mon-Sun)
+<span class="nc" id="L254">        HorizontalLayout weekdaysHeader = new HorizontalLayout();</span>
+<span class="nc" id="L255">        weekdaysHeader.setSpacing(false);</span>
+<span class="nc" id="L256">        weekdaysHeader.setPadding(false);</span>
+<span class="nc" id="L257">        weekdaysHeader.setWidthFull();</span>
+<span class="nc" id="L258">        weekdaysHeader.getStyle().set(&quot;justify-content&quot;, &quot;space-between&quot;);</span>
+
+<span class="nc" id="L260">        String[] weekdays = {&quot;M&quot;, &quot;T&quot;, &quot;W&quot;, &quot;T&quot;, &quot;F&quot;, &quot;S&quot;, &quot;S&quot;};</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">        for (String day : weekdays) {</span>
+<span class="nc" id="L262">            Span dayLabel = new Span(day);</span>
+<span class="nc" id="L263">            dayLabel.getStyle()</span>
+<span class="nc" id="L264">                    .set(&quot;width&quot;, DAY_SIZE_PX)</span>
+<span class="nc" id="L265">                    .set(&quot;height&quot;, DAY_SIZE_PX)</span>
+<span class="nc" id="L266">                    .set(&quot;line-height&quot;, DAY_SIZE_PX)</span>
+<span class="nc" id="L267">                    .set(&quot;text-align&quot;, &quot;center&quot;)</span>
+<span class="nc" id="L268">                    .set(&quot;font-weight&quot;, &quot;bold&quot;)</span>
+<span class="nc" id="L269">                    .set(&quot;font-size&quot;, &quot;0.8rem&quot;);</span>
+<span class="nc" id="L270">            weekdaysHeader.add(dayLabel);</span>
+        }
+<span class="nc" id="L272">        monthComponent.add(weekdaysHeader);</span>
+
+        // Calendar days grid
+<span class="nc" id="L275">        Div calendarGrid = new Div();</span>
+<span class="nc" id="L276">        calendarGrid.getStyle()</span>
+<span class="nc" id="L277">                .set(&quot;display&quot;, &quot;grid&quot;)</span>
+<span class="nc" id="L278">                .set(&quot;grid-template-columns&quot;, &quot;repeat(7, 1fr)&quot;)</span>
+<span class="nc" id="L279">                .set(&quot;gap&quot;, &quot;1px&quot;)</span>
+<span class="nc" id="L280">                .set(&quot;width&quot;, &quot;100%&quot;);  // Enable this line to ensure full width</span>
+
+        // Add some bottom margin to ensure space between month name and first row
+<span class="nc" id="L283">        calendarGrid.getStyle().set(&quot;margin-top&quot;, &quot;4px&quot;);</span>
+<span class="nc" id="L284">        LocalDate today = LocalDate.now();</span>
+        // First day of month
+<span class="nc" id="L286">        LocalDate firstOfMonth = LocalDate.of(currentYear, month, 1);</span>
+        // Determine first day of week for this month (0 = Monday, 6 = Sunday in our display)
+<span class="nc" id="L288">        int firstDayOfWeek = firstOfMonth.getDayOfWeek().getValue() - 1; // Monday is 1 in DayOfWeek, but we want 0</span>
+        // Last day of month
+<span class="nc" id="L290">        int lastDay = firstOfMonth.lengthOfMonth();</span>
+        // Add filling days from previous month
+<span class="nc bnc" id="L292" title="All 2 branches missed.">        if (firstDayOfWeek &gt; 0) {</span>
+            // Get the previous month
+<span class="nc" id="L294">            LocalDate prevMonthDate    = firstOfMonth.minusMonths(1);</span>
+<span class="nc" id="L295">            int       prevMonthLastDay = prevMonthDate.lengthOfMonth();</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">            for (int i = 0; i &lt; firstDayOfWeek; i++) {</span>
+<span class="nc" id="L297">                int       day  = prevMonthLastDay - firstDayOfWeek + i + 1;</span>
+<span class="nc bnc" id="L298" title="All 4 branches missed.">                LocalDate date = LocalDate.of(month.getValue() == 1 ? currentYear - 1 : currentYear, month.getValue() == 1 ? 12 : month.getValue() - 1, day);</span>
+<span class="nc" id="L299">                calendarGrid.add(createDayComponent(day, date, true, true));</span>
+            }
+        }
+
+        // Add days for current month
+<span class="nc bnc" id="L304" title="All 2 branches missed.">        for (int day = 1; day &lt;= lastDay; day++) {</span>
+<span class="nc" id="L305">            LocalDate date      = LocalDate.of(currentYear, month, day);</span>
+<span class="nc" id="L306">            boolean   isWeekend = isWeekend(date);</span>
+            // Check if it's today
+<span class="nc" id="L308">            boolean isToday = date.equals(today);</span>
+<span class="nc" id="L309">            calendarGrid.add(createDayComponent(day, date, isWeekend, false, isToday));</span>
+        }
+
+        // Add filling days from next month
+<span class="nc" id="L313">        int fillingDaysNeeded = 7 - ((firstDayOfWeek + lastDay) % 7);</span>
+<span class="nc bnc" id="L314" title="All 2 branches missed.">        if (fillingDaysNeeded &lt; 7) { // Skip if it's exactly 7 (full week)</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">            for (int i = 1; i &lt;= fillingDaysNeeded; i++) {</span>
+<span class="nc bnc" id="L316" title="All 4 branches missed.">                LocalDate date = LocalDate.of(month.getValue() == 12 ? currentYear + 1 : currentYear, month.getValue() == 12 ? 1 : month.getValue() + 1, i);</span>
+<span class="nc" id="L317">                calendarGrid.add(createDayComponent(i, date, false, true));</span>
+            }
+        }
+
+<span class="nc" id="L321">        monthComponent.add(calendarGrid);</span>
+<span class="nc" id="L322">        return monthComponent;</span>
+    }
+
+    /**
+     * Creates the year header with navigation buttons.
+     */
+    private Component createYearHeader() {
+<span class="nc" id="L329">        HorizontalLayout header = new HorizontalLayout();</span>
+<span class="nc" id="L330">        header.setWidthFull();</span>
+<span class="nc" id="L331">        header.setAlignItems(FlexComponent.Alignment.CENTER);</span>
+<span class="nc" id="L332">        header.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);</span>
+
+<span class="nc" id="L334">        Button prevYearBtn = new Button(new Icon(VaadinIcon.ANGLE_LEFT));</span>
+<span class="nc" id="L335">        prevYearBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);</span>
+<span class="nc" id="L336">        prevYearBtn.addClickListener(e -&gt; setYear(currentYear - 1));</span>
+
+<span class="nc" id="L338">        H4 yearLabel = new H4(String.valueOf(currentYear));</span>
+<span class="nc" id="L339">        yearLabel.addClassNames(LumoUtility.Margin.NONE);</span>
+
+<span class="nc" id="L341">        Button nextYearBtn = new Button(new Icon(VaadinIcon.ANGLE_RIGHT));</span>
+<span class="nc" id="L342">        nextYearBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);</span>
+<span class="nc" id="L343">        nextYearBtn.addClickListener(e -&gt; setYear(currentYear + 1));</span>
+
+<span class="nc" id="L345">        header.add(prevYearBtn, yearLabel, nextYearBtn);</span>
+<span class="nc" id="L346">        return header;</span>
+    }
+
+
+    /**
+     * Checks if a date falls on a weekend based on the user's calendar.
+     */
+    private boolean isWeekend(LocalDate date) {
+<span class="nc" id="L354">        ProjectCalendar calendar = user.getCalendar();</span>
+<span class="nc bnc" id="L355" title="All 2 branches missed.">        return !calendar.isWorkingDay(date.getDayOfWeek());</span>
+    }
+
+    /**
+     * Updates the calendar to display the specified year.
+     *
+     * @param year The year to display
+     */
+    public void setYear(int year) {
+<span class="nc" id="L364">        this.currentYear = year;</span>
+<span class="nc" id="L365">        updateCalendar(user);</span>
+<span class="nc" id="L366">    }</span>
+
+    /**
+     * Updates the calendar display based on given user and current year.
+     *
+     * @param updatedUser The latest user data to use for rendering the calendar
+     */
+    public void updateCalendar(User updatedUser) {
+        // Update user reference to latest data
+<span class="nc bnc" id="L375" title="All 2 branches missed.">        if (updatedUser != null) {</span>
+<span class="nc" id="L376">            this.user = updatedUser;</span>
+        }
+        // Clear previous content
+<span class="nc" id="L379">        removeAll();</span>
+        // Build the off day map for quick lookup
+<span class="nc" id="L381">        buildOffDayMap();</span>
+        // Create year navigation header
+<span class="nc" id="L383">        add(createYearHeader());</span>
+        // Create the calendar grid (3 rows x 4 months each)
+<span class="nc" id="L385">        Div calendarGrid = new Div();</span>
+<span class="nc" id="L386">        calendarGrid.addClassNames(LumoUtility.Display.FLEX, LumoUtility.FlexWrap.WRAP, LumoUtility.Width.FULL);</span>
+        // Add each month
+<span class="nc bnc" id="L388" title="All 2 branches missed.">        for (int monthIndex = 0; monthIndex &lt; 12; monthIndex++) {</span>
+<span class="nc" id="L389">            calendarGrid.add(createMonthComponent(Month.of(monthIndex + 1)));</span>
+        }
+<span class="nc" id="L391">        add(calendarGrid);</span>
+        // Add legend
+<span class="nc" id="L393">        add(createLegend());</span>
+<span class="nc" id="L394">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

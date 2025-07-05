@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TaskUtil.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.util</a> &gt; <span class="el_source">TaskUtil.java</span></div><h1>TaskUtil.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.util;
+
+import de.bushnaq.abdalla.projecthub.dto.Sprint;
+import de.bushnaq.abdalla.projecthub.dto.Task;
+import de.bushnaq.abdalla.projecthub.report.dao.MetaData;
+
+import java.util.HashMap;
+
+
+<span class="nc" id="L27">public class TaskUtil {</span>
+
+    public static HashMap&lt;Task, MetaData&gt; createMetaData(Sprint projectFile) {
+        //TODO fix creating metadata
+//        ProjectProperties properties = projectFile.getProjectProperties();
+//        if (properties.getCustomProperties() == null || properties.getCustomProperties().get(MetaData.METADATA) == null) {
+//            Map&lt;String, Object&gt;     customProperties = new HashMap&lt;&gt;();
+//            HashMap&lt;Task, MetaData&gt; mdMap            = new HashMap&lt;&gt;();
+//            customProperties.put(MetaData.METADATA, mdMap);
+//            properties.setCustomProperties(customProperties);
+//            return mdMap;
+//        } else {
+//            return (HashMap&lt;Task, MetaData&gt;) projectFile.getProjectProperties().getCustomProperties().get(MetaData.METADATA);
+//        }
+<span class="nc" id="L41">        return null;</span>
+    }
+
+    public static MetaData getTaskMetaData(Task task) {
+//        HashMap&lt;Task, MetaData&gt; mdMap = createMetaData(task.getParentFile());
+//        return mdMap.get(task);
+<span class="nc" id="L47">        return null;</span>
+    }
+
+    public static void putTaskMetaData(Task task, MetaData md) {
+//        HashMap&lt;Task, MetaData&gt; mdMap = createMetaData(task.getParentFile());
+//        mdMap.put(task, md);
+<span class="nc" id="L53">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

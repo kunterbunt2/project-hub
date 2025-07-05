@@ -1,0 +1,553 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SprintQualityBoard.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.ui.view</a> &gt; <span class="el_source">SprintQualityBoard.java</span></div><h1>SprintQualityBoard.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.ui.view;
+
+import com.vaadin.flow.component.html.*;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.router.*;
+import com.vaadin.flow.router.Location;
+import com.vaadin.flow.server.StreamResource;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+import de.bushnaq.abdalla.projecthub.Context;
+import de.bushnaq.abdalla.projecthub.ParameterOptions;
+import de.bushnaq.abdalla.projecthub.dto.*;
+import de.bushnaq.abdalla.projecthub.report.burndown.BurnDownChart;
+import de.bushnaq.abdalla.projecthub.report.burndown.RenderDao;
+import de.bushnaq.abdalla.projecthub.report.gantt.GanttChart;
+import de.bushnaq.abdalla.projecthub.rest.api.*;
+import de.bushnaq.abdalla.projecthub.ui.HtmlColor;
+import de.bushnaq.abdalla.projecthub.ui.MainLayout;
+import de.bushnaq.abdalla.util.Util;
+import de.bushnaq.abdalla.util.date.DateUtil;
+import de.bushnaq.abdalla.util.date.ReportUtil;
+import jakarta.annotation.security.PermitAll;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
+
+// Create a utility method for generating two-part cells
+
+
+@Route(&quot;sprint-quality-board&quot;)
+@PageTitle(&quot;Sprint Quality Board&quot;)
+@PermitAll // When security is enabled, allow all authenticated users
+public class SprintQualityBoard extends Main implements AfterNavigationObserver {
+    public static final String        BURNDOWN_CHART          = &quot;burndown-chart&quot;;
+    public static final String        GANTT_CHART             = &quot;gantt-chart&quot;;
+    public static final String        SPRINT_GRID_NAME_PREFIX = &quot;sprint-grid-name-&quot;;
+    private final       Clock         clock;
+    @Autowired
+    protected           Context       context;
+    private final       LocalDateTime created;
+    private final       FeatureApi    featureApi;
+    private             Long          featureId;
+<span class="nc" id="L76">    final               Logger        logger                  = LoggerFactory.getLogger(this.getClass());</span>
+    private final       LocalDateTime now;
+    private final       H2            pageTitle;
+    private final       ProductApi    productApi;
+    private             Long          productId;
+    private             Sprint        sprint;
+    private final       SprintApi     sprintApi;
+    private             Long          sprintId;
+    private final       TaskApi       taskApi;
+    private final       UserApi       userApi;
+    private final       VersionApi    versionApi;
+    private             Long          versionId;
+    private final       WorklogApi    worklogApi;
+
+<span class="nc" id="L90">    public SprintQualityBoard(WorklogApi worklogApi, TaskApi taskApi, SprintApi sprintApi, ProductApi productApi, VersionApi versionApi, FeatureApi featureApi, UserApi userApi, Clock clock) {</span>
+<span class="nc" id="L91">        created         = LocalDateTime.now(clock);</span>
+<span class="nc" id="L92">        this.worklogApi = worklogApi;</span>
+<span class="nc" id="L93">        this.taskApi    = taskApi;</span>
+<span class="nc" id="L94">        this.sprintApi  = sprintApi;</span>
+<span class="nc" id="L95">        this.productApi = productApi;</span>
+<span class="nc" id="L96">        this.versionApi = versionApi;</span>
+<span class="nc" id="L97">        this.featureApi = featureApi;</span>
+<span class="nc" id="L98">        this.userApi    = userApi;</span>
+<span class="nc" id="L99">        this.clock      = clock;</span>
+<span class="nc" id="L100">        this.now        = LocalDateTime.now(clock);</span>
+
+<span class="nc" id="L102">        pageTitle = new H2(&quot;Sprint Quality Board&quot;);</span>
+<span class="nc" id="L103">        pageTitle.addClassNames(</span>
+                LumoUtility.Margin.Top.MEDIUM,
+                LumoUtility.Margin.Bottom.SMALL
+        );
+<span class="nc" id="L107">        setSizeFull();</span>
+<span class="nc" id="L108">        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);</span>
+
+<span class="nc" id="L110">    }</span>
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+        //- Get query parameters
+<span class="nc" id="L115">        Location        location        = event.getLocation();</span>
+<span class="nc" id="L116">        QueryParameters queryParameters = location.getQueryParameters();</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">        if (queryParameters.getParameters().containsKey(&quot;product&quot;)) {</span>
+<span class="nc" id="L118">            this.productId = Long.parseLong(queryParameters.getParameters().get(&quot;product&quot;).getFirst());</span>
+        }
+<span class="nc bnc" id="L120" title="All 2 branches missed.">        if (queryParameters.getParameters().containsKey(&quot;version&quot;)) {</span>
+<span class="nc" id="L121">            this.versionId = Long.parseLong(queryParameters.getParameters().get(&quot;version&quot;).getFirst());</span>
+        }
+<span class="nc bnc" id="L123" title="All 2 branches missed.">        if (queryParameters.getParameters().containsKey(&quot;feature&quot;)) {</span>
+<span class="nc" id="L124">            this.featureId = Long.parseLong(queryParameters.getParameters().get(&quot;feature&quot;).getFirst());</span>
+        }
+<span class="nc bnc" id="L126" title="All 2 branches missed.">        if (queryParameters.getParameters().containsKey(&quot;sprint&quot;)) {</span>
+<span class="nc" id="L127">            this.sprintId = Long.parseLong(queryParameters.getParameters().get(&quot;sprint&quot;).getFirst());</span>
+        }
+
+<span class="nc" id="L130">        loadData();</span>
+
+<span class="nc" id="L132">        pageTitle.setText(sprint.getName());</span>
+        //- update breadcrumbs
+<span class="nc" id="L134">        getElement().getParent().getComponent()</span>
+<span class="nc" id="L135">                .ifPresent(component -&gt; {</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">                    if (component instanceof MainLayout mainLayout) {</span>
+<span class="nc" id="L137">                        mainLayout.getBreadcrumbs().clear();</span>
+<span class="nc" id="L138">                        Product product = productApi.getById(productId);</span>
+<span class="nc" id="L139">                        mainLayout.getBreadcrumbs().addItem(&quot;Products (&quot; + product.getName() + &quot;)&quot;, ProductListView.class);</span>
+//                        mainLayout.getBreadcrumbs().addItem(&quot;Products&quot;, ProductListView.class);
+                        {
+<span class="nc" id="L142">                            Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L143">                            params.put(&quot;product&quot;, String.valueOf(productId));</span>
+<span class="nc" id="L144">                            Version version = versionApi.getById(versionId);</span>
+<span class="nc" id="L145">                            mainLayout.getBreadcrumbs().addItem(&quot;Versions (&quot; + version.getName() + &quot;)&quot;, VersionListView.class, params);</span>
+//                            mainLayout.getBreadcrumbs().addItem(&quot;Versions&quot;, VersionListView.class, params);
+                        }
+                        {
+<span class="nc" id="L149">                            Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L150">                            params.put(&quot;product&quot;, String.valueOf(productId));</span>
+<span class="nc" id="L151">                            params.put(&quot;version&quot;, String.valueOf(versionId));</span>
+<span class="nc" id="L152">                            Feature feature = featureApi.getById(featureId);</span>
+<span class="nc" id="L153">                            mainLayout.getBreadcrumbs().addItem(&quot;Features (&quot; + feature.getName() + &quot;)&quot;, FeatureListView.class, params);</span>
+<span class="nc" id="L154">                            mainLayout.getBreadcrumbs().addItem(&quot;Features&quot;, FeatureListView.class, params);</span>
+                        }
+                        {
+<span class="nc" id="L157">                            Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L158">                            params.put(&quot;product&quot;, String.valueOf(productId));</span>
+<span class="nc" id="L159">                            params.put(&quot;version&quot;, String.valueOf(versionId));</span>
+<span class="nc" id="L160">                            params.put(&quot;FEATURE&quot;, String.valueOf(featureId));</span>
+<span class="nc" id="L161">                            Sprint sprint = sprintApi.getById(sprintId);</span>
+<span class="nc" id="L162">                            mainLayout.getBreadcrumbs().addItem(&quot;Sprints (&quot; + sprint.getName() + &quot;)&quot;, SprintListView.class, params);</span>
+//                            mainLayout.getBreadcrumbs().addItem(&quot;Sprints&quot;, SprintListView.class, params);
+                        }
+                        {
+<span class="nc" id="L166">                            Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L167">                            params.put(&quot;product&quot;, String.valueOf(productId));</span>
+<span class="nc" id="L168">                            params.put(&quot;version&quot;, String.valueOf(versionId));</span>
+<span class="nc" id="L169">                            params.put(&quot;FEATURE&quot;, String.valueOf(featureId));</span>
+<span class="nc" id="L170">                            params.put(&quot;sprint&quot;, String.valueOf(sprintId));</span>
+<span class="nc" id="L171">                            mainLayout.getBreadcrumbs().addItem(&quot;Tasks&quot;, TaskListView.class, params);</span>
+                        }
+                    }
+<span class="nc" id="L174">                });</span>
+//        renderBurnDownChart();
+<span class="nc" id="L176">        createSprintDetailsLayout();</span>
+<span class="nc" id="L177">        createGanttChart();</span>
+<span class="nc" id="L178">        logTime();</span>
+<span class="nc" id="L179">    }</span>
+
+    private Div createFieldDisplay(String label, String value, String status) {
+<span class="nc" id="L182">        Div container = new Div();</span>
+<span class="nc" id="L183">        container.getStyle()</span>
+<span class="nc" id="L184">                .set(&quot;display&quot;, &quot;flex&quot;)</span>
+<span class="nc" id="L185">                .set(&quot;flex-direction&quot;, &quot;column&quot;)</span>
+<span class="nc" id="L186">                .set(&quot;padding&quot;, &quot;var(--lumo-space-s)&quot;)</span>
+<span class="nc" id="L187">                .set(&quot;background&quot;, &quot;var(--lumo-base-color)&quot;);</span>
+
+        // Create a wrapper div for the value part that doesn't stretch
+<span class="nc" id="L190">        Div valueWrapper = new Div();</span>
+<span class="nc" id="L191">        valueWrapper.getStyle()</span>
+<span class="nc" id="L192">                .set(&quot;display&quot;, &quot;flex&quot;) // Use flex to allow inner content to determine size</span>
+<span class="nc" id="L193">                .set(&quot;width&quot;, &quot;auto&quot;);  // Don't stretch to full width</span>
+
+        // Value part (top)
+<span class="nc" id="L196">        Span valueSpan = new Span(value);</span>
+<span class="nc" id="L197">        valueSpan.getStyle()</span>
+<span class="nc" id="L198">                .set(&quot;font-weight&quot;, &quot;500&quot;)</span>
+<span class="nc" id="L199">                .set(&quot;font-size&quot;, &quot;var(--lumo-font-size-xl)&quot;);</span>
+
+        // Apply status-based styling if status is provided
+<span class="nc bnc" id="L202" title="All 2 branches missed.">        if (status != null) {</span>
+<span class="nc" id="L203">            valueSpan.getStyle()</span>
+<span class="nc" id="L204">                    .set(&quot;padding&quot;, &quot;0 var(--lumo-space-xs)&quot;)</span>
+<span class="nc" id="L205">                    .set(&quot;border-radius&quot;, &quot;var(--lumo-border-radius-s)&quot;);</span>
+
+<span class="nc bnc" id="L207" title="All 5 branches missed.">            switch (status) {</span>
+                case &quot;GOOD&quot;:
+<span class="nc" id="L209">                    valueSpan.getStyle().set(&quot;background-color&quot;, &quot;var(--lumo-success-color)&quot;);</span>
+<span class="nc" id="L210">                    break;</span>
+                case &quot;NORMAL&quot;:
+                    // Default styling
+<span class="nc" id="L213">                    break;</span>
+                case &quot;WARNING&quot;:
+<span class="nc" id="L215">                    valueSpan.getStyle().set(&quot;background-color&quot;, &quot;rgba(255, 179, 0, 1)&quot;);</span>
+<span class="nc" id="L216">                    break;</span>
+                case &quot;CRITICAL&quot;:
+<span class="nc" id="L218">                    valueSpan.getStyle().set(&quot;background-color&quot;, &quot;var(--lumo-error-color)&quot;);</span>
+                    break;
+            }
+        }
+
+<span class="nc" id="L223">        valueWrapper.add(valueSpan);</span>
+
+        // Name part with HTML support for special characters
+<span class="nc" id="L226">        Span nameSpan = new Span();</span>
+<span class="nc" id="L227">        nameSpan.getElement().setProperty(&quot;innerHTML&quot;, label);</span>
+<span class="nc" id="L228">        nameSpan.getStyle()</span>
+<span class="nc" id="L229">                .set(&quot;font-size&quot;, &quot;var(--lumo-font-size-xs)&quot;)</span>
+<span class="nc" id="L230">                .set(&quot;color&quot;, &quot;var(--lumo-secondary-text-color)&quot;)</span>
+<span class="nc" id="L231">                .set(&quot;margin-top&quot;, &quot;var(--lumo-space-xs)&quot;);</span>
+
+<span class="nc" id="L233">        container.add(valueWrapper, nameSpan);</span>
+<span class="nc" id="L234">        return container;</span>
+    }
+
+    // Overload for backward compatibility
+    private Div createFieldDisplay(String label, String value) {
+<span class="nc" id="L239">        return createFieldDisplay(label, value, null);</span>
+    }
+
+    private void createGanttChart() {
+        try {
+<span class="nc" id="L244">            long  time       = System.currentTimeMillis();</span>
+<span class="nc" id="L245">            Image ganttChart = generateGanttChartImage();</span>
+<span class="nc" id="L246">            ganttChart.getStyle()//.set(&quot;object-fit&quot;, &quot;contain&quot;) // Maintain aspect ratio</span>
+<span class="nc" id="L247">                    .set(&quot;margin-top&quot;, &quot;var(--lumo-space-m)&quot;);</span>
+<span class="nc" id="L248">            add(ganttChart);</span>
+<span class="nc" id="L249">            logger.info(&quot;Gantt chart generated in {} ms&quot;, System.currentTimeMillis() - time);</span>
+<span class="nc" id="L250">        } catch (Exception e) {</span>
+<span class="nc" id="L251">            add(new Paragraph(&quot;Error generating gantt chart: &quot; + e.getMessage()));</span>
+<span class="nc" id="L252">        }</span>
+<span class="nc" id="L253">    }</span>
+
+    private RenderDao createRenderDao(Context context, Sprint sprint, String column, LocalDateTime now, int chartWidth, int chartHeight, String link) {
+<span class="nc" id="L256">        RenderDao dao = new RenderDao();</span>
+<span class="nc" id="L257">        dao.context            = context;</span>
+<span class="nc" id="L258">        dao.column             = column;</span>
+<span class="nc" id="L259">        dao.sprintName         = column + &quot;-burn-down&quot;;</span>
+<span class="nc" id="L260">        dao.link               = link;</span>
+<span class="nc" id="L261">        dao.start              = sprint.getStart();</span>
+<span class="nc" id="L262">        dao.now                = now;</span>
+<span class="nc" id="L263">        dao.end                = sprint.getEnd();</span>
+<span class="nc" id="L264">        dao.release            = sprint.getReleaseDate();</span>
+<span class="nc" id="L265">        dao.chartWidth         = chartWidth;</span>
+<span class="nc" id="L266">        dao.chartHeight        = chartHeight;</span>
+<span class="nc" id="L267">        dao.sprint             = sprint;</span>
+<span class="nc" id="L268">        dao.estimatedBestWork  = DateUtil.add(sprint.getWorked(), sprint.getRemaining());</span>
+<span class="nc" id="L269">        dao.estimatedWorstWork = null;</span>
+<span class="nc" id="L270">        dao.maxWorked          = DateUtil.add(sprint.getWorked(), sprint.getRemaining());</span>
+<span class="nc" id="L271">        dao.remaining          = sprint.getRemaining();</span>
+<span class="nc" id="L272">        dao.worklog            = sprint.getWorklogs();</span>
+<span class="nc" id="L273">        dao.worklogRemaining   = sprint.getWorklogRemaining();</span>
+<span class="nc" id="L274">        dao.cssClass           = &quot;scheduleWithMargin&quot;;</span>
+<span class="nc" id="L275">        dao.graphicsTheme      = context.parameters.graphicsTheme;</span>
+<span class="nc" id="L276">        return dao;</span>
+    }
+
+    private void createSprintDetailsLayout() {
+<span class="nc" id="L280">        final DateTimeFormatter dtfymd = DateTimeFormatter.ofPattern(&quot;yyyy.MM.dd&quot;);</span>
+
+        // Create a container with CSS Grid layout
+<span class="nc" id="L283">        Div gridContainer = new Div();</span>
+<span class="nc" id="L284">        gridContainer.getStyle()</span>
+<span class="nc" id="L285">                .set(&quot;display&quot;, &quot;grid&quot;)</span>
+<span class="nc" id="L286">                .set(&quot;grid-template-columns&quot;, &quot;repeat(4, 1fr) 2fr repeat(2, 1fr)&quot;)  // 4 columns left, 1 middle (wider), 2 right</span>
+<span class="nc" id="L287">                .set(&quot;grid-template-rows&quot;, &quot;auto auto auto auto&quot;)  // 3 rows</span>
+<span class="nc" id="L288">                .set(&quot;gap&quot;, &quot;var(--lumo-space-m)&quot;)  // spacing between cells</span>
+<span class="nc" id="L289">                .set(&quot;width&quot;, &quot;100%&quot;)</span>
+<span class="nc" id="L290">                .set(&quot;height&quot;, &quot;auto&quot;);</span>
+
+<span class="nc" id="L292">        Duration estimation                      = DateUtil.add(sprint.getWorked(), sprint.getRemaining());</span>
+<span class="nc" id="L293">        String   manDelayString                  = ReportUtil.calcualteManDelayString(sprint.getStart(), now, sprint.getEnd(), sprint.getWorked(), DateUtil.add(sprint.getWorked(), sprint.getRemaining()));</span>
+<span class="nc" id="L294">        double   delayFraction                   = ReportUtil.calcualteDelayFraction(sprint.getStart(), now, sprint.getEnd(), sprint.getWorked(), DateUtil.add(sprint.getWorked(), sprint.getRemaining()));</span>
+<span class="nc" id="L295">        String   status                          = HtmlColor.calculateStatusColor(delayFraction);</span>
+<span class="nc" id="L296">        Double   extrapolatedDelayFraction       = ReportUtil.calculateExtrapolatedScheduleDelayFraction(sprint.getStart(), now, sprint.getEnd(), sprint.getWorked(), DateUtil.add(sprint.getWorked(), sprint.getRemaining()));</span>
+<span class="nc" id="L297">        String   extrapolatedStatus              = HtmlColor.calculateStatusColor(extrapolatedDelayFraction);</span>
+<span class="nc" id="L298">        String   extrapolatedScheduleDelayString = ReportUtil.calculateExtrapolatedScheduleDelayString(sprint.getStart(), now, sprint.getEnd(), sprint.getWorked(), DateUtil.add(sprint.getWorked(), sprint.getRemaining()));// Delay</span>
+
+        // First row
+<span class="nc" id="L301">        gridContainer.add(createFieldDisplay(&quot;Sprint Name&quot;, sprint.getName()));//column 1</span>
+<span class="nc" id="L302">        gridContainer.add(createFieldDisplay(&quot;Sprint Start Date&quot;, DateUtil.createDateString(sprint.getStart(), dtfymd)));//column 2</span>
+<span class="nc" id="L303">        gridContainer.add(createFieldDisplay(&quot;Total Work Days&quot;, &quot;&quot; + DateUtil.calculateWorkingDaysIncluding(sprint.getStart().toLocalDate(), sprint.getEnd().toLocalDate())));//column 3</span>
+<span class="nc" id="L304">        gridContainer.add(createFieldDisplay(&quot;Remaining Work Days&quot;, &quot;&quot; + DateUtil.calculateWorkingDaysIncluding(now, sprint.getEnd())));//column 4</span>
+<span class="nc" id="L305">        gridContainer.add(createFieldDisplay(&quot;Current Effort Delay&quot;, String.format(&quot;%s (%.0f%%)&quot;, manDelayString, 100 * delayFraction), status));//column 6</span>
+<span class="nc" id="L306">        gridContainer.add(createFieldDisplay(&quot;&amp;Sigma; Effort Spent&quot;, DateUtil.createDurationString(sprint.getWorked(), false, true, false)));//column 7</span>
+
+        // Second row
+<span class="nc" id="L309">        gridContainer.add(createFieldDisplay(&quot;&quot;, &quot;&quot;));//column 1</span>
+<span class="nc" id="L310">        gridContainer.add(createFieldDisplay(&quot;Sprint End Date&quot;, DateUtil.createDateString(sprint.getEnd(), dtfymd)));//column 2</span>
+<span class="nc" id="L311">        gridContainer.add(createFieldDisplay(&quot;Expected Progress&quot;, String.format(&quot;%.0f%%&quot;, 100 * ReportUtil.calcualteExpectedProgress(sprint.getStart(), now, sprint.getEnd(), sprint.getWorked(), sprint.getOriginalEstimation(), estimation, sprint.getRemaining()))));//column 3</span>
+<span class="nc" id="L312">        gridContainer.add(createFieldDisplay(&quot;Progress&quot;, String.format(&quot;%.0f%%&quot;, 100 * ReportUtil.calcualteProgress(sprint.getWorked(), estimation)), status));//column 4</span>
+<span class="nc" id="L313">        gridContainer.add(createFieldDisplay(&quot;Current Schedule Delay&quot;, DateUtil.createDurationString(ReportUtil.calcualteWorkDaysMiliseconsDelay(sprint.getStart(), now, sprint.getEnd(), sprint.getWorked(), sprint.getOriginalEstimation(), estimation, sprint.getRemaining()), false, true, false), status));//column 6</span>
+<span class="nc" id="L314">        gridContainer.add(createFieldDisplay(&quot;&amp;Sigma; Effort Estimate&quot;, DateUtil.createWorkDayDurationString(DateUtil.add(sprint.getWorked(), sprint.getRemaining()), false, true, false)));//column 7</span>
+
+
+        // Third row
+<span class="nc" id="L318">        gridContainer.add(createFieldDisplay(&quot;3.1&quot;, &quot;a&quot;));//column 1</span>
+<span class="nc bnc" id="L319" title="All 4 branches missed.">        if (sprint.getRemaining() == null || sprint.getRemaining().equals(Duration.ZERO)) {</span>
+<span class="nc" id="L320">            gridContainer.add(createFieldDisplay(&quot;Actual Sprint Release Date&quot;, DateUtil.createDateString(sprint.getReleaseDate(), dtfymd), status));//column 2</span>
+        } else {
+<span class="nc" id="L322">            gridContainer.add(createFieldDisplay(&quot;Extrapolated Sprint Release Date&quot;, DateUtil.createDateString(sprint.getReleaseDate(), dtfymd), extrapolatedStatus));//column 2</span>
+        }
+<span class="nc" id="L324">        gridContainer.add(createFieldDisplay(&quot;Optimal Efficiency&quot;, ReportUtil.createPersonDayEfficiencyString(ReportUtil.calcualteOptimaleEfficiency(sprint.getStart(), sprint.getEnd(), DateUtil.add(sprint.getWorked(), sprint.getRemaining())))));//column 3</span>
+<span class="nc" id="L325">        gridContainer.add(createFieldDisplay(&quot;Efficiency&quot;, ReportUtil.createPersonDayEfficiencyString(ReportUtil.calcualteEfficiency(sprint.getStart(), now, sprint.getEnd(), sprint.getWorked(), sprint.getRemaining())), status));//column 4</span>
+<span class="nc bnc" id="L326" title="All 2 branches missed.">        if (extrapolatedDelayFraction != null) {</span>
+<span class="nc" id="L327">            gridContainer.add(createFieldDisplay(&quot;Extrapolated Schedule Delay&quot;, String.format(&quot;%s (%.0f%%)&quot;, extrapolatedScheduleDelayString, 100 * extrapolatedDelayFraction), extrapolatedStatus));//column 6</span>
+        } else {
+<span class="nc" id="L329">            gridContainer.add(createFieldDisplay(&quot;Extrapolated Schedule Delay&quot;, &quot;NA&quot;, extrapolatedStatus));//column 6</span>
+        }
+<span class="nc" id="L331">        gridContainer.add(createFieldDisplay(&quot;&amp;Sigma; Remaining Effort Estimate&quot;, DateUtil.createDurationString(sprint.getRemaining(), false, true, false)));//column 7</span>
+
+
+        // forth row
+<span class="nc" id="L335">        gridContainer.add(createFieldDisplay(&quot;4.1&quot;, &quot;a&quot;));//column 1</span>
+<span class="nc" id="L336">        gridContainer.add(createFieldDisplay(&quot;4.2&quot;, &quot;b&quot;));//column 2</span>
+<span class="nc" id="L337">        gridContainer.add(createFieldDisplay(&quot;4.3&quot;, &quot;a&quot;));//column 3</span>
+<span class="nc" id="L338">        gridContainer.add(createFieldDisplay(&quot;4.4&quot;, &quot;b&quot;));//column 4</span>
+<span class="nc" id="L339">        gridContainer.add(createFieldDisplay(&quot;4.6&quot;, &quot;a&quot;));//column 6</span>
+<span class="nc" id="L340">        gridContainer.add(createFieldDisplay(&quot;4.7&quot;, &quot;b&quot;));//column 7</span>
+
+        // Create the spanning column (column 5)
+<span class="nc" id="L343">        Div spanningColumn = new Div();</span>
+<span class="nc" id="L344">        spanningColumn.getStyle()</span>
+<span class="nc" id="L345">                .set(&quot;grid-column&quot;, &quot;5 / 6&quot;)  // Column 5</span>
+<span class="nc" id="L346">                .set(&quot;grid-row&quot;, &quot;1 / 5&quot;)     // Span all 4 rows</span>
+<span class="nc" id="L347">                .set(&quot;padding&quot;, &quot;var(--lumo-space-m)&quot;)</span>
+<span class="nc" id="L348">                .set(&quot;background-color&quot;, &quot;var(--lumo-base-color)&quot;);</span>
+
+        try {
+<span class="nc" id="L351">            long  time          = System.currentTimeMillis();</span>
+<span class="nc" id="L352">            Image burndownChart = generateBurnDownImage();</span>
+<span class="nc" id="L353">            burndownChart.getStyle().set(&quot;object-fit&quot;, &quot;contain&quot;) // Maintain aspect ratio</span>
+<span class="nc" id="L354">                    .set(&quot;margin-top&quot;, &quot;var(--lumo-space-m)&quot;);</span>
+<span class="nc" id="L355">            spanningColumn.add(burndownChart);</span>
+<span class="nc" id="L356">            logger.info(&quot;Burndown chart generated in {} ms&quot;, System.currentTimeMillis() - time);</span>
+<span class="nc" id="L357">        } catch (Exception e) {</span>
+<span class="nc" id="L358">            spanningColumn.add(new Paragraph(&quot;Error loading burndown chart: &quot; + e.getMessage()));</span>
+<span class="nc" id="L359">        }</span>
+<span class="nc" id="L360">        gridContainer.add(spanningColumn);</span>
+
+<span class="nc" id="L362">        add(gridContainer);</span>
+
+<span class="nc" id="L364">    }</span>
+
+    private ComponentRenderer&lt;Div, Sprint&gt; createTwoPartRenderer(
+            Function&lt;Sprint, String&gt; valueProvider,
+            Function&lt;Sprint, String&gt; nameProvider) {
+
+<span class="nc" id="L370">        return new ComponentRenderer&lt;&gt;(item -&gt; {</span>
+<span class="nc" id="L371">            Div container = new Div();</span>
+<span class="nc" id="L372">            container.getStyle()</span>
+<span class="nc" id="L373">                    .set(&quot;display&quot;, &quot;flex&quot;)</span>
+<span class="nc" id="L374">                    .set(&quot;flex-direction&quot;, &quot;column&quot;);</span>
+
+            // Value part (top)
+<span class="nc" id="L377">            Span value = new Span(valueProvider.apply(item));</span>
+<span class="nc" id="L378">            value.getStyle()</span>
+<span class="nc" id="L379">                    .set(&quot;font-weight&quot;, &quot;normal&quot;);</span>
+
+            // Name part (bottom, smaller)
+<span class="nc" id="L382">            Span name = new Span(nameProvider.apply(item));</span>
+<span class="nc" id="L383">            name.getStyle()</span>
+<span class="nc" id="L384">                    .set(&quot;font-size&quot;, &quot;var(--lumo-font-size-xs)&quot;)</span>
+<span class="nc" id="L385">                    .set(&quot;color&quot;, &quot;var(--lumo-secondary-text-color)&quot;);</span>
+
+<span class="nc" id="L387">            container.add(value, name);</span>
+<span class="nc" id="L388">            return container;</span>
+        });
+    }
+
+    private Image generateBurnDownImage() {
+<span class="nc" id="L393">        StreamResource resource = new StreamResource(&quot;burndown.svg&quot;, () -&gt; {</span>
+<span class="nc" id="L394">            try (ByteArrayOutputStream outputStream = renderBurnDownChart()) {</span>
+                // Convert ByteArrayOutputStream to ByteArrayInputStream
+<span class="nc" id="L396">                return new ByteArrayInputStream(outputStream.toByteArray());</span>
+<span class="nc" id="L397">            } catch (Exception e) {</span>
+<span class="nc" id="L398">                logger.error(&quot;Error creating burndown chart&quot;, e);</span>
+<span class="nc" id="L399">                return new ByteArrayInputStream(new byte[0]); // Empty stream in case of error</span>
+            }
+        });
+        // Create an image component with the SVG resource
+<span class="nc" id="L403">        Image burndownChart = new Image(resource, &quot;Sprint Burndown Chart&quot;);</span>
+<span class="nc" id="L404">        burndownChart.setId(BURNDOWN_CHART);</span>
+<span class="nc" id="L405">        burndownChart.setWidthFull();</span>
+<span class="nc" id="L406">        return burndownChart;</span>
+    }
+
+    private Image generateGanttChartImage() throws Exception {
+<span class="nc" id="L410">        List&lt;Throwable&gt; exceptions = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L411">        GanttChart      chart      = new GanttChart(context, &quot;&quot;, &quot;/&quot;, &quot;Gantt Chart&quot;, sprint.getName() + &quot;-gant-chart&quot;, exceptions, ParameterOptions.getLocalNow(), false, sprint/*, 1887, 1000*/, &quot;scheduleWithMargin&quot;, context.parameters.graphicsTheme);</span>
+<span class="nc" id="L412">        Image           ganttChart = renderGanttImage(chart);</span>
+<span class="nc" id="L413">        ganttChart.setId(GANTT_CHART);</span>
+<span class="nc" id="L414">        ganttChart.setWidth(chart.getChartWidth() + &quot;px&quot;);</span>
+<span class="nc" id="L415">        return ganttChart;</span>
+    }
+
+    private void loadData() {
+        //- populate grid with tasks of the sprint
+<span class="nc" id="L420">        long time = System.currentTimeMillis();</span>
+
+        // Capture the security context from the current thread
+<span class="nc" id="L423">        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();</span>
+
+        // Load in parallel with security context propagation
+<span class="nc" id="L426">        CompletableFuture&lt;Sprint&gt; sprintFuture = CompletableFuture.supplyAsync(() -&gt; {</span>
+            // Set security context in this thread
+<span class="nc" id="L428">            SecurityContext context = SecurityContextHolder.createEmptyContext();</span>
+<span class="nc" id="L429">            context.setAuthentication(authentication);</span>
+<span class="nc" id="L430">            SecurityContextHolder.setContext(context);</span>
+            try {
+<span class="nc" id="L432">                Sprint s = sprintApi.getById(sprintId);</span>
+<span class="nc" id="L433">                s.initialize();</span>
+<span class="nc" id="L434">                return s;</span>
+            } finally {
+<span class="nc" id="L436">                SecurityContextHolder.clearContext();// Clear the security context after execution</span>
+            }
+        });
+
+<span class="nc" id="L440">        CompletableFuture&lt;List&lt;User&gt;&gt; usersFuture = CompletableFuture.supplyAsync(() -&gt; {</span>
+            // Set security context in this thread
+<span class="nc" id="L442">            SecurityContext context = SecurityContextHolder.createEmptyContext();</span>
+<span class="nc" id="L443">            context.setAuthentication(authentication);</span>
+<span class="nc" id="L444">            SecurityContextHolder.setContext(context);</span>
+            try {
+<span class="nc" id="L446">                return userApi.getAll(sprintId);</span>
+            } finally {
+<span class="nc" id="L448">                SecurityContextHolder.clearContext();// Clear the security context after execution</span>
+
+            }
+        });
+
+<span class="nc" id="L453">        CompletableFuture&lt;List&lt;Task&gt;&gt; tasksFuture = CompletableFuture.supplyAsync(() -&gt; {</span>
+            // Set security context in this thread
+<span class="nc" id="L455">            SecurityContext context = SecurityContextHolder.createEmptyContext();</span>
+<span class="nc" id="L456">            context.setAuthentication(authentication);</span>
+<span class="nc" id="L457">            SecurityContextHolder.setContext(context);</span>
+            try {
+<span class="nc" id="L459">                return taskApi.getAll(sprintId);</span>
+            } finally {
+<span class="nc" id="L461">                SecurityContextHolder.clearContext();// Clear the security context after execution</span>
+            }
+        });
+
+<span class="nc" id="L465">        CompletableFuture&lt;List&lt;Worklog&gt;&gt; worklogsFuture = CompletableFuture.supplyAsync(() -&gt; {</span>
+            // Set security context in this thread
+<span class="nc" id="L467">            SecurityContext context = SecurityContextHolder.createEmptyContext();</span>
+<span class="nc" id="L468">            context.setAuthentication(authentication);</span>
+<span class="nc" id="L469">            SecurityContextHolder.setContext(context);</span>
+            try {
+<span class="nc" id="L471">                return worklogApi.getAll(sprintId);</span>
+            } finally {
+<span class="nc" id="L473">                SecurityContextHolder.clearContext();// Clear the security context after execution</span>
+            }
+        });
+
+        // Wait for all futures and combine results
+        try {
+<span class="nc" id="L479">            sprint = sprintFuture.get();</span>
+<span class="nc" id="L480">            logger.info(&quot;sprint loaded and initialized in {} ms&quot;, System.currentTimeMillis() - time);</span>
+<span class="nc" id="L481">            time = System.currentTimeMillis();</span>
+<span class="nc" id="L482">            sprint.initUserMap(usersFuture.get());</span>
+<span class="nc" id="L483">            sprint.initTaskMap(tasksFuture.get(), worklogsFuture.get());</span>
+<span class="nc" id="L484">            logger.info(&quot;sprint user, task and worklog maps initialized in {} ms&quot;, System.currentTimeMillis() - time);</span>
+<span class="nc" id="L485">            sprint.recalculate(ParameterOptions.getLocalNow());</span>
+<span class="nc" id="L486">        } catch (InterruptedException | ExecutionException e) {</span>
+<span class="nc" id="L487">            logger.error(&quot;Error loading sprint data&quot;, e);</span>
+            // Handle exception appropriately
+<span class="nc" id="L489">        }</span>
+<span class="nc" id="L490">    }</span>
+
+    @Deprecated
+    private void loadDataOld() {
+<span class="nc" id="L494">        sprint = sprintApi.getById(sprintId);</span>
+<span class="nc" id="L495">        sprint.initialize();</span>
+<span class="nc" id="L496">        sprint.initUserMap(userApi.getAll(sprintId));</span>
+<span class="nc" id="L497">        sprint.initTaskMap(taskApi.getAll(sprintId), worklogApi.getAll(sprintId));</span>
+<span class="nc" id="L498">        sprint.recalculate(ParameterOptions.getLocalNow());</span>
+<span class="nc" id="L499">    }</span>
+
+    private void logTime() {
+<span class="nc" id="L502">        logger.info(&quot;generated page in {}&quot;, DateUtil.create24hDurationString(Duration.between(created, LocalDateTime.now()), true, true, true, false));</span>
+<span class="nc" id="L503">    }</span>
+
+    ByteArrayOutputStream renderBurnDownChart() {
+<span class="nc" id="L506">        RenderDao             dao = createRenderDao(context, sprint, &quot;burn-down&quot;, ParameterOptions.getLocalNow(), 640, 400, &quot;sprint-&quot; + sprint.getId() + &quot;/sprint.html&quot;);</span>
+<span class="nc" id="L507">        ByteArrayOutputStream o   = new ByteArrayOutputStream(64 * 1024); // 64 KB</span>
+        try {
+<span class="nc" id="L509">            BurnDownChart chart = new BurnDownChart(&quot;/&quot;, dao);</span>
+<span class="nc" id="L510">            chart.render(Util.generateCopyrightString(ParameterOptions.getLocalNow()), o);</span>
+<span class="nc" id="L511">            return o;</span>
+<span class="nc" id="L512">        } catch (Exception e) {</span>
+            try {
+<span class="nc" id="L514">                o.close(); // Close the stream in case of error</span>
+<span class="nc" id="L515">            } catch (Exception closeException) {</span>
+<span class="nc" id="L516">                logger.warn(&quot;Failed to close output stream&quot;, closeException);</span>
+<span class="nc" id="L517">            }</span>
+<span class="nc" id="L518">            throw new RuntimeException(e);</span>
+        }
+    }
+
+    ByteArrayOutputStream renderGanttChart(GanttChart chart) {
+<span class="nc" id="L523">        ByteArrayOutputStream o = new ByteArrayOutputStream(64 * 1024); //begin size 64 KB</span>
+        try {
+<span class="nc" id="L525">            chart.render(Util.generateCopyrightString(ParameterOptions.getLocalNow()), o);</span>
+<span class="nc" id="L526">            return o;</span>
+<span class="nc" id="L527">        } catch (Exception e) {</span>
+            try {
+<span class="nc" id="L529">                o.close(); // Close the stream in case of error</span>
+<span class="nc" id="L530">            } catch (Exception closeException) {</span>
+<span class="nc" id="L531">                logger.warn(&quot;Failed to close output stream&quot;, closeException);</span>
+<span class="nc" id="L532">            }</span>
+<span class="nc" id="L533">            throw new RuntimeException(e);</span>
+        }
+    }
+
+    private Image renderGanttImage(GanttChart chart) {
+<span class="nc" id="L538">        StreamResource resource = new StreamResource(&quot;gantt.svg&quot;, () -&gt; {</span>
+<span class="nc" id="L539">            try (ByteArrayOutputStream outputStream = renderGanttChart(chart)) {</span>
+                // Convert ByteArrayOutputStream to ByteArrayInputStream
+<span class="nc" id="L541">                return new ByteArrayInputStream(outputStream.toByteArray());</span>
+<span class="nc" id="L542">            } catch (Exception e) {</span>
+<span class="nc" id="L543">                logger.error(&quot;Error creating gantt chart&quot;, e);</span>
+<span class="nc" id="L544">                return new ByteArrayInputStream(new byte[0]); // Empty stream in case of error</span>
+            }
+        });
+        // Create an image component with the SVG resource
+<span class="nc" id="L548">        Image ganttChart = new Image(resource, &quot;Sprint Gantt Chart&quot;);</span>
+<span class="nc" id="L549">        return ganttChart;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ParameterOptions.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub</a> &gt; <span class="el_source">ParameterOptions.java</span></div><h1>ParameterOptions.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub;
+
+import de.bushnaq.abdalla.projecthub.report.dao.BurnDownGraphicsTheme;
+import de.bushnaq.abdalla.projecthub.report.dao.GraphicsLightTheme;
+import de.bushnaq.abdalla.util.date.DateUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+
+<span class="fc" id="L32">public abstract class ParameterOptions {</span>
+    protected static final String                CLI_OPTION_CAPTURE_COST                     = &quot;capturecost&quot;;
+    protected static final String                CLI_OPTION_CAPTURE_OUT_OF_OFFICE_FROM_GANTT = &quot;captureoutofofficefromgantt&quot;;
+    protected static final String                CLI_OPTION_CAPTURE_OUT_OF_OFFICE_FROM_RAM   = &quot;captureoutofofficefromram&quot;;
+    protected static final String                CLI_OPTION_DATE                             = &quot;date&quot;;
+    protected static final String                CLI_OPTION_DETAILED                         = &quot;detailed&quot;;
+    protected static final String                CLI_OPTION_DISABLE_PROXY                    = &quot;disableproxy&quot;;
+    protected static final String                CLI_OPTION_ENV                              = &quot;env&quot;;
+    protected static final String                CLI_OPTION_INDIVIDUAL_LOG                   = &quot;individuallog&quot;;
+    protected static final String                CLI_OPTION_QUERY_TEAM_PLANNER               = &quot;queryteamplanner&quot;;
+    protected static final String                CLI_OPTION_QUICK_MODE                       = &quot;quick&quot;;
+    protected static final String                CLI_OPTION_REPORT_FOLDER                    = &quot;reportfolder&quot;;
+    protected static final String                CLI_OPTION_RESOURCE_MAP                     = &quot;resourcemap&quot;;
+    protected static final String                CLI_OPTION_THEME                            = &quot;theme&quot;;
+    protected static final String                CLI_OPTION_VERBOSE                          = &quot;verbose&quot;;
+    protected static final String                CLI_OPTION_XLSX_FILE                        = &quot;xlsxfile&quot;;
+<span class="fc" id="L48">    public                 boolean               activeRequests                              = true;//for test purposes</span>
+<span class="fc" id="L49">    public                 boolean               captureCost                                 = false;//for cost charts</span>
+<span class="fc" id="L50">    public                 boolean               captureOutOfOfficeFromGantt                 = false;//get out of office information from Gantt charts</span>
+<span class="fc" id="L51">    public                 boolean               captureOutOfOfficeFromRam                   = false;//get out of office information from RAM db</span>
+<span class="fc" id="L52">    public                 boolean               closedRequests                              = true;</span>
+<span class="fc" id="L53">    public                 boolean               closingRequests                             = true;</span>
+<span class="fc" id="L54">    public                 boolean               detailed                                    = true;//should always be true, otherwise resources will not be shown in burn down chart</span>
+    //    public String domainName = &quot;DOMAIN&quot;;
+<span class="fc" id="L56">    public                 List&lt;Throwable&gt;       exceptions                                  = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L57">    public                 String[]              files                                       = {};</span>
+    //    public String folder = null;//for test purposes
+<span class="fc" id="L59">    public                 BurnDownGraphicsTheme graphicsTheme                               = new GraphicsLightTheme();</span>
+<span class="fc" id="L60">    public                 boolean               individualLog                               = false;//resource individual log visible as drill down list of work burn down chart. Legacy!</span>
+    // public boolean infringements = false;
+<span class="fc" id="L62">    public                 Integer               limitProjectOverview                        = null;// 6 * 30;</span>
+<span class="fc" id="L63">    public                 Integer               limitResourceUtilization                    = null;// 1 * 30;</span>
+<span class="fc" id="L64">    protected final        Logger                logger                                      = LoggerFactory.getLogger(this.getClass());</span>
+<span class="fc" id="L65">    public static          OffsetDateTime        now                                         = OffsetDateTime.now();</span>
+<span class="fc" id="L66">    public                 boolean               outOfOfficeOnly                             = false;//no ramdb cost records</span>
+    //    public String password = &quot;PManager2018&quot;;
+    public                 boolean               queryTeamPlanner;
+<span class="fc" id="L69">    public                 boolean               quickMode                                   = false;//only query active projects and resource map</span>
+<span class="fc" id="L70">    public                 String                reportFolder                                = &quot;./&quot;;</span>
+<span class="fc" id="L71">    public                 boolean               resourceMap                                 = false;</span>
+<span class="fc" id="L72">    public                 boolean               resourceUtilizationPane                     = false;//only used in tests to cover code, currently cannot be enabled in production mode</span>
+    //    public long smbTimeout = 180;
+    //    public boolean useLocalShareFolder = false;
+//    public SmbParameters smbParameters = new SmbParameters();
+<span class="fc" id="L76">    public                 boolean               verbose                                     = false;//in verbose mode, temporary &lt;filename&gt;-tp.xml file will not be deleted.</span>
+<span class="fc" id="L77">    public                 String                xlsxFile                                    = null;//used only by Xlsx2mppMain</span>
+
+    public static LocalDateTime getLocalNow() {
+<span class="nc" id="L80">        return DateUtil.offsetDateTimeToLocalDateTime(now);</span>
+    }
+
+    public abstract void start(String[] args) throws Exception;
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

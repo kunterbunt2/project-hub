@@ -1,0 +1,809 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractGanttRenderer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.report.gantt</a> &gt; <span class="el_source">AbstractGanttRenderer.java</span></div><h1>AbstractGanttRenderer.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.report.gantt;
+
+import de.bushnaq.abdalla.projecthub.Context;
+import de.bushnaq.abdalla.projecthub.dto.Relation;
+import de.bushnaq.abdalla.projecthub.dto.Task;
+import de.bushnaq.abdalla.projecthub.dto.TaskMode;
+import de.bushnaq.abdalla.projecthub.dto.User;
+import de.bushnaq.abdalla.projecthub.report.AbstractCanvas;
+import de.bushnaq.abdalla.projecthub.report.AbstractRenderer;
+import de.bushnaq.abdalla.projecthub.report.dao.*;
+import de.bushnaq.abdalla.svg.util.ExtendedRectangle;
+import de.bushnaq.abdalla.svg.util.RectangleWithToolTip;
+import de.bushnaq.abdalla.util.ColorUtil;
+import de.bushnaq.abdalla.util.GanttErrorHandler;
+import de.bushnaq.abdalla.util.TaskUtil;
+import de.bushnaq.abdalla.util.date.DateUtil;
+import net.sf.mpxj.ProjectCalendar;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.awt.*;
+import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+
+/**
+ * abstract class used by GanttChartRenderer and TeamPlannnerRenderer
+ *
+ * @author abdalla.bushnaq
+ */
+public abstract class AbstractGanttRenderer extends AbstractRenderer {
+    private static final   float                FINE_LINE_STROKE_WIDTH     = 1.0f;
+    private static final   int                  LINE_HEIGHT                = 18;
+    private static final   int                  RELATION_CORNER_LENGTH     = 14;
+    private static final   float                RELATION_LINE_STROKE_WIDTH = 1f;
+    public static final    int                  RESOURCE_NAME_TO_TASK_GAP  = 3;
+    //TODO replace with sprint calendar working day
+    public static final    int                  SECONDS_PER_DAY            = 85 * 6 * 60;//seconds between work start and work end, including lunch hour
+    private static final   int                  TASK_BODY_BORDER           = 4;
+    public static final    int                  TASK_NAME_TO_TASK_GAP      = 5 + 8;
+<span class="nc" id="L64">    private final static   Font                 graphFont                  = new Font(Font.SANS_SERIF, Font.PLAIN, 12);</span>
+<span class="nc" id="L65">    private final static   Font                 idErrorFont                = new Font(Font.SANS_SERIF, Font.BOLD, 12);</span>
+<span class="nc" id="L66">    private final static   Font                 idFont                     = new Font(Font.SANS_SERIF, Font.PLAIN, 12);</span>
+<span class="nc" id="L67">    protected final static Font                 outOfOfficeFont            = new Font(Font.SANS_SERIF, Font.BOLD, 20);</span>
+<span class="nc" id="L68">    private final static   Font                 storyFont                  = new Font(Font.SANS_SERIF, Font.BOLD, 12);</span>
+<span class="nc" id="L69">    private final static   Font                 taskInlineFont             = new Font(Font.SANS_SERIF, Font.PLAIN, 12);</span>
+<span class="nc" id="L70">    private final static   Font                 taskProgressFont           = new Font(Font.SANS_SERIF, Font.PLAIN, 8);</span>
+<span class="nc" id="L71">    private final static   Font                 taskResourceLocationFont   = new Font(Font.SANS_SERIF, Font.PLAIN, 8);</span>
+<span class="nc" id="L72">    private final static   Font                 taskTickFont               = new Font(Font.SANS_SERIF, Font.PLAIN, 5);</span>
+<span class="nc" id="L73">    protected              AuthorsContribution  authorsContribution        = new AuthorsContribution();// remaining and worked per author</span>
+    protected              Context              context;
+<span class="nc" id="L75">    private final          DateUtil             dateUtil                   = new DateUtil();</span>
+<span class="nc" id="L76">    protected              GanttErrorHandler    geh                        = new GanttErrorHandler();</span>
+<span class="nc" id="L77">    private final          Logger               logger                     = LoggerFactory.getLogger(this.getClass());</span>
+    private final          int                  numberOfLinesPerTask;
+<span class="nc" id="L79">    protected              ResourcesUtilization resourcesUtilization       = new ResourcesUtilization();// only used for out of office</span>
+<span class="nc" id="L80">    protected              Map&lt;Long, Integer&gt;   taskHeight                 = new HashMap&lt;&gt;();</span>
+
+    public AbstractGanttRenderer(Context context, String sprintName/*, Map&lt;LocalDate, String&gt; bankHolidays*/, boolean completed/*, int chartWidth, int chartHeight*/, int numberOfLinesPerTask, int preRun, int postRun, BurnDownGraphicsTheme graphicsTheme) throws IOException {
+<span class="nc" id="L83">        super(sprintName/*, bankHolidays*/, completed/*, chartWidth, chartHeight*/, preRun, postRun, graphicsTheme);</span>
+<span class="nc" id="L84">        this.context              = context;</span>
+<span class="nc" id="L85">        this.numberOfLinesPerTask = numberOfLinesPerTask;</span>
+<span class="nc" id="L86">    }</span>
+
+//    private int addVacation(ResourceUtilization ru, String resourceName, OffDay pce) {
+//        int days = 0;
+
+    /// /        RecurringData recurring = pce.getRecurring();
+    /// /        if (recurring != null) {
+    /// /            LocalDate[] dates = recurring.getDates();
+    /// /            for (int i = 0; i &lt; dates.length; i++) {
+    /// /                LocalDate exceptionDate = dates[i];
+    /// /                int       dayIndex      = calculateDayIndex(exceptionDate);
+    /// /                if (dayIndex &gt; -1) {
+    /// /                    ru.addVacation(dayIndex, 1.0);
+    /// /                    days++;
+    /// /                    // logger.trace(String.format(&quot;%s is out of office on %s.&quot;, resourceName,
+    /// /                    // dateUtil.createDateString(exceptionDate.getTime())));
+    /// /                }
+    /// /            }
+    /// /        } else
+//        {
+//            LocalDate fromDate = pce.getFirstDay();
+//            while (fromDate.isBefore(pce.getLastDay()) || fromDate.isEqual(pce.getLastDay())) {
+//                //                logger.trace(String.format(&quot;%s is out of office on %s.&quot;, resourceName, dateUtil.createDateString(fromDate.getTime())));
+//                int dayIndex = calculateDayIndex(fromDate);
+//                if (dayIndex &gt; -1) {
+//                    ru.addVacation(dayIndex, 1.0);
+//                    days++;
+//                }
+//                fromDate = DateUtil.addDay(fromDate, 1);
+//            }
+//        }
+//        return days;
+//    }
+    private void drawConflictMarker(int y, List&lt;Conflict&gt; conflict) {
+<span class="nc bnc" id="L120" title="All 2 branches missed.">        if (conflict != null) {</span>
+            // only used in team planner chart
+<span class="nc" id="L122">            graphics2D.setColor(Color.red);</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">            for (Conflict c : conflict) {</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">                if (c.originalConflict) {</span>
+<span class="nc" id="L125">                    int c1 = calculateX(c.range.start, c.range.start.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;</span>
+<span class="nc" id="L126">                    int c2 = calculateX(c.range.end, c.range.end.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;</span>
+<span class="nc" id="L127">                    graphics2D.fillRect(c1, y - getTaskHeight() / 2, c2 - c1 - 1, 2);</span>
+<span class="nc" id="L128">                    graphics2D.fillRect(c1, y + getTaskHeight() / 2 - 1, c2 - c1 - 1, 2);</span>
+                }
+<span class="nc" id="L130">            }</span>
+        }
+<span class="nc" id="L132">    }</span>
+
+    private void drawCriticalMarker(Task task, int x1, int x2, int y) {
+<span class="nc bnc" id="L135" title="All 2 branches missed.">        if (task.isCritical()) {</span>
+<span class="nc" id="L136">            graphics2D.setColor(graphicsTheme.ganttCriticalTaskBorderColor);</span>
+        } else {
+<span class="nc" id="L138">            graphics2D.setColor(graphicsTheme.ganttTaskBorderColor);</span>
+        }
+        ProjectCalendar pc;
+<span class="nc" id="L141">        User            user = task.getAssignedUser();</span>
+<span class="nc bnc" id="L142" title="All 4 branches missed.">        if (user != null &amp;&amp; user.getCalendar() != null) {</span>
+<span class="nc" id="L143">            pc = user.getCalendar();</span>
+        } else {
+<span class="nc" id="L145">            pc = task.getEffectiveCalendar();</span>
+        }
+<span class="nc" id="L147">        int days = (int) Duration.between(task.getStart().truncatedTo(ChronoUnit.DAYS), task.getFinish().truncatedTo(ChronoUnit.DAYS)).toDays();</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">        for (int day = 0; day &lt;= days; day++) {</span>
+<span class="nc" id="L149">            LocalDateTime currentDay = task.getStart().truncatedTo(ChronoUnit.DAYS).plusDays(day);</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">            if (pc.isWorkingDate(currentDay.toLocalDate())) {</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">                if (days == 0) {</span>
+                    //this is the left and right end
+<span class="nc" id="L153">                    graphics2D.fillRect(x1, y - getTaskHeight() / 2 + TASK_BODY_BORDER, x2 - x1 + 1, 1);//upper -</span>
+<span class="nc" id="L154">                    graphics2D.fillRect(x1, y + getTaskHeight() / 2 - TASK_BODY_BORDER - 1, x2 - x1 + 1, 1);//lower -</span>
+<span class="nc" id="L155">                    graphics2D.fillRect(x1, y - getTaskHeight() / 2 + TASK_BODY_BORDER + 1, 1, getTaskHeight() - TASK_BODY_BORDER * 2 - 2);//start |</span>
+<span class="nc" id="L156">                    graphics2D.fillRect(x2, y - getTaskHeight() / 2 + TASK_BODY_BORDER + 1, 1, getTaskHeight() - TASK_BODY_BORDER * 2 - 2);//end |</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">                } else if (day == 0) {</span>
+                    //this is the left end
+<span class="nc" id="L159">                    int xFinish = calculateX(currentDay.withHour(8).plusSeconds(SECONDS_PER_DAY), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;</span>
+<span class="nc" id="L160">                    graphics2D.fillRect(x1, y - getTaskHeight() / 2 + TASK_BODY_BORDER, xFinish - x1, 1);//upper -</span>
+<span class="nc" id="L161">                    graphics2D.fillRect(x1, y + getTaskHeight() / 2 - TASK_BODY_BORDER - 1, xFinish - x1, 1);//lower -</span>
+<span class="nc" id="L162">                    graphics2D.fillRect(x1, y - getTaskHeight() / 2 + TASK_BODY_BORDER + 1, 1, getTaskHeight() - TASK_BODY_BORDER * 2 - 2);//start |</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">                } else if (day == days) {</span>
+                    //this is the right end
+<span class="nc" id="L165">                    int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;</span>
+<span class="nc" id="L166">                    graphics2D.fillRect(xStart, y - getTaskHeight() / 2 + TASK_BODY_BORDER, x2 - xStart + 1, 1);//upper -</span>
+<span class="nc" id="L167">                    graphics2D.fillRect(xStart, y + getTaskHeight() / 2 - TASK_BODY_BORDER - 1, x2 - xStart + 1, 1);//lower -</span>
+<span class="nc" id="L168">                    graphics2D.fillRect(x2, y - getTaskHeight() / 2 + TASK_BODY_BORDER + 1, 1, getTaskHeight() - TASK_BODY_BORDER * 2 - 2);//end |</span>
+
+<span class="nc" id="L170">                } else {</span>
+                    //this is the middle
+<span class="nc" id="L172">                    int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;</span>
+<span class="nc" id="L173">                    graphics2D.fillRect(xStart, y - getTaskHeight() / 2 + TASK_BODY_BORDER, calendarXAxes.dayOfWeek.getWidth(), 1);</span>
+<span class="nc" id="L174">                    graphics2D.fillRect(xStart, y + getTaskHeight() / 2 - TASK_BODY_BORDER - 1, calendarXAxes.dayOfWeek.getWidth(), 1);</span>
+<span class="nc" id="L175">                }</span>
+            } else {
+<span class="nc bnc" id="L177" title="All 2 branches missed.">                for (int i = 0; i &lt; calendarXAxes.dayOfWeek.getWidth() - 1; i++) {</span>
+<span class="nc" id="L178">                    int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;</span>
+<span class="nc" id="L179">                    int x      = i + xStart;</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">                    if (x % 4 == 0) {</span>
+<span class="nc" id="L181">                        graphics2D.fillRect(x, y - getTaskHeight() / 2 + TASK_BODY_BORDER, 2, 1);</span>
+<span class="nc" id="L182">                        graphics2D.fillRect(x, y + getTaskHeight() / 2 - TASK_BODY_BORDER - 1, 2, 1);</span>
+                    }
+                }
+            }
+        }
+<span class="nc" id="L187">    }</span>
+
+    private void drawId(Task task, int y) {
+<span class="nc" id="L190">        int      x1        = firstDayX;</span>
+<span class="nc" id="L191">        int      x2        = x1 + calendarXAxes.dayOfWeek.getWidth();</span>
+<span class="nc" id="L192">        Color    fillColor = graphicsTheme.ganttIdColor;</span>
+<span class="nc" id="L193">        Color    textColor = graphicsTheme.ganttIdTextColor;</span>
+<span class="nc" id="L194">        MetaData md        = TaskUtil.getTaskMetaData(task);</span>
+<span class="nc" id="L195">        graphics2D.setFont(idFont);</span>
+<span class="nc" id="L196">        fillColor = graphicsTheme.ganttIdColor;</span>
+<span class="nc" id="L197">        textColor = graphicsTheme.ganttIdTextColor;</span>
+<span class="nc" id="L198">        graphics2D.setColor(fillColor);</span>
+<span class="nc" id="L199">        graphics2D.fillRect(x1 + 1, y - getTaskHeight() / 2, x2 - x1 - 1, getTaskHeight());</span>
+        {
+<span class="nc" id="L201">            graphics2D.setColor(textColor);</span>
+<span class="nc" id="L202">            FontMetrics fm     = graphics2D.getFontMetrics();</span>
+<span class="nc" id="L203">            int         yShift = fm.getAscent() - fm.getHeight() / 2;</span>
+
+<span class="nc bnc" id="L205" title="All 2 branches missed.">            if (md != null) {</span>
+<span class="nc" id="L206">                graphics2D.drawString(String.format(&quot;%02d&quot;, task.getId()), x1 + 4, y + yShift, md.getError(0));</span>
+            } else {
+<span class="nc" id="L208">                graphics2D.drawString(String.format(&quot;%02d&quot;, task.getId()), x1 + 4, y + yShift);</span>
+            }
+        }
+<span class="nc" id="L211">    }</span>
+
+    private void drawManualMarker(Task task, int x1, int y, boolean labelInside, Color textColor) {
+<span class="nc bnc" id="L214" title="All 2 branches missed.">        if (task.getTaskMode() == TaskMode.MANUALLY_SCHEDULED) {</span>
+<span class="nc" id="L215">            graphics2D.setColor(Color.red);</span>
+<span class="nc" id="L216">            graphics2D.fillRect(x1, y - getTaskHeight() / 2, 1, getTaskHeight());</span>
+            //timestamp
+//            graphics2D.setFont(graphFont);
+//            graphics2D.setColor(textColor);
+//            FontMetrics fm     = graphics2D.getFontMetrics();
+//            int         yShift = fm.getAscent() - fm.getHeight() / 2;
+//            String      label  = String.format(&quot;%s&quot;, dateUtil.createDateTimeString(task.getStart()));
+//            int         width  = fm.stringWidth(label);
+//            if (labelInside) {
+//            } else {
+//                graphics2D.drawString(label, x1 - width, y + yShift);
+//            }
+        }
+<span class="nc" id="L229">    }</span>
+
+    private void drawMilestoneTask(Task task, int x1, int y, boolean labelInside, Color fillColor, Color textColor, String taskName) {
+<span class="nc bnc" id="L232" title="All 2 branches missed.">        if (task.getTaskMode() == TaskMode.MANUALLY_SCHEDULED) {</span>
+<span class="nc" id="L233">            graphics2D.setColor(Color.red);</span>
+//            graphics2D.fillRect(x1 - calendarXAxses.dayOfWeek.getWidth() / 2, y - getTaskHeight() / 2, 1, getTaskHeight());
+<span class="nc" id="L235">            graphics2D.setColor(fillColor);</span>
+        } else {
+<span class="nc" id="L237">            graphics2D.setColor(Color.gray);</span>
+        }
+<span class="nc" id="L239">        int   milestoneWidth = getTaskHeight() / 2 - TASK_BODY_BORDER;</span>
+<span class="nc" id="L240">        int   c              = 0;</span>
+<span class="nc" id="L241">        int[] xPoints        = {x1 + c, x1 + c + milestoneWidth, x1 + c, x1 + c - milestoneWidth, x1 + c};</span>
+<span class="nc" id="L242">        int[] yPoints        = {y - milestoneWidth, y, y + milestoneWidth, y, y - milestoneWidth};</span>
+<span class="nc" id="L243">        int   nPoints        = 5;</span>
+<span class="nc" id="L244">        graphics2D.fillPolygon(xPoints, yPoints, nPoints);</span>
+<span class="nc" id="L245">        graphics2D.drawPolygon(xPoints, yPoints, nPoints);</span>
+<span class="nc" id="L246">        graphics2D.setFont(graphFont);</span>
+<span class="nc" id="L247">        graphics2D.setColor(textColor);</span>
+<span class="nc" id="L248">        FontMetrics fm     = graphics2D.getFontMetrics();</span>
+<span class="nc" id="L249">        int         yShift = fm.getAscent() - fm.getHeight() / 2;</span>
+//        graphics2D.drawString(taskName, x2 + 5 + 8, y + yShift);
+<span class="nc bnc" id="L251" title="All 2 branches missed.">        if (labelInside) {</span>
+
+        } else {
+<span class="nc" id="L254">            LocalDateTime start          = task.getStart();</span>
+<span class="nc" id="L255">            String        dateTimeString = dateUtil.createDateTimeString(task.getStart());</span>
+<span class="nc" id="L256">            graphics2D.drawString(String.format(&quot;%s (%s)&quot;, taskName, dateTimeString), x1 + 2 + 8 + c + milestoneWidth / 2, y + yShift);</span>
+        }
+<span class="nc" id="L258">    }</span>
+
+//    private void drawOutOfOffice(Task task, int y) {
+//        //TODO reintroduce bank holidays and vacations
+//
+//        if (task.getAssignedUser() != null) {
+//            for (ProjectCalendarException calendarException : task.getAssignedUser().getCalendar().getCalendarExceptions()) {
+//                for (LocalDate currentDay = calendarException.getFromDate(); currentDay.isBefore(calendarException.getToDate()) || currentDay.isEqual(calendarException.getToDate()); currentDay = currentDay.plusDays(1)) {
+////                    int    dayIndex = calculateDayIndex(calendarException.getFromDate());
+//                    String name = calendarException.getName();
+//                    if (name.equals(OffDayType.VACATION.name()) || name.equals(OffDayType.HOLIDAY.name()) || name.equals(OffDayType.SICK.name()) || name.equals(OffDayType.TRIP.name())) {
+//                        int daysX = calculateDayX(currentDay);
+//                        if (daysX &gt; 0 &amp;&amp; daysX &lt; calendarXAxes.getWidth()) {
+//                            graphics2D.setFont(outOfOfficeFont);
+//                            graphics2D.setColor(graphicsTheme.ganttOutOfOfficeColor);
+////                            graphics2D.fillRect(daysX - (calendarXAxses.dayOfWeek.getWidth() / 2 - 1), y - (calendarXAxses.dayOfWeek.getWidth() / 2) + 2, calendarXAxses.dayOfWeek.getWidth() - 1, getTaskHeight());
+//                            graphics2D.setColor(Color.WHITE);
+//                            FontMetrics fm        = graphics2D.getFontMetrics();
+//                            String      text      = &quot;O&quot;;
+//                            int         width     = fm.stringWidth(text);
+//                            int         maxAscent = fm.getMaxAscent();
+////                            graphics2D.drawString(text, daysX - width / 2, y + (maxAscent + 1) / 2 - 2);
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//
+////        ProjectFile parentFile = task.getParentFile();
+////        LocalDate   start      = parentFile.getEarliestStartDate().toLocalDate();
+////        LocalDate   finish     = parentFile.getLatestFinishDate().toLocalDate();
+////        String resourceName = null;
+////        if (!task.getMilestone() &amp;&amp; task.getResourceAssignments().size() == 1) {
+////            for (ResourceAssignment assignment : task.getResourceAssignments()) {
+////                Resource resource = assignment.getResource();
+////                if (resource != null) {
+////                    resourceName = resource.getName();
+////                    break;
+////                }
+////            }
+////        }
+////        if (resourceName != null) {
+////            ResourceUtilization ru = resourcesUtilization.get(Authors.mapToPrimaryLoginName(resourceName));
+////            for (LocalDate currentDay = start; currentDay.isBefore(finish); currentDay = currentDay.plusDays(1)) {
+////                int dayIndex = calculateDayIndex(currentDay);
+////                if (ru != null &amp;&amp; (ru.getVacation(dayIndex) != null || ru.getSickness(dayIndex) != null)) {
+////                    int daysX = calculateDayX(currentDay);
+////                    // int x1 = daysX - (calendarXAxses.dayOfWeek.width / 2 - 1);
+////                    // int y1 = y - (calendarXAxses.dayOfWeek.width / 2) + 2;
+////                    // graphics2D.drawImage(outOfOffice, null, x1, y1);
+////                    graphics2D.setFont(outOfOfficeFont);
+////                    graphics2D.setColor(graphicsTheme.ganttOutOfOfficeColor);
+////                    graphics2D.fillRect(daysX - (calendarXAxses.dayOfWeek.getWidth() / 2 - 1), y - (calendarXAxses.dayOfWeek.getWidth() / 2) + 2,
+////                            calendarXAxses.dayOfWeek.getWidth() - 1, getTaskHeight());
+////                    graphics2D.setColor(Color.WHITE);
+////                    FontMetrics fm        = graphics2D.getFontMetrics();
+////                    String      text      = &quot;O&quot;;
+////                    int         width     = fm.stringWidth(text);
+////                    int         maxAscent = fm.getMaxAscent();
+////                    graphics2D.drawString(text, daysX - width / 2, y + (maxAscent + 1) / 2 - 2);
+////                }
+////            }
+////        }
+//    }
+
+    /**
+     * T------------| | | C
+     *
+     * @param sourceTask
+     * @param targetTask
+     * @throws Exception
+     */
+    private void drawRelation(Task sourceTask, int y2, Task targetTask, int y1) throws Exception {
+
+<span class="nc" id="L333">        int signum = (int) Math.signum(y2 - y1);</span>
+        int y3;
+<span class="nc bnc" id="L335" title="All 2 branches missed.">        if (signum &gt; 0) {</span>
+<span class="nc" id="L336">            y2 -= getTaskHeight() / 2 - TASK_BODY_BORDER;</span>
+<span class="nc" id="L337">            y3 = y2 - 5;</span>
+        } else {
+<span class="nc" id="L339">            y2 += getTaskHeight() / 2 - TASK_BODY_BORDER;</span>
+<span class="nc" id="L340">            y3 = y2 + 5;</span>
+        }
+<span class="nc" id="L342">        int x1 = calculateX(targetTask.getFinish(), targetTask.getFinish().truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;</span>
+<span class="nc" id="L343">        int x2 = RELATION_CORNER_LENGTH + calculateX(sourceTask.getStart(), sourceTask.getStart().truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2 - RESOURCE_NAME_TO_TASK_GAP;</span>
+<span class="nc" id="L344">        graphics2D.setStroke(new BasicStroke(RELATION_LINE_STROKE_WIDTH));</span>
+<span class="nc bnc" id="L345" title="All 4 branches missed.">        if (sourceTask.isCritical() &amp;&amp; targetTask.isCritical()) {</span>
+<span class="nc" id="L346">            graphics2D.setColor(graphicsTheme.ganttCriticalRelationColor);</span>
+
+        } else {
+<span class="nc" id="L349">            graphics2D.setColor(graphicsTheme.ganttRelationColor);</span>
+        }
+//        graphics2D.drawLine(x1, y1, x2, y1);
+<span class="nc" id="L352">        graphics2D.fillRect(x1 + 1, y1, x2 - x1, 1);// -</span>
+//        graphics2D.drawLine(x2, y1, x2, y2);
+<span class="nc" id="L354">        graphics2D.fillRect(x2, y1 + 1, 1, y3 - y1);// |</span>
+<span class="nc bnc" id="L355" title="All 2 branches missed.">        if (y2 &gt; y1) {</span>
+            //arrow head down
+            // x2-d,y2-d x2+D,y2-D
+            // x2,Y2
+
+<span class="nc" id="L360">            int   d       = 5;</span>
+<span class="nc" id="L361">            int[] xPoints = {x2 - d, x2 + d, x2};</span>
+<span class="nc" id="L362">            int[] yPoints = {y2 - d + signum, y2 - d + signum, y2 + signum};</span>
+<span class="nc" id="L363">            graphics2D.setColor(graphicsTheme.ganttRelationColor);</span>
+<span class="nc" id="L364">            graphics2D.fillPolygon(xPoints, yPoints, xPoints.length);</span>
+<span class="nc" id="L365">        } else {</span>
+            //arrow head up
+            // x2,Y2
+            // x2+3,y2+3 x2-3,y2+3
+
+<span class="nc" id="L370">            int   d       = 5;</span>
+<span class="nc" id="L371">            int[] xPoints = {x2 + d, x2 - d, x2};</span>
+<span class="nc" id="L372">            int[] yPoints = {y2 + d + signum, y2 + d + signum, y2 + signum};</span>
+<span class="nc" id="L373">            graphics2D.setColor(graphicsTheme.ganttRelationColor);</span>
+<span class="nc" id="L374">            graphics2D.fillPolygon(xPoints, yPoints, xPoints.length);</span>
+        }
+
+<span class="nc" id="L377">    }</span>
+
+    private void drawRibbon(Graphics2D graphics2D, int y1, int x1, int y2, int delta1, int delta2, Color ribbonColor) {
+<span class="nc" id="L380">        int[] xpoints = {x1, x1 + delta1, x1 + delta1 + delta2, x1 + delta2};</span>
+<span class="nc" id="L381">        int[] ypoints = {y2, y1, y1, y2};</span>
+<span class="nc" id="L382">        graphics2D.setColor(ribbonColor);</span>
+<span class="nc" id="L383">        graphics2D.fillPolygon(xpoints, ypoints, xpoints.length);</span>
+<span class="nc" id="L384">    }</span>
+
+    private void drawStoryBody(Task task, int x1, int x2, int y, Color fillColor, String marker, String toolTip) {
+<span class="nc" id="L387">        Color originalColor = fillColor;</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">        if (marker == null) {</span>
+<span class="nc" id="L389">            drawTick(task.getStart(), x1, y, TextAlignment.left);</span>
+<span class="nc" id="L390">            drawTick(task.getFinish(), x2, y, TextAlignment.right);</span>
+<span class="nc" id="L391">            int y1        = y + TASK_BODY_BORDER;</span>
+<span class="nc" id="L392">            int thickness = 2;</span>
+<span class="nc" id="L393">            graphics2D.fillRect(x1, y1 - getTaskHeight() / 2, x2 - x1 + 1, thickness);//upper ---</span>
+<span class="nc" id="L394">            graphics2D.fillRect(x1, y1 - getTaskHeight() / 2 + thickness, thickness, getTaskHeight() - TASK_BODY_BORDER * 2 - thickness);//left |</span>
+<span class="nc" id="L395">            graphics2D.fillRect(x1 + x2 - x1 - 1, y1 - getTaskHeight() / 2 + thickness, thickness, getTaskHeight() - TASK_BODY_BORDER * 2 - thickness);//right |</span>
+<span class="nc bnc" id="L396" title="All 2 branches missed.">            if (x2 - x1 - 1 &gt; 0) {</span>
+<span class="nc" id="L397">                ExtendedRectangle s = new ExtendedRectangle(x1 + 1, y1 - getTaskHeight() / 2, x2 - x1 - 1, getTaskHeight() - thickness * 2);</span>
+<span class="nc" id="L398">                s.setToolTip(toolTip);</span>
+<span class="nc" id="L399">                s.setVisible(false);</span>
+<span class="nc" id="L400">                graphics2D.fill(s);</span>
+            }
+<span class="nc" id="L402">        } else {</span>
+            // int x1 = dayX1 - (calendarXAxses.dayOfWeek.width / 2 - 1);
+            // int x2 = x1 + width;
+<span class="nc" id="L405">            int   y1   = y - getTaskHeight() / 2 + 1;</span>
+<span class="nc" id="L406">            int   y2   = y1 + getTaskHeight() - 2;</span>
+<span class="nc" id="L407">            Shape clip = graphics2D.getClip();</span>
+<span class="nc" id="L408">            graphics2D.setClip(x1 + 1, y - getTaskHeight() / 2 + 2, x2 - x1 - 1, getTaskHeight() - 4);</span>
+            {
+                // mark that we do not have a gantt chart
+<span class="nc" id="L411">                int   delta1      = 25;// ribbon offset</span>
+<span class="nc" id="L412">                int   delta2      = 16;// ribbon width</span>
+<span class="nc" id="L413">                Color ribbonColor = originalColor;</span>
+<span class="nc bnc" id="L414" title="All 2 branches missed.">                for (int x = x1 - delta2; x &lt; x2; x += delta2) {</span>
+<span class="nc" id="L415">                    drawRibbon(graphics2D, y1, x, y2, delta1, delta2 - 1, ribbonColor);</span>
+<span class="nc bnc" id="L416" title="All 2 branches missed.">                    if (ribbonColor == originalColor) {</span>
+<span class="nc" id="L417">                        ribbonColor = Color.white;</span>
+                    } else {
+<span class="nc" id="L419">                        ribbonColor = originalColor;</span>
+                    }
+                }
+            }
+<span class="nc" id="L423">            graphics2D.setClip(clip);</span>
+        }
+<span class="nc" id="L425">    }</span>
+
+    public void drawTask(long gantUniqueId, Task task, boolean drawId, boolean drawRelations, boolean labelInside, boolean alien, String marker, List&lt;Conflict&gt; conflict, boolean drawOutOfOffice) throws Exception {
+        //TODO implement this fixed
+<span class="nc bnc" id="L429" title="All 2 branches missed.">        if (GanttUtil.isValidTask(task)) {</span>
+
+<span class="nc" id="L431">            graphics2D.setStroke(new BasicStroke(FINE_LINE_STROKE_WIDTH));</span>
+<span class="nc" id="L432">            LocalDateTime start = task.getStart();</span>
+<span class="nc" id="L433">            LocalDateTime stop  = task.getFinish();</span>
+<span class="nc" id="L434">            int           x1    = calculateX(start, start.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;</span>
+<span class="nc" id="L435">            int           x2    = calculateX(stop, stop.truncatedTo(ChronoUnit.DAYS).withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;</span>
+<span class="nc" id="L436">            Integer       lane  = taskHeight.get(gantUniqueId * 10000 + task.getId());</span>
+<span class="nc" id="L437">            int           y     = lane + getTaskHeight() / 2;</span>
+//            if (drawOutOfOffice) {
+//                drawOutOfOffice(task, y);
+//            }
+<span class="nc" id="L441">            drawTask(task, x1, x2, y, labelInside, alien, marker, conflict);</span>
+<span class="nc bnc" id="L442" title="All 2 branches missed.">            if (drawId) {</span>
+<span class="nc" id="L443">                drawId(task, y);</span>
+            }
+<span class="nc bnc" id="L445" title="All 2 branches missed.">            if (drawRelations) {</span>
+<span class="nc" id="L446">                List&lt;Relation&gt; predecessors = task.getPredecessors();</span>
+<span class="nc bnc" id="L447" title="All 4 branches missed.">                if (predecessors != null &amp;&amp; !predecessors.isEmpty()) {</span>
+<span class="nc bnc" id="L448" title="All 2 branches missed.">                    for (Relation relation : predecessors) {</span>
+<span class="nc" id="L449">                        Task sourceTask = task;</span>
+<span class="nc" id="L450">                        Task targetTask = task.getSprint().getTaskById(relation.getPredecessorId());</span>
+                        //TODO implement this
+<span class="nc bnc" id="L452" title="All 2 branches missed.">                        if (relation.isVisible()) {</span>
+<span class="nc" id="L453">                            int y1 = taskHeight.get(gantUniqueId * 10000 + targetTask.getId()) + getTaskHeight() / 2;</span>
+<span class="nc" id="L454">                            int y2 = taskHeight.get(gantUniqueId * 10000 + sourceTask.getId()) + getTaskHeight() / 2;</span>
+<span class="nc" id="L455">                            drawRelation(sourceTask, y2, targetTask, y1);</span>
+                        }
+<span class="nc" id="L457">                    }</span>
+                }
+            }
+        }
+<span class="nc" id="L461">    }</span>
+
+    private void drawTask(Task task, int x1, int x2, int y, boolean labelInside, boolean alien, String marker, List&lt;Conflict&gt; conflict) throws Exception {
+<span class="nc" id="L464">        Color  fillColor           = graphicsTheme.getAuthorColor(28);</span>
+<span class="nc" id="L465">        Color  textColor           = graphicsTheme.ganttTaskTextColor;</span>
+<span class="nc" id="L466">        Color  textInfoColor       = graphicsTheme.ganttTaskTextColor;</span>
+<span class="nc" id="L467">        String resourceName        = null;</span>
+<span class="nc" id="L468">        String resourceUtilization = null;</span>
+<span class="nc" id="L469">        Number units               = null;</span>
+
+<span class="nc" id="L471">        String taskName = task.getName();</span>
+<span class="nc bnc" id="L472" title="All 2 branches missed.">        if (!task.isMilestone()) {</span>
+<span class="nc bnc" id="L473" title="All 2 branches missed.">            if (task.getAssignedUser() != null) {</span>
+<span class="nc" id="L474">                resourceName        = task.getAssignedUser().getName();</span>
+<span class="nc" id="L475">                units               = task.getAssignedUser().getAvailabilities().getLast().getAvailability() * 100;</span>
+<span class="nc" id="L476">                resourceUtilization = String.format(&quot;%.0f%%&quot;, units);</span>
+<span class="nc" id="L477">                fillColor           = task.getAssignedUser().getColor();</span>
+            }
+        }
+<span class="nc bnc" id="L480" title="All 4 branches missed.">        if (task.isMilestone() &amp;&amp; task.getChildTasks().size() == 0) {</span>
+            // ---Milestone, but not a story (MS Project marks stories with 0 duration as milestones
+<span class="nc" id="L482">            fillColor = graphicsTheme.ganttMilestoneColor;</span>
+<span class="nc" id="L483">            textColor = graphicsTheme.ganttMilestoneTextColor;</span>
+<span class="nc bnc" id="L484" title="All 2 branches missed.">        } else if (task.getChildTasks().size() != 0) {</span>
+            // ---Story
+<span class="nc" id="L486">            fillColor = graphicsTheme.ganttStoryColor;</span>
+<span class="nc" id="L487">            textColor = graphicsTheme.ganttStoryTextColor;</span>
+<span class="nc bnc" id="L488" title="All 4 branches missed.">        } else if (resourceName != null &amp;&amp; units != null) {</span>
+            //task
+<span class="nc" id="L490">            textColor = graphicsTheme.ganttTaskTextColor;</span>
+//            int authorIndex = authorsContribution.getSortedKeyList().indexOf(resourceName);
+//            if (authorIndex != -1) {
+//                fillColor = authors.getNameMap().get(resourceName).getColor();
+//            }
+<span class="nc" id="L495">            fillColor = generateGanttColor(task.getAssignedUser().getColor());</span>
+        }
+<span class="nc bnc" id="L497" title="All 4 branches missed.">        if (task.isMilestone() &amp;&amp; task.getChildTasks().isEmpty()) {</span>
+            // milestone
+<span class="nc" id="L499">            drawMilestoneTask(task, x1, y, labelInside, fillColor, textColor, taskName);</span>
+        } else {
+<span class="nc bnc" id="L501" title="All 2 branches missed.">            if (!task.getChildTasks().isEmpty()) {</span>
+                // story
+<span class="nc" id="L503">                String tooltip = generateToolTip(task, x1, x2, y, marker, resourceName, resourceUtilization);</span>
+<span class="nc" id="L504">                drawStoryBody(task, x1, x2, y, fillColor, marker, tooltip);</span>
+<span class="nc" id="L505">                graphics2D.setFont(storyFont);</span>
+<span class="nc" id="L506">                graphics2D.setColor(textColor);</span>
+<span class="nc" id="L507">                FontMetrics fm     = graphics2D.getFontMetrics();</span>
+<span class="nc" id="L508">                int         yShift = fm.getAscent() - fm.getHeight() / 2;</span>
+<span class="nc bnc" id="L509" title="All 2 branches missed.">                if (labelInside) {</span>
+                    // only used for team planner chart
+                } else {
+<span class="nc" id="L512">                    graphics2D.drawString(taskName, x2 + 2 + 8, y + yShift);</span>
+                }
+<span class="nc" id="L514">            } else {</span>
+                //task
+<span class="nc" id="L516">                String tooltip = generateToolTip(task, x1, x2, y, marker, resourceName, resourceUtilization);</span>
+<span class="nc bnc" id="L517" title="All 2 branches missed.">                if (task.getProgress() == null) {</span>
+<span class="nc" id="L518">                    drawTaskBody(task, x1, x2, y, fillColor, alien, 0.0f, tooltip);</span>
+                } else {
+<span class="nc" id="L520">                    drawTaskBody(task, x1, x2, y, fillColor, alien, task.getProgress().doubleValue(), tooltip);</span>
+                }
+<span class="nc" id="L522">                drawConflictMarker(y, conflict);</span>
+<span class="nc" id="L523">                drawCriticalMarker(task, x1, x2, y);</span>
+<span class="nc" id="L524">                drawManualMarker(task, x1, y, labelInside, textColor);</span>
+
+                // task text
+<span class="nc bnc" id="L527" title="All 2 branches missed.">                if (labelInside) {</span>
+<span class="nc" id="L528">                    graphics2D.setColor(textColor);</span>
+<span class="nc" id="L529">                    graphics2D.setFont(taskInlineFont);</span>
+<span class="nc" id="L530">                    FontMetrics fm     = graphics2D.getFontMetrics();</span>
+<span class="nc" id="L531">                    int         yShift = fm.getAscent() - fm.getHeight() / 2;</span>
+<span class="nc" id="L532">                    Shape       clip   = graphics2D.getClip();</span>
+<span class="nc" id="L533">                    graphics2D.setClip(x1 + 1, y - getTaskHeight() / 2 + RESOURCE_NAME_TO_TASK_GAP, x2 - x1 - 1 - 2, getTaskHeight() - 6);</span>
+<span class="nc bnc" id="L534" title="All 2 branches missed.">                    if (marker != null) {</span>
+<span class="nc" id="L535">                        graphics2D.drawString(marker, x1 + 1, y - getTaskHeight() / 2 + (LINE_HEIGHT) / 2 + yShift);</span>
+                    }
+<span class="nc" id="L537">                    graphics2D.drawString(task.getName(), x1 + 1, y - getTaskHeight() / 2 + (LINE_HEIGHT) * RESOURCE_NAME_TO_TASK_GAP / 2 + yShift + 1);</span>
+<span class="nc bnc" id="L538" title="All 2 branches missed.">                    if (resourceName != null) {</span>
+<span class="nc" id="L539">                        int stringWidth = fm.stringWidth(resourceName);</span>
+<span class="nc" id="L540">                        graphics2D.drawString(resourceName + resourceUtilization, x1 - stringWidth, y + (LINE_HEIGHT) * 5 / 2 + yShift);</span>
+                    }
+<span class="nc" id="L542">                    graphics2D.setClip(clip);</span>
+<span class="nc" id="L543">                } else {</span>
+                    // progress text
+<span class="nc bnc" id="L545" title="All 2 branches missed.">                    if (task.getProgress() != null) {</span>
+<span class="nc" id="L546">                        Color blendedColor = ColorUtil.calculateColorBlending(fillColor, Color.white);</span>
+<span class="nc bnc" id="L547" title="All 2 branches missed.">                        if (task.getProgress().doubleValue() &gt; 0.5) {</span>
+<span class="nc" id="L548">                            blendedColor = ColorUtil.calculateColorBlending(fillColor, blendedColor);// we are drawing</span>
+                            // two times
+                        }
+<span class="nc" id="L551">                        Color highestContrast = ColorUtil.heighestContrast(blendedColor);</span>
+<span class="nc" id="L552">                        graphics2D.setColor(highestContrast);</span>
+<span class="nc" id="L553">                        graphics2D.setFont(taskProgressFont);</span>
+<span class="nc" id="L554">                        String text  = String.format(&quot;%2.0f%%&quot;, task.getProgress().doubleValue() * 100);</span>
+<span class="nc" id="L555">                        int    width = graphics2D.getFontMetrics().stringWidth(text);</span>
+                        // will the process text fit into the task?
+<span class="nc bnc" id="L557" title="All 2 branches missed.">                        if (width &lt; x2 - x1) {</span>
+<span class="nc" id="L558">                            FontMetrics fm     = graphics2D.getFontMetrics();</span>
+<span class="nc" id="L559">                            int         ascent = fm.getAscent();</span>
+<span class="nc" id="L560">                            Shape       clip   = graphics2D.getClip();</span>
+<span class="nc" id="L561">                            graphics2D.setClip(x1 + 1, y - getTaskHeight() / 2 + RESOURCE_NAME_TO_TASK_GAP, x2 - x1 - 1 - 2, getTaskHeight() - 6);</span>
+<span class="nc" id="L562">                            graphics2D.drawString(text, x1 + (x2 - x1) / 2 + 1 - width / 2, y + (ascent - 2) / 2);</span>
+<span class="nc" id="L563">                            graphics2D.setClip(clip);</span>
+                        }
+                    }
+
+                    {
+                        //Task name
+<span class="nc" id="L569">                        graphics2D.setColor(textColor);</span>
+<span class="nc" id="L570">                        graphics2D.setFont(graphFont);</span>
+<span class="nc" id="L571">                        FontMetrics fm     = graphics2D.getFontMetrics();</span>
+<span class="nc" id="L572">                        int         yShift = fm.getAscent() - fm.getHeight() / 2;</span>
+<span class="nc" id="L573">                        graphics2D.drawString(taskName, x2 + TASK_NAME_TO_TASK_GAP, y + yShift);</span>
+                    }
+<span class="nc bnc" id="L575" title="All 2 branches missed.">                    if (resourceName != null) {</span>
+                        //resource name+info
+<span class="nc" id="L577">                        graphics2D.setColor(textColor);</span>
+<span class="nc" id="L578">                        graphics2D.setFont(graphFont);</span>
+<span class="nc" id="L579">                        FontMetrics fm1               = graphics2D.getFontMetrics();</span>
+<span class="nc" id="L580">                        int         yShift            = fm1.getAscent() - 1;</span>
+<span class="nc" id="L581">                        int         resourceNameWidth = fm1.stringWidth(resourceName);</span>
+<span class="nc" id="L582">                        int         resourceNameX     = x1 - resourceNameWidth - RESOURCE_NAME_TO_TASK_GAP;</span>
+<span class="nc" id="L583">                        graphics2D.drawString(resourceName, resourceNameX, y - getTaskHeight() / 2 + yShift);</span>
+                        {
+<span class="nc" id="L585">                            graphics2D.setColor(textInfoColor);</span>
+<span class="nc" id="L586">                            graphics2D.setFont(taskResourceLocationFont);</span>
+<span class="nc" id="L587">                            FontMetrics fm2   = graphics2D.getFontMetrics();</span>
+<span class="nc" id="L588">                            int         infoY = y + getTaskHeight() / 2 - TASK_BODY_BORDER;</span>
+<span class="nc" id="L589">                            graphics2D.drawString(resourceUtilization, resourceNameX, infoY);</span>
+
+<span class="nc" id="L591">                            String location      = task.getAssignedUser().getLocations().getLast().getCountry() + &quot;/&quot; + task.getAssignedUser().getLocations().getLast().getState();</span>
+<span class="nc" id="L592">                            int    locationWidth = fm2.stringWidth(location);</span>
+<span class="nc" id="L593">                            int    locationX     = x1 - locationWidth - RESOURCE_NAME_TO_TASK_GAP;</span>
+<span class="nc" id="L594">                            graphics2D.drawString(location, locationX, infoY);</span>
+                        }
+                    }
+                }
+            }
+        }
+<span class="nc" id="L600">    }</span>
+
+    private void drawTaskBody(Task task, int x1, int x2, int y, Color fillColor, boolean alien, double progress, String toolTip) {
+<span class="nc" id="L603">        Color originalColor = fillColor;</span>
+<span class="nc bnc" id="L604" title="All 2 branches missed.">        if (!alien) {</span>
+<span class="nc" id="L605">            int y1 = y - getTaskHeight() / 2 + TASK_BODY_BORDER;</span>
+<span class="nc" id="L606">            int h  = getTaskHeight() - TASK_BODY_BORDER * 2;</span>
+<span class="nc bnc" id="L607" title="All 2 branches missed.">            if (x2 - x1 - 1 - 1 &gt; 0) {</span>
+                //sometimes tasks are so small, that we cannot draw them.
+<span class="nc" id="L609">                drawTick(task.getStart(), x1, y, TextAlignment.left);</span>
+<span class="nc" id="L610">                drawTick(task.getFinish(), x2, y, TextAlignment.right);</span>
+                ProjectCalendar pc;
+<span class="nc" id="L612">                User            user = task.getAssignedUser();</span>
+<span class="nc bnc" id="L613" title="All 4 branches missed.">                if (user != null &amp;&amp; user.getCalendar() != null) {</span>
+<span class="nc" id="L614">                    pc = user.getCalendar();</span>
+                } else {
+<span class="nc" id="L616">                    pc = task.getEffectiveCalendar();</span>
+                }
+<span class="nc" id="L618">                int days = (int) Duration.between(task.getStart().truncatedTo(ChronoUnit.DAYS), task.getFinish().truncatedTo(ChronoUnit.DAYS)).toDays();</span>
+<span class="nc bnc" id="L619" title="All 2 branches missed.">                for (int day = 0; day &lt;= days; day++) {</span>
+<span class="nc" id="L620">                    LocalDateTime currentDay = task.getStart().truncatedTo(ChronoUnit.DAYS).plusDays(day);</span>
+                    Shape         s;
+<span class="nc bnc" id="L622" title="All 2 branches missed.">                    if (pc.isWorkingDate(currentDay.toLocalDate())) {</span>
+<span class="nc" id="L623">                        graphics2D.setColor(fillColor);</span>
+<span class="nc bnc" id="L624" title="All 2 branches missed.">                        if (days == 0) {</span>
+                            //this is the left and right end
+<span class="nc" id="L626">                            s = new RectangleWithToolTip(x1, y1, x2 - x1, h, toolTip);</span>
+<span class="nc bnc" id="L627" title="All 2 branches missed.">                        } else if (day == 0) {</span>
+                            //this is the left end
+<span class="nc" id="L629">                            int xFinish = calculateX(currentDay.withHour(8).plusSeconds(SECONDS_PER_DAY), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;</span>
+<span class="nc" id="L630">                            s = new RectangleWithToolTip(x1, y1, xFinish - x1, h, toolTip);</span>
+<span class="nc bnc" id="L631" title="All 2 branches missed.">                        } else if (day == days) {</span>
+                            //this is the right end
+<span class="nc" id="L633">                            int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;</span>
+<span class="nc" id="L634">                            s = new RectangleWithToolTip(xStart, y1, x2 - xStart + 1, h, toolTip);</span>
+<span class="nc" id="L635">                        } else {</span>
+                            //this is the middle
+<span class="nc" id="L637">                            int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;</span>
+<span class="nc" id="L638">                            s = new RectangleWithToolTip(xStart, y1, calendarXAxes.dayOfWeek.getWidth(), h, toolTip);</span>
+<span class="nc" id="L639">                        }</span>
+                    } else {
+<span class="nc" id="L641">                        graphics2D.setColor(new Color(fillColor.getRed(), fillColor.getGreen(), fillColor.getBlue(), 64));//very trabsparent</span>
+<span class="nc" id="L642">                        int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;</span>
+<span class="nc" id="L643">                        s = new RectangleWithToolTip(xStart, y1, calendarXAxes.dayOfWeek.getWidth(), h, toolTip);</span>
+                    }
+<span class="nc" id="L645">                    graphics2D.fill(s);</span>
+                }
+
+                //progress
+<span class="nc bnc" id="L649" title="All 4 branches missed.">                if (progress &gt; 0.0 &amp;&amp; numberOfLinesPerTask == 1) {</span>
+<span class="nc" id="L650">                    graphics2D.fillRect(x1 + 1, y1 + 4, (int) ((x2 - x1) * progress - 1), h - 8);</span>
+<span class="nc bnc" id="L651" title="All 2 branches missed.">                    if (progress &lt; 1.0) {</span>
+<span class="nc" id="L652">                        graphics2D.setColor(Color.black);</span>
+<span class="nc" id="L653">                        graphics2D.fillRect(x1 + (int) ((x2 - x1) * progress - 1), y - getTaskHeight() / 2 + 2, 1, getTaskHeight() - 4);</span>
+                    }
+                }
+            }
+
+<span class="nc" id="L658">        } else {</span>
+<span class="nc" id="L659">            int   y1   = y - getTaskHeight() / 2 + 1;</span>
+<span class="nc" id="L660">            int   y2   = y1 + getTaskHeight() - 1;</span>
+<span class="nc" id="L661">            Shape clip = graphics2D.getClip();</span>
+<span class="nc" id="L662">            graphics2D.setClip(x1, y - getTaskHeight() / 2 + 2, x2 - x1 - 1, getTaskHeight() - 4);</span>
+            {
+                // mark that we do not have a gantt chart
+<span class="nc" id="L665">                int   delta1      = 25;// ribbon offset</span>
+<span class="nc" id="L666">                int   delta2      = 16;// ribbon width</span>
+<span class="nc" id="L667">                Color ribbonColor = originalColor;</span>
+<span class="nc bnc" id="L668" title="All 2 branches missed.">                for (int x = x1 - delta2; x &lt; x2; x += delta2) {</span>
+<span class="nc" id="L669">                    drawRibbon(graphics2D, y1, x, y2, delta1, delta2 - 1, ribbonColor);</span>
+<span class="nc bnc" id="L670" title="All 2 branches missed.">                    if (ribbonColor == originalColor) {</span>
+<span class="nc" id="L671">                        ribbonColor = Color.white;</span>
+                    } else {
+<span class="nc" id="L673">                        ribbonColor = originalColor;</span>
+                    }
+                }
+            }
+<span class="nc" id="L677">            graphics2D.setClip(clip);</span>
+        }
+<span class="nc" id="L679">    }</span>
+
+    private void drawTick(LocalDateTime time, int x, int y, TextAlignment alignment) {
+<span class="nc" id="L682">        DateTimeFormatter formatter  = DateTimeFormatter.ofPattern(&quot;HH:mm&quot;);</span>
+<span class="nc" id="L683">        String            timeString = time.format(formatter);</span>
+<span class="nc" id="L684">        graphics2D.setColor(graphicsTheme.ganttTaskTickLineColor);</span>
+<span class="nc" id="L685">        graphics2D.fillRect(x, y - getTaskHeight() / 2 + TASK_BODY_BORDER - 2, 1, 2);</span>
+<span class="nc" id="L686">        graphics2D.setFont(taskTickFont);</span>
+<span class="nc" id="L687">        graphics2D.setColor(graphicsTheme.ganttTaskTickTextColor);</span>
+<span class="nc" id="L688">        FontMetrics fm    = graphics2D.getFontMetrics();</span>
+<span class="nc" id="L689">        int         width = fm.stringWidth(timeString);</span>
+        int         testX;
+<span class="nc bnc" id="L691" title="All 2 branches missed.">        switch (alignment) {</span>
+            case left:
+<span class="nc" id="L693">                testX = x - width;</span>
+<span class="nc" id="L694">                break;</span>
+            default:
+<span class="nc" id="L696">                testX = x;</span>
+                break;
+        }
+<span class="nc" id="L699">        graphics2D.drawString(timeString, testX, y - getTaskHeight() / 2 + TASK_BODY_BORDER - 2);</span>
+<span class="nc" id="L700">    }</span>
+
+    private Color generateGanttColor(Color color) {
+<span class="nc" id="L703">        color = org.apache.xmlgraphics.java2d.color.ColorUtil.lightenColor(color, 0.5f);</span>
+<span class="nc" id="L704">        return new Color(color.getRed(), color.getGreen(), color.getBlue(), 128);</span>
+    }
+
+    private String generateToolTip(Task task, int x1, int x2, int y, String marker, String resourceName, String resourceUtelization) throws Exception {
+<span class="nc" id="L708">        String start    = DateUtil.createDateString(task.getStart(), dateUtil.dtfymdhms);</span>
+<span class="nc" id="L709">        String finish   = DateUtil.createDateString(task.getFinish(), dateUtil.dtfymdhms);</span>
+<span class="nc" id="L710">        String progress = null;</span>
+<span class="nc bnc" id="L711" title="All 2 branches missed.">        if (task.getProgress() != null) {</span>
+<span class="nc" id="L712">            progress = String.format(&quot;%2.0f%%&quot;, task.getProgress().doubleValue() * 100);</span>
+
+        }
+<span class="nc" id="L715">        String duration = DateUtil.createDurationString(task.getDuration(), true, true, true);</span>
+<span class="nc" id="L716">        String toolTip  = &quot;&quot;;</span>
+<span class="nc bnc" id="L717" title="All 2 branches missed.">        if (marker != null) {</span>
+<span class="nc" id="L718">            toolTip += String.format(&quot;%s&lt;br&gt;&quot;, marker);</span>
+        } else {
+        }
+<span class="nc bnc" id="L721" title="All 2 branches missed.">        if (resourceName != null) {</span>
+<span class="nc" id="L722">            String primaryResourceName = resourceName;</span>
+<span class="nc" id="L723">            toolTip += String.format(&quot;&lt;b&gt;%s&lt;/b&gt;&lt;br&gt;&quot;, task.getName(), primaryResourceName + resourceUtelization, start, finish, task.getNotes());</span>
+        }
+<span class="nc bnc" id="L725" title="All 4 branches missed.">        if (task.getChildTasks().size() == 0 || resourceName != null) {</span>
+<span class="nc" id="L726">            String primaryResourceName = resourceName;</span>
+<span class="nc" id="L727">            toolTip += String.format(&quot;&lt;b&gt;Resource&lt;/b&gt; %s&lt;br&gt;&quot;, primaryResourceName + resourceUtelization);</span>
+        }
+<span class="nc" id="L729">        toolTip += String.format(&quot;&lt;b&gt;Duration&lt;/b&gt; %s&lt;br&gt;&quot;, duration);</span>
+<span class="nc" id="L730">        toolTip += String.format(&quot;&lt;b&gt;Start&lt;/b&gt; %s&lt;br&gt;&quot;, start);</span>
+<span class="nc" id="L731">        toolTip += String.format(&quot;&lt;b&gt;Finish&lt;/b&gt; %s&lt;br&gt;&quot;, finish);</span>
+<span class="nc bnc" id="L732" title="All 4 branches missed.">        if (task.getChildTasks().size() == 0 &amp;&amp; progress != null) {</span>
+<span class="nc" id="L733">            toolTip += String.format(&quot;&lt;b&gt;Progress&lt;/b&gt; %s&lt;br&gt;&quot;, progress);</span>
+        }
+<span class="nc" id="L735">        toolTip += String.format(&quot;&lt;b&gt;Notes&lt;/b&gt; %s&quot;, task.getNotes());</span>
+<span class="nc" id="L736">        toolTip += String.format(&quot;\&quot; shape=\&quot;rect\&quot; coords=\&quot;%d,%d,%d,%d\&quot;&quot;, AbstractCanvas.transformToMapX(x1 + 1), AbstractCanvas.transformToMapY(y - getTaskHeight() / 2), AbstractCanvas.transformToMapX(x2 - 1), AbstractCanvas.transformToMapY(y + getTaskHeight() / 2));</span>
+<span class="nc" id="L737">        return toolTip;</span>
+    }
+
+    @Override
+    protected int getTaskHeight() {
+<span class="nc" id="L742">        return LINE_HEIGHT * numberOfLinesPerTask + 4;</span>
+    }
+
+//    protected void initOutOfOffice(/*GanttInformationList gattInformationList*/) {
+////TODO reintroduce bank holidays and vacations
+//
+////        int vacations = 0;
+////        for (GanttInformation ganttInformation : gattInformationList) {
+////            if (context.debug.filterGantt(ganttInformation)) {
+////                logger.trace(&quot;Extracting out-of-Office information from &quot; + ganttInformation.projectFileName);
+////                for (Resource resource : ganttInformation.projectFile.getResources()) {
+////                    String                                                     primaryResourcename = Authors.mapToPrimaryLoginName(resource.getName());
+////                    com.ricoh.sdced.projects.dashboard.dao.ResourceUtilization ru                  = resourcesUtilization.get(primaryResourcename);
+////                    if (ru == null &amp;&amp; primaryResourcename != null) {
+////                        ru = new ResourceUtilization(milestones.firstMilestone, days);
+////                        ru.setMaxUnit(0.7);
+////                        resourcesUtilization.put(primaryResourcename, ru);
+////                    }
+////                    ProjectCalendar resourceCalendar = resource.getCalendar();
+////                    if (resourceCalendar != null &amp;&amp; ru != null) {
+////                        for (ProjectCalendarException pce : resourceCalendar.getCalendarExceptions()) {
+////                            vacations += addVacation(ru, resource.getName(), pce);
+////                        }
+////                    } else if (resource.getID() == 0) {
+////                        // we do not expect a calendar
+////                    } else {
+////                        logger.trace(resource.getName() + &quot; has no calendar&quot;);
+////                    }
+////                }
+////            }
+////        }
+////        logger.info(String.format(&quot;Included %d vacation days from %d gantt charts.&quot;, vacations, gattInformationList.size()));
+//
+//    }
+
+//    protected void initOutOfOffice(TimeTracker timeTracker) {
+//        if (timeTracker != null) {
+//            for (TimeTrackerUser user : timeTracker.timeTrackerUserList) {
+//                for (TimeTrackerPunch punch : user.racPunchList) {
+//                    String                                                     resourceName        = timeTracker.userIdToUserNameMap.get(punch.userId).name;
+//                    String                                                     primaryResourcename = Authors.mapToPrimaryLoginName(resourceName);
+//                    com.ricoh.sdced.projects.dashboard.dao.ResourceUtilization ru                  = resourcesUtilization.get(primaryResourcename);
+//                    if (ru == null &amp;&amp; primaryResourcename != null) {
+//                        ru = new ResourceUtilization(milestones.firstMilestone, days);
+//                        ru.setMaxUnit(0.7);
+//                        resourcesUtilization.put(primaryResourcename, ru);
+//                    }
+//                    if (ru != null) {
+//                        int startDayIndex = calculateDayIndex(punch.in);
+//                        if (startDayIndex &gt; -1) {
+//                            if (punch.projectId == 1) {
+//                                switch (punch.taskId) {
+//                                    case 285:// vacation
+//                                        ru.addVacation(startDayIndex, 1.0);
+//                                        break;
+//                                    case 286:// sickness
+//                                        ru.addSickness(startDayIndex, 1.0);
+//                                        break;
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

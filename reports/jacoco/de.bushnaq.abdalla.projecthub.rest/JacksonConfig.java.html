@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JacksonConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.rest</a> &gt; <span class="el_source">JacksonConfig.java</span></div><h1>JacksonConfig.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.rest;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.fasterxml.jackson.datatype.hibernate6.Hibernate6Module;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.awt.*;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+@Configuration
+<span class="fc" id="L45">public class JacksonConfig {</span>
+
+    @Bean
+    @Primary
+    // Add this annotation to make this the primary ObjectMapper, otherwise we get conflict with hillaEndpointObjectMapper
+    public ObjectMapper objectMapper() {
+<span class="fc" id="L51">        ObjectMapper objectMapper = new ObjectMapper();</span>
+<span class="fc" id="L52">        objectMapper.setFilterProvider(new SimpleFilterProvider().setFailOnUnknownId(false));</span>
+<span class="fc" id="L53">        objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);</span>
+<span class="fc" id="L54">        objectMapper.setDefaultPropertyInclusion(</span>
+<span class="fc" id="L55">                JsonInclude.Value.construct(JsonInclude.Include.NON_NULL, JsonInclude.Include.NON_EMPTY)</span>
+        );
+<span class="fc" id="L57">        objectMapper.registerModule(</span>
+<span class="fc" id="L58">                new Hibernate6Module().configure(</span>
+                        Hibernate6Module.Feature.FORCE_LAZY_LOADING, false)
+        );
+<span class="fc" id="L61">        objectMapper.disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE);</span>
+<span class="fc" id="L62">        JavaTimeModule javaTimeModule = new JavaTimeModule();</span>
+<span class="fc" id="L63">        objectMapper.registerModule(new SimpleModule().addSerializer(OffsetDateTime.class, new OffsetDateTimeSerializer()));</span>
+<span class="fc" id="L64">        objectMapper.registerModule(new SimpleModule().addDeserializer(OffsetDateTime.class, new OffsetDateTimeDeserializer()));</span>
+<span class="fc" id="L65">        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd'T'HH:mm:ss&quot;);</span>
+<span class="fc" id="L66">        javaTimeModule.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(formatter));</span>
+<span class="fc" id="L67">        javaTimeModule.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(formatter));</span>
+<span class="fc" id="L68">        objectMapper.registerModule(javaTimeModule);</span>
+<span class="fc" id="L69">        objectMapper.registerModule(new Jdk8Module());</span>
+        // Register Color serializer/deserializer
+<span class="fc" id="L71">        SimpleModule colorModule = new SimpleModule();</span>
+<span class="fc" id="L72">        colorModule.addSerializer(Color.class, new ColorSerializer());</span>
+<span class="fc" id="L73">        colorModule.addDeserializer(Color.class, new ColorDeserializer());</span>
+<span class="fc" id="L74">        objectMapper.registerModule(colorModule);</span>
+
+<span class="fc" id="L76">        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);</span>
+<span class="fc" id="L77">        return objectMapper;</span>
+    }
+
+    @Bean
+    // Ensure WebMvc configuration uses your ObjectMapper
+    public WebMvcConfigurer webMvcConfigurer(ObjectMapper objectMapper) {
+<span class="fc" id="L83">        return new WebMvcConfigurer() {</span>
+            @Override
+            public void configureMessageConverters(List&lt;HttpMessageConverter&lt;?&gt;&gt; converters) {
+<span class="fc" id="L86">                converters.removeIf(c -&gt; c instanceof MappingJackson2HttpMessageConverter);</span>
+<span class="fc" id="L87">                MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();</span>
+<span class="fc" id="L88">                converter.setObjectMapper(objectMapper);</span>
+<span class="fc" id="L89">                converters.add(converter);</span>
+<span class="fc" id="L90">            }</span>
+        };
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

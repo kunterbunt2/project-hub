@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GanttRenderer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.report.gantt</a> &gt; <span class="el_source">GanttRenderer.java</span></div><h1>GanttRenderer.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.report.gantt;
+
+import de.bushnaq.abdalla.projecthub.Context;
+import de.bushnaq.abdalla.projecthub.dto.Sprint;
+import de.bushnaq.abdalla.projecthub.dto.Task;
+import de.bushnaq.abdalla.projecthub.dto.User;
+import de.bushnaq.abdalla.projecthub.report.dao.*;
+import de.bushnaq.abdalla.svg.util.ExtendedGraphics2D;
+import de.bushnaq.abdalla.util.ErrorException;
+import de.bushnaq.abdalla.util.GanttErrorHandler;
+import de.bushnaq.abdalla.util.TaskUtil;
+import de.bushnaq.abdalla.util.date.DateUtil;
+import net.sf.mpxj.ProjectCalendar;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.awt.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+/**
+ * renders a gantt chart using ms project mpp file as base
+ * Will make out of office time visible
+ *
+ * @author abdalla.bushnaq
+ */
+public class GanttRenderer extends AbstractGanttRenderer {
+
+    private static final int    GANTT_TASK_POST_SPACE = 50;
+    private static final int    GANTT_TASK_PRI_SPACE  = 50;
+<span class="nc" id="L49">    private final static Font   NoneWorkingDayFont    = new Font(Font.SANS_SERIF, Font.BOLD, 24);</span>
+    private static final int    ONE_WEEK              = 7;
+<span class="nc" id="L51">    private final        Logger logger                = LoggerFactory.getLogger(this.getClass());</span>
+    private final        Sprint sprint;
+
+
+    public GanttRenderer(Context context, String sprintName, List&lt;Throwable&gt; exceptions, LocalDateTime now, boolean completed,
+                         Sprint sprint/*, int chartWidth, int chartHeight*/, String cssClass, BurnDownGraphicsTheme graphicsTheme)
+            throws Exception {
+<span class="nc" id="L58">        super(context, sprintName/*, context.bankHolidays*/, completed/*, chartWidth, chartHeight*/, 1, 14, 14, graphicsTheme);</span>
+//        this.ganttFileName = ganttFileName;
+<span class="nc" id="L60">        this.sprint = sprint;</span>
+//        this.timeTracker   = context.timeTracker;
+<span class="nc" id="L62">        this.graphicsTheme = graphicsTheme;</span>
+//        geh.exceptions     = exceptions;
+<span class="nc" id="L64">        milestones.add(now.toLocalDate(), &quot;N&quot;, &quot;Now (current date)&quot;, Color.blue);</span>
+<span class="nc" id="L65">        milestones.add(sprint.getEarliestStartDate().toLocalDate(), &quot;S&quot;, &quot;Start (Start of project)&quot;, Color.blue);</span>
+<span class="nc" id="L66">        milestones.add(sprint.getLatestFinishDate().toLocalDate(), &quot;E&quot;, &quot;End (End of project)&quot;, Color.blue);</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        if (completed) {</span>
+            //We do not want to keep drawing the graph further and further to include the current date, if it is closed.
+<span class="nc bnc" id="L69" title="All 2 branches missed.">            if (now.isAfter(DateUtil.addDay(sprint.getLatestFinishDate(), ONE_WEEK))) {</span>
+<span class="nc" id="L70">                milestones.remove(&quot;N&quot;);</span>
+            }
+        }
+<span class="nc" id="L73">        milestones.calculate();</span>
+<span class="nc" id="L74">        processInit(sprintName);</span>
+<span class="nc" id="L75">    }</span>
+
+    @Override
+    protected int calculateChartHeight() {
+<span class="nc" id="L79">        return calendarXAxes.getHeight() + GANTT_TASK_PRI_SPACE + GanttUtil.calculateNumberOfTasks(sprint) * (getTaskHeight() + 1) + GANTT_TASK_POST_SPACE;</span>
+    }
+
+    @Override
+    protected int calculateChartWidth() {
+        //TODO why are we ignoring postRun days?
+<span class="nc" id="L85">        return calendarXAxes.dayOfWeek.getWidth() * (days + calendarXAxes.getPriRun() /*+ calendarXAxses.getPostRun()*/);</span>
+    }
+
+    @Override
+    protected void calculateDayWidth() {
+<span class="nc" id="L90">        super.calculateDayWidth();</span>
+<span class="nc" id="L91">        calendarXAxes.dayOfWeek.setWidth(20);</span>
+<span class="nc" id="L92">    }</span>
+
+    protected void calculateTaskHeightMap(int yOffset) {
+<span class="nc" id="L95">        int y = yOffset + GANTT_TASK_PRI_SPACE;</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        for (Task task : sprint.getTasks()) {</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">            if (GanttUtil.isValidTask(task)) {</span>
+<span class="nc" id="L98">                taskHeight.put(task.getId(), y);</span>
+<span class="nc" id="L99">                y += getTaskHeight() + 1;</span>
+            }
+<span class="nc" id="L101">        }</span>
+<span class="nc" id="L102">    }</span>
+
+    @Override
+    public void draw(ExtendedGraphics2D graphics2D, int x, int y) throws Exception {
+<span class="nc" id="L106">        this.graphics2D = graphics2D;</span>
+<span class="nc" id="L107">        initPosition(x, y);</span>
+<span class="nc" id="L108">        calculateTaskHeightMap(y + calendarXAxes.getHeight());</span>
+<span class="nc" id="L109">        drawCalendar();</span>
+<span class="nc" id="L110">        drawMilestones();</span>
+<span class="nc" id="L111">        drawGanttChart();</span>
+<span class="nc" id="L112">    }</span>
+
+    @Override
+    public void drawDayBars(LocalDate currentDay) {
+<span class="nc" id="L116">        int ganttUniqueId = 0;</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">        for (Task task : sprint.getTasks()) {</span>
+<span class="nc" id="L118">            ProjectCalendar pc   = task.getEffectiveCalendar();</span>
+<span class="nc" id="L119">            Integer         lane = taskHeight.get(ganttUniqueId * 10000 + task.getId());</span>
+<span class="nc" id="L120">            int             y    = lane + getTaskHeight() / 2;</span>
+<span class="nc" id="L121">            int             x    = calculateDayX(currentDay);</span>
+<span class="nc" id="L122">            int             y1   = y - getTaskHeight() / 2;</span>
+<span class="nc" id="L123">            int             x1   = x - (calendarXAxes.dayOfWeek.getWidth() / 2 - 1);</span>
+            {
+                //grid
+<span class="nc" id="L126">                graphics2D.setColor(graphicsTheme.ganttGridColor);</span>
+<span class="nc" id="L127">                graphics2D.fillRect(x1 - 1, y1 - 1, calendarXAxes.dayOfWeek.getWidth(), 1);//top --</span>
+<span class="nc" id="L128">                graphics2D.fillRect(x1 - 1, y1, 1, getTaskHeight());//left |</span>
+            }
+            {
+                //background
+<span class="nc" id="L132">                graphics2D.setColor(GraphColorUtil.getGanttDayStripeColor(graphicsTheme, pc, currentDay));</span>
+<span class="nc" id="L133">                Shape  s      = new Rectangle(x1, y1, calendarXAxes.dayOfWeek.getWidth() - 1, getTaskHeight());</span>
+<span class="nc" id="L134">                String letter = GraphColorUtil.getDayLetter(graphicsTheme, pc, currentDay);</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">                if (letter != null) {</span>
+<span class="nc" id="L136">                    graphics2D.fill(s);</span>
+<span class="nc" id="L137">                    graphics2D.setColor(Color.white);</span>
+<span class="nc" id="L138">                    graphics2D.setFont(NoneWorkingDayFont);</span>
+<span class="nc" id="L139">                    FontMetrics fm     = graphics2D.getFontMetrics();</span>
+<span class="nc" id="L140">                    int         yShift = fm.getAscent() - fm.getHeight() / 2;</span>
+<span class="nc" id="L141">                    int         xShift = fm.stringWidth(letter) / 2;</span>
+<span class="nc" id="L142">                    graphics2D.drawString(letter, x - xShift, y + yShift);</span>
+                }
+            }
+<span class="nc" id="L145">        }</span>
+<span class="nc" id="L146">    }</span>
+
+    protected void drawGanttChart() throws Exception {
+<span class="nc" id="L149">        drawGanttChart(calendarXAxes.getHeight());</span>
+        //        drawAuthorLegend();
+        //        drawGraphFrame(firstDayX);
+<span class="nc" id="L152">    }</span>
+
+    protected void drawGanttChart(int yOffset) throws Exception {
+<span class="nc bnc" id="L155" title="All 2 branches missed.">        for (Task task : sprint.getTasks()) {</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">            if (GanttUtil.isValidTask(task)) {</span>
+<span class="nc" id="L157">                drawTask(0, task, true, true, false, false, null, null, true);</span>
+            }
+<span class="nc" id="L159">        }</span>
+<span class="nc" id="L160">    }</span>
+
+    private void processInit(String ganttFileName) throws Exception {
+<span class="nc" id="L163">        initSize(0, 0, false);</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">        for (Task task : sprint.getTasks()) {</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">            if (GanttUtil.isValidTask(task)) {</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">                if (task.getAssignedUser() != null) {</span>
+//                    String primaryResourceName = task.getAssignedUser().getName();
+//                    if (primaryResourceName == null) {
+//                        primaryResourceName = task.getAssignedUser().getName();
+//                    }
+<span class="nc" id="L171">                    AuthorContribution ew = authorsContribution.get(task.getAssignedUser());</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">                    if (ew == null) {</span>
+<span class="nc" id="L173">                        ew = new AuthorContribution();</span>
+<span class="nc" id="L174">                        authorsContribution.put(task.getAssignedUser(), ew);</span>
+                    }
+                }
+            }
+<span class="nc" id="L178">        }</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">        for (User user : authorsContribution.getSortedKeyList()) {</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">            if (user != null) {</span>
+<span class="nc" id="L181">                authors.add(user);</span>
+            }
+<span class="nc" id="L183">        }</span>
+//        authors.calculateColors(graphicsTheme, true);
+//        authors.sort();
+<span class="nc" id="L186">        GanttUtil gu = new GanttUtil(context);</span>
+        //we only generate resource dependencies if it is not a genuin Gantt chart exported from MS Project online
+<span class="nc bnc" id="L188" title="All 2 branches missed.">        if (ganttFileName.toLowerCase().endsWith(&quot;.xml&quot;)) {</span>
+<span class="nc" id="L189">            gu.createResourceDependencies(sprint);</span>
+        }
+
+<span class="nc" id="L192">        GanttErrorHandler eh = new GanttErrorHandler();</span>
+<span class="nc" id="L193">        gu.testRelationsAreHonored(eh, sprint);</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">        if (!eh.noException) {</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">            for (Throwable e : eh.exceptions) {</span>
+<span class="nc" id="L196">                String message = String.format(e.getMessage() + &quot; in Gantt chart '%s'.&quot;, ganttFileName);</span>
+<span class="nc" id="L197">                geh.exceptions.add(new ErrorException(message));</span>
+<span class="nc" id="L198">                logger.warn(message);</span>
+<span class="nc" id="L199">            }</span>
+        }
+//TODO reintroduce bank holidays and vacations
+
+//        if (context.parameters.captureOutOfOfficeFromGantt) {
+//            initOutOfOffice(context.ganttInformationList);
+//        } else if (context.parameters.captureOutOfOfficeFromRam) {
+//            initOutOfOffice(timeTracker);
+//        }
+<span class="nc" id="L208">    }</span>
+
+    public void setConflictingTasks(ConflictingTasks conflictingTasks) {
+        //        this.conflictingTask = conflictingTasks;
+<span class="nc bnc" id="L212" title="All 2 branches missed.">        for (Task task : sprint.getTasks()) {</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">            if (GanttUtil.isValidTask(task)) {</span>
+<span class="nc" id="L214">                List&lt;Conflict&gt; conflicList = conflictingTasks.get(task);</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">                if (conflicList != null) {</span>
+<span class="nc" id="L216">                    MetaData md = TaskUtil.getTaskMetaData(task);</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">                    if (md == null) {</span>
+<span class="nc" id="L218">                        md = new MetaData();</span>
+<span class="nc" id="L219">                        TaskUtil.putTaskMetaData(task, md);</span>
+                    }
+<span class="nc bnc" id="L221" title="All 2 branches missed.">                    for (Conflict conflict : conflicList) {</span>
+<span class="nc" id="L222">                        md.errors.add(String.format(&quot;resource conflict with task '%s'[%s]\n&quot;, conflict.task.getName(), conflict.projectName));</span>
+<span class="nc" id="L223">                    }</span>
+                }
+            }
+<span class="nc" id="L226">        }</span>
+<span class="nc" id="L227">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

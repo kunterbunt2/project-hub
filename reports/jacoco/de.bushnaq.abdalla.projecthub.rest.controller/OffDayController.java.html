@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OffDayController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.rest.controller</a> &gt; <span class="el_source">OffDayController.java</span></div><h1>OffDayController.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.rest.controller;
+
+import de.bushnaq.abdalla.projecthub.dao.OffDayDAO;
+import de.bushnaq.abdalla.projecthub.repository.OffDayRepository;
+import de.bushnaq.abdalla.projecthub.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping(&quot;/api/offday&quot;)
+<span class="fc" id="L35">public class OffDayController {</span>
+
+    @Autowired
+    private OffDayRepository offDayRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @DeleteMapping(&quot;/{userId}/{id}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    public ResponseEntity&lt;Object&gt; delete(@PathVariable Long userId, @PathVariable Long id) {
+<span class="nc" id="L46">        return userRepository.findById(userId).map(</span>
+                user -&gt; {
+<span class="nc" id="L48">                    OffDayDAO offDay = offDayRepository.findById(id).orElseThrow();</span>
+<span class="nc" id="L49">                    user.getOffDays().remove(offDay);</span>
+<span class="nc" id="L50">                    userRepository.save(user);</span>
+<span class="nc" id="L51">                    offDayRepository.deleteById(id);</span>
+<span class="nc" id="L52">                    return ResponseEntity.ok().build(); // Return 200 OK</span>
+                }
+<span class="nc" id="L54">        ).orElse(ResponseEntity.notFound().build());</span>
+    }
+
+    @GetMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMIN', 'USER')&quot;)
+    public Optional&lt;OffDayDAO&gt; getById(@PathVariable Long id) {
+<span class="nc" id="L60">        OffDayDAO e = offDayRepository.findById(id).orElseThrow();</span>
+<span class="nc" id="L61">        return Optional.of(e);</span>
+    }
+
+    @PostMapping(&quot;/{userId}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    public ResponseEntity&lt;OffDayDAO&gt; save(@RequestBody OffDayDAO offDay, @PathVariable Long userId) {
+<span class="nc" id="L67">        return userRepository.findById(userId).map(user -&gt; {</span>
+            // Check for overlapping OffDays
+<span class="nc" id="L69">            List&lt;OffDayDAO&gt; overlappingOffDays = offDayRepository.findOverlappingOffDays(</span>
+                    user,
+<span class="nc" id="L71">                    offDay.getFirstDay(),</span>
+<span class="nc" id="L72">                    offDay.getLastDay(),</span>
+                    null // No ID to exclude since this is a new record
+            );
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">            if (!overlappingOffDays.isEmpty()) {</span>
+<span class="nc" id="L77">                throw new ResponseStatusException(</span>
+                        HttpStatus.CONFLICT,
+                        &quot;This off day overlaps with existing off days for the user&quot;
+                );
+            }
+
+<span class="nc" id="L83">            offDay.setUser(user);</span>
+<span class="nc" id="L84">            OffDayDAO save = offDayRepository.save(offDay);</span>
+<span class="nc" id="L85">            return ResponseEntity.ok(save); // Return 200 OK</span>
+<span class="nc" id="L86">        }).orElse(ResponseEntity.notFound().build());</span>
+    }
+
+    @PutMapping(&quot;/{userId}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    public ResponseEntity&lt;Object&gt; update(@RequestBody OffDayDAO offDay, @PathVariable Long userId) {
+<span class="nc" id="L92">        return userRepository.findById(userId).map(user -&gt; {</span>
+            // Check for overlapping OffDays, excluding the current offDay being updated
+<span class="nc" id="L94">            List&lt;OffDayDAO&gt; overlappingOffDays = offDayRepository.findOverlappingOffDays(</span>
+                    user,
+<span class="nc" id="L96">                    offDay.getFirstDay(),</span>
+<span class="nc" id="L97">                    offDay.getLastDay(),</span>
+<span class="nc" id="L98">                    offDay.getId() // Exclude the current offDay</span>
+            );
+
+<span class="nc bnc" id="L101" title="All 2 branches missed.">            if (!overlappingOffDays.isEmpty()) {</span>
+<span class="nc" id="L102">                throw new ResponseStatusException(</span>
+                        HttpStatus.CONFLICT,
+                        &quot;This off day overlaps with existing off days for the user&quot;
+                );
+            }
+
+<span class="nc" id="L108">            offDay.setUser(user);</span>
+<span class="nc" id="L109">            OffDayDAO save = offDayRepository.save(offDay);</span>
+<span class="nc" id="L110">            return ResponseEntity.ok().build(); // Return 200 OK</span>
+<span class="nc" id="L111">        }).orElse(ResponseEntity.notFound().build());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OffDayListView.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.ui.view</a> &gt; <span class="el_source">OffDayListView.java</span></div><h1>OffDayListView.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.ui.view;
+
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.router.*;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+import de.bushnaq.abdalla.projecthub.dto.*;
+import de.bushnaq.abdalla.projecthub.dto.Location;
+import de.bushnaq.abdalla.projecthub.rest.api.OffDayApi;
+import de.bushnaq.abdalla.projecthub.rest.api.UserApi;
+import de.bushnaq.abdalla.projecthub.ui.MainLayout;
+import de.bushnaq.abdalla.projecthub.ui.component.YearCalendarComponent;
+import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
+import de.bushnaq.abdalla.projecthub.ui.dialog.OffDayDialog;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+import jakarta.annotation.security.PermitAll;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Route(value = &quot;offday/:username?&quot;, layout = MainLayout.class)
+@PageTitle(&quot;User Off Days&quot;)
+@PermitAll
+public class OffDayListView extends Main implements BeforeEnterObserver, AfterNavigationObserver {
+    public static final String                CREATE_OFFDAY_BUTTON             = &quot;create-offday-button&quot;;
+    //    public static final String                INFO_BOX                         = &quot;offday-info-box&quot;;
+    public static final String                OFFDAY_GRID                      = &quot;offday-grid&quot;;
+    public static final String                OFFDAY_GRID_DELETE_BUTTON_PREFIX = &quot;offday-delete-button-&quot;;
+    public static final String                OFFDAY_GRID_EDIT_BUTTON_PREFIX   = &quot;offday-edit-button-&quot;;
+    public static final String                OFFDAY_GRID_END_DATE_PREFIX      = &quot;offday-end-&quot;;
+    public static final String                OFFDAY_GRID_START_DATE_PREFIX    = &quot;offday-start-&quot;;
+    public static final String                OFFDAY_GRID_TYPE_PREFIX          = &quot;offday-type-&quot;;
+    public static final String                OFFDAY_LIST_PAGE_TITLE           = &quot;offday-page-title&quot;;
+    public static final String                ROUTE                            = &quot;offday&quot;;
+    private             User                  currentUser;
+<span class="nc" id="L69">    private final       Grid&lt;OffDay&gt;          grid                             = new Grid&lt;&gt;(OffDay.class, false);</span>
+    private final       OffDayApi             offDayApi;
+    private final       UserApi               userApi;
+    private             YearCalendarComponent yearCalendar;
+
+
+<span class="nc" id="L75">    public OffDayListView(OffDayApi offDayApi, UserApi userApi) {</span>
+<span class="nc" id="L76">        this.offDayApi = offDayApi;</span>
+<span class="nc" id="L77">        this.userApi   = userApi;</span>
+
+<span class="nc" id="L79">        setSizeFull();</span>
+<span class="nc" id="L80">        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);</span>
+
+<span class="nc" id="L82">        add(VaadinUtils.createHeader(&quot;User Off-Days&quot;, OFFDAY_LIST_PAGE_TITLE, VaadinIcon.CALENDAR, CREATE_OFFDAY_BUTTON, () -&gt; openOffDayDialog(null)), new HorizontalLayout(createGrid(), createCalendar()));</span>
+<span class="nc" id="L83">    }</span>
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+//        createCalendar();
+<span class="nc" id="L88">        refreshOffDayGrid();</span>
+<span class="nc" id="L89">    }</span>
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        // Get username from URL parameter or use the currently authenticated user
+<span class="nc" id="L94">        String usernameParam = event.getRouteParameters().get(&quot;username&quot;).orElse(null);</span>
+
+<span class="nc" id="L96">        Authentication authentication  = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">        String         currentUsername = authentication != null ? authentication.getName() : null;</span>
+
+        // If no username is provided, use the current authenticated user
+        // Store in a final variable to use in lambda
+<span class="nc bnc" id="L101" title="All 4 branches missed.">        final String username = (usernameParam == null &amp;&amp; currentUsername != null) ?</span>
+<span class="nc" id="L102">                currentUsername : usernameParam;</span>
+
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        if (username != null) {</span>
+            try {
+                // Find user by username using the direct getByName method
+<span class="nc" id="L107">                currentUser = userApi.getByName(username);</span>
+<span class="nc" id="L108">                currentUser.initialize();</span>
+<span class="nc" id="L109">            } catch (ResponseStatusException ex) {</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">                if (ex.getStatusCode().equals(HttpStatus.NOT_FOUND)) {</span>
+                    // Create a new user since one wasn't found
+<span class="nc" id="L112">                    User newUser = createDefaultUser(username);</span>
+<span class="nc" id="L113">                    currentUser = userApi.persist(newUser);</span>
+<span class="nc" id="L114">                    currentUser.initialize();</span>
+<span class="nc" id="L115">                    Notification notification = Notification.show(&quot;Created new user: &quot; + username, 3000, Notification.Position.MIDDLE);</span>
+<span class="nc" id="L116">                    notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);</span>
+<span class="nc" id="L117">                } else {</span>
+<span class="nc" id="L118">                    throw ex;</span>
+                }
+<span class="nc" id="L120">            }</span>
+        } else {
+            // Redirect to main page if no username and not authenticated
+<span class="nc" id="L123">            event.forwardTo(&quot;&quot;);</span>
+        }
+<span class="nc" id="L125">        createCalendar();</span>
+<span class="nc" id="L126">    }</span>
+
+    private void confirmDelete(OffDay offDay) {
+<span class="nc" id="L129">        ConfirmDialog dialog = new ConfirmDialog(&quot;Confirm Delete&quot;, &quot;Are you sure you want to delete this off day record?&quot;, &quot;Delete&quot;,</span>
+                () -&gt; {
+                    try {
+<span class="nc" id="L132">                        offDayApi.deleteById(currentUser, offDay);</span>
+<span class="nc" id="L133">                        refreshOffDayGrid();</span>
+                        // Update the calendar with the fresh user data
+<span class="nc bnc" id="L135" title="All 2 branches missed.">                        if (yearCalendar != null) {</span>
+<span class="nc" id="L136">                            yearCalendar.updateCalendar(currentUser);</span>
+                        }
+<span class="nc" id="L138">                        Notification.show(&quot;Off day deleted&quot;, 3000, Notification.Position.MIDDLE);</span>
+<span class="nc" id="L139">                    } catch (Exception ex) {</span>
+<span class="nc" id="L140">                        Notification notification = Notification.show(&quot;Failed to delete: &quot; + ex.getMessage(), 3000, Notification.Position.MIDDLE);</span>
+<span class="nc" id="L141">                        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);</span>
+<span class="nc" id="L142">                    }</span>
+<span class="nc" id="L143">                });</span>
+<span class="nc" id="L144">        dialog.open();</span>
+<span class="nc" id="L145">    }</span>
+
+    private YearCalendarComponent createCalendar() {
+        // Create a new YearCalendarComponent with the current user and the current year
+<span class="nc bnc" id="L149" title="All 2 branches missed.">        if (yearCalendar != null)</span>
+<span class="nc" id="L150">            return yearCalendar;</span>
+<span class="nc" id="L151">        yearCalendar = new YearCalendarComponent(currentUser, java.time.LocalDate.now().getYear(), this::handleCalendarDayClick);</span>
+<span class="nc" id="L152">        return yearCalendar;</span>
+    }
+
+    /**
+     * Creates a default user with standard settings
+     *
+     * @param username The name for the new user
+     * @return A new User object with default settings
+     */
+    private User createDefaultUser(String username) {
+<span class="nc" id="L162">        User user = new User();</span>
+<span class="nc" id="L163">        user.setName(username);</span>
+<span class="nc" id="L164">        user.setEmail(username);</span>
+<span class="nc" id="L165">        user.setFirstWorkingDay(java.time.LocalDate.now());</span>
+<span class="nc" id="L166">        user.setColor(new java.awt.Color(51, 102, 204));</span>
+<span class="nc" id="L167">        Availability availability = new Availability(1.0f, java.time.LocalDate.now());</span>
+<span class="nc" id="L168">        user.addAvailability(availability);</span>
+<span class="nc" id="L169">        de.bushnaq.abdalla.projecthub.dto.Location location = new Location(&quot;DE&quot;, &quot;nw&quot;, java.time.LocalDate.now());</span>
+<span class="nc" id="L170">        user.addLocation(location);</span>
+<span class="nc" id="L171">        return user;</span>
+    }
+
+    private Grid&lt;OffDay&gt; createGrid() {
+<span class="nc" id="L175">        grid.setId(OFFDAY_GRID);</span>
+<span class="nc" id="L176">        grid.setWidthFull();</span>
+<span class="nc" id="L177">        grid.addClassNames(LumoUtility.Border.ALL, LumoUtility.BorderColor.CONTRAST_10);</span>
+
+        // Add columns
+<span class="nc" id="L180">        grid.addColumn(new ComponentRenderer&lt;&gt;(offDay -&gt; {</span>
+<span class="nc" id="L181">                    DateTimeFormatter formatter    = DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd&quot;);</span>
+<span class="nc" id="L182">                    String            startDateStr = offDay.getFirstDay().format(formatter);</span>
+<span class="nc" id="L183">                    Span              span         = new Span(startDateStr);</span>
+<span class="nc" id="L184">                    span.setId(OFFDAY_GRID_START_DATE_PREFIX + offDay.getId());</span>
+<span class="nc" id="L185">                    return span;</span>
+                }))
+<span class="nc" id="L187">                .setHeader(createHeaderWithIcon(VaadinIcon.CALENDAR, &quot;First Day&quot;))</span>
+<span class="nc" id="L188">                .setSortable(true)</span>
+<span class="nc" id="L189">                .setKey(&quot;firstDay&quot;);</span>
+
+<span class="nc" id="L191">        grid.addColumn(new ComponentRenderer&lt;&gt;(offDay -&gt; {</span>
+<span class="nc" id="L192">                    DateTimeFormatter formatter  = DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd&quot;);</span>
+<span class="nc" id="L193">                    String            endDateStr = offDay.getLastDay().format(formatter);</span>
+<span class="nc" id="L194">                    Span              span       = new Span(endDateStr);</span>
+<span class="nc" id="L195">                    span.setId(OFFDAY_GRID_END_DATE_PREFIX + offDay.getId());</span>
+<span class="nc" id="L196">                    return span;</span>
+                }))
+<span class="nc" id="L198">                .setHeader(createHeaderWithIcon(VaadinIcon.CALENDAR, &quot;Last Day&quot;))</span>
+<span class="nc" id="L199">                .setSortable(true)</span>
+<span class="nc" id="L200">                .setKey(&quot;lastDay&quot;);</span>
+
+<span class="nc" id="L202">        grid.addColumn(new ComponentRenderer&lt;&gt;(offDay -&gt; {</span>
+<span class="nc" id="L203">                    OffDayType type = offDay.getType();</span>
+<span class="nc" id="L204">                    Span       span = new Span(type.name());</span>
+<span class="nc" id="L205">                    span.setId(OFFDAY_GRID_TYPE_PREFIX + offDay.getId());</span>
+<span class="nc" id="L206">                    return span;</span>
+                }))
+<span class="nc" id="L208">                .setHeader(createHeaderWithIcon(VaadinIcon.TAGS, &quot;Type&quot;))</span>
+<span class="nc" id="L209">                .setSortable(true)</span>
+<span class="nc" id="L210">                .setKey(&quot;type&quot;);</span>
+
+        // Add action column
+<span class="nc" id="L213">        grid.addColumn(new ComponentRenderer&lt;&gt;(offDay -&gt; {</span>
+<span class="nc" id="L214">            HorizontalLayout layout = new HorizontalLayout();</span>
+<span class="nc" id="L215">            layout.setAlignItems(FlexComponent.Alignment.CENTER);</span>
+<span class="nc" id="L216">            layout.setSpacing(true);</span>
+
+<span class="nc" id="L218">            Button editButton = new Button(new Icon(VaadinIcon.EDIT));</span>
+<span class="nc" id="L219">            editButton.setId(OFFDAY_GRID_EDIT_BUTTON_PREFIX + offDay.getId());</span>
+<span class="nc" id="L220">            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);</span>
+<span class="nc" id="L221">            editButton.addClickListener(e -&gt; openOffDayDialog(offDay));</span>
+<span class="nc" id="L222">            editButton.getElement().setAttribute(&quot;title&quot;, &quot;Edit&quot;);</span>
+
+<span class="nc" id="L224">            Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));</span>
+<span class="nc" id="L225">            deleteButton.setId(OFFDAY_GRID_DELETE_BUTTON_PREFIX + offDay.getId());</span>
+<span class="nc" id="L226">            deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);</span>
+<span class="nc" id="L227">            deleteButton.addClickListener(e -&gt; confirmDelete(offDay));</span>
+<span class="nc" id="L228">            deleteButton.getElement().setAttribute(&quot;title&quot;, &quot;Delete&quot;);</span>
+
+<span class="nc" id="L230">            layout.add(editButton, deleteButton);</span>
+<span class="nc" id="L231">            return layout;</span>
+<span class="nc" id="L232">        })).setHeader(createHeaderWithIcon(VaadinIcon.COG, &quot;Actions&quot;)).setFlexGrow(0).setWidth(&quot;120px&quot;);</span>
+
+<span class="nc" id="L234">        return grid;</span>
+    }
+
+    private HorizontalLayout createHeaderWithIcon(VaadinIcon icon, String text) {
+<span class="nc" id="L238">        Icon headerIcon = new Icon(icon);</span>
+<span class="nc" id="L239">        headerIcon.setSize(&quot;16px&quot;);</span>
+
+<span class="nc" id="L241">        Span headerText = new Span(text);</span>
+<span class="nc" id="L242">        headerText.addClassNames(LumoUtility.Margin.XSMALL);</span>
+
+<span class="nc" id="L244">        HorizontalLayout headerLayout = new HorizontalLayout(headerIcon, headerText);</span>
+<span class="nc" id="L245">        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);</span>
+<span class="nc" id="L246">        headerLayout.setSpacing(false);</span>
+
+<span class="nc" id="L248">        return headerLayout;</span>
+    }
+
+    /**
+     * Handles clicks on calendar days that have off days
+     *
+     * @param date The date that was clicked
+     */
+    private void handleCalendarDayClick(java.time.LocalDate date) {
+<span class="nc bnc" id="L257" title="All 2 branches missed.">        if (currentUser != null) {</span>
+            // Find the off day that contains this date
+<span class="nc" id="L259">            OffDay matchingOffDay = currentUser.getOffDays().stream()</span>
+<span class="nc" id="L260">                    .filter(offDay -&gt;</span>
+<span class="nc bnc" id="L261" title="All 4 branches missed.">                            (date.equals(offDay.getFirstDay()) || date.isAfter(offDay.getFirstDay())) &amp;&amp;</span>
+<span class="nc bnc" id="L262" title="All 4 branches missed.">                                    (date.equals(offDay.getLastDay()) || date.isBefore(offDay.getLastDay())))</span>
+<span class="nc" id="L263">                    .findFirst()</span>
+<span class="nc" id="L264">                    .orElse(null);</span>
+
+<span class="nc bnc" id="L266" title="All 2 branches missed.">            if (matchingOffDay != null) {</span>
+                // Open the dialog to edit this off day
+<span class="nc" id="L268">                openOffDayDialog(matchingOffDay);</span>
+            }
+        }
+<span class="nc" id="L271">    }</span>
+
+    private void openOffDayDialog(OffDay offDay) {
+        // Create new or edit existing off day
+<span class="nc" id="L275">        OffDayDialog dialog = new OffDayDialog(</span>
+                offDay,
+                this.currentUser,
+                this.offDayApi,
+                () -&gt; {
+<span class="nc" id="L280">                    refreshOffDayGrid();</span>
+<span class="nc bnc" id="L281" title="All 2 branches missed.">                    if (yearCalendar != null) {</span>
+                        // Pass the updated user to the calendar
+<span class="nc" id="L283">                        yearCalendar.updateCalendar(currentUser);</span>
+                    }
+<span class="nc" id="L285">                });</span>
+<span class="nc" id="L286">        dialog.open();</span>
+<span class="nc" id="L287">    }</span>
+
+
+    private void refreshOffDayGrid() {
+<span class="nc bnc" id="L291" title="All 2 branches missed.">        if (currentUser != null) {</span>
+            // Reload the user to get fresh data
+<span class="nc" id="L293">            currentUser = userApi.getById(currentUser.getId());</span>
+<span class="nc" id="L294">            currentUser.initialize();</span>
+
+            // Sort off days by start date (newest to oldest)
+<span class="nc" id="L297">            List&lt;OffDay&gt; sortedOffDays = currentUser.getOffDays().stream().sorted(Comparator.comparing(OffDay::getFirstDay).reversed()).collect(Collectors.toList());</span>
+
+<span class="nc" id="L299">            grid.setItems(sortedOffDays);</span>
+
+<span class="nc" id="L301">            yearCalendar.updateCalendar(currentUser);</span>
+        }
+<span class="nc" id="L303">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

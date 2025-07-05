@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FeatureListView.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.ui.view</a> &gt; <span class="el_source">FeatureListView.java</span></div><h1>FeatureListView.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.ui.view;
+
+import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.router.*;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+import de.bushnaq.abdalla.projecthub.dto.Feature;
+import de.bushnaq.abdalla.projecthub.dto.Product;
+import de.bushnaq.abdalla.projecthub.dto.Version;
+import de.bushnaq.abdalla.projecthub.rest.api.FeatureApi;
+import de.bushnaq.abdalla.projecthub.rest.api.ProductApi;
+import de.bushnaq.abdalla.projecthub.rest.api.VersionApi;
+import de.bushnaq.abdalla.projecthub.ui.MainLayout;
+import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
+import de.bushnaq.abdalla.projecthub.ui.dialog.FeatureDialog;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.Clock;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.HashMap;
+import java.util.Map;
+
+@Route(&quot;feature-list&quot;)
+@PageTitle(&quot;Feature List Page&quot;)
+@PermitAll // When security is enabled, allow all authenticated users
+@RolesAllowed({&quot;USER&quot;, &quot;ADMIN&quot;}) // Restrict access to users with specific roles
+public class FeatureListView extends Main implements AfterNavigationObserver {
+    public static final String        CREATE_FEATURE_BUTTON_ID          = &quot;create-feature-button&quot;;
+    public static final String        FEATURE_GRID                      = &quot;feature-grid&quot;;
+    public static final String        FEATURE_GRID_DELETE_BUTTON_PREFIX = &quot;feature-grid-delete-button-prefix-&quot;;
+    public static final String        FEATURE_GRID_EDIT_BUTTON_PREFIX   = &quot;feature-grid-edit-button-prefix-&quot;;
+    public static final String        FEATURE_GRID_NAME_PREFIX          = &quot;feature-grid-name-&quot;;
+    public static final String        FEATURE_LIST_PAGE_TITLE           = &quot;feature-list-page-title&quot;;
+    private final       FeatureApi    featureApi;
+    private final       Grid&lt;Feature&gt; grid;
+    private final       ProductApi    productApi;
+    //    private             H2            pageTitle;
+    private             Long          productId;
+    private final       VersionApi    versionApi;
+    private             Long          versionId;
+
+<span class="nc" id="L75">    public FeatureListView(FeatureApi featureApi, ProductApi productApi, VersionApi versionApi, Clock clock) {</span>
+<span class="nc" id="L76">        this.featureApi = featureApi;</span>
+<span class="nc" id="L77">        this.productApi = productApi;</span>
+<span class="nc" id="L78">        this.versionApi = versionApi;</span>
+
+<span class="nc" id="L80">        grid = createGrid(clock);</span>
+
+<span class="nc" id="L82">        setSizeFull();</span>
+<span class="nc" id="L83">        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);</span>
+
+<span class="nc" id="L85">        add(VaadinUtils.createHeader(&quot;Features&quot;, FEATURE_LIST_PAGE_TITLE, VaadinIcon.LIGHTBULB, CREATE_FEATURE_BUTTON_ID, () -&gt; openFeatureDialog(null)), grid);</span>
+<span class="nc" id="L86">    }</span>
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+        //- Get query parameters
+<span class="nc" id="L91">        Location        location        = event.getLocation();</span>
+<span class="nc" id="L92">        QueryParameters queryParameters = location.getQueryParameters();</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">        if (queryParameters.getParameters().containsKey(&quot;product&quot;)) {</span>
+<span class="nc" id="L94">            this.productId = Long.parseLong(queryParameters.getParameters().get(&quot;product&quot;).getFirst());</span>
+        }
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        if (queryParameters.getParameters().containsKey(&quot;version&quot;)) {</span>
+<span class="nc" id="L97">            this.versionId = Long.parseLong(queryParameters.getParameters().get(&quot;version&quot;).getFirst());</span>
+//            pageTitle.setText(&quot;Features of Version &quot; + versionId);
+        }
+        //- update breadcrumbs
+<span class="nc" id="L101">        getElement().getParent().getComponent()</span>
+<span class="nc" id="L102">                .ifPresent(component -&gt; {</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">                    if (component instanceof MainLayout mainLayout) {</span>
+<span class="nc" id="L104">                        mainLayout.getBreadcrumbs().clear();</span>
+<span class="nc" id="L105">                        Product product = productApi.getById(productId);</span>
+<span class="nc" id="L106">                        mainLayout.getBreadcrumbs().addItem(&quot;Products (&quot; + product.getName() + &quot;)&quot;, ProductListView.class);</span>
+                        {
+<span class="nc" id="L108">                            Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L109">                            params.put(&quot;product&quot;, String.valueOf(productId));</span>
+<span class="nc" id="L110">                            Version version = versionApi.getById(versionId);</span>
+<span class="nc" id="L111">                            mainLayout.getBreadcrumbs().addItem(&quot;Versions (&quot; + version.getName() + &quot;)&quot;, VersionListView.class, params);</span>
+                        }
+                        {
+<span class="nc" id="L114">                            Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L115">                            params.put(&quot;product&quot;, String.valueOf(productId));</span>
+<span class="nc" id="L116">                            params.put(&quot;version&quot;, String.valueOf(versionId));</span>
+<span class="nc" id="L117">                            mainLayout.getBreadcrumbs().addItem(&quot;Features&quot;, FeatureListView.class, params);</span>
+                        }
+                    }
+<span class="nc" id="L120">                });</span>
+
+        //- populate grid
+<span class="nc" id="L123">        refreshGrid();</span>
+<span class="nc" id="L124">    }</span>
+
+    private void confirmDelete(Feature feature) {
+<span class="nc" id="L127">        String message = &quot;Are you sure you want to delete feature \&quot;&quot; + feature.getName() + &quot;\&quot;?&quot;;</span>
+<span class="nc" id="L128">        ConfirmDialog dialog = new ConfirmDialog(</span>
+                &quot;Confirm Delete&quot;,
+                message,
+                &quot;Delete&quot;,
+                () -&gt; {
+<span class="nc" id="L133">                    featureApi.deleteById(feature.getId());</span>
+<span class="nc" id="L134">                    refreshGrid();</span>
+<span class="nc" id="L135">                    Notification.show(&quot;Feature deleted&quot;, 3000, Notification.Position.BOTTOM_START);</span>
+<span class="nc" id="L136">                }</span>
+        );
+<span class="nc" id="L138">        dialog.open();</span>
+<span class="nc" id="L139">    }</span>
+
+    private Grid&lt;Feature&gt; createGrid(Clock clock) {
+        final Grid&lt;Feature&gt; grid;
+<span class="nc" id="L143">        DateTimeFormatter   dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());</span>
+
+<span class="nc" id="L145">        grid = new Grid&lt;&gt;();</span>
+<span class="nc" id="L146">        grid.setId(FEATURE_GRID);</span>
+
+<span class="nc" id="L148">        Grid.Column&lt;Feature&gt; keyColumn = grid.addColumn(Feature::getKey).setHeader(&quot;Key&quot;);</span>
+<span class="nc" id="L149">        keyColumn.setId(&quot;feature-grid-key-column&quot;);</span>
+<span class="nc" id="L150">        keyColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.KEY), new Div(new Text(&quot;Key&quot;))));</span>
+
+<span class="nc" id="L152">        Grid.Column&lt;Feature&gt; nameColumn = grid.addColumn(new ComponentRenderer&lt;&gt;(feature -&gt; {</span>
+<span class="nc" id="L153">            Div div    = new Div();</span>
+<span class="nc" id="L154">            Div square = new Div();</span>
+<span class="nc" id="L155">            square.setMinHeight(&quot;16px&quot;);</span>
+<span class="nc" id="L156">            square.setMaxHeight(&quot;16px&quot;);</span>
+<span class="nc" id="L157">            square.setMinWidth(&quot;16px&quot;);</span>
+<span class="nc" id="L158">            square.setMaxWidth(&quot;16px&quot;);</span>
+//            square.getStyle().set(&quot;background-color&quot;, &quot;#&quot; + ColorUtil.colorToHtmlColor(feature.getColor()));
+<span class="nc" id="L160">            square.getStyle().set(&quot;float&quot;, &quot;left&quot;);</span>
+<span class="nc" id="L161">            square.getStyle().set(&quot;margin&quot;, &quot;1px&quot;);</span>
+<span class="nc" id="L162">            div.add(square);</span>
+<span class="nc" id="L163">            div.add(feature.getName());</span>
+<span class="nc" id="L164">            div.setId(FEATURE_GRID_NAME_PREFIX + feature.getName());</span>
+<span class="nc" id="L165">            return div;</span>
+<span class="nc" id="L166">        })).setHeader(&quot;Name&quot;);</span>
+<span class="nc" id="L167">        nameColumn.setId(&quot;feature-grid-name-column&quot;);</span>
+<span class="nc" id="L168">        nameColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.LIGHTBULB), new Div(new Text(&quot;Name&quot;))));</span>
+
+<span class="nc" id="L170">        Grid.Column&lt;Feature&gt; createdColumn = grid.addColumn(version -&gt; dateTimeFormatter.format(version.getCreated())).setHeader(&quot;Created&quot;);</span>
+<span class="nc" id="L171">        createdColumn.setId(&quot;feature-grid-created-column&quot;);</span>
+<span class="nc" id="L172">        createdColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text(&quot;Created&quot;))));</span>
+
+<span class="nc" id="L174">        Grid.Column&lt;Feature&gt; updatedColumn = grid.addColumn(version -&gt; dateTimeFormatter.format(version.getUpdated())).setHeader(&quot;Updated&quot;);</span>
+<span class="nc" id="L175">        updatedColumn.setId(&quot;feature-grid-updated-column&quot;);</span>
+<span class="nc" id="L176">        updatedColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text(&quot;Updated&quot;))));</span>
+
+        // Add actions column with direct buttons instead of context menu
+<span class="nc" id="L179">        grid.addColumn(new ComponentRenderer&lt;&gt;(feature -&gt; {</span>
+<span class="nc" id="L180">            HorizontalLayout layout = new HorizontalLayout();</span>
+<span class="nc" id="L181">            layout.setAlignItems(FlexComponent.Alignment.CENTER);</span>
+<span class="nc" id="L182">            layout.setSpacing(true);</span>
+
+<span class="nc" id="L184">            Button editButton = new Button(new Icon(VaadinIcon.EDIT));</span>
+<span class="nc" id="L185">            editButton.setId(FEATURE_GRID_EDIT_BUTTON_PREFIX + feature.getName());</span>
+<span class="nc" id="L186">            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);</span>
+<span class="nc" id="L187">            editButton.addClickListener(e -&gt; openFeatureDialog(feature));</span>
+<span class="nc" id="L188">            editButton.getElement().setAttribute(&quot;title&quot;, &quot;Edit&quot;);</span>
+
+<span class="nc" id="L190">            Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));</span>
+<span class="nc" id="L191">            deleteButton.setId(FEATURE_GRID_DELETE_BUTTON_PREFIX + feature.getName());</span>
+<span class="nc" id="L192">            deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);</span>
+<span class="nc" id="L193">            deleteButton.addClickListener(e -&gt; confirmDelete(feature));</span>
+<span class="nc" id="L194">            deleteButton.getElement().setAttribute(&quot;title&quot;, &quot;Delete&quot;);</span>
+
+<span class="nc" id="L196">            layout.add(editButton, deleteButton);</span>
+<span class="nc" id="L197">            return layout;</span>
+<span class="nc" id="L198">        })).setHeader(&quot;Actions&quot;).setFlexGrow(0).setWidth(&quot;120px&quot;);</span>
+
+<span class="nc" id="L200">        grid.setSizeFull();</span>
+
+        //- Add click listener to navigate to SprintView with the selected version ID
+<span class="nc" id="L203">        grid.addItemClickListener(event -&gt; {</span>
+<span class="nc" id="L204">            Feature selectedFeature = event.getItem();</span>
+            //- Create parameters map
+<span class="nc" id="L206">            Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L207">            params.put(&quot;product&quot;, String.valueOf(productId));</span>
+<span class="nc" id="L208">            params.put(&quot;version&quot;, String.valueOf(versionId));</span>
+<span class="nc" id="L209">            params.put(&quot;feature&quot;, String.valueOf(selectedFeature.getId()));</span>
+            //- Navigate with query parameters
+<span class="nc" id="L211">            UI.getCurrent().navigate(</span>
+                    SprintListView.class,
+<span class="nc" id="L213">                    QueryParameters.simple(params)</span>
+            );
+<span class="nc" id="L215">        });</span>
+<span class="nc" id="L216">        return grid;</span>
+    }
+
+    private void openFeatureDialog(Feature feature) {
+<span class="nc" id="L220">        FeatureDialog dialog = new FeatureDialog(feature, (savedFeature, featureDialog) -&gt; {</span>
+            try {
+<span class="nc bnc" id="L222" title="All 2 branches missed.">                if (savedFeature.getId() == null) {</span>
+<span class="nc" id="L223">                    savedFeature.setVersionId(versionId);</span>
+<span class="nc" id="L224">                    featureApi.persist(savedFeature);</span>
+<span class="nc" id="L225">                    Notification.show(&quot;Feature created&quot;, 3000, Notification.Position.BOTTOM_START);</span>
+<span class="nc" id="L226">                    featureDialog.close();</span>
+                } else {
+<span class="nc" id="L228">                    featureApi.update(savedFeature);</span>
+<span class="nc" id="L229">                    Notification.show(&quot;Feature updated&quot;, 3000, Notification.Position.BOTTOM_START);</span>
+<span class="nc" id="L230">                    featureDialog.close();</span>
+                }
+<span class="nc" id="L232">                refreshGrid();</span>
+<span class="nc" id="L233">            } catch (ResponseStatusException ex) {</span>
+<span class="nc bnc" id="L234" title="All 2 branches missed.">                if (ex.getStatusCode() == HttpStatus.CONFLICT) {</span>
+                    // This is a name uniqueness violation
+<span class="nc" id="L236">                    featureDialog.setErrorMessage(&quot;A feature with this name already exists&quot;);</span>
+                } else {
+                    // Some other error
+<span class="nc" id="L239">                    Notification.show(&quot;Error: &quot; + ex.getMessage(), 3000, Notification.Position.MIDDLE);</span>
+<span class="nc" id="L240">                    featureDialog.close();</span>
+                }
+<span class="nc" id="L242">            } catch (Exception ex) {</span>
+<span class="nc" id="L243">                Notification.show(&quot;Unexpected error: &quot; + ex.getMessage(), 3000, Notification.Position.MIDDLE);</span>
+<span class="nc" id="L244">                featureDialog.close();</span>
+<span class="nc" id="L245">            }</span>
+<span class="nc" id="L246">        });</span>
+<span class="nc" id="L247">        dialog.open();</span>
+<span class="nc" id="L248">    }</span>
+
+    private void refreshGrid() {
+<span class="nc bnc" id="L251" title="All 2 branches missed.">        if (versionId != null) {</span>
+<span class="nc" id="L252">            grid.setItems(featureApi.getAll(versionId));</span>
+        } else {
+<span class="nc" id="L254">            grid.setItems(featureApi.getAll());</span>
+        }
+<span class="nc" id="L256">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

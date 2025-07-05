@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>User.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.dto</a> &gt; <span class="el_source">User.java</span></div><h1>User.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.dto;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import de.bushnaq.abdalla.projecthub.ParameterOptions;
+import de.bushnaq.abdalla.projecthub.report.calendar.CalendarUtil;
+import de.bushnaq.abdalla.projecthub.report.gantt.GanttContext;
+import de.focus_shift.jollyday.core.Holiday;
+import de.focus_shift.jollyday.core.HolidayManager;
+import de.focus_shift.jollyday.core.ManagerParameters;
+import de.focus_shift.jollyday.core.parameter.UrlManagerParameter;
+import lombok.*;
+import net.sf.mpxj.ProjectCalendar;
+import net.sf.mpxj.ProjectCalendarException;
+import net.sf.mpxj.ProjectFile;
+
+import java.awt.*;
+import java.net.URL;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@ToString(callSuper = true)
+@EqualsAndHashCode(of = {&quot;id&quot;}, callSuper = false)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+public class User extends AbstractTimeAware implements Comparable&lt;User&gt; {
+
+    private static final long               MAX_PROJECT_LENGTH = 1;
+    @JsonManagedReference
+    private              List&lt;Availability&gt; availabilities     = new ArrayList&lt;&gt;();
+
+    @JsonIgnore
+    private ProjectCalendar calendar;
+    private Color           color;
+    private String          email;
+    private LocalDate       firstWorkingDay;
+    private Long            id;
+    private LocalDate       lastWorkingDay;
+    @JsonManagedReference
+    private List&lt;Location&gt;  locations = new ArrayList&lt;&gt;();
+    private String          name;
+    @JsonManagedReference
+    private List&lt;OffDay&gt;    offDays   = new ArrayList&lt;&gt;();
+
+    public void addAvailability(Availability availability) {
+<span class="nc" id="L70">        availabilities.add(availability);</span>
+<span class="nc" id="L71">    }</span>
+
+    public void addLocation(Location location) {
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        if (location.getStart() == null)</span>
+<span class="nc" id="L75">            throw new IllegalArgumentException(&quot;start date is null&quot;);</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">        if (location.getCountry() == null)</span>
+<span class="nc" id="L77">            throw new IllegalArgumentException(&quot;start date is null&quot;);</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        if (location.getState() == null)</span>
+<span class="nc" id="L79">            throw new IllegalArgumentException(&quot;start date is null&quot;);</span>
+<span class="nc" id="L80">        locations.add(location);</span>
+<span class="nc" id="L81">    }</span>
+
+    public void addOffday(OffDay offDay) {
+<span class="nc" id="L84">        offDays.add(offDay);</span>
+<span class="nc" id="L85">    }</span>
+
+    @Override
+    public int compareTo(User other) {
+<span class="nc" id="L89">        return this.id.compareTo(other.id);</span>
+    }
+
+    @JsonIgnore
+    public String getKey() {
+<span class="nc" id="L94">        return &quot;U-&quot; + id;</span>
+    }
+
+    public void initialize(GanttContext gc) {
+<span class="nc" id="L98">        ProjectCalendar resourceCalendar = getCalendar();</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">        if (resourceCalendar == null) {</span>
+<span class="nc" id="L100">            resourceCalendar = gc.getProjectFile().addDefaultDerivedCalendar();</span>
+<span class="nc" id="L101">            resourceCalendar.setParent(gc.getCalendar());</span>
+<span class="nc" id="L102">            resourceCalendar.setName(getName());</span>
+<span class="nc" id="L103">            setCalendar(resourceCalendar);</span>
+        }
+
+<span class="nc" id="L106">        initializeLocationsAndOffdays();</span>
+<span class="nc" id="L107">    }</span>
+
+    public void initialize(Sprint sprint) {
+<span class="nc" id="L110">        ProjectCalendar resourceCalendar = getCalendar();</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">        if (resourceCalendar == null) {</span>
+<span class="nc" id="L112">            resourceCalendar = sprint.getProjectFile().addDefaultDerivedCalendar();</span>
+<span class="nc" id="L113">            resourceCalendar.setParent(sprint.getCalendar());</span>
+<span class="nc" id="L114">            resourceCalendar.setName(getName());</span>
+<span class="nc" id="L115">            setCalendar(resourceCalendar);</span>
+        }
+
+<span class="nc" id="L118">        initializeLocationsAndOffdays();</span>
+<span class="nc" id="L119">    }</span>
+
+    public void initialize() {
+<span class="nc" id="L122">        long            time             = System.currentTimeMillis();</span>
+<span class="nc" id="L123">        ProjectCalendar resourceCalendar = getCalendar();</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">        if (resourceCalendar == null) {</span>
+<span class="nc" id="L125">            ProjectFile projectFile = new ProjectFile();</span>
+<span class="nc" id="L126">            CalendarUtil.initializeProjectProperties(projectFile);</span>
+<span class="nc" id="L127">            ProjectCalendar calendar = CalendarUtil.initializeCalendar(projectFile);</span>
+<span class="nc" id="L128">            resourceCalendar = projectFile.addDefaultDerivedCalendar();</span>
+<span class="nc" id="L129">            resourceCalendar.setParent(calendar);</span>
+<span class="nc" id="L130">            resourceCalendar.setName(getName());</span>
+<span class="nc" id="L131">            setCalendar(resourceCalendar);</span>
+        }
+<span class="nc" id="L133">        System.out.println(&quot;User.initialize() took &quot; + (System.currentTimeMillis() - time) + &quot; ms for user: &quot; + getName());</span>
+
+<span class="nc" id="L135">        time = System.currentTimeMillis();</span>
+<span class="nc" id="L136">        initializeLocationsAndOffdays();</span>
+<span class="nc" id="L137">        System.out.println(&quot;User.initializeLocationsAndOffdays() took &quot; + (System.currentTimeMillis() - time) + &quot; ms for user: &quot; + getName());</span>
+<span class="nc" id="L138">    }</span>
+
+    private void initializeLocationsAndOffdays() {
+        //TODO rethink employee leaving company and coming back
+<span class="nc" id="L142">        ProjectCalendar pc = getCalendar();</span>
+        LocalDate       endDateInclusive;
+<span class="nc bnc" id="L144" title="All 2 branches missed.">        for (OffDay offDay : getOffDays()) {</span>
+<span class="nc" id="L145">            ProjectCalendarException pce = pc.addCalendarException(offDay.getFirstDay(), offDay.getLastDay());</span>
+<span class="nc" id="L146">            pce.setName(offDay.getType().name());</span>
+<span class="nc" id="L147">        }</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">        for (int i = 0; i &lt; locations.size(); i++) {</span>
+<span class="nc" id="L149">            Location  location           = locations.get(i);</span>
+<span class="nc" id="L150">            LocalDate startDateInclusive = location.getStart();</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">            if (i + 1 &lt; locations.size())</span>
+<span class="nc" id="L152">                endDateInclusive = locations.get(i + 1).getStart();//end of this location is start of next location</span>
+            else
+<span class="nc" id="L154">                endDateInclusive = ParameterOptions.now.plusYears(MAX_PROJECT_LENGTH).toLocalDate();</span>
+<span class="nc" id="L155">            HolidayManager holidayManager = HolidayManager.getInstance(ManagerParameters.create(location.getCountry()));</span>
+<span class="nc" id="L156">            List&lt;Holiday&gt;  holidays       = holidayManager.getHolidays(startDateInclusive, endDateInclusive, location.getState()).stream().sorted().collect(Collectors.toList());</span>
+<span class="nc" id="L157">            URL            url            = getClass().getClassLoader().getResource(&quot;holidays/carnival-holidays.xml&quot;);</span>
+<span class="nc bnc" id="L158" title="All 4 branches missed.">            if (url != null &amp;&amp; &quot;nw&quot;.equals(location.getState())) {</span>
+<span class="nc" id="L159">                UrlManagerParameter urlManParam        = new UrlManagerParameter(url, new Properties());</span>
+<span class="nc" id="L160">                HolidayManager      customManager      = HolidayManager.getInstance(urlManParam);</span>
+<span class="nc" id="L161">                Set&lt;Holiday&gt;        additionalHolidays = customManager.getHolidays(startDateInclusive, endDateInclusive, location.getState());</span>
+<span class="nc" id="L162">                holidays.addAll(additionalHolidays.stream().toList());</span>
+            }
+<span class="nc bnc" id="L164" title="All 2 branches missed.">            for (Holiday holiday : holidays) {</span>
+<span class="nc" id="L165">                ProjectCalendarException pce = pc.addCalendarException(holiday.getDate());</span>
+<span class="nc" id="L166">                pce.setName(holiday.getDescription());</span>
+<span class="nc" id="L167">            }</span>
+        }
+<span class="nc" id="L169">    }</span>
+
+    public void removeAvailability(Availability availability) {
+<span class="nc" id="L172">        availabilities.remove(availability);</span>
+<span class="nc" id="L173">    }</span>
+
+    public void removeLocation(Location location) {
+<span class="nc" id="L176">        locations.remove(location);</span>
+<span class="nc" id="L177">    }</span>
+
+    public void removeOffDay(OffDay offDay) {
+<span class="nc" id="L180">        offDays.remove(offDay);</span>
+<span class="nc" id="L181">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserListView.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.ui.view</a> &gt; <span class="el_source">UserListView.java</span></div><h1>UserListView.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.ui.view;
+
+import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.router.*;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+import de.bushnaq.abdalla.projecthub.dto.User;
+import de.bushnaq.abdalla.projecthub.rest.api.UserApi;
+import de.bushnaq.abdalla.projecthub.ui.MainLayout;
+import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
+import de.bushnaq.abdalla.projecthub.ui.dialog.UserDialog;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+import jakarta.annotation.security.PermitAll;
+
+import java.time.Clock;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+
+@Route(&quot;user-list&quot;)
+@PageTitle(&quot;User List Page&quot;)
+@Menu(order = 2, icon = &quot;vaadin:users&quot;, title = &quot;User List&quot;)
+@PermitAll // When security is enabled, allow all authenticated users
+public class UserListView extends Main implements AfterNavigationObserver {
+    public static final String     CREATE_USER_BUTTON             = &quot;create-user-button&quot;;
+    public static final String     ROUTE                          = &quot;user-list&quot;;
+    public static final String     USER_GRID_DELETE_BUTTON_PREFIX = &quot;user-grid-delete-button-prefix-&quot;;
+    public static final String     USER_GRID_EDIT_BUTTON_PREFIX   = &quot;user-grid-edit-button-prefix-&quot;;
+    public static final String     USER_GRID_NAME_PREFIX          = &quot;user-grid-name-&quot;;
+    public static final String     USER_LIST_PAGE_TITLE           = &quot;user-list-page-title&quot;;
+    private final       Clock      clock;
+    private             Grid&lt;User&gt; grid;
+    private final       UserApi    userApi;
+
+<span class="nc" id="L61">    public UserListView(UserApi userApi, Clock clock) {</span>
+<span class="nc" id="L62">        this.userApi = userApi;</span>
+<span class="nc" id="L63">        this.clock   = clock;</span>
+
+<span class="nc" id="L65">        setSizeFull();</span>
+<span class="nc" id="L66">        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);</span>
+
+<span class="nc" id="L68">        add(VaadinUtils.createHeader(&quot;Users&quot;, USER_LIST_PAGE_TITLE, VaadinIcon.USERS, CREATE_USER_BUTTON, () -&gt; openUserDialog(null)), createGrid(clock));</span>
+<span class="nc" id="L69">    }</span>
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+<span class="nc" id="L73">        getElement().getParent().getComponent()</span>
+<span class="nc" id="L74">                .ifPresent(component -&gt; {</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">                    if (component instanceof MainLayout mainLayout) {</span>
+<span class="nc" id="L76">                        mainLayout.getBreadcrumbs().clear();</span>
+<span class="nc" id="L77">                        mainLayout.getBreadcrumbs().addItem(&quot;Users&quot;, UserListView.class);</span>
+                    }
+<span class="nc" id="L79">                });</span>
+<span class="nc" id="L80">    }</span>
+
+    private void confirmDelete(User user) {
+<span class="nc" id="L83">        String message = &quot;Are you sure you want to delete user \&quot;&quot; + user.getName() + &quot;\&quot;?&quot;;</span>
+<span class="nc" id="L84">        ConfirmDialog dialog = new ConfirmDialog(</span>
+                &quot;Confirm Delete&quot;,
+                message,
+                &quot;Delete&quot;,
+                () -&gt; {
+<span class="nc" id="L89">                    userApi.deleteById(user.getId());</span>
+<span class="nc" id="L90">                    refreshGrid();</span>
+<span class="nc" id="L91">                    Notification.show(&quot;User deleted&quot;, 3000, Notification.Position.BOTTOM_START);</span>
+<span class="nc" id="L92">                }</span>
+        );
+<span class="nc" id="L94">        dialog.open();</span>
+<span class="nc" id="L95">    }</span>
+
+    private Grid&lt;User&gt; createGrid(Clock clock) {
+<span class="nc" id="L98">        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());</span>
+
+<span class="nc" id="L100">        grid = new Grid&lt;&gt;();</span>
+<span class="nc" id="L101">        refreshGrid();</span>
+        {
+<span class="nc" id="L103">            Grid.Column&lt;User&gt; column = grid.addColumn(User::getKey).setHeader(&quot;Key&quot;);</span>
+<span class="nc" id="L104">            column.setId(&quot;user-grid-key-column&quot;);</span>
+<span class="nc" id="L105">            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.KEY), new Div(new Text(&quot;Key&quot;))));</span>
+        }
+        {
+<span class="nc" id="L108">            Grid.Column&lt;User&gt; column = grid.addColumn(new ComponentRenderer&lt;&gt;(user -&gt; {</span>
+<span class="nc" id="L109">                Div div = new Div();</span>
+                // Create color indicator if available
+<span class="nc bnc" id="L111" title="All 2 branches missed.">                if (user.getColor() != null) {</span>
+<span class="nc" id="L112">                    Div square = new Div();</span>
+<span class="nc" id="L113">                    square.setMinHeight(&quot;16px&quot;);</span>
+<span class="nc" id="L114">                    square.setMaxHeight(&quot;16px&quot;);</span>
+<span class="nc" id="L115">                    square.setMinWidth(&quot;16px&quot;);</span>
+<span class="nc" id="L116">                    square.setMaxWidth(&quot;16px&quot;);</span>
+<span class="nc" id="L117">                    square.getStyle().set(&quot;float&quot;, &quot;left&quot;);</span>
+<span class="nc" id="L118">                    square.getStyle().set(&quot;margin&quot;, &quot;1px&quot;);</span>
+<span class="nc" id="L119">                    square.getStyle().set(&quot;background-color&quot;, &quot;#&quot; + Integer.toHexString(user.getColor().getRGB()).substring(2));</span>
+<span class="nc" id="L120">                    div.add(square);</span>
+                }
+<span class="nc" id="L122">                div.add(user.getName());</span>
+<span class="nc" id="L123">                div.setId(USER_GRID_NAME_PREFIX + user.getName());</span>
+<span class="nc" id="L124">                return div;</span>
+<span class="nc" id="L125">            })).setHeader(&quot;Name&quot;);</span>
+<span class="nc" id="L126">            column.setId(&quot;user-grid-name-column&quot;);</span>
+<span class="nc" id="L127">            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.USER), new Div(new Text(&quot;Name&quot;))));</span>
+        }
+        {
+<span class="nc" id="L130">            Grid.Column&lt;User&gt; column = grid.addColumn(User::getEmail).setHeader(&quot;Email&quot;);</span>
+<span class="nc" id="L131">            column.setId(&quot;user-grid-email-column&quot;);</span>
+<span class="nc" id="L132">            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.ENVELOPE), new Div(new Text(&quot;Email&quot;))));</span>
+        }
+        {
+<span class="nc bnc" id="L135" title="All 2 branches missed.">            Grid.Column&lt;User&gt; column = grid.addColumn(user -&gt; user.getFirstWorkingDay() != null ? user.getFirstWorkingDay().toString() : &quot;&quot;).setHeader(&quot;First Working Day&quot;);</span>
+<span class="nc" id="L136">            column.setId(&quot;user-grid-first-working-day-column&quot;);</span>
+<span class="nc" id="L137">            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR_USER), new Div(new Text(&quot;First Working Day&quot;))));</span>
+        }
+        {
+<span class="nc bnc" id="L140" title="All 2 branches missed.">            Grid.Column&lt;User&gt; column = grid.addColumn(user -&gt; user.getLastWorkingDay() != null ? user.getLastWorkingDay().toString() : &quot;&quot;).setHeader(&quot;Last Working Day&quot;);</span>
+<span class="nc" id="L141">            column.setId(&quot;user-grid-last-working-day-column&quot;);</span>
+<span class="nc" id="L142">            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR_USER), new Div(new Text(&quot;Last Working Day&quot;))));</span>
+        }
+        {
+<span class="nc" id="L145">            Grid.Column&lt;User&gt; column = grid.addColumn(user -&gt; dateTimeFormatter.format(user.getCreated())).setHeader(&quot;Created&quot;);</span>
+<span class="nc" id="L146">            column.setId(&quot;user-grid-created-column&quot;);</span>
+<span class="nc" id="L147">            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text(&quot;Created&quot;))));</span>
+        }
+        {
+<span class="nc" id="L150">            Grid.Column&lt;User&gt; column = grid.addColumn(user -&gt; dateTimeFormatter.format(user.getUpdated())).setHeader(&quot;Updated&quot;);</span>
+<span class="nc" id="L151">            column.setId(&quot;user-grid-updated-column&quot;);</span>
+<span class="nc" id="L152">            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text(&quot;Updated&quot;))));</span>
+        }
+
+        // Add actions column with direct buttons instead of context menu
+<span class="nc" id="L156">        grid.addColumn(new ComponentRenderer&lt;&gt;(user -&gt; {</span>
+<span class="nc" id="L157">            HorizontalLayout layout = new HorizontalLayout();</span>
+<span class="nc" id="L158">            layout.setAlignItems(FlexComponent.Alignment.CENTER);</span>
+<span class="nc" id="L159">            layout.setSpacing(true);</span>
+
+<span class="nc" id="L161">            Button editButton = new Button(new Icon(VaadinIcon.EDIT));</span>
+<span class="nc" id="L162">            editButton.setId(USER_GRID_EDIT_BUTTON_PREFIX + user.getName());</span>
+<span class="nc" id="L163">            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);</span>
+<span class="nc" id="L164">            editButton.addClickListener(e -&gt; openUserDialog(user));</span>
+<span class="nc" id="L165">            editButton.getElement().setAttribute(&quot;title&quot;, &quot;Edit&quot;);</span>
+
+<span class="nc" id="L167">            Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));</span>
+<span class="nc" id="L168">            deleteButton.setId(USER_GRID_DELETE_BUTTON_PREFIX + user.getName());</span>
+<span class="nc" id="L169">            deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);</span>
+<span class="nc" id="L170">            deleteButton.addClickListener(e -&gt; confirmDelete(user));</span>
+<span class="nc" id="L171">            deleteButton.getElement().setAttribute(&quot;title&quot;, &quot;Delete&quot;);</span>
+
+<span class="nc" id="L173">            layout.add(editButton, deleteButton);</span>
+<span class="nc" id="L174">            return layout;</span>
+<span class="nc" id="L175">        })).setWidth(&quot;120px&quot;).setFlexGrow(0);</span>
+
+<span class="nc" id="L177">        grid.setSizeFull();</span>
+<span class="nc" id="L178">        return grid;</span>
+    }
+
+    private void openUserDialog(User user) {
+<span class="nc" id="L182">        UserDialog dialog = new UserDialog(user, savedUser -&gt; {</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">            if (user != null) {</span>
+                // Edit mode
+<span class="nc" id="L185">                userApi.update(savedUser);</span>
+<span class="nc" id="L186">                Notification.show(&quot;User updated&quot;, 3000, Notification.Position.BOTTOM_START);</span>
+            } else {
+                // Create mode
+<span class="nc" id="L189">                userApi.persist(savedUser);</span>
+<span class="nc" id="L190">                Notification.show(&quot;User created&quot;, 3000, Notification.Position.BOTTOM_START);</span>
+            }
+<span class="nc" id="L192">            refreshGrid();</span>
+<span class="nc" id="L193">        });</span>
+<span class="nc" id="L194">        dialog.open();</span>
+<span class="nc" id="L195">    }</span>
+
+    private void refreshGrid() {
+<span class="nc" id="L198">        grid.setItems(userApi.getAll());</span>
+<span class="nc" id="L199">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

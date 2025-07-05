@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ColorUtil.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.util</a> &gt; <span class="el_source">ColorUtil.java</span></div><h1>ColorUtil.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.util;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.awt.*;
+
+<span class="nc" id="L25">public class ColorUtil {</span>
+<span class="nc" id="L26">    private static final Logger logger = LoggerFactory.getLogger(ColorUtil.class);</span>
+
+    /**
+     * Calculate the color blending on a background color taking the color's alpha channel into account
+     * So,
+     * a color with an alpha channel not 255 drawn over white background will appear lighter and
+     * a color with an alpha channel not 255 drawn over black background will appear darker.
+     * This method calculates the new blended color
+     *
+     * @param aColor,     the color we want to blend over the background using the alpha channel
+     * @param background, the background that the color is going to be drawn on
+     * @return the new blended color
+     */
+    public static Color calculateColorBlending(final Color aColor, Color background) {
+        //        logger.info(String.format(&quot;r=%d, g=%d, b=%s, a=%d %08X&quot;, aColor.getRed(), aColor.getGreen(), aColor.getBlue(), aColor.getAlpha(), aColor.getRGB()));
+<span class="nc" id="L41">        final int alpha = aColor.getAlpha();</span>
+<span class="nc" id="L42">        final int red   = (aColor.getRed() * alpha) / 255 + (background.getRed() * (255 - alpha)) / 255;</span>
+<span class="nc" id="L43">        final int green = (aColor.getGreen() * alpha) / 255 + (background.getGreen() * (255 - alpha)) / 255;</span>
+<span class="nc" id="L44">        final int blue  = (aColor.getBlue() * alpha) / 255 + (background.getBlue() * (255 - alpha)) / 255;</span>
+<span class="nc" id="L45">        Color     c     = new Color(red, green, blue);</span>
+        //        logger.info(String.format(&quot;r=%d, g=%d, b=%s, a=%d %08X&quot;, c.getRed(), c.getGreen(), c.getBlue(), c.getAlpha(), c.getRGB()));
+<span class="nc" id="L47">        return c;</span>
+    }
+
+    public static Color calculateComplementaryColor(Color color) {
+<span class="nc" id="L51">        Color complementaryColor = new Color(255 - color.getRed(), 255 - color.getGreen(), 255 - color.getBlue());</span>
+<span class="nc" id="L52">        return complementaryColor;</span>
+    }
+
+    public static int calculateContrast(final Color aC1, final Color aC2) {
+<span class="nc" id="L56">        final int red   = Math.abs(aC1.getRed() - aC2.getRed());</span>
+<span class="nc" id="L57">        final int green = Math.abs(aC1.getGreen() - aC2.getGreen());</span>
+<span class="nc" id="L58">        final int blue  = Math.abs(aC1.getBlue() - aC2.getBlue());</span>
+
+        //0.299*R + 0.587*G + 0.114*B
+<span class="nc" id="L61">        final int light = ((red * 299) / 1000) + ((green * 587) / 1000) + ((blue * 114) / 1000);</span>
+<span class="nc" id="L62">        return light;</span>
+    }
+
+    public static Color colorFraction(final Color aColor, final double aFraction) {
+<span class="nc" id="L66">        final int _red   = Math.max(Math.min((int) (aColor.getRed() * aFraction), 255), 0);</span>
+<span class="nc" id="L67">        final int _green = Math.max(Math.min((int) (aColor.getGreen() * aFraction), 255), 0);</span>
+<span class="nc" id="L68">        final int _blue  = Math.max(Math.min((int) (aColor.getBlue() * aFraction), 255), 0);</span>
+<span class="nc" id="L69">        return new Color(_red, _green, _blue);</span>
+    }
+
+    public static Color colorMerger(final Color aColor1, final Color aColor2, final float aFraction) {
+<span class="nc" id="L73">        final float[] _color1 = aColor1.getColorComponents(null);</span>
+<span class="nc" id="L74">        final float[] _color2 = aColor2.getColorComponents(null);</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">        for (int i = 0; i &lt; 3; i++) {</span>
+<span class="nc" id="L76">            _color1[i] = _color2[i] * aFraction + _color1[i] * (1 - aFraction);</span>
+        }
+<span class="nc" id="L78">        return new Color(_color1[0], _color1[1], _color1[2]);</span>
+    }
+
+    public static String colorToHtmlColor(final Color aColor) {
+<span class="nc" id="L82">        int       _rgb   = aColor.getRGB();</span>
+<span class="nc" id="L83">        final int _red   = aColor.getRed();</span>
+<span class="nc" id="L84">        final int _green = aColor.getGreen();</span>
+<span class="nc" id="L85">        final int _blue  = aColor.getBlue();</span>
+<span class="nc" id="L86">        _rgb = (_red &lt;&lt; 16) + (_green &lt;&lt; 8) + (_blue);</span>
+<span class="nc" id="L87">        final String _buffer = Integer.toHexString(_rgb);</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">        if (_buffer.length() &lt; 6) {</span>
+<span class="nc" id="L89">            String _resturnValue = &quot;0&quot;;</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">            for (int i = 0; i &lt; 6 - _buffer.length() - 1; i++) {</span>
+<span class="nc" id="L91">                _resturnValue += &quot;0&quot;;</span>
+            }
+<span class="nc" id="L93">            return _resturnValue + _buffer;</span>
+        } else {
+<span class="nc" id="L95">            return _buffer;</span>
+        }
+    }
+
+    public static String colorToJsfColor(final Color aColor) {
+<span class="nc" id="L100">        final int _red   = aColor.getRed();</span>
+<span class="nc" id="L101">        final int _green = aColor.getGreen();</span>
+<span class="nc" id="L102">        final int _blue  = aColor.getBlue();</span>
+<span class="nc" id="L103">        return &quot;rgb( &quot; + _red + &quot;, &quot; + _green + &quot;, &quot; + _blue + &quot;)&quot;;</span>
+    }
+
+    public static float difference(final int[] aPatternPixelColor, final int[] aImagePixelColor) {
+<span class="nc" id="L107">        float[] _patternHsb = null;</span>
+        {
+            // int _red = aPatternPixelColor.getRed();
+            // int _green = aPatternPixelColor.getGreen();
+            // int _blue = aPatternPixelColor.getBlue();
+<span class="nc" id="L112">            _patternHsb = Color.RGBtoHSB(aPatternPixelColor[0], aPatternPixelColor[1], aPatternPixelColor[2], null);</span>
+        }
+<span class="nc" id="L114">        float[] _imageHsb = null;</span>
+        {
+            // int _red = aImagePixelColor.getRed();
+            // int _green = aImagePixelColor.getGreen();
+            // int _blue = aImagePixelColor.getBlue();
+<span class="nc" id="L119">            _imageHsb = Color.RGBtoHSB(aImagePixelColor[0], aImagePixelColor[1], aImagePixelColor[2], null);</span>
+        }
+<span class="nc" id="L121">        float _difference = 0;</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">        if (aPatternPixelColor[3] != 0) {</span>
+            // ---In case not transparent
+<span class="nc" id="L124">            _difference += Math.abs(_patternHsb[0] - _imageHsb[0]);</span>
+<span class="nc" id="L125">            _difference += Math.abs(_patternHsb[1] - _imageHsb[1]);</span>
+<span class="nc" id="L126">            _difference += Math.abs(_patternHsb[2] - _imageHsb[2]);</span>
+        } else {
+        }
+<span class="nc" id="L129">        return _difference;</span>
+    }
+
+    public static Color heighestContrast(final Color aColor) {
+<span class="nc" id="L133">        final int red   = aColor.getRed();</span>
+<span class="nc" id="L134">        final int green = aColor.getGreen();</span>
+<span class="nc" id="L135">        final int blue  = aColor.getBlue();</span>
+
+        //0.299*R + 0.587*G + 0.114*B
+<span class="nc" id="L138">        final int light = ((red * 299) / 1000) + ((green * 587) / 1000) + ((blue * 114) / 1000);</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">        if (light &lt; 127) {</span>
+<span class="nc" id="L140">            return Color.white;</span>
+        } else {
+<span class="nc" id="L142">            return Color.black;</span>
+        }
+    }
+
+    /**
+     * Blue 255 will return a gray value of 28 Red 255 will return a gray value of 76 Green 255 will return a gray value
+     * of 150 The commulative gray value is the sum of the component values
+     *
+     * @param aColor given color
+     * @return Returns either white or black, whichever will have the highest contrast to the given color
+     */
+    public static Color heighestContrast(final Color aColor, Color background) {
+<span class="nc" id="L154">        return heighestContrast(aColor, background, aColor.getAlpha());</span>
+    }
+
+    public static Color heighestContrast(final Color aColor, Color background, int alpha) {
+<span class="nc" id="L158">        final int red   = (aColor.getRed() * alpha) / 255 + (background.getRed() * (255 - alpha)) / 255;</span>
+<span class="nc" id="L159">        final int green = (aColor.getGreen() * alpha) / 255 + (background.getGreen() * (255 - alpha)) / 255;</span>
+<span class="nc" id="L160">        final int blue  = (aColor.getBlue() * alpha) / 255 + (background.getBlue() * (255 - alpha)) / 255;</span>
+<span class="nc" id="L161">        Color     c     = new Color(red, green, blue);</span>
+<span class="nc" id="L162">        Color     color = ColorUtil.selectMostContrastColor(c, new Color[]{Color.black, Color.white});</span>
+<span class="nc" id="L163">        return color;</span>
+    }
+
+    public static Color selectMostContrastColor(Color backgroundColor, Color[] colors) {
+<span class="nc" id="L167">        int   maxContrast   = 0;</span>
+<span class="nc" id="L168">        Color contrastColor = null;</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">        for (Color c : colors) {</span>
+<span class="nc" id="L170">            int contrast = Math.abs(backgroundColor.getRed() - c.getRed()) * Math.abs(backgroundColor.getRed() - c.getRed())</span>
+<span class="nc" id="L171">                    + Math.abs(backgroundColor.getGreen() - c.getGreen()) * Math.abs(backgroundColor.getGreen() - c.getGreen())</span>
+<span class="nc" id="L172">                    + Math.abs(backgroundColor.getBlue() - c.getBlue()) * Math.abs(backgroundColor.getBlue() - c.getBlue());</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">            if (contrast &gt; maxContrast) {</span>
+<span class="nc" id="L174">                contrastColor = c;</span>
+<span class="nc" id="L175">                maxContrast   = contrast;</span>
+            }
+        }
+<span class="nc" id="L178">        return contrastColor;</span>
+    }
+
+    public static Color setAlpha(Color c1, int alpha) {
+<span class="nc" id="L182">        return new Color(c1.getRed(), c1.getGreen(), c1.getBlue(), alpha);</span>
+    }
+
+    public static Color windowsToJava(final Color aColor) {
+<span class="nc" id="L186">        final int _red   = aColor.getRed();</span>
+<span class="nc" id="L187">        final int _green = aColor.getGreen();</span>
+<span class="nc" id="L188">        final int _blue  = aColor.getBlue();</span>
+<span class="nc" id="L189">        return new Color(_blue, _green, _red);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

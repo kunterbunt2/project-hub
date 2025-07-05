@@ -1,0 +1,223 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head><meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>UserDialog xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../../../apidocs/de/bushnaq/abdalla/projecthub/ui/dialog/UserDialog.html">View Javadoc</a></div><pre>
+<a class="jxr_linenumber" name="L1" href="#L1">1</a>   <em class="jxr_comment">/*</em>
+<a class="jxr_linenumber" name="L2" href="#L2">2</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <em class="jxr_comment"> * Copyright (C) 2025-2025 Abdalla Bushnaq</em>
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <em class="jxr_comment"> * Licensed under the Apache License, Version 2.0 (the "License");</em>
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <em class="jxr_comment"> * you may not use this file except in compliance with the License.</em>
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <em class="jxr_comment"> * You may obtain a copy of the License at</em>
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L8" href="#L8">8</a>   <em class="jxr_comment"> *       <a href="http://www.apache.org/licenses/LICENSE-2.0" target="alexandria_uri">http://www.apache.org/licenses/LICENSE-2.0</a></em>
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <em class="jxr_comment"> *   Unless required by applicable law or agreed to in writing, software</em>
+<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <em class="jxr_comment"> *  distributed under the License is distributed on an "AS IS" BASIS,</em>
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <em class="jxr_comment"> *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</em>
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <em class="jxr_comment"> *  See the License for the specific language governing permissions and</em>
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <em class="jxr_comment"> *  limitations under the License.</em>
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>  <em class="jxr_comment"> */</em>
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>  
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>  <strong class="jxr_keyword">package</strong> de.bushnaq.abdalla.projecthub.ui.dialog;
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">import</strong> com.vaadin.flow.component.datepicker.DatePicker;
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <strong class="jxr_keyword">import</strong> com.vaadin.flow.component.dialog.Dialog;
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>  <strong class="jxr_keyword">import</strong> com.vaadin.flow.component.icon.Icon;
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>  <strong class="jxr_keyword">import</strong> com.vaadin.flow.component.icon.VaadinIcon;
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>  <strong class="jxr_keyword">import</strong> com.vaadin.flow.component.notification.Notification;
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>  <strong class="jxr_keyword">import</strong> com.vaadin.flow.component.orderedlayout.FlexComponent;
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>  <strong class="jxr_keyword">import</strong> com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>  <strong class="jxr_keyword">import</strong> com.vaadin.flow.component.orderedlayout.VerticalLayout;
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>  <strong class="jxr_keyword">import</strong> com.vaadin.flow.component.textfield.EmailField;
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>  <strong class="jxr_keyword">import</strong> com.vaadin.flow.component.textfield.TextField;
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>  <strong class="jxr_keyword">import</strong> de.bushnaq.abdalla.projecthub.dto.User;
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>  <strong class="jxr_keyword">import</strong> de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>  <strong class="jxr_keyword">import</strong> org.vaadin.addons.tatu.ColorPicker;
+<a class="jxr_linenumber" name="L33" href="#L33">33</a>  
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>  <strong class="jxr_keyword">import</strong> java.awt.*;
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>  <strong class="jxr_keyword">import</strong> java.util.List;
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>  <strong class="jxr_keyword">import</strong> java.util.function.Consumer;
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>  
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>  <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L39" href="#L39">39</a>  <em class="jxr_javadoccomment"> * A reusable dialog for creating and editing users.</em>
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>  <em class="jxr_javadoccomment"> */</em>
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a name="UserDialog" href="../../../../../../de/bushnaq/abdalla/projecthub/ui/dialog/UserDialog.html#UserDialog">UserDialog</a> <strong class="jxr_keyword">extends</strong> Dialog {
+<a class="jxr_linenumber" name="L42" href="#L42">42</a>  
+<a class="jxr_linenumber" name="L43" href="#L43">43</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String         CANCEL_BUTTON                 = <span class="jxr_string">"cancel-user-button"</span>;
+<a class="jxr_linenumber" name="L44" href="#L44">44</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String         CONFIRM_BUTTON                = <span class="jxr_string">"save-user-button"</span>;
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String         USER_COLOR_PICKER             = <span class="jxr_string">"user-color-picker"</span>;
+<a class="jxr_linenumber" name="L46" href="#L46">46</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String         USER_DIALOG                   = <span class="jxr_string">"user-dialog"</span>;
+<a class="jxr_linenumber" name="L47" href="#L47">47</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String         USER_EMAIL_FIELD              = <span class="jxr_string">"user-email-field"</span>;
+<a class="jxr_linenumber" name="L48" href="#L48">48</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String         USER_FIRST_WORKING_DAY_PICKER = <span class="jxr_string">"user-first-working-day-picker"</span>;
+<a class="jxr_linenumber" name="L49" href="#L49">49</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String         USER_LAST_WORKING_DAY_PICKER  = <span class="jxr_string">"user-last-working-day-picker"</span>;
+<a class="jxr_linenumber" name="L50" href="#L50">50</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String         USER_NAME_FIELD               = <span class="jxr_string">"user-name-field"</span>;
+<a class="jxr_linenumber" name="L51" href="#L51">51</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong>       ColorPicker    colorPicker;
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong>       EmailField     emailField;
+<a class="jxr_linenumber" name="L53" href="#L53">53</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong>       DatePicker     firstWorkingDayPicker;
+<a class="jxr_linenumber" name="L54" href="#L54">54</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong>       <strong class="jxr_keyword">boolean</strong>        isEditMode;
+<a class="jxr_linenumber" name="L55" href="#L55">55</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong>       DatePicker     lastWorkingDayPicker;
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong>       TextField      nameField;
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong>       Consumer&lt;User&gt; saveCallback;
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong>       User           user;
+<a class="jxr_linenumber" name="L59" href="#L59">59</a>  
+<a class="jxr_linenumber" name="L60" href="#L60">60</a>      <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>  <em class="jxr_javadoccomment">     * Creates a dialog for creating or editing a user.</em>
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>  <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>  <em class="jxr_javadoccomment">     * @param user         The user to edit, or null for creating a new user</em>
+<a class="jxr_linenumber" name="L64" href="#L64">64</a>  <em class="jxr_javadoccomment">     * @param saveCallback Callback that receives the user with updated values</em>
+<a class="jxr_linenumber" name="L65" href="#L65">65</a>  <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L66" href="#L66">66</a>      <strong class="jxr_keyword">public</strong> <a name="UserDialog" href="../../../../../../de/bushnaq/abdalla/projecthub/ui/dialog/UserDialog.html#UserDialog">UserDialog</a>(User user, Consumer&lt;User&gt; saveCallback) {
+<a class="jxr_linenumber" name="L67" href="#L67">67</a>          <strong class="jxr_keyword">this</strong>.user         = user;
+<a class="jxr_linenumber" name="L68" href="#L68">68</a>          <strong class="jxr_keyword">this</strong>.saveCallback = saveCallback;
+<a class="jxr_linenumber" name="L69" href="#L69">69</a>          isEditMode        = user != <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L70" href="#L70">70</a>  
+<a class="jxr_linenumber" name="L71" href="#L71">71</a>          <em class="jxr_comment">// Set the dialog title with an icon</em>
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>          String title = isEditMode ? <span class="jxr_string">"Edit User"</span> : <span class="jxr_string">"Create User"</span>;
+<a class="jxr_linenumber" name="L73" href="#L73">73</a>  
+<a class="jxr_linenumber" name="L74" href="#L74">74</a>          <em class="jxr_comment">// Create a custom header with icon</em>
+<a class="jxr_linenumber" name="L75" href="#L75">75</a>          HorizontalLayout headerLayout = <strong class="jxr_keyword">new</strong> HorizontalLayout();
+<a class="jxr_linenumber" name="L76" href="#L76">76</a>          headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+<a class="jxr_linenumber" name="L77" href="#L77">77</a>          headerLayout.setSpacing(<strong class="jxr_keyword">true</strong>);
+<a class="jxr_linenumber" name="L78" href="#L78">78</a>  
+<a class="jxr_linenumber" name="L79" href="#L79">79</a>          Icon titleIcon = <strong class="jxr_keyword">new</strong> Icon(VaadinIcon.USER);
+<a class="jxr_linenumber" name="L80" href="#L80">80</a>          titleIcon.getStyle().set(<span class="jxr_string">"margin-right"</span>, <span class="jxr_string">"0.5em"</span>);
+<a class="jxr_linenumber" name="L81" href="#L81">81</a>  
+<a class="jxr_linenumber" name="L82" href="#L82">82</a>          com.vaadin.flow.component.html.H3 titleLabel = <strong class="jxr_keyword">new</strong> com.vaadin.flow.component.html.H3(title);
+<a class="jxr_linenumber" name="L83" href="#L83">83</a>          titleLabel.getStyle().set(<span class="jxr_string">"margin"</span>, <span class="jxr_string">"0"</span>);
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>  
+<a class="jxr_linenumber" name="L85" href="#L85">85</a>          headerLayout.add(titleIcon, titleLabel);
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>  
+<a class="jxr_linenumber" name="L87" href="#L87">87</a>          <em class="jxr_comment">// Set the custom header</em>
+<a class="jxr_linenumber" name="L88" href="#L88">88</a>          setHeaderTitle(<strong class="jxr_keyword">null</strong>); <em class="jxr_comment">// Clear the default title</em>
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>          getHeader().add(headerLayout);
+<a class="jxr_linenumber" name="L90" href="#L90">90</a>  
+<a class="jxr_linenumber" name="L91" href="#L91">91</a>          setId(USER_DIALOG);
+<a class="jxr_linenumber" name="L92" href="#L92">92</a>          setWidth(<span class="jxr_string">"500px"</span>);
+<a class="jxr_linenumber" name="L93" href="#L93">93</a>  
+<a class="jxr_linenumber" name="L94" href="#L94">94</a>          VerticalLayout dialogLayout = <strong class="jxr_keyword">new</strong> VerticalLayout();
+<a class="jxr_linenumber" name="L95" href="#L95">95</a>          dialogLayout.setPadding(false);
+<a class="jxr_linenumber" name="L96" href="#L96">96</a>          dialogLayout.setSpacing(<strong class="jxr_keyword">true</strong>);
+<a class="jxr_linenumber" name="L97" href="#L97">97</a>  
+<a class="jxr_linenumber" name="L98" href="#L98">98</a>          <em class="jxr_comment">// Name field</em>
+<a class="jxr_linenumber" name="L99" href="#L99">99</a>          nameField = <strong class="jxr_keyword">new</strong> TextField(<span class="jxr_string">"Name"</span>);
+<a class="jxr_linenumber" name="L100" href="#L100">100</a>         nameField.setId(USER_NAME_FIELD);
+<a class="jxr_linenumber" name="L101" href="#L101">101</a>         nameField.setWidthFull();
+<a class="jxr_linenumber" name="L102" href="#L102">102</a>         nameField.setRequired(<strong class="jxr_keyword">true</strong>);
+<a class="jxr_linenumber" name="L103" href="#L103">103</a>         nameField.setPrefixComponent(<strong class="jxr_keyword">new</strong> Icon(VaadinIcon.USER));
+<a class="jxr_linenumber" name="L104" href="#L104">104</a> 
+<a class="jxr_linenumber" name="L105" href="#L105">105</a>         <em class="jxr_comment">// Email field</em>
+<a class="jxr_linenumber" name="L106" href="#L106">106</a>         emailField = <strong class="jxr_keyword">new</strong> EmailField(<span class="jxr_string">"Email"</span>);
+<a class="jxr_linenumber" name="L107" href="#L107">107</a>         emailField.setId(USER_EMAIL_FIELD);
+<a class="jxr_linenumber" name="L108" href="#L108">108</a>         emailField.setWidthFull();
+<a class="jxr_linenumber" name="L109" href="#L109">109</a>         emailField.setPrefixComponent(<strong class="jxr_keyword">new</strong> Icon(VaadinIcon.ENVELOPE));
+<a class="jxr_linenumber" name="L110" href="#L110">110</a> 
+<a class="jxr_linenumber" name="L111" href="#L111">111</a>         <em class="jxr_comment">// Color picker (using the community add-on)</em>
+<a class="jxr_linenumber" name="L112" href="#L112">112</a>         colorPicker = <strong class="jxr_keyword">new</strong> ColorPicker();
+<a class="jxr_linenumber" name="L113" href="#L113">113</a>         colorPicker.setId(USER_COLOR_PICKER);
+<a class="jxr_linenumber" name="L114" href="#L114">114</a>         colorPicker.setWidth(<span class="jxr_string">"100%"</span>);
+<a class="jxr_linenumber" name="L115" href="#L115">115</a> 
+<a class="jxr_linenumber" name="L116" href="#L116">116</a>         <em class="jxr_comment">// Set predefined color presets</em>
+<a class="jxr_linenumber" name="L117" href="#L117">117</a>         colorPicker.setPresets(List.of(
+<a class="jxr_linenumber" name="L118" href="#L118">118</a>                 <strong class="jxr_keyword">new</strong> ColorPicker.ColorPreset(<span class="jxr_string">"#FF0000"</span>, <span class="jxr_string">"Red"</span>),
+<a class="jxr_linenumber" name="L119" href="#L119">119</a>                 <strong class="jxr_keyword">new</strong> ColorPicker.ColorPreset(<span class="jxr_string">"#0000FF"</span>, <span class="jxr_string">"Blue"</span>),
+<a class="jxr_linenumber" name="L120" href="#L120">120</a>                 <strong class="jxr_keyword">new</strong> ColorPicker.ColorPreset(<span class="jxr_string">"#008000"</span>, <span class="jxr_string">"Green"</span>),
+<a class="jxr_linenumber" name="L121" href="#L121">121</a>                 <strong class="jxr_keyword">new</strong> ColorPicker.ColorPreset(<span class="jxr_string">"#FFFF00"</span>, <span class="jxr_string">"Yellow"</span>),
+<a class="jxr_linenumber" name="L122" href="#L122">122</a>                 <strong class="jxr_keyword">new</strong> ColorPicker.ColorPreset(<span class="jxr_string">"#FFA500"</span>, <span class="jxr_string">"Orange"</span>),
+<a class="jxr_linenumber" name="L123" href="#L123">123</a>                 <strong class="jxr_keyword">new</strong> ColorPicker.ColorPreset(<span class="jxr_string">"#800080"</span>, <span class="jxr_string">"Purple"</span>),
+<a class="jxr_linenumber" name="L124" href="#L124">124</a>                 <strong class="jxr_keyword">new</strong> ColorPicker.ColorPreset(<span class="jxr_string">"#FFC0CB"</span>, <span class="jxr_string">"Pink"</span>),
+<a class="jxr_linenumber" name="L125" href="#L125">125</a>                 <strong class="jxr_keyword">new</strong> ColorPicker.ColorPreset(<span class="jxr_string">"#00FFFF"</span>, <span class="jxr_string">"Cyan"</span>),
+<a class="jxr_linenumber" name="L126" href="#L126">126</a>                 <strong class="jxr_keyword">new</strong> ColorPicker.ColorPreset(<span class="jxr_string">"#FF00FF"</span>, <span class="jxr_string">"Magenta"</span>),
+<a class="jxr_linenumber" name="L127" href="#L127">127</a>                 <strong class="jxr_keyword">new</strong> ColorPicker.ColorPreset(<span class="jxr_string">"#D3D3D3"</span>, <span class="jxr_string">"Light Gray"</span>),
+<a class="jxr_linenumber" name="L128" href="#L128">128</a>                 <strong class="jxr_keyword">new</strong> ColorPicker.ColorPreset(<span class="jxr_string">"#808080"</span>, <span class="jxr_string">"Gray"</span>),
+<a class="jxr_linenumber" name="L129" href="#L129">129</a>                 <strong class="jxr_keyword">new</strong> ColorPicker.ColorPreset(<span class="jxr_string">"#A9A9A9"</span>, <span class="jxr_string">"Dark Gray"</span>),
+<a class="jxr_linenumber" name="L130" href="#L130">130</a>                 <strong class="jxr_keyword">new</strong> ColorPicker.ColorPreset(<span class="jxr_string">"#000000"</span>, <span class="jxr_string">"Black"</span>)
+<a class="jxr_linenumber" name="L131" href="#L131">131</a>         ));
+<a class="jxr_linenumber" name="L132" href="#L132">132</a> 
+<a class="jxr_linenumber" name="L133" href="#L133">133</a>         <em class="jxr_comment">// First working day picker</em>
+<a class="jxr_linenumber" name="L134" href="#L134">134</a>         firstWorkingDayPicker = <strong class="jxr_keyword">new</strong> DatePicker(<span class="jxr_string">"First Working Day"</span>);
+<a class="jxr_linenumber" name="L135" href="#L135">135</a>         firstWorkingDayPicker.setId(USER_FIRST_WORKING_DAY_PICKER);
+<a class="jxr_linenumber" name="L136" href="#L136">136</a>         firstWorkingDayPicker.setWidthFull();
+<a class="jxr_linenumber" name="L137" href="#L137">137</a>         firstWorkingDayPicker.setPrefixComponent(<strong class="jxr_keyword">new</strong> Icon(VaadinIcon.CALENDAR_USER));
+<a class="jxr_linenumber" name="L138" href="#L138">138</a> 
+<a class="jxr_linenumber" name="L139" href="#L139">139</a>         <em class="jxr_comment">// Last working day picker</em>
+<a class="jxr_linenumber" name="L140" href="#L140">140</a>         lastWorkingDayPicker = <strong class="jxr_keyword">new</strong> DatePicker(<span class="jxr_string">"Last Working Day"</span>);
+<a class="jxr_linenumber" name="L141" href="#L141">141</a>         lastWorkingDayPicker.setId(USER_LAST_WORKING_DAY_PICKER);
+<a class="jxr_linenumber" name="L142" href="#L142">142</a>         lastWorkingDayPicker.setWidthFull();
+<a class="jxr_linenumber" name="L143" href="#L143">143</a>         lastWorkingDayPicker.setPrefixComponent(<strong class="jxr_keyword">new</strong> Icon(VaadinIcon.CALENDAR_USER));
+<a class="jxr_linenumber" name="L144" href="#L144">144</a> 
+<a class="jxr_linenumber" name="L145" href="#L145">145</a>         <em class="jxr_comment">// Add validation to ensure last working day is after first working day</em>
+<a class="jxr_linenumber" name="L146" href="#L146">146</a>         firstWorkingDayPicker.addValueChangeListener(event -&gt; {
+<a class="jxr_linenumber" name="L147" href="#L147">147</a>             <strong class="jxr_keyword">if</strong> (event.getValue() != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L148" href="#L148">148</a>                 lastWorkingDayPicker.setMin(event.getValue());
+<a class="jxr_linenumber" name="L149" href="#L149">149</a>             }
+<a class="jxr_linenumber" name="L150" href="#L150">150</a>         });
+<a class="jxr_linenumber" name="L151" href="#L151">151</a> 
+<a class="jxr_linenumber" name="L152" href="#L152">152</a>         lastWorkingDayPicker.addValueChangeListener(event -&gt; {
+<a class="jxr_linenumber" name="L153" href="#L153">153</a>             <strong class="jxr_keyword">if</strong> (event.getValue() != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L154" href="#L154">154</a>                 firstWorkingDayPicker.setMax(event.getValue());
+<a class="jxr_linenumber" name="L155" href="#L155">155</a>             }
+<a class="jxr_linenumber" name="L156" href="#L156">156</a>         });
+<a class="jxr_linenumber" name="L157" href="#L157">157</a> 
+<a class="jxr_linenumber" name="L158" href="#L158">158</a>         <strong class="jxr_keyword">if</strong> (isEditMode) {
+<a class="jxr_linenumber" name="L159" href="#L159">159</a>             nameField.setValue(user.getName() != <strong class="jxr_keyword">null</strong> ? user.getName() : <span class="jxr_string">""</span>);
+<a class="jxr_linenumber" name="L160" href="#L160">160</a>             emailField.setValue(user.getEmail() != <strong class="jxr_keyword">null</strong> ? user.getEmail() : <span class="jxr_string">""</span>);
+<a class="jxr_linenumber" name="L161" href="#L161">161</a>             <strong class="jxr_keyword">if</strong> (user.getColor() != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L162" href="#L162">162</a>                 String colorHex = <span class="jxr_string">"#"</span> + Integer.toHexString(user.getColor().getRGB()).substring(2);
+<a class="jxr_linenumber" name="L163" href="#L163">163</a>                 colorPicker.setValue(colorHex);
+<a class="jxr_linenumber" name="L164" href="#L164">164</a>             }
+<a class="jxr_linenumber" name="L165" href="#L165">165</a>             firstWorkingDayPicker.setValue(user.getFirstWorkingDay());
+<a class="jxr_linenumber" name="L166" href="#L166">166</a>             lastWorkingDayPicker.setValue(user.getLastWorkingDay());
+<a class="jxr_linenumber" name="L167" href="#L167">167</a>         }
+<a class="jxr_linenumber" name="L168" href="#L168">168</a> 
+<a class="jxr_linenumber" name="L169" href="#L169">169</a>         dialogLayout.add(
+<a class="jxr_linenumber" name="L170" href="#L170">170</a>                 nameField,
+<a class="jxr_linenumber" name="L171" href="#L171">171</a>                 emailField,
+<a class="jxr_linenumber" name="L172" href="#L172">172</a>                 colorPicker,
+<a class="jxr_linenumber" name="L173" href="#L173">173</a>                 firstWorkingDayPicker,
+<a class="jxr_linenumber" name="L174" href="#L174">174</a>                 lastWorkingDayPicker
+<a class="jxr_linenumber" name="L175" href="#L175">175</a>         );
+<a class="jxr_linenumber" name="L176" href="#L176">176</a> 
+<a class="jxr_linenumber" name="L177" href="#L177">177</a>         dialogLayout.add(VaadinUtils.createDialogButtonLayout(<span class="jxr_string">"Save"</span>, CONFIRM_BUTTON, <span class="jxr_string">"Cancel"</span>, CANCEL_BUTTON, <strong class="jxr_keyword">this</strong>::save, <strong class="jxr_keyword">this</strong>));
+<a class="jxr_linenumber" name="L178" href="#L178">178</a>         add(dialogLayout);
+<a class="jxr_linenumber" name="L179" href="#L179">179</a>     }
+<a class="jxr_linenumber" name="L180" href="#L180">180</a> 
+<a class="jxr_linenumber" name="L181" href="#L181">181</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> save() {
+<a class="jxr_linenumber" name="L182" href="#L182">182</a>         <strong class="jxr_keyword">if</strong> (nameField.getValue().trim().isEmpty()) {
+<a class="jxr_linenumber" name="L183" href="#L183">183</a>             Notification.show(<span class="jxr_string">"Please enter a user name"</span>, 3000, Notification.Position.MIDDLE);
+<a class="jxr_linenumber" name="L184" href="#L184">184</a>             <strong class="jxr_keyword">return</strong>;
+<a class="jxr_linenumber" name="L185" href="#L185">185</a>         }
+<a class="jxr_linenumber" name="L186" href="#L186">186</a> 
+<a class="jxr_linenumber" name="L187" href="#L187">187</a>         User userToSave;
+<a class="jxr_linenumber" name="L188" href="#L188">188</a>         <strong class="jxr_keyword">if</strong> (isEditMode) {
+<a class="jxr_linenumber" name="L189" href="#L189">189</a>             userToSave = user;
+<a class="jxr_linenumber" name="L190" href="#L190">190</a>         } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L191" href="#L191">191</a>             userToSave = <strong class="jxr_keyword">new</strong> User();
+<a class="jxr_linenumber" name="L192" href="#L192">192</a>         }
+<a class="jxr_linenumber" name="L193" href="#L193">193</a> 
+<a class="jxr_linenumber" name="L194" href="#L194">194</a>         userToSave.setName(nameField.getValue().trim());
+<a class="jxr_linenumber" name="L195" href="#L195">195</a>         userToSave.setEmail(emailField.getValue().trim());
+<a class="jxr_linenumber" name="L196" href="#L196">196</a> 
+<a class="jxr_linenumber" name="L197" href="#L197">197</a>         <em class="jxr_comment">// Convert Vaadin color string to AWT Color</em>
+<a class="jxr_linenumber" name="L198" href="#L198">198</a>         String colorValue = colorPicker.getValue();
+<a class="jxr_linenumber" name="L199" href="#L199">199</a>         <strong class="jxr_keyword">if</strong> (colorValue != <strong class="jxr_keyword">null</strong> &amp;&amp; !colorValue.isEmpty()) {
+<a class="jxr_linenumber" name="L200" href="#L200">200</a>             userToSave.setColor(Color.decode(colorValue));
+<a class="jxr_linenumber" name="L201" href="#L201">201</a>         }
+<a class="jxr_linenumber" name="L202" href="#L202">202</a> 
+<a class="jxr_linenumber" name="L203" href="#L203">203</a>         userToSave.setFirstWorkingDay(firstWorkingDayPicker.getValue());
+<a class="jxr_linenumber" name="L204" href="#L204">204</a>         userToSave.setLastWorkingDay(lastWorkingDayPicker.getValue());
+<a class="jxr_linenumber" name="L205" href="#L205">205</a> 
+<a class="jxr_linenumber" name="L206" href="#L206">206</a>         saveCallback.accept(userToSave);
+<a class="jxr_linenumber" name="L207" href="#L207">207</a>         close();
+<a class="jxr_linenumber" name="L208" href="#L208">208</a> 
+<a class="jxr_linenumber" name="L209" href="#L209">209</a>     }
+<a class="jxr_linenumber" name="L210" href="#L210">210</a> }
+</pre>
+<hr/>
+<div id="footer">© 2025</div>
+</body>
+</html>

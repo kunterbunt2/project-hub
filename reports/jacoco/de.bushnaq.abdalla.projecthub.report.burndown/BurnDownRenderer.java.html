@@ -1,0 +1,806 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BurnDownRenderer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.report.burndown</a> &gt; <span class="el_source">BurnDownRenderer.java</span></div><h1>BurnDownRenderer.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.report.burndown;
+
+import de.bushnaq.abdalla.projecthub.Context;
+import de.bushnaq.abdalla.projecthub.dao.WarnException;
+import de.bushnaq.abdalla.projecthub.dto.Sprint;
+import de.bushnaq.abdalla.projecthub.dto.Task;
+import de.bushnaq.abdalla.projecthub.dto.User;
+import de.bushnaq.abdalla.projecthub.dto.Worklog;
+import de.bushnaq.abdalla.projecthub.report.AbstractRenderer;
+import de.bushnaq.abdalla.projecthub.report.dao.*;
+import de.bushnaq.abdalla.projecthub.report.gantt.GanttUtil;
+import de.bushnaq.abdalla.svg.util.ExtendedGraphics2D;
+import de.bushnaq.abdalla.svg.util.ExtendedPolygon;
+import de.bushnaq.abdalla.util.ErrorException;
+import de.bushnaq.abdalla.util.date.DateUtil;
+import org.apache.xmlgraphics.java2d.color.ColorUtil;
+
+import java.awt.*;
+import java.io.IOException;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Standard agile burn down chart, based on logged work in jira tickets of a
+ * specific sprint.
+ *
+ * @author abdalla.bushnaq
+ */
+public class BurnDownRenderer extends AbstractRenderer {
+
+    private static final String                 ERROR_106_AGNTT_START_DATE_NOT_MACTHING_SPRINT_START_DATE = &quot;Error #106: Gantt start date %s does not match sprint start date %s. Ignoring Gantt chart guide information&quot;;
+    private static final int                    ONE_WEEK                                                  = 7;
+    private static final long                   ONE_WORK_MONTH                                            = 20L * 75L * 60L * 6L;
+    private static final long                   ONE_WORK_WEEK                                             = 5L * 75L * 60L * 6L;
+    private static final long                   SECONDS_PER_HOUR                                          = 60 * 60;
+    private static final long                   SECONDS_PER_WORKING_DAY                                   = 75 * 6 * 60;
+    private static final String                 WORK_OUTSIDE_ALLOWED_TIME_BOUNDARIES_OCCURRED             = &quot;Work outside allowed time boundaries occurred&quot;;
+    private static final int                    Y_AXIS_WIDTH                                              = 50;
+    private static final float                  fine_LINE_STROKE_WIDTH                                    = 1f;
+<span class="nc" id="L60">    private static final DateTimeFormatter      sdfymd                                                    = DateTimeFormatter.ofPattern(&quot;yyyy.MMM.dd&quot;);</span>
+    private              Context                context;
+    private              Duration               eBestWork;
+    private              Duration               eWorstWork;
+    private              Color                  extrapolationColor;
+<span class="nc" id="L65">    public               BurnDownGuide          ganttWorkWithBufferPerDayAccumulated                      = null;// max work per day, were every day has the amount of work planned at that day and all days before that</span>
+<span class="nc" id="L66">    public               BurnDownGuide          ganttWorkWithoutBufferPerDayAccumulated                   = null;// min work per day, were every day has the amount of work planned at that day and all days before that</span>
+    protected            BurnDownGraphicsTheme  graphicsTheme;
+    protected            LocalDateTime          lastWorklog;
+    private final        Duration               maxActualWorked;
+    private              Duration               maxWorked;
+<span class="nc" id="L71">    private              int                    numberOfWorkExceptions                                    = 0;</span>
+    private final        Sprint                 request;
+    private              boolean                sprintClosed;
+<span class="nc" id="L74">    protected            AuthorsContribution    usersTotalContribution                                    = new AuthorsContribution();</span>
+<span class="nc" id="L75">    private final        Map&lt;User, DayWork[]&gt;   usersWorkPerDayAccumulated                                = new HashMap&lt;&gt;();// work per author and day, were every day has the amount of work done at all previous days, first day has 0 work done</span>
+    private              List&lt;Worklog&gt;          worklog;
+    private              List&lt;WorklogRemaining&gt; worklogRemaining;
+    private              GraphSquare            yAxis;
+
+    public BurnDownRenderer(RenderDao dao) throws Exception {
+<span class="nc" id="L81">        super(dao);</span>
+<span class="nc" id="L82">        this.request = dao.sprint;</span>
+<span class="nc" id="L83">        processingInit(dao);</span>
+        // populateGuide(context, start, end, request);
+<span class="nc" id="L85">        initGanttGuide(context, dao.start, dao.end);</span>
+<span class="nc" id="L86">        maxActualWorked = dao.maxWorked;</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        if (isPlannedBurnDownGuideAvailable()) {</span>
+            // was the estimation in the gantt chart actually bigger than the current estimation?
+<span class="nc" id="L89">            this.maxWorked = DateUtil.max(maxWorked, ganttWorkWithoutBufferPerDayAccumulated.get(0));</span>
+<span class="nc" id="L90">            this.maxWorked = DateUtil.max(maxWorked, ganttWorkWithBufferPerDayAccumulated.get(0));</span>
+        }
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        if (numberOfWorkExceptions != 0) {</span>
+<span class="nc" id="L93">            request.exceptions.add(new WarnException(String.format(&quot;%s %d times.&quot;, WORK_OUTSIDE_ALLOWED_TIME_BOUNDARIES_OCCURRED, numberOfWorkExceptions)));</span>
+        }
+<span class="nc" id="L95">    }</span>
+
+    public void calculateAuthorContribution(List&lt;Worklog&gt; worklogList, List&lt;WorklogRemaining&gt; worklogRemaining,
+                                            AuthorsContribution authorsContribution) {
+<span class="nc bnc" id="L99" title="All 2 branches missed.">        if (worklogRemaining != null) {</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">            for (WorklogRemaining work : worklogRemaining) {</span>
+<span class="nc" id="L101">                AuthorContribution ac = authorsContribution.get(work.getAuthor());</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">                if (ac == null) {</span>
+<span class="nc" id="L103">                    ac = new AuthorContribution();</span>
+<span class="nc" id="L104">                    authorsContribution.put(work.getAuthor(), ac);</span>
+                }
+<span class="nc" id="L106">                ac.addRemaining(work.getRemaining());</span>
+<span class="nc" id="L107">            }</span>
+        }
+<span class="nc bnc" id="L109" title="All 2 branches missed.">        if (worklogList != null) {</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">            for (Worklog work : worklogList) {</span>
+<span class="nc" id="L111">                AuthorContribution ac = authorsContribution.get(request.getuser(work.getAuthorId()));</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">                if (ac == null) {</span>
+<span class="nc" id="L113">                    ac = new AuthorContribution();</span>
+<span class="nc" id="L114">                    authorsContribution.put(request.getuser(work.getAuthorId()), ac);</span>
+                }
+<span class="nc" id="L116">                ac.addWorked(work.getTimeSpent());</span>
+<span class="nc" id="L117">            }</span>
+        }
+<span class="nc" id="L119">    }</span>
+
+    protected int calculateAuthorGraphHeight(Duration authorDelta, Duration authorEstimated, Duration sumEstimated) {
+<span class="nc" id="L122">        long maxAuthorGraphHeight = (diagram.height * authorEstimated.getSeconds()) / sumEstimated.getSeconds();</span>
+<span class="nc" id="L123">        return (int) ((authorEstimated.minus(authorDelta).getSeconds() * maxAuthorGraphHeight) / (authorEstimated.getSeconds()));</span>
+    }
+
+    @Override
+    protected int calculateChartWidth() {
+        //        logger.info(String.format(&quot;DEBUG chartType=%s, dayWidth=%d, days=%d, chartWidth=%d&quot;, getClass().getSimpleName(), calendarXAxses.dayOfWeek.getWidth(), days, calendarXAxses.dayOfWeek.getWidth() * days));
+<span class="nc" id="L129">        return Y_AXIS_WIDTH + calendarXAxes.dayOfWeek.getWidth() * days + calendarXAxes.getPriRun() + calendarXAxes.getPostRun();</span>
+    }
+
+    @Override
+    protected void calculateDayWidth() {
+<span class="nc" id="L134">        super.calculateDayWidth();</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">        if (chartWidth == 0) {</span>
+            //big chart with fixed day width
+<span class="nc" id="L137">            calendarXAxes.dayOfWeek.setWidth(MAX_DAY_WIDTH);</span>
+        } else {
+<span class="nc" id="L139">            calendarXAxes.dayOfWeek.setWidth((chartWidth - Y_AXIS_WIDTH) / days);</span>
+<span class="nc" id="L140">            calendarXAxes.dayOfWeek.setWidth(Math.min(calendarXAxes.dayOfWeek.getWidth(), MAX_DAY_WIDTH));</span>
+<span class="nc" id="L141">            calendarXAxes.dayOfWeek.setWidth(Math.max(calendarXAxes.dayOfWeek.getWidth(), 1));</span>
+<span class="nc" id="L142">            days = (chartWidth - Y_AXIS_WIDTH) / calendarXAxes.dayOfWeek.getWidth();</span>
+        }
+<span class="nc" id="L144">    }</span>
+
+    protected int calculateGraphHight(Duration hight) {
+<span class="nc" id="L147">        return (int) ((hight.getSeconds() * (diagram.height)) / (maxWorked.getSeconds()));</span>
+    }
+
+    private void calculateWorkPerDay(Context context, Task task, BurnDownGuide guide) throws Exception {
+<span class="nc" id="L151">        LocalDateTime start = task.getStart();</span>
+<span class="nc" id="L152">        LocalDateTime stop  = task.getFinish();</span>
+<span class="nc bnc" id="L153" title="All 4 branches missed.">        if (!task.isMilestone() &amp;&amp; task.getResourceId() != null) {</span>
+<span class="nc bnc" id="L154" title="All 6 branches missed.">            if (GanttUtil.isValidTask(task) &amp;&amp; !task.isMilestone() &amp;&amp; task.getChildTasks().isEmpty()) {</span>
+<span class="nc bnc" id="L155" title="All 4 branches missed.">                if (stop.isBefore(start) || stop.isEqual(start)) {</span>
+<span class="nc" id="L156">                    request.exceptions.add(new ErrorException(String.format(&quot;Task %s finish time has to be after start time. Ignoring task.&quot;, task.getName())));</span>
+                } else {
+                    //                    Duration duration0 = task.getDuration();
+//                    for (User assignment : task.getAssignedUser())
+                    {
+//                        Resource resource =  assignment.getResource();
+
+//                        Number availability = assignment.getUnits();
+<span class="nc" id="L164">                        Number availability = task.getAssignedUser().getAvailabilities().getLast().getAvailability();</span>
+<span class="nc bnc" id="L165" title="All 4 branches missed.">                        if (/*resource != null &amp;&amp;*/ availability != null &amp;&amp; context.debug.filterResource(task.getAssignedUser())) {</span>
+<span class="nc" id="L166">                            int  startDayIndex = calculateDayIndex(start);</span>
+<span class="nc" id="L167">                            int  stopDayIndex  = calculateDayIndex(stop);</span>
+<span class="nc" id="L168">                            long oneDay        = 75 * SECONDS_PER_HOUR / 10;</span>
+                            //                            long oneHour = SECONDS_PER_HOUR;
+<span class="nc bnc" id="L170" title="All 2 branches missed.">                            if (stopDayIndex == startDayIndex) {</span>
+                                // ---We assume that a task is worked on every day from 8:00 - 12:00, 13:00 - 16:30 (7.5h, with lunch time at 12:00)
+                                // start time might not be in the morning at exactly 8:00
+                                // stop time might not be in the afternoon 15:30
+<span class="nc" id="L174">                                LocalDateTime lunchStartTime = DateUtil.calculateLunchStartTime(start);</span>
+<span class="nc" id="L175">                                LocalDateTime lunchStopTime  = DateUtil.calculateLunchStopTime(start);</span>
+<span class="nc bnc" id="L176" title="All 4 branches missed.">                                if (start.isBefore(lunchStartTime) || start.isEqual(lunchStartTime)) {</span>
+                                    // if(start &lt;= 12:00)
+<span class="nc bnc" id="L178" title="All 4 branches missed.">                                    if (stop.isBefore(lunchStartTime) || stop.isEqual(lunchStartTime)) {</span>
+                                        // if(stop &lt;= 12:00)
+                                        // (stop - start)/7.5
+<span class="nc" id="L181">                                        double   fraction = (double) Duration.between(start, stop).getSeconds() / oneDay;</span>
+<span class="nc" id="L182">                                        Duration work     = Duration.ofSeconds((long) ((fraction * availability.doubleValue() * SECONDS_PER_WORKING_DAY)));</span>
+<span class="nc" id="L183">                                        guide.add(startDayIndex, work);</span>
+<span class="nc bnc" id="L184" title="All 4 branches missed.">                                    } else if (stop.isAfter(lunchStopTime) || stop.isEqual(lunchStopTime)) {</span>
+                                        // if(stop &gt;= 13:00)
+                                        // ( stop - start -1h )/7.5
+<span class="nc" id="L187">                                        double   fraction = (double) Duration.between(start, stop).minusHours(1).getSeconds() / oneDay;</span>
+<span class="nc" id="L188">                                        Duration work     = Duration.ofSeconds((long) ((fraction * availability.doubleValue() * SECONDS_PER_WORKING_DAY)));</span>
+<span class="nc" id="L189">                                        guide.add(startDayIndex, work);</span>
+<span class="nc" id="L190">                                    } else {</span>
+<span class="nc" id="L191">                                        throw new Exception(String.format(&quot;Task %s stop within lunch time&quot;, task.getName()));</span>
+                                    }
+<span class="nc bnc" id="L193" title="All 4 branches missed.">                                } else if (start.isAfter(lunchStopTime) || start.isEqual(lunchStopTime)) {</span>
+                                    // if(start &gt;= 13:00 &amp;&amp; stop &gt;= 13:00)
+                                    // (stop - Start))/7.5
+<span class="nc" id="L196">                                    double   fraction = ((double) Duration.between(start, stop).getSeconds()) / oneDay;</span>
+<span class="nc" id="L197">                                    Duration work     = Duration.ofSeconds((long) ((fraction * availability.doubleValue() * SECONDS_PER_WORKING_DAY)));</span>
+<span class="nc" id="L198">                                    guide.add(startDayIndex, work);</span>
+<span class="nc" id="L199">                                } else {</span>
+<span class="nc" id="L200">                                    throw new Exception(String.format(&quot;Task %s stop before start&quot;, task.getName()));</span>
+                                }
+
+<span class="nc" id="L203">                            } else {</span>
+                                // start
+                                {
+                                    // ---We assume that a task is worked on every day from 8:00 - 12:00, 13:00 -  16:30 (7.5h, with lunch time at 12:00)
+                                    // start time might not be in the morning at exactly 8:00
+<span class="nc" id="L208">                                    LocalDateTime lunchStartTime = DateUtil.calculateLunchStartTime(start);</span>
+<span class="nc" id="L209">                                    LocalDateTime lunchStopTime  = DateUtil.calculateLunchStopTime(start);</span>
+<span class="nc bnc" id="L210" title="All 4 branches missed.">                                    if (start.isBefore(lunchStartTime) || start.isEqual(lunchStartTime)) {</span>
+<span class="nc" id="L211">                                        double   fraction = ((double) Duration.between(start.toLocalTime(), LocalTime.of(16, 30)).minusHours(1).getSeconds()) / oneDay;</span>
+<span class="nc" id="L212">                                        Duration work     = Duration.ofSeconds((long) ((fraction * availability.doubleValue() * SECONDS_PER_WORKING_DAY)));</span>
+<span class="nc" id="L213">                                        guide.add(startDayIndex, work);</span>
+<span class="nc bnc" id="L214" title="All 4 branches missed.">                                    } else if (start.isAfter(lunchStopTime) || start.isEqual(lunchStopTime)) {</span>
+<span class="nc" id="L215">                                        double   fraction = ((double) Duration.between(start.toLocalTime(), LocalTime.of(16, 30)).minusHours(1).getSeconds()) / oneDay;</span>
+<span class="nc" id="L216">                                        Duration work     = Duration.ofSeconds((long) ((fraction * availability.doubleValue() * SECONDS_PER_WORKING_DAY)));</span>
+<span class="nc" id="L217">                                        guide.add(startDayIndex, work);</span>
+<span class="nc" id="L218">                                    } else {</span>
+<span class="nc" id="L219">                                        throw new Exception(String.format(&quot;Task %s start within lunch time&quot;, task.getName()));</span>
+                                    }
+                                }
+                                // end
+                                {
+                                    // ---We assume that a task is worked on every day from 8:00 - 12:00, 13:00 - 16:30 (7.5h, with lunch time at 12:00)
+                                    // last day, stop time might not be in the afternoon 16:30
+<span class="nc" id="L226">                                    LocalDateTime lunchStartTime = DateUtil.calculateLunchStartTime(stop);</span>
+<span class="nc" id="L227">                                    LocalDateTime lunchStopTime  = DateUtil.calculateLunchStopTime(stop);</span>
+<span class="nc bnc" id="L228" title="All 4 branches missed.">                                    if (stop.isBefore(lunchStartTime) || stop.isEqual(lunchStartTime)) {</span>
+                                        // if(stop &lt;= 12:00)
+                                        // (stop - 8:00)/7.5
+<span class="nc" id="L231">                                        double   fraction = ((double) Duration.between(LocalTime.of(8, 0), stop.toLocalTime()).getSeconds()) / oneDay;</span>
+<span class="nc" id="L232">                                        Duration work     = Duration.ofSeconds((long) ((fraction * availability.doubleValue() * SECONDS_PER_WORKING_DAY)));</span>
+<span class="nc" id="L233">                                        guide.add(stopDayIndex, work);</span>
+<span class="nc bnc" id="L234" title="All 4 branches missed.">                                    } else if (stop.isAfter(lunchStopTime) || stop.isEqual(lunchStopTime)) {</span>
+                                        // if(stop &gt;= 13:00)
+                                        // (stop - 8:00 -1h)/7.5
+<span class="nc" id="L237">                                        double   fraction = ((double) Duration.between(LocalTime.of(8, 0), stop.toLocalTime()).minusHours(1).getSeconds()) / oneDay;</span>
+<span class="nc" id="L238">                                        Duration work     = Duration.ofSeconds((long) ((fraction * availability.doubleValue() * SECONDS_PER_WORKING_DAY)));</span>
+<span class="nc" id="L239">                                        guide.add(stopDayIndex, work);</span>
+<span class="nc" id="L240">                                    } else {</span>
+<span class="nc" id="L241">                                        throw new Exception(String.format(&quot;Task %s stop within lunch time&quot;, task.getName()));</span>
+                                    }
+                                }
+                            }
+<span class="nc bnc" id="L245" title="All 2 branches missed.">                            if (startDayIndex + 1 &lt; stopDayIndex) {</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">                                for (int index = startDayIndex + 1; index &lt; stopDayIndex; index++) {</span>
+<span class="nc" id="L247">                                    LocalDate today = calculateDayFromIndex(index);</span>
+<span class="nc bnc" id="L248" title="All 2 branches missed.">                                    if (task.getEffectiveCalendar().isWorkingDate(today))</span>
+//                                    if (isResourceWorkingDay(context, task.getAssignedUser(), today))
+                                    {
+<span class="nc" id="L251">                                        Duration work = Duration.ofSeconds((long) (availability.doubleValue() * SECONDS_PER_WORKING_DAY));</span>
+<span class="nc" id="L252">                                        guide.add(index, work);</span>
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+<span class="nc" id="L262">    }</span>
+
+    private LocalDate calendarFromDayIndex(int dayIndex) {
+<span class="nc" id="L265">        return milestones.firstMilestone.plusDays(dayIndex);</span>
+    }
+
+    protected void createBurnDownChart() {
+<span class="nc" id="L269">        graphics2D.setStroke(new BasicStroke(STANDARD_LINE_STROKE_WIDTH));</span>
+
+<span class="nc" id="L271">        LocalDate firstDay  = milestones.firstMilestone /*- (long) (60 * ONE_DAY_MILLIS / dayWidth)*/;</span>
+<span class="nc" id="L272">        int       firstDayX = diagram.x + calendarXAxes.dayOfWeek.getWidth() / 2;</span>
+<span class="nc" id="L273">        int       startX    = firstDayX + DateUtil.calculateDays(firstDay, milestones.get(&quot;S&quot;).time) * calendarXAxes.dayOfWeek.getWidth();</span>
+
+<span class="nc" id="L275">        drawAuthorLegend();</span>
+<span class="nc" id="L276">        drawLegend();</span>
+<span class="nc bnc" id="L277" title="All 4 branches missed.">        if (maxWorked != null &amp;&amp; !maxWorked.isZero()) {</span>
+            // y axis markings
+<span class="nc" id="L279">            drawYAxes(startX, maxWorked);</span>
+<span class="nc bnc" id="L280" title="All 4 branches missed.">            if (worklog != null &amp;&amp; worklog.size() != 0) {</span>
+<span class="nc" id="L281">                drawBurnDown(firstDay, firstDayX, maxWorked);</span>
+            }
+<span class="nc bnc" id="L283" title="All 2 branches missed.">            if (sprintClosed) {</span>
+<span class="nc" id="L284">                drawWatermark(startX - calendarXAxes.dayOfWeek.getWidth() / 2 + 10,</span>
+<span class="nc" id="L285">                        chartHeight - calendarXAxes.getHeight() - calendarXAxes.year.getHeight() - 10, &quot;CLOSED&quot;, graphicsTheme.watermarkColor);</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">            } else if (isAbandonedProject()) {</span>
+<span class="nc" id="L287">                drawWatermark(startX - calendarXAxes.dayOfWeek.getWidth() / 2 + 10,</span>
+<span class="nc" id="L288">                        chartHeight - calendarXAxes.getHeight() - calendarXAxes.year.getHeight() - 10, &quot;ABANDONED&quot;, graphicsTheme.watermarkColor);</span>
+            }
+            // Optimal burn down rate
+
+<span class="nc bnc" id="L292" title="All 2 branches missed.">            if (isPlannedBurnDownGuideAvailable()) {</span>
+<span class="nc" id="L293">                drawPlannedBurnDownGuide(firstDayX, ganttWorkWithoutBufferPerDayAccumulated);</span>
+<span class="nc" id="L294">                drawPlannedBurnDownGuide(firstDayX, ganttWorkWithBufferPerDayAccumulated);</span>
+            } else {
+                // ---liniar guide
+<span class="nc" id="L297">                drawOptimalBurnDownGuide(firstDayX, eBestWork);</span>
+            }
+
+<span class="nc bnc" id="L300" title="All 2 branches missed.">            if (eWorstWork != null) {</span>
+<span class="nc" id="L301">                drawOptimalBurnDownGuide(firstDayX, eWorstWork);</span>
+            }
+
+            // release extrapolation (Velocity)
+<span class="nc bnc" id="L305" title="All 2 branches missed.">            if (milestones.get(&quot;R&quot;) != null) {</span>
+<span class="nc" id="L306">                graphics2D.setColor(extrapolationColor);</span>
+<span class="nc" id="L307">                int x1 = startX - calendarXAxes.dayOfWeek.getWidth() / 2 + 1;</span>
+<span class="nc" id="L308">                int y1 = diagram.y + diagram.height - calculateGraphHight(maxActualWorked);</span>
+                {
+<span class="nc" id="L310">                    int x = firstDayX + DateUtil.calculateDays(firstDay, milestones.get(&quot;R&quot;).time) * calendarXAxes.dayOfWeek.getWidth();</span>
+<span class="nc" id="L311">                    graphics2D.drawLine(x1, y1, x, diagram.y + diagram.height);</span>
+                }
+            }
+        } else {
+            // ---Maybe this is a test case ticket?
+        }
+
+<span class="nc" id="L318">    }</span>
+
+    protected void createMilestones(LocalDateTime start, LocalDateTime now, LocalDateTime end, LocalDateTime firstWorklog, LocalDateTime lastWorklog,
+                                    LocalDateTime release, boolean completed) {
+<span class="nc bnc" id="L322" title="All 2 branches missed.">        if (start != null) {</span>
+<span class="nc" id="L323">            milestones.add(start.toLocalDate(), &quot;S&quot;, &quot;Start (Start of project)&quot;, Color.blue);</span>
+        }
+<span class="nc" id="L325">        milestones.add(now.toLocalDate(), &quot;N&quot;, &quot;Now (current date)&quot;, Color.blue);</span>
+<span class="nc bnc" id="L326" title="All 2 branches missed.">        if (end != null) {</span>
+<span class="nc" id="L327">            milestones.add(end.toLocalDate(), &quot;E&quot;, &quot;End (End of project)&quot;, Color.blue);</span>
+        }
+<span class="nc bnc" id="L329" title="All 2 branches missed.">        if (release != null) {</span>
+<span class="nc" id="L330">            milestones.add(release.toLocalDate(), &quot;R&quot;, &quot;Release (Estimated release date)&quot;, Color.blue);</span>
+        }
+<span class="nc bnc" id="L332" title="All 2 branches missed.">        if (isHideNow(now, end, completed)) {</span>
+<span class="nc" id="L333">            milestones.remove(&quot;N&quot;);</span>
+        }
+<span class="nc bnc" id="L335" title="All 6 branches missed.">        if (firstWorklog != null &amp;&amp; (start == null || !firstWorklog.toLocalDate().isEqual(start.toLocalDate()))) {</span>
+<span class="nc" id="L336">            milestones.add(firstWorklog.toLocalDate(), &quot;F&quot;, &quot;First punch-in&quot;, Color.blue);</span>
+        }
+<span class="nc bnc" id="L338" title="All 6 branches missed.">        if (lastWorklog != null &amp;&amp; (end == null || !lastWorklog.toLocalDate().isEqual(end.toLocalDate()))) {</span>
+<span class="nc" id="L339">            milestones.add(lastWorklog.toLocalDate(), &quot;L&quot;, &quot;Last punch-out&quot;, Color.blue);</span>
+        }
+<span class="nc" id="L341">        milestones.calculate();</span>
+        // milestones.print();//debugging code
+<span class="nc" id="L343">    }</span>
+
+    @Override
+    public void draw(ExtendedGraphics2D graphics2D, int x, int y) throws IOException {
+<span class="nc" id="L347">        this.graphics2D = graphics2D;</span>
+<span class="nc" id="L348">        initPosition(Y_AXIS_WIDTH + x, y);</span>
+<span class="nc" id="L349">        drawCalendar(true);</span>
+<span class="nc" id="L350">        drawMilestones();</span>
+<span class="nc" id="L351">        createBurnDownChart();</span>
+<span class="nc" id="L352">    }</span>
+
+    protected void drawAuthorLegend() {
+<span class="nc" id="L355">        int authorLegendWidth = 20;</span>
+<span class="nc bnc" id="L356" title="All 2 branches missed.">        for (User author : authors.getList()) {</span>
+<span class="nc" id="L357">            FontMetrics metrics = graphics2D.getFontMetrics(calendarXAxes.milestone.font);</span>
+            // get the advance of my text in this font
+            // and render context
+<span class="nc" id="L360">            int adv = metrics.stringWidth(author.getName());</span>
+<span class="nc" id="L361">            authorLegendWidth = Math.max(authorLegendWidth, adv);</span>
+<span class="nc" id="L362">        }</span>
+<span class="nc" id="L363">        drawAuthorLegend(chartWidth - 130 - authorLegendWidth - 5, diagram.y);</span>
+<span class="nc" id="L364">    }</span>
+
+    private void drawBorder(int x, int y, int lastX, int lastY) {
+<span class="nc" id="L367">        graphics2D.setColor(graphicsTheme.burnDownBorderColor);</span>
+<span class="nc" id="L368">        graphics2D.drawLine(lastX - calendarXAxes.dayOfWeek.getWidth() / 2, lastY, x - calendarXAxes.dayOfWeek.getWidth() / 2, y);</span>
+<span class="nc" id="L369">    }</span>
+
+    private void drawBurnDown(LocalDate firstDay, int firstDayX, Duration estimatedWork) {
+        // burn down graph
+<span class="nc bnc" id="L373" title="All 2 branches missed.">        if (context.parameters.detailed) {</span>
+            Integer[] graphHeight;
+            {
+<span class="nc" id="L376">                int days = DateUtil.calculateDays(milestones.firstMilestone, DateUtil.max(milestones.lastMilestone, milestones.get(&quot;N&quot;).time)) + 1;</span>
+<span class="nc" id="L377">                graphHeight = new Integer[days + 3];</span>
+<span class="nc bnc" id="L378" title="All 2 branches missed.">                for (int i = 0; i &lt; days + 3; i++) {</span>
+<span class="nc" id="L379">                    graphHeight[i] = 0;</span>
+                }
+            }
+<span class="nc" id="L382">            int authorIndex = 0;</span>
+            // int sum = 0;
+<span class="nc bnc" id="L384" title="All 2 branches missed.">            for (User user : usersTotalContribution.getSortedKeyList()) {</span>
+<span class="nc" id="L385">                AuthorContribution ac                  = usersTotalContribution.get(user);</span>
+<span class="nc" id="L386">                Duration           authorEstimatedWork = ac.worked.plus(ac.remaining);</span>
+<span class="nc bnc" id="L387" title="All 2 branches missed.">                if (!authorEstimatedWork.isZero()) {</span>
+                    // (worked + remaining));
+<span class="nc" id="L389">                    int yesterdayX  = 0;</span>
+<span class="nc" id="L390">                    int yesterdayY  = 0;</span>
+<span class="nc" id="L391">                    int yesterdayY2 = 0;</span>
+<span class="nc" id="L392">                    int lastX       = 0;</span>
+<span class="nc" id="L393">                    int lastY       = 0;</span>
+<span class="nc" id="L394">                    int lastY2      = 0;</span>
+<span class="nc" id="L395">                    int x           = 0;</span>
+<span class="nc" id="L396">                    int y           = 0;</span>
+<span class="nc" id="L397">                    int nowDayIndex = (DateUtil.calculateDays(milestones.firstMilestone, DateUtil.min(milestones.lastMilestone, milestones.get(&quot;N&quot;).time)));</span>
+                    {
+<span class="nc" id="L399">                        int maxDayIndex = nowDayIndex;// Math.max(authorWorkPerDay.get(user).length, nowDayIndex);</span>
+                        // logger.info(DateUtil.createDateString(calculateDayFromIndex(maxDayIndex), sdfMMMdd));
+<span class="nc bnc" id="L401" title="All 2 branches missed.">                        for (int dayIndex = 0; dayIndex &lt;= maxDayIndex + 2; dayIndex++) {</span>
+<span class="nc" id="L402">                            x = firstDayX + dayIndex * calendarXAxes.dayOfWeek.getWidth();</span>
+<span class="nc" id="L403">                            int                currentDayAuthorGraphHeight = 0;</span>
+<span class="nc" id="L404">                            List&lt;List&lt;String&gt;&gt; transactions                = null;</span>
+<span class="nc bnc" id="L405" title="All 2 branches missed.">                            if (dayIndex &lt;= maxDayIndex + 2) {</span>
+<span class="nc" id="L406">                                currentDayAuthorGraphHeight = calculateAuthorGraphHeight(usersWorkPerDayAccumulated.get(user)[dayIndex].duration,</span>
+                                        authorEstimatedWork, maxWorked);
+<span class="nc" id="L408">                                y                           = diagram.y + diagram.height - graphHeight[dayIndex] - currentDayAuthorGraphHeight;</span>
+<span class="nc bnc" id="L409" title="All 2 branches missed.">                                if (dayIndex &gt; 0) {</span>
+<span class="nc" id="L410">                                    transactions = usersWorkPerDayAccumulated.get(user)[dayIndex - 1].transactions;</span>
+                                }
+                            }
+<span class="nc bnc" id="L413" title="All 2 branches missed.">                            if (x != lastX) {</span>
+                                // ---a new day started, so we can draw the polygon of last day
+<span class="nc bnc" id="L415" title="All 4 branches missed.">                                if (yesterdayX != 0 &amp;&amp; lastX != 0) {</span>
+//                                    User      author               = authors.getIdMap().get(user.getId());
+<span class="nc" id="L417">                                    LocalDate calendarFromDayIndex = calendarFromDayIndex(dayIndex - 2);</span>
+<span class="nc" id="L418">                                    drawPolygon(yesterdayX, yesterdayY, yesterdayY2, lastX, lastY, lastY2,</span>
+<span class="nc bnc" id="L419" title="All 2 branches missed.">                                            authorIndex == usersTotalContribution.getSortedKeyList().size() - 1, DateUtil.isWorkDay(calendarFromDayIndex),</span>
+<span class="nc" id="L420">                                            graphicsTheme.burnDownBorderColor, generateBurnDownColor(user.getColor()), transactions, user.getName());</span>
+                                }
+<span class="nc" id="L422">                                yesterdayX  = lastX;</span>
+<span class="nc" id="L423">                                yesterdayY  = lastY;</span>
+<span class="nc" id="L424">                                yesterdayY2 = lastY2;</span>
+                            }
+<span class="nc" id="L426">                            lastX = x;</span>
+<span class="nc" id="L427">                            lastY = y;</span>
+<span class="nc bnc" id="L428" title="All 2 branches missed.">                            if (dayIndex &lt;= maxDayIndex + 2) {</span>
+<span class="nc" id="L429">                                                         lastY2 = diagram.y + diagram.height - graphHeight[dayIndex];</span>
+<span class="nc" id="L430">                                graphHeight[dayIndex] += currentDayAuthorGraphHeight;</span>
+                            }
+                        }
+                    }
+                }
+<span class="nc" id="L435">                authorIndex++;</span>
+<span class="nc" id="L436">            }</span>
+        }
+        // draw border
+<span class="nc bnc" id="L439" title="All 2 branches missed.">        if (!context.parameters.detailed) {</span>
+<span class="nc" id="L440">            graphics2D.setStroke(new BasicStroke(STANDARD_LINE_STROKE_WIDTH));</span>
+<span class="nc" id="L441">            int      lastX      = 0;</span>
+<span class="nc" id="L442">            int      lastY      = 0;</span>
+<span class="nc" id="L443">            Duration worked     = Duration.ZERO;</span>
+<span class="nc" id="L444">            int      yesterdayX = 0;</span>
+<span class="nc" id="L445">            int      yesterdayY = 0;</span>
+<span class="nc bnc" id="L446" title="All 2 branches missed.">            for (Worklog work : worklog) {</span>
+<span class="nc bnc" id="L447" title="All 2 branches missed.">                if (work.getStart().toLocalDate().isBefore(milestones.get(&quot;N&quot;).time)) {</span>
+<span class="nc" id="L448">                    worked = worked.plus(work.getTimeSpent());</span>
+<span class="nc" id="L449">                    int x = firstDayX + DateUtil.calculateDays(firstDay, DateUtil.toDayPrecision(work.getStart())) * calendarXAxes.dayOfWeek.getWidth();</span>
+<span class="nc bnc" id="L450" title="All 2 branches missed.">                    if (x &lt; firstDayX) {</span>
+<span class="nc" id="L451">                        x = firstDayX;</span>
+                    }
+<span class="nc" id="L453">                    int y = diagram.y + diagram.height - calculateGraphHight(estimatedWork.minus(worked));</span>
+<span class="nc bnc" id="L454" title="All 2 branches missed.">                    if (x != lastX) {</span>
+                        // ---a new day started, so we can draw the polygon of last day
+<span class="nc bnc" id="L456" title="All 4 branches missed.">                        if (yesterdayX != 0 &amp;&amp; lastX != 0) {</span>
+<span class="nc" id="L457">                            drawBorder(lastX, lastY, yesterdayX, yesterdayY);</span>
+                        }
+<span class="nc" id="L459">                        yesterdayX = lastX;</span>
+<span class="nc" id="L460">                        yesterdayY = lastY;</span>
+                    }
+<span class="nc" id="L462">                    lastX = x;</span>
+<span class="nc" id="L463">                    lastY = y;</span>
+                }
+<span class="nc" id="L465">            }</span>
+            // ---Draw last polygon
+<span class="nc" id="L467">            drawBorder(lastX, lastY, yesterdayX, yesterdayY);</span>
+            // to now
+<span class="nc bnc" id="L469" title="All 2 branches missed.">            if (worklog.size() != 0) {</span>
+<span class="nc" id="L470">                int x = firstDayX + DateUtil.calculateDays(firstDay, milestones.get(&quot;N&quot;).time) * calendarXAxes.dayOfWeek.getWidth();</span>
+<span class="nc bnc" id="L471" title="All 2 branches missed.">                if (x != lastX) {</span>
+<span class="nc" id="L472">                    drawBorder(lastX, lastY, x, lastY);</span>
+                }
+            }
+        }
+<span class="nc" id="L476">    }</span>
+
+    protected void drawLegend() {
+<span class="nc" id="L479">        drawLegend(chartWidth - 130, diagram.y, extrapolationColor);</span>
+<span class="nc" id="L480">    }</span>
+
+    protected void drawOptimalBurnDownGuide(int firstDayX, Duration estimatedWork) {
+<span class="nc" id="L483">        LocalDate firstDay          = milestones.get(&quot;S&quot;).time;</span>
+<span class="nc" id="L484">        LocalDate lastDay           = milestones.get(&quot;E&quot;).time;</span>
+<span class="nc" id="L485">        int       workingDays       = DateUtil.calculateWorkingDaysIncluding(firstDay, lastDay);</span>
+<span class="nc" id="L486">        Duration  workPerWorkingDay = Duration.ofSeconds((long) (((double) estimatedWork.getSeconds()) / workingDays));</span>
+        Duration  work;
+<span class="nc" id="L488">        graphics2D.setStroke(new BasicStroke(STANDARD_LINE_STROKE_WIDTH, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{3}, 0));</span>
+<span class="nc" id="L489">        graphics2D.setColor(graphicsTheme.optimaleGuideColor);</span>
+<span class="nc" id="L490">        int workingdays = 0;</span>
+        int y;
+<span class="nc" id="L492">        int lastX       = firstDayX + calendarXAxes.dayOfWeek.getWidth() * DateUtil.calculateDays(firstDay, firstDay) - calendarXAxes.dayOfWeek.getWidth() / 2 + 1;</span>
+<span class="nc" id="L493">        int lastY       = diagram.y + diagram.height - calculateGraphHight(estimatedWork);</span>
+<span class="nc bnc" id="L494" title="All 4 branches missed.">        for (LocalDate currentDay = firstDay; currentDay.isBefore(lastDay) || currentDay.isEqual(lastDay); currentDay = currentDay.plusDays(1)) {</span>
+<span class="nc" id="L495">            int daysX = firstDayX + calendarXAxes.dayOfWeek.getWidth() * DateUtil.calculateDays(firstDay, currentDay) + calendarXAxes.dayOfWeek.getWidth() / 2</span>
+                    - 1;
+<span class="nc bnc" id="L497" title="All 4 branches missed.">            if (currentDay.getDayOfWeek() == DayOfWeek.SATURDAY || currentDay.getDayOfWeek() == DayOfWeek.SUNDAY) {</span>
+
+            } else {
+<span class="nc" id="L500">                workingdays++;</span>
+            }
+<span class="nc" id="L502">            work = Duration.ofSeconds(estimatedWork.getSeconds() - workingdays * workPerWorkingDay.getSeconds());</span>
+<span class="nc" id="L503">            y    = diagram.y + diagram.height - calculateGraphHight(work);</span>
+<span class="nc" id="L504">            graphics2D.drawLine(lastX, lastY, daysX, y);</span>
+<span class="nc" id="L505">            lastX = daysX;</span>
+<span class="nc" id="L506">            lastY = y;</span>
+        }
+<span class="nc" id="L508">    }</span>
+
+    /**
+     * Draw the burn down guide taken from the gantt chart
+     *
+     * @param firstDayX
+     * @param guide
+     */
+    private void drawPlannedBurnDownGuide(int firstDayX, BurnDownGuide guide) {
+<span class="nc" id="L517">        int lastX = 0;</span>
+<span class="nc" id="L518">        int lastY = 0;</span>
+<span class="nc bnc" id="L519" title="All 2 branches missed.">        if (isPlannedBurnDownGuideAvailable()) {</span>
+<span class="nc" id="L520">            lastY = diagram.y + diagram.height - calculateGraphHight(guide.get(0));</span>
+        } else {
+<span class="nc" id="L522">            lastY = diagram.y + diagram.height - calculateGraphHight(maxWorked);</span>
+        }
+<span class="nc" id="L524">        graphics2D.setStroke(new BasicStroke(STANDARD_LINE_STROKE_WIDTH, BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL, 0, new float[]{3}, 0));</span>
+<span class="nc" id="L525">        graphics2D.setStroke(new BasicStroke(STANDARD_LINE_STROKE_WIDTH, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{3}, 0));</span>
+<span class="nc" id="L526">        graphics2D.setColor(graphicsTheme.plannedGuideColor);</span>
+<span class="nc bnc" id="L527" title="All 2 branches missed.">        for (int i = 0; i &lt; guide.getSize(); i++) {</span>
+<span class="nc" id="L528">            Duration r = guide.get(i);</span>
+<span class="nc" id="L529">            int      x = firstDayX + i * calendarXAxes.dayOfWeek.getWidth() - calendarXAxes.dayOfWeek.getWidth() / 2 + 1;</span>
+<span class="nc" id="L530">            int      y = diagram.y + diagram.height - calculateGraphHight(r);</span>
+<span class="nc bnc" id="L531" title="All 2 branches missed.">            if (i != 0) {</span>
+<span class="nc" id="L532">                graphics2D.drawLine(lastX, lastY, x, y);</span>
+            }
+<span class="nc" id="L534">            lastX = x;</span>
+<span class="nc" id="L535">            lastY = y;</span>
+        }
+<span class="nc" id="L537">    }</span>
+
+    /**
+     * x1,y1-----------------x2,y1 | | | | | x2,y2 | | | |
+     * x1,y3-----------------x2,y4
+     *
+     * @param x2
+     * @param y2
+     * @param x1
+     * @param y1
+     * @param y4
+     * @param color
+     * @param transactions
+     * @param authorName
+     */
+    private void drawPolygon(int x1, int y1, int y3, int x2, int y2, int y4, boolean drawBorder, boolean weekday, Color borderColor, Color color,
+                             List&lt;List&lt;String&gt;&gt; transactions, String authorName) {
+        {
+<span class="nc" id="L555">            ExtendedPolygon p = new ExtendedPolygon();</span>
+<span class="nc" id="L556">            p.setToolTip(DayWork.transactionsToTooltips(transactions, authorName));</span>
+<span class="nc" id="L557">            p.addPoint(x1 - calendarXAxes.dayOfWeek.getWidth() / 2, y1);</span>
+<span class="nc bnc" id="L558" title="All 2 branches missed.">            if (calendarXAxes.dayOfWeek.getWidth() &gt; 3) {</span>
+<span class="nc" id="L559">                p.addPoint(x2 - calendarXAxes.dayOfWeek.getWidth() / 2 + 1 - 1, y2);</span>
+<span class="nc" id="L560">                p.addPoint(x2 - calendarXAxes.dayOfWeek.getWidth() / 2 + 1 - 1, y4);</span>
+            } else {
+<span class="nc" id="L562">                p.addPoint(x2 - calendarXAxes.dayOfWeek.getWidth() / 2 + 1, y2);</span>
+<span class="nc" id="L563">                p.addPoint(x2 - calendarXAxes.dayOfWeek.getWidth() / 2 + 1, y4);</span>
+            }
+<span class="nc" id="L565">            p.addPoint(x1 - calendarXAxes.dayOfWeek.getWidth() / 2, y3);</span>
+<span class="nc" id="L566">            graphics2D.setColor(color);</span>
+            //            graphics2D.fillPolygon(p);
+<span class="nc" id="L568">            graphics2D.fill(p);</span>
+        }
+<span class="nc bnc" id="L570" title="All 2 branches missed.">        if (drawBorder) {</span>
+<span class="nc" id="L571">            graphics2D.setStroke(new BasicStroke(STANDARD_LINE_STROKE_WIDTH));</span>
+<span class="nc" id="L572">            drawBorder(x1, y1, x2 - 1, y2);</span>
+        }
+<span class="nc" id="L574">    }</span>
+
+    private void drawWatermark(int x, int y, String watermark, Color watermarkColor) {
+<span class="nc" id="L577">        final Font font = new Font(&quot;Arial&quot;, Font.BOLD, 64);</span>
+<span class="nc" id="L578">        graphics2D.setFont(font);</span>
+<span class="nc" id="L579">        graphics2D.setColor(watermarkColor);</span>
+<span class="nc" id="L580">        graphics2D.drawString(watermark, x, y);</span>
+<span class="nc" id="L581">    }</span>
+
+    private void drawYAxes(int startX, Duration estimatedWork) {
+        {
+<span class="nc" id="L585">            graphics2D.setStroke(new BasicStroke(fine_LINE_STROKE_WIDTH));</span>
+<span class="nc" id="L586">            Duration mark     = Duration.ofSeconds(estimatedWork.getSeconds() / 5);</span>
+<span class="nc" id="L587">            String   markUnit = null;</span>
+<span class="nc bnc" id="L588" title="All 2 branches missed.">            if (mark.getSeconds() &gt; ONE_WORK_MONTH) {</span>
+<span class="nc" id="L589">                mark     = Duration.ofSeconds(ONE_WORK_MONTH);</span>
+<span class="nc" id="L590">                markUnit = &quot;pm&quot;;</span>
+<span class="nc bnc" id="L591" title="All 2 branches missed.">            } else if (mark.getSeconds() &gt; ONE_WORK_WEEK) {</span>
+<span class="nc" id="L592">                mark     = Duration.ofSeconds(ONE_WORK_WEEK);</span>
+<span class="nc" id="L593">                markUnit = &quot;pw&quot;;</span>
+            } else {
+<span class="nc" id="L595">                mark     = Duration.ofSeconds(SECONDS_PER_WORKING_DAY);</span>
+<span class="nc" id="L596">                markUnit = &quot;pd&quot;;</span>
+            }
+<span class="nc" id="L598">            int lastMarkY = 99999;</span>
+//            Color hLineColor = ColorUtil.setAlpha(graphicsTheme.ganttGridColor, 32);
+<span class="nc bnc" id="L600" title="All 2 branches missed.">            for (Duration timeMark = Duration.ZERO; timeMark.getSeconds() &lt; estimatedWork.getSeconds(); timeMark = timeMark.plus(mark)) {</span>
+<span class="nc" id="L601">                int markY = diagram.y + diagram.height - 1 - calculateGraphHight(timeMark);</span>
+<span class="nc bnc" id="L602" title="All 2 branches missed.">                if (lastMarkY - markY &gt; 12) {</span>
+<span class="nc" id="L603">                    graphics2D.setColor(graphicsTheme.ticksColor);</span>
+<span class="nc" id="L604">                    graphics2D.fillRect(startX - 4 - calendarXAxes.dayOfWeek.getWidth() / 2, markY, 4, 1);</span>
+<span class="nc" id="L605">                    graphics2D.setColor(graphicsTheme.ganttGridColor);</span>
+<span class="nc" id="L606">                    graphics2D.fillRect(startX - 1, markY, diagram.width - startX, 1);//grid --</span>
+
+<span class="nc" id="L608">                    drawGraphText(yAxis.x + yAxis.width - 5, markY, timeMark.getSeconds() / mark.getSeconds() + markUnit, graphicsTheme.tickTextColor,</span>
+                            yAxis.lableFont, TextAlignment.right);
+<span class="nc" id="L610">                    lastMarkY = markY;</span>
+                }
+            }
+        }
+<span class="nc" id="L614">    }</span>
+
+    private Color generateBurnDownColor(Color color) {
+<span class="nc" id="L617">        color = ColorUtil.lightenColor(color, 0.75f);</span>
+<span class="nc" id="L618">        return new Color(color.getRed(), color.getGreen(), color.getBlue(), 128);</span>
+    }
+
+    public void init() throws IOException {
+<span class="nc" id="L622">        initSize(Y_AXIS_WIDTH, 0, true);</span>
+<span class="nc bnc" id="L623" title="All 4 branches missed.">        if (milestones.get(&quot;R&quot;) != null &amp;&amp; milestones.get(&quot;R&quot;).time.isAfter(milestones.get(&quot;E&quot;).time)) {</span>
+<span class="nc" id="L624">            extrapolationColor = graphicsTheme.delayEventColor;</span>
+        } else {
+<span class="nc" id="L626">            extrapolationColor = graphicsTheme.inTimeColor;</span>
+        }
+
+<span class="nc" id="L629">        calculateAuthorContribution(worklog, worklogRemaining, usersTotalContribution);</span>
+
+<span class="nc" id="L631">        Map&lt;User, Duration&gt; authorWorkSum = new HashMap&lt;&gt;();// total work done by any author</span>
+<span class="nc bnc" id="L632" title="All 2 branches missed.">        for (User user : usersTotalContribution.getSortedKeyList()) {</span>
+<span class="nc bnc" id="L633" title="All 2 branches missed.">            if (authorWorkSum.get(user) == null) {</span>
+<span class="nc" id="L634">                authorWorkSum.put(user, Duration.ZERO);</span>
+            }
+<span class="nc" id="L636">        }</span>
+<span class="nc" id="L637">        int days = DateUtil.calculateDays(milestones.firstMilestone, milestones.lastMilestone) + 1;</span>
+<span class="nc bnc" id="L638" title="All 2 branches missed.">        if (worklog != null) {</span>
+<span class="nc" id="L639">            int lastDayIndexWithValue = 0;// the last day any author has data</span>
+<span class="nc bnc" id="L640" title="All 2 branches missed.">            for (Worklog work : worklog) {</span>
+<span class="nc" id="L641">                Duration  aws     = authorWorkSum.get(request.getuser(work.getAuthorId()));</span>
+<span class="nc" id="L642">                DayWork[] dayWork = usersWorkPerDayAccumulated.get(request.getuser(work.getAuthorId()));</span>
+<span class="nc bnc" id="L643" title="All 2 branches missed.">                if (dayWork == null) {</span>
+                    // create a list of work per day for authors that have worked
+<span class="nc" id="L645">                    dayWork    = new DayWork[days + 3];// first value is 0</span>
+<span class="nc" id="L646">                    dayWork[0] = new DayWork();</span>
+<span class="nc" id="L647">                    usersWorkPerDayAccumulated.put(request.getuser(work.getAuthorId()), dayWork);</span>
+                }
+<span class="nc" id="L649">                aws = aws.plus(work.getTimeSpent());</span>
+<span class="nc" id="L650">                authorWorkSum.put(request.getuser(work.getAuthorId()), aws);</span>
+<span class="nc" id="L651">                int day = (DateUtil.calculateDays(milestones.firstMilestone, DateUtil.toDayPrecision(work.getStart())));</span>
+<span class="nc bnc" id="L652" title="All 2 branches missed.">                if (day &lt; 0) {</span>
+                    // ignore any data before first day of sprint
+<span class="nc" id="L654">                    day = 0;</span>
+                }
+<span class="nc bnc" id="L656" title="All 2 branches missed.">                if (day &lt; days) {</span>
+                    {
+<span class="nc bnc" id="L658" title="All 2 branches missed.">                        if (dayWork[day + 1] != null) {</span>
+<span class="nc" id="L659">                            dayWork[day + 1].setDuration(aws);</span>
+<span class="nc" id="L660">                            dayWork[day + 1].add(work);</span>
+                        } else {
+<span class="nc" id="L662">                            dayWork[day + 1] = new DayWork(aws);// every day has the amount of work done at that day and all days before that</span>
+<span class="nc" id="L663">                            dayWork[day + 1].add(work);</span>
+                        }
+<span class="nc bnc" id="L665" title="All 2 branches missed.">                        if (!aws.isZero()) {</span>
+<span class="nc" id="L666">                            lastDayIndexWithValue = Math.max(day, lastDayIndexWithValue);</span>
+                        }
+                    }
+                } else {
+<span class="nc" id="L670">                    numberOfWorkExceptions++;</span>
+<span class="nc" id="L671">                    logger.error(WORK_OUTSIDE_ALLOWED_TIME_BOUNDARIES_OCCURRED);</span>
+                }
+
+<span class="nc" id="L674">            }</span>
+<span class="nc" id="L675">            milestones.add(calendarFromDayIndex(lastDayIndexWithValue + 1), &quot;L&quot;, &quot;last value + 1&quot;, Color.red, true);</span>
+        }
+<span class="nc" id="L677">        milestones.calculate();</span>
+<span class="nc" id="L678">        int nowDayIndex = (DateUtil.calculateDays(milestones.firstMilestone, DateUtil.min(milestones.lastMilestone, milestones.get(&quot;N&quot;).time)));</span>
+<span class="nc bnc" id="L679" title="All 2 branches missed.">        for (User user : usersTotalContribution.getSortedKeyList()) {</span>
+<span class="nc" id="L680">            Duration  last = Duration.ZERO;</span>
+<span class="nc" id="L681">            DayWork[] aw   = usersWorkPerDayAccumulated.get(user);</span>
+<span class="nc bnc" id="L682" title="All 2 branches missed.">            if (aw == null) {</span>
+                // create a list of work per day for authors that have no work done yet and thus
+                // where missed in the above use case involving worklog
+<span class="nc" id="L685">                aw    = new DayWork[days + 3];</span>
+<span class="nc" id="L686">                aw[0] = new DayWork();</span>
+<span class="nc" id="L687">                usersWorkPerDayAccumulated.put(user, aw);</span>
+            }
+            // fill in empty parts of the days list
+<span class="nc bnc" id="L690" title="All 2 branches missed.">            for (int i = 1; i &lt; usersWorkPerDayAccumulated.get(user).length; i++) {</span>
+<span class="nc bnc" id="L691" title="All 2 branches missed.">                if (i &lt;= nowDayIndex + 2) {</span>
+<span class="nc bnc" id="L692" title="All 2 branches missed.">                    if (usersWorkPerDayAccumulated.get(user)[i] == null</span>
+<span class="nc bnc" id="L693" title="All 2 branches missed.">                            || last.toSeconds() &gt; usersWorkPerDayAccumulated.get(user)[i].duration.toSeconds()) {</span>
+<span class="nc" id="L694">                        usersWorkPerDayAccumulated.get(user)[i] = new DayWork(last);</span>
+                    }
+<span class="nc" id="L696">                    last = usersWorkPerDayAccumulated.get(user)[i].duration;</span>
+                } else {
+                    // ignore anything after today (only makes sense in a test scenario, where we
+                    // simulate a now time in the past)
+<span class="nc bnc" id="L700" title="All 2 branches missed.">                    if (usersWorkPerDayAccumulated.get(user)[i] == null) {</span>
+<span class="nc" id="L701">                        usersWorkPerDayAccumulated.get(user)[i] = new DayWork(Duration.ZERO);</span>
+                    }
+                }
+            }
+<span class="nc" id="L705">        }</span>
+
+<span class="nc bnc" id="L707" title="All 2 branches missed.">        if (usersTotalContribution.size() != 0) {</span>
+<span class="nc bnc" id="L708" title="All 2 branches missed.">            for (User user : usersTotalContribution.getSortedKeyList()) {</span>
+<span class="nc" id="L709">                authors.add(user);</span>
+<span class="nc" id="L710">            }</span>
+        }
+//        authors.calculateColors(graphicsTheme, true);
+<span class="nc" id="L713">    }</span>
+
+    /**
+     * Initialize BurnDownGuide object from gantt chart of this project to visualize
+     * planned burn down rate
+     *
+     * @param context
+     * @param sprintStartDate
+     * @param sprintEndDate
+     * @throws Exception
+     */
+    private void initGanttGuide(Context context, LocalDateTime sprintStartDate, LocalDateTime sprintEndDate)
+            throws Exception {
+<span class="nc" id="L726">        int startDayIndex = calculateDayIndex(sprintStartDate);</span>
+<span class="nc" id="L727">        int stopDayIndex  = calculateDayIndex(sprintEndDate);</span>
+
+<span class="nc" id="L729">        ganttWorkWithoutBufferPerDayAccumulated = new BurnDownGuide(context, sprintStartDate, startDayIndex, stopDayIndex);</span>
+<span class="nc" id="L730">        ganttWorkWithBufferPerDayAccumulated    = new BurnDownGuide(context, sprintStartDate, startDayIndex, stopDayIndex);</span>
+<span class="nc bnc" id="L731" title="All 2 branches missed.">        for (Task task : request.getTasks()) {</span>
+<span class="nc bnc" id="L732" title="All 4 branches missed.">            if (!task.isMilestone() &amp;&amp; task.getChildTasks().isEmpty()) {</span>
+                //only include tasks that have an impact on the cost, as otherwise they are also not included in the sprint (e.g. delivery buffers)
+<span class="nc bnc" id="L734" title="All 2 branches missed.">                if (task.isImpactOnCost()) {</span>
+<span class="nc" id="L735">                    calculateWorkPerDay(context, task, ganttWorkWithoutBufferPerDayAccumulated);</span>
+                } else {
+<span class="nc" id="L737">                    Duration d = task.getOriginalEstimate();</span>
+//                        if (task.getResourceAssignments().size() &gt; 0)
+                    {
+//                            net.sf.mpxj.Duration d = task.getResourceAssignments().get(0).getWork();
+<span class="nc" id="L741">                        logger.info(String.format(&quot;%s has %s effort, but no impact on cost&quot;, task.getName(), DateUtil.create24hDurationString(d, true, true, false)));</span>
+                    }
+                }
+<span class="nc" id="L744">                calculateWorkPerDay(context, task, ganttWorkWithBufferPerDayAccumulated);</span>
+            }
+<span class="nc" id="L746">        }</span>
+<span class="nc" id="L747">        ganttWorkWithoutBufferPerDayAccumulated.convertToAccumulatedValues();</span>
+<span class="nc" id="L748">        ganttWorkWithBufferPerDayAccumulated.convertToAccumulatedValues();</span>
+<span class="nc" id="L749">    }</span>
+
+    private boolean isAbandonedProject() {
+        //if the request ticket is closed, but the sprint is still open
+        //        + &quot; and status = 'Closed' or status = 'Cancelled' or status = 'Waiting for Quotation Request' or status = 'Rejected' or status = 'On Hold'&quot;;
+
+//        return (sprintClosed != 1) &amp;&amp; (request.getRequestStatus().equals(AbstractIssue.REQUEST_STATUS_CLOSED)
+//                || request.getRequestStatus().equals(AbstractIssue.REQUEST_STATUS_CANCELED)
+//                || request.getRequestStatus().equals(AbstractIssue.REQUEST_STATUS_ON_HOLD)
+//                || request.getRequestStatus().equals(AbstractIssue.REQUEST_STATUS_REJECTED)
+//                || request.getRequestStatus().equals(AbstractIssue.REQUEST_STATUS_WAITING_FOR_QUOTATION_REQUEST));
+<span class="nc" id="L760">        return request.isClosed();</span>
+    }
+
+    protected boolean isHideNow(LocalDateTime now, LocalDateTime end, boolean completed) {
+<span class="nc bnc" id="L764" title="All 4 branches missed.">        if (completed || isAbandonedProject()) {</span>
+            // We do not want to keep drawing the graph further and further to include the
+            // current date, if it is closed.
+<span class="nc bnc" id="L767" title="All 4 branches missed.">            return end != null &amp;&amp; now.isAfter(DateUtil.addDay(end, ONE_WEEK));</span>
+        }
+<span class="nc" id="L769">        return false;</span>
+    }
+
+    protected boolean isPlannedBurnDownGuideAvailable() {
+<span class="nc bnc" id="L773" title="All 2 branches missed.">        return ganttWorkWithoutBufferPerDayAccumulated != null;</span>
+    }
+
+//    private boolean isResourceWorkingDay(Context context, User resource, LocalDate day) {
+//        if (day.getDayOfWeek() == DayOfWeek.SATURDAY || day.getDayOfWeek() == DayOfWeek.SUNDAY) {
+//            // ---ignore Saturdays and Sundays
+//            return false;
+//        }
+//        if (resource != null) {
+//            ProjectCalendar resourceCalendar = resource.getCalendar();
+//            // ---ignore bank holidays
+//            return (resourceCalendar == null || resourceCalendar.getException(day) == null) /*&amp;&amp; (context.bankHolidays.get(day) == null)*/;
+//        }
+//        return true;
+//    }
+
+    private void processingInit(RenderDao dao) throws IOException {
+<span class="nc" id="L790">        this.context          = dao.context;</span>
+<span class="nc" id="L791">        this.worklog          = dao.worklog;</span>
+<span class="nc" id="L792">        this.lastWorklog      = dao.lastWorklog;</span>
+<span class="nc" id="L793">        this.worklogRemaining = dao.worklogRemaining;</span>
+<span class="nc" id="L794">        this.eBestWork        = dao.estimatedBestWork;</span>
+<span class="nc" id="L795">        this.eWorstWork       = dao.estimatedWorstWork;</span>
+<span class="nc" id="L796">        this.maxWorked        = dao.maxWorked;</span>
+<span class="nc" id="L797">        this.sprintClosed     = dao.sprint.isClosed();</span>
+<span class="nc" id="L798">        this.graphicsTheme    = dao.graphicsTheme;</span>
+<span class="nc" id="L799">        createMilestones(dao.start, dao.now, dao.end, dao.firstWorklog, dao.lastWorklog, dao.sprint.getReleaseDate(), dao.sprint.isClosed());</span>
+
+<span class="nc" id="L801">        init();</span>
+<span class="nc" id="L802">        yAxis = new GraphSquare(2, diagram.y, Y_AXIS_WIDTH, diagram.height, new Font(&quot;Arial&quot;, Font.PLAIN, 12), new Font(&quot;Arial&quot;, Font.PLAIN, 12));</span>
+<span class="nc" id="L803">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

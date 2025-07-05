@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SecurityConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.security</a> &gt; <span class="el_source">SecurityConfig.java</span></div><h1>SecurityConfig.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.security;
+
+import com.vaadin.flow.spring.security.VaadinWebSecurity;
+import de.bushnaq.abdalla.projecthub.ui.view.LoginView;
+import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
+@EnableWebSecurity
+@EnableMethodSecurity(securedEnabled = true, prePostEnabled = true)
+@Configuration
+<span class="fc" id="L50">public class SecurityConfig extends VaadinWebSecurity {</span>
+<span class="fc" id="L51">    Logger logger = LoggerFactory.getLogger(this.getClass());</span>
+
+    @Autowired
+    private SecurityUserDetailsService userDetailsService;
+
+    @Bean
+    public AuthenticationManager authenticationManager() {
+        // Create authentication provider for the test users
+<span class="fc" id="L59">        DaoAuthenticationProvider testProvider = new DaoAuthenticationProvider();</span>
+<span class="fc" id="L60">        testProvider.setPasswordEncoder(passwordEncoder());</span>
+<span class="fc" id="L61">        testProvider.setUserDetailsService(testUsers());</span>
+
+        // Create authentication provider for the regular users
+<span class="fc" id="L64">        DaoAuthenticationProvider regularProvider = new DaoAuthenticationProvider();</span>
+<span class="fc" id="L65">        regularProvider.setPasswordEncoder(passwordEncoder());</span>
+<span class="fc" id="L66">        regularProvider.setUserDetailsService(userDetailsService);</span>
+
+        // Return a provider manager with both providers
+<span class="fc" id="L69">        return new ProviderManager(testProvider, regularProvider);</span>
+    }
+
+    /**
+     * Separate security configuration specifically for API endpoints
+     * This uses HTTP Basic Authentication for API security
+     */
+    @Bean
+    @Order(2) // Lower precedence than the OAuth2 API security filter chain
+    public SecurityFilterChain basicAuthApiSecurityFilterChain(HttpSecurity http) throws Exception {
+<span class="fc" id="L79">        logger.info(&quot;&gt;&gt;&gt; Configuring security chain (3/4) basic authentication for REST API endpoints&quot;);</span>
+<span class="fc" id="L80">        return http</span>
+<span class="fc" id="L81">                .securityMatcher(&quot;/api/**&quot;) // Apply this configuration only to API endpoints</span>
+<span class="fc" id="L82">                .authorizeHttpRequests(authorize -&gt; authorize</span>
+<span class="fc" id="L83">                        .anyRequest().authenticated()</span>
+                )
+<span class="fc" id="L85">                .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for API endpoints</span>
+<span class="fc" id="L86">                .httpBasic() // Enable HTTP Basic Auth for APIs</span>
+<span class="fc" id="L87">                .and()</span>
+<span class="fc" id="L88">                .exceptionHandling(handling -&gt; handling</span>
+                        // Return 401 for unauthenticated requests instead of redirecting
+<span class="fc" id="L90">                        .authenticationEntryPoint((request, response, authException) -&gt; {</span>
+<span class="nc" id="L91">                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);</span>
+<span class="nc" id="L92">                            response.getWriter().write(&quot;Authentication required&quot;);</span>
+<span class="nc" id="L93">                        })</span>
+                        // Return 403 for unauthorized requests
+<span class="fc" id="L95">                        .accessDeniedHandler((request, response, accessDeniedException) -&gt; {</span>
+<span class="nc" id="L96">                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);</span>
+<span class="nc" id="L97">                            response.getWriter().write(&quot;Access denied&quot;);</span>
+<span class="nc" id="L98">                        })</span>
+                )
+<span class="fc" id="L100">                .authenticationManager(authenticationManager()) // Use our combined authentication manager</span>
+<span class="fc" id="L101">                .build();</span>
+    }
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+<span class="fc" id="L106">        logger.info(&quot;&gt;&gt;&gt; Configuring security chain (4/4) basic authentication for vaadin&quot;);</span>
+        // Configure for all non-API endpoints (Vaadin UI)
+
+        // Allow for H2 console
+<span class="fc" id="L110">        http//</span>
+<span class="fc" id="L111">                .authorizeHttpRequests(authorize -&gt; authorize//</span>
+<span class="fc" id="L112">                        .requestMatchers(new AntPathRequestMatcher(&quot;/h2-console/**&quot;)).permitAll()</span>
+                )//
+<span class="fc" id="L114">                .csrf(csrf -&gt; csrf//</span>
+<span class="fc" id="L115">                        .ignoringRequestMatchers(new AntPathRequestMatcher(&quot;/h2-console/**&quot;))</span>
+                )//
+<span class="fc" id="L117">                .headers(headers -&gt; headers//</span>
+<span class="fc" id="L118">                        .frameOptions(frameOptions -&gt; frameOptions.sameOrigin())</span>
+                );
+
+
+        // Set the login view
+<span class="fc" id="L123">        setLoginView(http, LoginView.class);</span>
+
+<span class="fc" id="L125">        http.authorizeHttpRequests(authorize -&gt; authorize</span>
+<span class="fc" id="L126">                        .requestMatchers(new AntPathRequestMatcher(&quot;/&quot;)).permitAll()</span>
+<span class="fc" id="L127">                        .requestMatchers(new AntPathRequestMatcher(&quot;/&quot; + LoginView.ROUTE)).permitAll()</span>
+<span class="fc" id="L128">                        .requestMatchers(new AntPathRequestMatcher(&quot;/VAADIN/**&quot;)).permitAll()</span>
+<span class="fc" id="L129">                        .requestMatchers(new AntPathRequestMatcher(&quot;/ui/icons/**&quot;)).permitAll()</span>
+<span class="fc" id="L130">                        .requestMatchers(new AntPathRequestMatcher(&quot;/ui/images/**&quot;)).permitAll()</span>
+<span class="fc" id="L131">                        .requestMatchers(new AntPathRequestMatcher(&quot;/frontend/**&quot;)).permitAll()</span>
+<span class="fc" id="L132">                        .requestMatchers(new AntPathRequestMatcher(&quot;/frontend-es5/**&quot;)).permitAll()</span>
+<span class="fc" id="L133">                        .requestMatchers(new AntPathRequestMatcher(&quot;/frontend-es6/**&quot;)).permitAll()</span>
+//                .requestMatchers(new AntPathRequestMatcher(&quot;/oauth2/**&quot;)).permitAll()
+//                .requestMatchers(new AntPathRequestMatcher(&quot;/login/oauth2/**&quot;)).permitAll()
+        );
+
+        // Call the parent configuration to handle Vaadin-specific security
+<span class="fc" id="L139">        super.configure(http);</span>
+
+        // Set the default success URL after login to ProductListView
+<span class="fc" id="L142">        http.formLogin(formLogin -&gt; formLogin.defaultSuccessUrl(&quot;/ui/product-list&quot;, true));</span>
+<span class="fc" id="L143">    }</span>
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+<span class="fc" id="L147">        return new BCryptPasswordEncoder();</span>
+    }
+
+    /**
+     * Configure test users for API testing with appropriate roles
+     */
+    @Bean
+    public InMemoryUserDetailsManager testUsers() {
+        // Create an admin user for admin role tests
+<span class="fc" id="L156">        UserDetails adminUser = User.builder()</span>
+<span class="fc" id="L157">                .username(&quot;admin-user&quot;)</span>
+<span class="fc" id="L158">                .password(passwordEncoder().encode(&quot;test-password&quot;))</span>
+<span class="fc" id="L159">                .roles(&quot;ADMIN&quot;)</span>
+<span class="fc" id="L160">                .build();</span>
+
+        // Create a regular user for USER role tests
+<span class="fc" id="L163">        UserDetails regularUser = User.builder()</span>
+<span class="fc" id="L164">                .username(&quot;user&quot;)</span>
+<span class="fc" id="L165">                .password(passwordEncoder().encode(&quot;test-password&quot;))</span>
+<span class="fc" id="L166">                .roles(&quot;USER&quot;)  // Only USER role, no ADMIN privileges</span>
+<span class="fc" id="L167">                .build();</span>
+
+<span class="fc" id="L169">        logger.info(&quot;Created default test user/admin users.&quot;);</span>
+
+<span class="fc" id="L171">        return new InMemoryUserDetailsManager(adminUser, regularUser);</span>
+    }
+
+    /**
+     * Configure a combined UserDetailsService that checks both test users and regular users
+     */
+    @Bean
+    @Primary
+    public UserDetailsService userDetailsService() {
+<span class="fc" id="L180">        return username -&gt; {</span>
+            try {
+                // First try the test users
+<span class="nc" id="L183">                return testUsers().loadUserByUsername(username);</span>
+<span class="nc" id="L184">            } catch (UsernameNotFoundException e) {</span>
+                // If not found among test users, try the regular user service
+<span class="nc" id="L186">                return userDetailsService.loadUserByUsername(username);</span>
+            }
+        };
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

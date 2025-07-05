@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VersionController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.rest.controller</a> &gt; <span class="el_source">VersionController.java</span></div><h1>VersionController.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.rest.controller;
+
+import de.bushnaq.abdalla.projecthub.dao.VersionDAO;
+import de.bushnaq.abdalla.projecthub.repository.ProductRepository;
+import de.bushnaq.abdalla.projecthub.repository.VersionRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+
+@RestController
+@RequestMapping(&quot;/api/version&quot;)
+<span class="fc" id="L34">public class VersionController {</span>
+
+    @Autowired
+    private ProductRepository productRepository;
+    @Autowired
+    private VersionRepository versionRepository;
+
+    @DeleteMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    public void delete(@PathVariable Long id) {
+<span class="nc" id="L44">        versionRepository.deleteById(id);</span>
+<span class="nc" id="L45">    }</span>
+
+    @GetMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMIN', 'USER')&quot;)
+    public ResponseEntity&lt;VersionDAO&gt; get(@PathVariable Long id) {
+<span class="nc" id="L50">        return versionRepository.findById(id).map(ResponseEntity::ok)</span>
+<span class="nc" id="L51">                .orElse(ResponseEntity.notFound().build());</span>
+    }
+
+    @GetMapping(&quot;/product/{productId}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMIN', 'USER')&quot;)
+    public List&lt;VersionDAO&gt; getAll(@PathVariable Long productId) {
+<span class="nc" id="L57">        return versionRepository.findByProductId(productId);</span>
+    }
+
+    @GetMapping
+    @PreAuthorize(&quot;hasAnyRole('ADMIN', 'USER')&quot;)
+    public List&lt;VersionDAO&gt; getAll() {
+<span class="nc" id="L63">        return versionRepository.findAll();</span>
+    }
+
+    @PostMapping()
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    public ResponseEntity&lt;VersionDAO&gt; persist(@RequestBody VersionDAO version) {
+<span class="nc" id="L69">        return productRepository.findById(version.getProductId()).map(product -&gt; {</span>
+            // Check if a version with the same name already exists for this product
+<span class="nc bnc" id="L71" title="All 2 branches missed.">            if (versionRepository.existsByNameAndProductId(version.getName(), version.getProductId())) {</span>
+<span class="nc" id="L72">                throw new ResponseStatusException(HttpStatus.CONFLICT, &quot;A version with name '&quot; + version.getName() + &quot;' already exists for this product&quot;);</span>
+            }
+<span class="nc" id="L74">            VersionDAO save = versionRepository.save(version);</span>
+<span class="nc" id="L75">            return ResponseEntity.ok(save);</span>
+<span class="nc" id="L76">        }).orElse(ResponseEntity.notFound().build());</span>
+    }
+
+    @PutMapping()
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    public void update(@RequestBody VersionDAO version) {
+        // Check if another version with the same name exists in the same product (excluding the current version)
+<span class="nc" id="L83">        VersionDAO existingVersion = versionRepository.findByNameAndProductId(version.getName(), version.getProductId());</span>
+<span class="nc bnc" id="L84" title="All 4 branches missed.">        if (existingVersion != null &amp;&amp; !existingVersion.getId().equals(version.getId())) {</span>
+<span class="nc" id="L85">            throw new ResponseStatusException(HttpStatus.CONFLICT, &quot;Another version with name '&quot; + version.getName() + &quot;' already exists for this product&quot;);</span>
+        }
+<span class="nc" id="L87">        versionRepository.save(version);</span>
+<span class="nc" id="L88">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

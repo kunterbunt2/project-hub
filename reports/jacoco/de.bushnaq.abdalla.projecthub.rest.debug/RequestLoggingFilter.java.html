@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RequestLoggingFilter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.rest.debug</a> &gt; <span class="el_source">RequestLoggingFilter.java</span></div><h1>RequestLoggingFilter.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.rest.debug;
+
+
+import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
+
+@Component
+<span class="fc" id="L36">public class RequestLoggingFilter implements Filter {</span>
+
+<span class="fc" id="L38">    private static final Logger logger = LoggerFactory.getLogger(RequestLoggingFilter.class);</span>
+
+    @Override
+    public void destroy() {
+        // Cleanup code, if needed
+<span class="nc" id="L43">    }</span>
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">        if (request instanceof HttpServletRequest httpRequest) {</span>
+<span class="fc" id="L49">            CachedBodyHttpServletRequest cachedRequest = new CachedBodyHttpServletRequest(httpRequest);</span>
+<span class="fc" id="L50">            String                       body          = cachedRequest.getRequestBody();</span>
+<span class="fc" id="L51">            String                       requestURL    = httpRequest.getRequestURL().toString();</span>
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">            if (DebugUtil.DEBUG) {</span>
+<span class="nc" id="L53">                System.out.format(&quot;Received JSON request: %s %s\n&quot;, requestURL, body);</span>
+            }
+<span class="fc" id="L55">            chain.doFilter(cachedRequest, response);</span>
+<span class="fc" id="L56">        } else {</span>
+<span class="nc" id="L57">            chain.doFilter(request, response);</span>
+        }
+<span class="fc" id="L59">    }</span>
+
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {
+        // Initialization code, if needed
+<span class="fc" id="L64">    }</span>
+
+    private static class CachedBodyHttpServletRequest extends HttpServletRequestWrapper {
+
+        private final String requestBody;
+
+        public CachedBodyHttpServletRequest(HttpServletRequest request) throws IOException {
+<span class="fc" id="L71">            super(request);</span>
+<span class="fc" id="L72">            this.requestBody = new BufferedReader(new InputStreamReader(request.getInputStream(), StandardCharsets.UTF_8))</span>
+<span class="fc" id="L73">                    .lines()</span>
+<span class="fc" id="L74">                    .collect(Collectors.joining(&quot;\n&quot;));</span>
+<span class="fc" id="L75">        }</span>
+
+        @Override
+        public ServletInputStream getInputStream() throws IOException {
+<span class="fc" id="L79">            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(requestBody.getBytes(StandardCharsets.UTF_8));</span>
+<span class="fc" id="L80">            return new ServletInputStream() {</span>
+                @Override
+                public boolean isFinished() {
+<span class="nc bnc" id="L83" title="All 2 branches missed.">                    return byteArrayInputStream.available() == 0;</span>
+                }
+
+                @Override
+                public boolean isReady() {
+<span class="nc" id="L88">                    return true;</span>
+                }
+
+                @Override
+                public int read() throws IOException {
+<span class="fc" id="L93">                    return byteArrayInputStream.read();</span>
+                }
+
+                @Override
+                public void setReadListener(ReadListener readListener) {
+                    // No implementation needed
+<span class="nc" id="L99">                }</span>
+            };
+        }
+
+        @Override
+        public BufferedReader getReader() throws IOException {
+<span class="fc" id="L105">            return new BufferedReader(new InputStreamReader(this.getInputStream(), StandardCharsets.UTF_8));</span>
+        }
+
+        public String getRequestBody() {
+<span class="fc" id="L109">            return this.requestBody;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

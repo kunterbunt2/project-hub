@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Task.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.dto</a> &gt; <span class="el_source">Task.java</span></div><h1>Task.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.dto;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import de.bushnaq.abdalla.util.DurationDeserializer;
+import de.bushnaq.abdalla.util.DurationSerializer;
+import lombok.*;
+import net.sf.mpxj.ProjectCalendar;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+/**
+ * represents a task in a Gantt chart.
+ */
+@Getter
+@Setter
+@NoArgsConstructor
+@EqualsAndHashCode(of = {&quot;id&quot;}, callSuper = false)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@ToString(callSuper = false)
+public class Task implements Comparable&lt;Task&gt; {
+
+    @JsonIgnore
+    private List&lt;Task&gt;     childTasks        = new ArrayList&lt;&gt;();
+    private boolean        critical          = false;
+    @JsonSerialize(using = DurationSerializer.class)
+    @JsonDeserialize(using = DurationDeserializer.class)
+    private Duration       duration;
+    private LocalDateTime  finish;
+    private Long           id;
+    private boolean        impactOnCost      = true;
+    private boolean        milestone;
+    private String         name;
+    @JsonIgnore
+    private String         notes;
+    @JsonSerialize(using = DurationSerializer.class)
+    @JsonDeserialize(using = DurationDeserializer.class)
+    private Duration       originalEstimate  = Duration.ZERO;
+    @JsonIgnore
+    @ToString.Exclude//help intellij debugger not to go into a loop
+    private Task           parentTask;
+    private Long           parentTaskId;
+    private List&lt;Relation&gt; predecessors      = new ArrayList&lt;&gt;();
+    private Number         progress          = 0;
+    @JsonSerialize(using = DurationSerializer.class)
+    @JsonDeserialize(using = DurationDeserializer.class)
+    private Duration       remainingEstimate = Duration.ZERO;
+    private Long           resourceId;
+    @JsonIgnore
+    @ToString.Exclude//help intellij debugger not to go into a loop
+    private Sprint         sprint;
+    private Long           sprintId;
+    private LocalDateTime  start;
+    private TaskMode       taskMode          = TaskMode.AUTO_SCHEDULED;
+    @JsonSerialize(using = DurationSerializer.class)
+    @JsonDeserialize(using = DurationDeserializer.class)
+    private Duration       timeSpent         = Duration.ZERO;
+    @JsonIgnore
+    private List&lt;Worklog&gt;  worklogs          = new ArrayList&lt;&gt;();
+
+    public void addChildTask(Task childTask) {
+<span class="nc bnc" id="L85" title="All 2 branches missed.">        if (childTask.getParentTask() != null) {</span>
+<span class="nc" id="L86">            childTask.getParentTask().removeChildTask(childTask);</span>
+        }
+<span class="nc" id="L88">        childTask.setParentTask(this);</span>
+<span class="nc" id="L89">        childTask.setParentTaskId(this.getId());</span>
+<span class="nc" id="L90">        childTasks.add(childTask);</span>
+<span class="nc" id="L91">    }</span>
+
+    public void addPredecessor(Task dependency, boolean isVisible) {
+<span class="nc" id="L94">        predecessors.add(new Relation(dependency, isVisible));</span>
+<span class="nc" id="L95">    }</span>
+
+    public void addTimeSpent(Duration w) {
+<span class="nc bnc" id="L98" title="All 2 branches missed.">        if (w != null) {</span>
+<span class="nc" id="L99">            timeSpent = timeSpent.plus(w);</span>
+        }
+<span class="nc" id="L101">    }</span>
+
+    public void addWorklog(Worklog worklog) {
+<span class="nc" id="L104">        worklog.setTaskId(id);</span>
+<span class="nc" id="L105">        worklogs.add(worklog);</span>
+<span class="nc" id="L106">    }</span>
+
+    @Override
+    public int compareTo(Task other) {
+<span class="nc" id="L110">        return this.id.compareTo(other.id);</span>
+    }
+
+    @JsonIgnore
+    public User getAssignedUser() {
+<span class="nc" id="L115">        return sprint.getuser(resourceId);</span>
+    }
+
+    @JsonIgnore
+    public ProjectCalendar getEffectiveCalendar() {
+<span class="nc" id="L120">        User user = getAssignedUser();</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">        if (user != null) {</span>
+<span class="nc" id="L122">            return user.getCalendar();</span>
+        } else {
+<span class="nc" id="L124">            return sprint.getCalendar();</span>
+        }
+    }
+
+    @JsonIgnore
+    public String getKey() {
+<span class="nc" id="L130">        return &quot;T-&quot; + id;</span>
+    }
+
+    public void initialize() {
+<span class="nc" id="L134">    }</span>
+
+    public boolean isAncestor(Task story) {
+<span class="nc bnc" id="L137" title="All 2 branches missed.">        if (Objects.equals(story.getId(), getId()))</span>
+<span class="nc" id="L138">            return true;</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">        for (Task childTask : childTasks) {</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">            if (childTask.isAncestor(story))</span>
+<span class="nc" id="L141">                return true;</span>
+<span class="nc" id="L142">        }</span>
+<span class="nc" id="L143">        return false;</span>
+    }
+
+    public void recalculate() {
+<span class="nc" id="L147">        double fraction = ((double) getTimeSpent().toSeconds()) / getTimeSpent().plus(getRemainingEstimate()).toSeconds();</span>
+<span class="nc" id="L148">        setProgress(fraction);</span>
+<span class="nc" id="L149">    }</span>
+
+    public void removeChildTask(Task childTask) {
+<span class="nc" id="L152">        childTasks.remove(childTask);</span>
+<span class="nc" id="L153">        childTask.setParentTask(null);</span>
+<span class="nc" id="L154">        childTask.setParentTaskId(null);</span>
+<span class="nc" id="L155">    }</span>
+
+    public void removeRemainingEstimate(Duration w) {
+<span class="nc bnc" id="L158" title="All 2 branches missed.">        if (w != null) {</span>
+<span class="nc" id="L159">            remainingEstimate = remainingEstimate.minus(w);</span>
+        }
+<span class="nc" id="L161">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

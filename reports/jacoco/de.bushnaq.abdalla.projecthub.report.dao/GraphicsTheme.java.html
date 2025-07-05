@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GraphicsTheme.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.report.dao</a> &gt; <span class="el_source">GraphicsTheme.java</span></div><h1>GraphicsTheme.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.report.dao;
+
+import java.awt.*;
+
+<span class="fc" id="L22">public class GraphicsTheme {</span>
+<span class="fc" id="L23">    public static final Color  COLOR_DARK_GREEN            = new Color(0x095c09);</span>
+<span class="fc" id="L24">    public static final Color  COLOR_DARK_RED              = new Color(0xcc4a31);</span>
+<span class="fc" id="L25">    public static final Color  COLOR_GOLD                  = new Color(0xffcc00);</span>
+<span class="fc" id="L26">    public static final Color  COLOR_MAGENTA               = new Color(0xe5127d);</span>
+<span class="fc" id="L27">    public              Color  calendarFillingDayTextColor = new Color(0xe2dbdb); // very Light gray for filling days before and after the days we are interested in</span>
+<span class="fc" id="L28">    public              Color  calendarHolidayBgColor      = new Color(183, 216, 240);  // Light blue</span>
+<span class="fc" id="L29">    public              Color  calendarHolidayTextColor    = new Color(123, 180, 200);  // Light blue</span>
+<span class="fc" id="L30">    public              Color  calendarMonthNameColor      = new Color(0xff6336);  // Red for month names</span>
+<span class="fc" id="L31">    public              Color  calendarNormalDayTextColor  = new Color(0x323232);  // almost black</span>
+<span class="fc" id="L32">    public              Color  calendarSickBgColor         = new Color(0xfff2e8); // Light red</span>
+<span class="fc" id="L33">    public              Color  calendarSickTextColor       = new Color(0xff6d5b); // Light red</span>
+<span class="fc" id="L34">    public              Color  calendarTodayBgColor        = new Color(0xff3a30);  // Red circle for today</span>
+<span class="fc" id="L35">    public              Color  calendarTodayTextColor      = Color.white;  // White text for today</span>
+<span class="fc" id="L36">    public              Color  calendarTripBgColor         = new Color(183, 183, 183);// new Color(0xfffcea);  // Light yellow</span>
+<span class="fc" id="L37">    public              Color  calendarTripTextColor       = new Color(64, 64, 64);//new Color(0xff931e);  // Light yellow</span>
+<span class="fc" id="L38">    public              Color  calendarVacationBgColor     = new Color(183, 240, 216);  // Light green</span>
+<span class="fc" id="L39">    public              Color  calendarVacationTextColor   = new Color(123, 200, 180);  // Light green</span>
+<span class="fc" id="L40">    public              Color  calendarWeekDayTextColor    = new Color(180, 180, 180);  // Light gray for weekends</span>
+<span class="fc" id="L41">    public              Color  calendarWeekendBgColor      = null;</span>
+<span class="fc" id="L42">    public              Color  calendarWeekendTextColor    = new Color(180, 180, 180);  // Light gray for weekends</span>
+<span class="fc" id="L43">    public              Color  calendarYearTextColor       = new Color(80, 80, 80);  // Dark gray for year display</span>
+    public              Color  chartBackgroundColor;
+    public              Color  chartBorderColor;
+<span class="fc" id="L46">    public              ETheme cssTheme                    = ETheme.light;</span>
+<span class="fc" id="L47">    public              Color  ganttHolidayColor           = new Color(183, 216, 240, 0x3f);  // Light blue;</span>
+<span class="fc" id="L48">    public              Color  ganttNormalDayTextColor     = new Color(0x323232);  // almost black</span>
+<span class="fc" id="L49">    public              Color  ganttSickColor              = new Color(0xfff2e8); // Light red;</span>
+<span class="fc" id="L50">    public              Color  ganttTaskTickLineColor      = new Color(183, 216, 240);</span>
+<span class="fc" id="L51">    public              Color  ganttTaskTickTextColor      = new Color(0, 0, 0, 127);</span>
+<span class="fc" id="L52">    public              Color  ganttTripColor              = new Color(183, 183, 183, 0x7f);//new Color(0xfffcea);  // Light yellow;</span>
+<span class="fc" id="L53">    public              Color  ganttVacationColor          = new Color(183, 240, 216, 0x5f);  // Light green;</span>
+<span class="fc" id="L54">    public              Color  ganttWeekDayBgColor         = new Color(0xf7f7f7);</span>
+<span class="fc" id="L55">    public              Color  ganttWeekDayTextColor       = new Color(150, 150, 150);  // Light gray for weekends</span>
+<span class="fc" id="L56">    public              Color  ganttWeekendTextColor       = new Color(180, 180, 180);  // Light gray for weekends</span>
+<span class="fc" id="L57">    public              Color  ganttYearBackgroundColor    = new Color(0xf7f7f7);</span>
+<span class="fc" id="L58">    public              Color  ganttYearBoderColor         = Color.white;</span>
+<span class="fc" id="L59">    public              Color  ganttYearTextColor          = new Color(80, 80, 80);  // Dark gray for year display</span>
+<span class="fc" id="L60">    public              Color  holidayColor                = new Color(183, 216, 240);  // Light blue;</span>
+<span class="fc" id="L61">    public              Color  sickColor                   = new Color(0xfff2e8); // Light red;</span>
+<span class="fc" id="L62">    public              Color  tripColor                   = new Color(183, 183, 183);//new Color(0xfffcea);  // Light yellow;</span>
+<span class="fc" id="L63">    public              Color  vacationColor               = new Color(183, 240, 216);  // Light green;</span>
+//    public              Color  yearTextColor;
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

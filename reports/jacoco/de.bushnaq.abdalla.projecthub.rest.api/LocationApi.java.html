@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LocationApi.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.rest.api</a> &gt; <span class="el_source">LocationApi.java</span></div><h1>LocationApi.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.rest.api;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import de.bushnaq.abdalla.projecthub.dto.Location;
+import de.bushnaq.abdalla.projecthub.dto.User;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+@Service
+public class LocationApi extends AbstractApi {
+
+    public LocationApi(RestTemplate restTemplate, ObjectMapper objectMapper, String baseUrl) {
+<span class="fc" id="L33">        super(restTemplate, objectMapper, baseUrl);</span>
+<span class="fc" id="L34">    }</span>
+
+<span class="nc" id="L36">    public LocationApi() {</span>
+
+<span class="nc" id="L38">    }</span>
+
+    @Autowired
+    public LocationApi(RestTemplate restTemplate, ObjectMapper objectMapper) {
+<span class="fc" id="L42">        super(restTemplate, objectMapper);</span>
+<span class="fc" id="L43">    }</span>
+
+    //TODO use ids instead of objects
+    public void deleteById(User user, Location location) throws org.springframework.web.client.RestClientException {
+<span class="nc" id="L47">        executeWithErrorHandling(() -&gt; restTemplate.exchange(</span>
+<span class="nc" id="L48">                getBaseUrl() + &quot;/location/{userId}/{id}&quot;,</span>
+                HttpMethod.DELETE,
+<span class="nc" id="L50">                createHttpEntity(),</span>
+                Void.class,
+<span class="nc" id="L52">                user.getId(),</span>
+<span class="nc" id="L53">                location.getId()</span>
+        ));
+<span class="nc" id="L55">    }</span>
+
+    public Location getById(Long id) {
+<span class="nc" id="L58">        ResponseEntity&lt;Location&gt; response = executeWithErrorHandling(() -&gt; restTemplate.exchange(</span>
+<span class="nc" id="L59">                getBaseUrl() + &quot;/location/{id}&quot;,</span>
+                HttpMethod.GET,
+<span class="nc" id="L61">                createHttpEntity(),</span>
+                Location.class,
+                id
+        ));
+<span class="nc" id="L65">        return response.getBody();</span>
+    }
+
+    public Location persist(Location location, Long userId) {
+<span class="nc" id="L69">        ResponseEntity&lt;Location&gt; response = executeWithErrorHandling(() -&gt; restTemplate.exchange(</span>
+<span class="nc" id="L70">                getBaseUrl() + &quot;/location/{userId}&quot;,</span>
+                HttpMethod.POST,
+<span class="nc" id="L72">                createHttpEntity(location),</span>
+                Location.class,
+                userId
+        ));
+<span class="nc" id="L76">        return response.getBody();</span>
+    }
+
+    public void update(Location location, Long userId) {
+<span class="nc" id="L80">        executeWithErrorHandling(() -&gt; restTemplate.exchange(</span>
+<span class="nc" id="L81">                getBaseUrl() + &quot;/location/{userId}&quot;,</span>
+                HttpMethod.PUT,
+<span class="nc" id="L83">                createHttpEntity(location),</span>
+                Void.class,
+                userId
+        ));
+<span class="nc" id="L87">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

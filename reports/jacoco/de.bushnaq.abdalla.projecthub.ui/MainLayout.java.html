@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MainLayout.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.ui</a> &gt; <span class="el_source">MainLayout.java</span></div><h1>MainLayout.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.ui;
+
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.applayout.AppLayout;
+import com.vaadin.flow.component.avatar.Avatar;
+import com.vaadin.flow.component.avatar.AvatarVariant;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Image;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.tabs.Tab;
+import com.vaadin.flow.component.tabs.Tabs;
+import com.vaadin.flow.router.Layout;
+import com.vaadin.flow.server.menu.MenuConfiguration;
+import com.vaadin.flow.server.menu.MenuEntry;
+import de.bushnaq.abdalla.projecthub.security.SecurityUtils;
+import de.bushnaq.abdalla.projecthub.ui.component.Breadcrumbs;
+import de.bushnaq.abdalla.projecthub.ui.component.ThemeToggle;
+import jakarta.annotation.security.PermitAll;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.vaadin.flow.theme.lumo.LumoUtility.*;
+
+@Layout
+@PermitAll // When security is enabled, allow all authenticated users
+public final class MainLayout extends AppLayout {
+
+<span class="fc" id="L55">    private final Breadcrumbs      breadcrumbs  = new Breadcrumbs();</span>
+<span class="fc" id="L56">    private final Map&lt;Tab, String&gt; tabToPathMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L57">    private final Tabs             tabs         = new Tabs();</span>
+
+<span class="fc" id="L59">    MainLayout() {</span>
+<span class="fc" id="L60">        setPrimarySection(Section.NAVBAR);</span>
+
+        // Create main navigation bar components
+<span class="fc" id="L63">        HorizontalLayout navbarLayout = new HorizontalLayout();</span>
+<span class="fc" id="L64">        navbarLayout.setWidthFull();</span>
+<span class="fc" id="L65">        navbarLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);</span>
+<span class="fc" id="L66">        navbarLayout.setAlignItems(FlexComponent.Alignment.CENTER);</span>
+<span class="fc" id="L67">        navbarLayout.addClassName(&quot;navbar-custom&quot;);</span>
+
+        // Add logo and app name to the left
+<span class="fc" id="L70">        Image logoLayout = createLogo();</span>
+
+        // Add navigation tabs to the center
+<span class="fc" id="L73">        createNavTabs();</span>
+<span class="fc" id="L74">        tabs.addClassNames(Margin.Horizontal.MEDIUM);</span>
+<span class="fc" id="L75">        ThemeToggle themeToggle = new ThemeToggle();</span>
+
+        // Add user menu to the right
+<span class="fc" id="L78">        Component userMenu = createUserMenu();</span>
+
+<span class="fc" id="L80">        navbarLayout.add(logoLayout, tabs, themeToggle, userMenu);</span>
+<span class="fc" id="L81">        navbarLayout.expand(tabs);</span>
+
+<span class="fc" id="L83">        Div breadcrumbContainer = new Div(breadcrumbs);</span>
+<span class="fc" id="L84">        breadcrumbContainer.addClassNames(</span>
+                Padding.Horizontal.MEDIUM,
+                Padding.Vertical.XSMALL,
+                Width.FULL,
+                Background.CONTRAST_5
+        );
+
+<span class="fc" id="L91">        var navAndBreadcrumbs = new VerticalLayout();</span>
+<span class="fc" id="L92">        navAndBreadcrumbs.setPadding(false);</span>
+<span class="fc" id="L93">        navAndBreadcrumbs.setSpacing(false);</span>
+<span class="fc" id="L94">        navAndBreadcrumbs.setMargin(false);</span>
+
+<span class="fc" id="L96">        navAndBreadcrumbs.add(breadcrumbContainer, navbarLayout);</span>
+
+        // Add the combined layout to the navbar area
+<span class="fc" id="L99">        addToNavbar(true, navAndBreadcrumbs);</span>
+<span class="fc" id="L100">    }</span>
+
+    private Image createLogo() {
+<span class="fc" id="L103">        Image logo = new Image(&quot;images/logo.svg&quot;, &quot;Kassandra Logo&quot;);</span>
+<span class="fc" id="L104">        logo.setHeight(&quot;32px&quot;);</span>
+<span class="fc" id="L105">        return logo;</span>
+    }
+
+    private void createNavTabs() {
+<span class="fc" id="L109">        tabs.setOrientation(Tabs.Orientation.HORIZONTAL);</span>
+
+<span class="fc" id="L111">        MenuConfiguration.getMenuEntries().forEach(entry -&gt; {</span>
+<span class="fc" id="L112">            Tab tab = createTab(entry);</span>
+<span class="fc" id="L113">            tabToPathMap.put(tab, entry.path());</span>
+<span class="fc" id="L114">            tabs.add(tab);</span>
+<span class="fc" id="L115">        });</span>
+
+<span class="fc" id="L117">        tabs.addSelectedChangeListener(event -&gt; {</span>
+<span class="nc" id="L118">            Tab    selectedTab = event.getSelectedTab();</span>
+<span class="nc" id="L119">            String targetPath  = tabToPathMap.get(selectedTab);</span>
+<span class="nc bnc" id="L120" title="All 4 branches missed.">            if (targetPath != null &amp;&amp; !targetPath.isEmpty()) {</span>
+<span class="nc" id="L121">                getUI().ifPresent(ui -&gt; ui.navigate(targetPath));</span>
+            }
+<span class="nc" id="L123">        });</span>
+<span class="fc" id="L124">    }</span>
+
+    private Tab createTab(MenuEntry menuEntry) {
+<span class="fc" id="L127">        Icon icon = null;</span>
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">        if (menuEntry.icon() != null) {</span>
+<span class="fc" id="L129">            icon = new Icon(menuEntry.icon());</span>
+<span class="fc" id="L130">            icon.addClassNames(Margin.Right.XSMALL);</span>
+        }
+
+<span class="fc" id="L133">        Span text = new Span(menuEntry.title());</span>
+
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">        if (icon != null) {</span>
+<span class="fc" id="L136">            return new Tab(new HorizontalLayout(icon, text));</span>
+        } else {
+<span class="nc" id="L138">            return new Tab(text);</span>
+        }
+    }
+
+    private Component createUserMenu() {
+<span class="fc" id="L143">        final String username = getUserName();</span>
+
+<span class="fc" id="L145">        var avatar = new Avatar(username);</span>
+<span class="fc" id="L146">        avatar.addThemeVariants(AvatarVariant.LUMO_XSMALL);</span>
+<span class="fc" id="L147">        avatar.addClassNames(Margin.Right.SMALL);</span>
+<span class="fc" id="L148">        avatar.setColorIndex(5);</span>
+
+<span class="fc" id="L150">        var userMenu = new MenuBar();</span>
+<span class="fc" id="L151">        userMenu.addThemeVariants(MenuBarVariant.LUMO_TERTIARY_INLINE);</span>
+<span class="fc" id="L152">        userMenu.addClassNames(Margin.Right.MEDIUM);</span>
+
+<span class="fc" id="L154">        var userMenuItem = userMenu.addItem(avatar);</span>
+<span class="fc" id="L155">        userMenuItem.add(username);</span>
+<span class="pc" id="L156">        userMenuItem.getSubMenu().addItem(&quot;Manage Availability&quot;, e -&gt; navigateToAvailability(username));</span>
+<span class="pc" id="L157">        userMenuItem.getSubMenu().addItem(&quot;Manage Location&quot;, e -&gt; navigateToLocation(username));</span>
+<span class="pc" id="L158">        userMenuItem.getSubMenu().addItem(&quot;Manage Off Days&quot;, e -&gt; navigateToOffDays(username));</span>
+<span class="fc" id="L159">        userMenuItem.getSubMenu().addItem(&quot;View Profile&quot;).setEnabled(false);</span>
+<span class="fc" id="L160">        userMenuItem.getSubMenu().addItem(&quot;Manage Settings&quot;).setEnabled(false);</span>
+<span class="pc" id="L161">        userMenuItem.getSubMenu().addItem(&quot;Logout&quot;, e -&gt; logout());</span>
+
+<span class="fc" id="L163">        return userMenu;</span>
+    }
+
+    // Method to get the breadcrumbs component (to be used by views)
+    public Breadcrumbs getBreadcrumbs() {
+<span class="fc" id="L168">        return breadcrumbs;</span>
+    }
+
+    private String getUserName() {
+<span class="fc" id="L172">        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="pc bpc" id="L173" title="1 of 2 branches missed.">        String         userName       = authentication != null ? authentication.getName() : &quot;Guest&quot;;</span>
+
+        // If using OIDC, try to get the email address from authentication details
+<span class="pc bpc" id="L176" title="2 of 4 branches missed.">        if (authentication != null &amp;&amp; authentication.getPrincipal() instanceof org.springframework.security.oauth2.core.oidc.user.OidcUser oidcUser) {</span>
+<span class="nc" id="L177">            String email = oidcUser.getEmail();</span>
+<span class="nc bnc" id="L178" title="All 4 branches missed.">            if (email != null &amp;&amp; !email.isEmpty()) {</span>
+<span class="nc" id="L179">                userName = email;</span>
+            }
+        }
+<span class="fc" id="L182">        return userName;</span>
+    }
+
+    private void logout() {
+<span class="nc" id="L186">        SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();</span>
+<span class="nc" id="L187">        logoutHandler.logout(SecurityUtils.getHttpServletRequest(), SecurityUtils.getHttpServletResponse(), SecurityContextHolder.getContext().getAuthentication());</span>
+<span class="nc" id="L188">        getUI().ifPresent(ui -&gt; ui.getPage().setLocation(&quot;/ui/login&quot;));</span>
+<span class="nc" id="L189">    }</span>
+
+    private void navigateToAvailability(String username) {
+<span class="nc" id="L192">        getUI().ifPresent(ui -&gt; ui.navigate(&quot;availability/&quot; + username));</span>
+<span class="nc" id="L193">    }</span>
+
+    private void navigateToLocation(String username) {
+<span class="nc" id="L196">        getUI().ifPresent(ui -&gt; ui.navigate(&quot;location/&quot; + username));</span>
+<span class="nc" id="L197">    }</span>
+
+    private void navigateToOffDays(String username) {
+<span class="nc" id="L200">        getUI().ifPresent(ui -&gt; ui.navigate(&quot;offday/&quot; + username));</span>
+<span class="nc" id="L201">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

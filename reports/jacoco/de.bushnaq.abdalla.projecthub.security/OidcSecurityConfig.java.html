@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OidcSecurityConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.security</a> &gt; <span class="el_source">OidcSecurityConfig.java</span></div><h1>OidcSecurityConfig.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.security;
+
+import com.vaadin.flow.spring.security.VaadinWebSecurity;
+import de.bushnaq.abdalla.projecthub.ui.view.LoginView;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
+import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
+import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
+import org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority;
+import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Security configuration for OAuth2/OIDC authentication.
+ * This class configures Spring Security to use OAuth2/OIDC for authentication with Vaadin UI.
+ * It's only enabled when the 'spring.security.oauth2.client.registration.keycloak.client-id' property is defined.
+ */
+@EnableWebSecurity
+@Configuration
+@ConditionalOnProperty(name = &quot;spring.security.oauth2.client.registration.keycloak.client-id&quot;)
+<span class="nc" id="L54">public class OidcSecurityConfig extends VaadinWebSecurity {</span>
+
+    @Autowired(required = false)
+    private       ClientRegistrationRepository clientRegistrationRepository;
+<span class="nc" id="L58">    private final Logger                       logger = LoggerFactory.getLogger(OidcSecurityConfig.class);</span>
+
+    /**
+     * Configures Spring Security to use OAuth2 login for Vaadin UI pages.
+     * This security configuration is now specifically for Vaadin UI endpoints,
+     * separate from the API security configuration.
+     */
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+<span class="nc" id="L67">        logger.info(&quot;&gt;&gt;&gt; Configuring security chain (2/4) OAuth2/OIDC security for Vaadin UI&quot;);</span>
+
+        // Check if client registration repository is available
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (clientRegistrationRepository == null) {</span>
+<span class="nc" id="L71">            logger.error(&quot;ClientRegistrationRepository is null - OAuth2 endpoints will not be available!&quot;);</span>
+        } else {
+            try {
+<span class="nc" id="L74">                logger.info(&quot;Checking for keycloak client registration&quot;);</span>
+<span class="nc" id="L75">                clientRegistrationRepository.findByRegistrationId(&quot;keycloak&quot;);</span>
+<span class="nc" id="L76">                logger.info(&quot;Found keycloak client registration&quot;);</span>
+<span class="nc" id="L77">            } catch (Exception e) {</span>
+<span class="nc" id="L78">                logger.error(&quot;Error finding keycloak client registration&quot;, e);</span>
+<span class="nc" id="L79">            }</span>
+        }
+
+        // Set up Vaadin specific security configuration first
+<span class="nc" id="L83">        setLoginView(http, LoginView.class);</span>
+
+        // Allow access to the login page and static resources without authentication
+<span class="nc" id="L86">        http.authorizeHttpRequests(authorize -&gt; authorize</span>
+<span class="nc" id="L87">                .requestMatchers(new AntPathRequestMatcher(&quot;/&quot;)).permitAll()</span>
+<span class="nc" id="L88">                .requestMatchers(new AntPathRequestMatcher(&quot;/&quot; + LoginView.ROUTE)).permitAll()</span>
+<span class="nc" id="L89">                .requestMatchers(new AntPathRequestMatcher(&quot;/VAADIN/**&quot;)).permitAll()</span>
+<span class="nc" id="L90">                .requestMatchers(new AntPathRequestMatcher(&quot;/ui/icons/**&quot;)).permitAll()</span>
+<span class="nc" id="L91">                .requestMatchers(new AntPathRequestMatcher(&quot;/ui/images/**&quot;)).permitAll()</span>
+<span class="nc" id="L92">                .requestMatchers(new AntPathRequestMatcher(&quot;/frontend/**&quot;)).permitAll()</span>
+<span class="nc" id="L93">                .requestMatchers(new AntPathRequestMatcher(&quot;/frontend-es5/**&quot;)).permitAll()</span>
+<span class="nc" id="L94">                .requestMatchers(new AntPathRequestMatcher(&quot;/frontend-es6/**&quot;)).permitAll()</span>
+<span class="nc" id="L95">                .requestMatchers(new AntPathRequestMatcher(&quot;/oauth2/**&quot;)).permitAll()</span>
+<span class="nc" id="L96">                .requestMatchers(new AntPathRequestMatcher(&quot;/login/oauth2/**&quot;)).permitAll());</span>
+
+        // Configure OAuth2 login support for Vaadin UI
+<span class="nc bnc" id="L99" title="All 2 branches missed.">        if (clientRegistrationRepository != null) {</span>
+<span class="nc" id="L100">            logger.info(&quot;Configuring OAuth2 login with base URI: {}&quot;,</span>
+                    OAuth2AuthorizationRequestRedirectFilter.DEFAULT_AUTHORIZATION_REQUEST_BASE_URI);
+
+            // Configure OAuth2 login with custom resolver if available
+<span class="nc" id="L104">            http.oauth2Login(oauth2Config -&gt; {</span>
+<span class="nc" id="L105">                oauth2Config.loginPage(&quot;/&quot; + LoginView.ROUTE)</span>
+<span class="nc" id="L106">                        .defaultSuccessUrl(&quot;/ui/product-list&quot;, true) // Redirects to &quot;/product-list&quot; after successful login</span>
+<span class="nc" id="L107">                        .userInfoEndpoint(userInfo -&gt; userInfo</span>
+<span class="nc" id="L108">                                .userAuthoritiesMapper(grantedAuthoritiesMapper()));</span>
+<span class="nc" id="L109">            });</span>
+
+            // Configure OAuth2 logout
+<span class="nc" id="L112">            http.logout(logout -&gt; logout</span>
+<span class="nc" id="L113">                    .logoutSuccessHandler(oidcLogoutSuccessHandler())</span>
+            );
+
+            // Note: We no longer configure JWT resource server here, as it's now in ApiSecurityConfig
+        }
+
+        // Complete Vaadin security configuration
+<span class="nc" id="L120">        super.configure(http);</span>
+<span class="nc" id="L121">    }</span>
+
+    /**
+     * Extract Keycloak roles from token/userinfo claims and add them as Spring Security authorities.
+     */
+    @SuppressWarnings(&quot;unchecked&quot;)
+    private void extractKeycloakRoles(Set&lt;GrantedAuthority&gt; mappedAuthorities, Map&lt;String, Object&gt; claims) {
+        // Check for realm_access claim which contains roles
+<span class="nc bnc" id="L129" title="All 2 branches missed.">        if (claims.containsKey(&quot;realm_access&quot;)) {</span>
+<span class="nc" id="L130">            Map&lt;String, Object&gt; realmAccess = (Map&lt;String, Object&gt;) claims.get(&quot;realm_access&quot;);</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">            if (realmAccess.containsKey(&quot;roles&quot;)) {</span>
+<span class="nc" id="L132">                ((Iterable&lt;String&gt;) realmAccess.get(&quot;roles&quot;)).forEach(role -&gt; {</span>
+<span class="nc" id="L133">                    mappedAuthorities.add(new SimpleGrantedAuthority(&quot;ROLE_&quot; + role.toUpperCase()));</span>
+<span class="nc" id="L134">                });</span>
+            }
+        }
+<span class="nc" id="L137">    }</span>
+
+    /**
+     * Maps OAuth2/OIDC roles to Spring Security authorities.
+     * This ensures that roles from Keycloak are properly mapped to Spring Security roles.
+     */
+    @Bean
+    public GrantedAuthoritiesMapper grantedAuthoritiesMapper() {
+<span class="nc" id="L145">        return authorities -&gt; {</span>
+<span class="nc" id="L146">            Set&lt;GrantedAuthority&gt; mappedAuthorities = new HashSet&lt;&gt;();</span>
+
+<span class="nc" id="L148">            authorities.forEach(authority -&gt; {</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">                if (authority instanceof OidcUserAuthority oidcUserAuthority) {</span>
+<span class="nc" id="L150">                    OidcIdToken  idToken  = oidcUserAuthority.getIdToken();</span>
+<span class="nc" id="L151">                    OidcUserInfo userInfo = oidcUserAuthority.getUserInfo();</span>
+
+                    // Extract realm roles
+<span class="nc" id="L154">                    extractKeycloakRoles(mappedAuthorities, idToken.getClaims());</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">                    if (userInfo != null) {</span>
+<span class="nc" id="L156">                        extractKeycloakRoles(mappedAuthorities, userInfo.getClaims());</span>
+                    }
+
+<span class="nc" id="L159">                    mappedAuthorities.add(new SimpleGrantedAuthority(&quot;ROLE_USER&quot;)); // Default role</span>
+
+<span class="nc bnc" id="L161" title="All 2 branches missed.">                } else if (authority instanceof OAuth2UserAuthority oauth2UserAuthority) {</span>
+<span class="nc" id="L162">                    Map&lt;String, Object&gt; attributes = oauth2UserAuthority.getAttributes();</span>
+
+                    // Extract realm roles
+<span class="nc" id="L165">                    extractKeycloakRoles(mappedAuthorities, attributes);</span>
+
+<span class="nc" id="L167">                    mappedAuthorities.add(new SimpleGrantedAuthority(&quot;ROLE_USER&quot;)); // Default role</span>
+                }
+<span class="nc" id="L169">            });</span>
+
+<span class="nc" id="L171">            return mappedAuthorities;</span>
+        };
+    }
+
+    /**
+     * Configure the OAuth2 logout success handler.
+     */
+    private OidcClientInitiatedLogoutSuccessHandler oidcLogoutSuccessHandler() {
+<span class="nc" id="L179">        OidcClientInitiatedLogoutSuccessHandler logoutSuccessHandler =</span>
+                new OidcClientInitiatedLogoutSuccessHandler(clientRegistrationRepository);
+        // Set the URL to redirect to after logout
+<span class="nc" id="L182">        logoutSuccessHandler.setPostLogoutRedirectUri(&quot;{baseUrl}&quot;);</span>
+<span class="nc" id="L183">        return logoutSuccessHandler;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

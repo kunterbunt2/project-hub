@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CalendarRenderer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.report.calendar</a> &gt; <span class="el_source">CalendarRenderer.java</span></div><h1>CalendarRenderer.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.report.calendar;
+
+import de.bushnaq.abdalla.projecthub.Context;
+import de.bushnaq.abdalla.projecthub.dto.OffDayType;
+import de.bushnaq.abdalla.projecthub.dto.User;
+import de.bushnaq.abdalla.projecthub.report.AbstractRenderer;
+import de.bushnaq.abdalla.projecthub.report.dao.BurnDownGraphicsTheme;
+import de.bushnaq.abdalla.svg.util.ExtendedGraphics2D;
+import net.sf.mpxj.ProjectCalendar;
+import net.sf.mpxj.ProjectCalendarException;
+
+import java.awt.*;
+import java.awt.font.TextAttribute;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * renders a gantt chart using ms project mpp file as base
+ * Will make out of office time visible
+ *
+ * @author abdalla.bushnaq
+ */
+public class CalendarRenderer extends AbstractRenderer {
+<span class="nc" id="L46">    private final int                   DAY_SIZE              = 24;</span>
+<span class="nc" id="L47">    private final int                   HEADER_HEIGHT         = 25;</span>
+<span class="nc" id="L48">    private final int                   LEGEND_HEIGHT         = 24 * 2;</span>
+<span class="nc" id="L49">    private final int                   MONTHS_PER_COL        = 3;</span>
+<span class="nc" id="L50">    private final int                   MONTHS_PER_ROW        = 4;</span>
+<span class="nc" id="L51">    private final int                   MONTH_GAP             = 20;</span>
+<span class="nc" id="L52">    private final int                   MONTH_HEIGHT          = 180;</span>
+<span class="nc" id="L53">    private final int                   MONTH_WIDTH           = 200;</span>
+<span class="nc" id="L54">    private final int                   WEEKDAY_HEADER_HEIGHT = 20;</span>
+<span class="nc" id="L55">    private final int                   YEAR_HEIGHT           = 20;</span>
+<span class="nc" id="L56">    private final int                   cellHeight            = 16;</span>
+<span class="nc" id="L57">    private final int                   cellWidth             = 16;</span>
+    //    private       ExtendedGraphics2D    graphics2D;
+    private final BurnDownGraphicsTheme graphicsTheme;
+    private       int                   holidays;
+    private final LocalDateTime         now;
+    private       int                   sickDays;
+    private       int                   tripDays;
+    private final User                  user;
+<span class="nc" id="L65">    private       int                   vacationDays          = 0;</span>
+
+<span class="nc" id="L67">    public CalendarRenderer(Context context, User user, LocalDateTime now, String cssClass, BurnDownGraphicsTheme graphicsTheme) throws Exception {</span>
+<span class="nc" id="L68">        this.user          = user;</span>
+<span class="nc" id="L69">        this.now           = now;</span>
+<span class="nc" id="L70">        this.graphicsTheme = graphicsTheme;</span>
+<span class="nc" id="L71">        chartWidth         = MONTH_WIDTH * MONTHS_PER_ROW + MONTH_GAP * (MONTHS_PER_ROW - 1);</span>
+<span class="nc" id="L72">        chartHeight        = YEAR_HEIGHT + HEADER_HEIGHT + WEEKDAY_HEADER_HEIGHT + MONTH_HEIGHT * MONTHS_PER_COL + MONTH_GAP * (MONTHS_PER_COL - 1) + LEGEND_HEIGHT;</span>
+<span class="nc" id="L73">    }</span>
+
+    protected int calculateChartHeight() {
+<span class="nc" id="L76">        return cellHeight * 12;</span>
+    }
+
+    protected int calculateChartWidth() {
+<span class="nc" id="L80">        return cellWidth * 31;</span>
+    }
+
+    @Override
+    public void draw(ExtendedGraphics2D graphics2D, int x, int y) throws Exception {
+<span class="nc" id="L85">        drawCalendar(graphics2D, 2025, now.toLocalDate(), x, y);</span>
+<span class="nc" id="L86">    }</span>
+
+    void drawCalendar(Graphics2D graphics2D, int year, LocalDate today, int x, int y) throws IOException, FontFormatException {
+<span class="nc" id="L89">        int holidays = 0;</span>
+
+        // Save original font and color
+<span class="nc" id="L92">        Font  originalFont  = graphics2D.getFont();</span>
+<span class="nc" id="L93">        Color originalColor = graphics2D.getColor();</span>
+
+        // Fonts
+<span class="nc" id="L96">        Font smallFont = new Font(Font.SANS_SERIF, Font.PLAIN, 6);</span>
+
+<span class="nc" id="L98">        int yearTextHeight = drawYear(graphics2D, year, x, y);</span>
+
+        // Calculate offset for calendar to position below the year text
+<span class="nc" id="L101">        int yearOffset = yearTextHeight + 20; // Add some padding</span>
+
+        // For each month
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        for (int monthIndex = 0; monthIndex &lt; 12; monthIndex++) {</span>
+<span class="nc" id="L105">            int row = monthIndex / MONTHS_PER_ROW;</span>
+<span class="nc" id="L106">            int col = monthIndex % MONTHS_PER_ROW;</span>
+
+<span class="nc" id="L108">            int monthStartX = x + col * (MONTH_WIDTH + MONTH_GAP);</span>
+<span class="nc" id="L109">            int monthStartY = y + yearOffset + row * (MONTH_HEIGHT + MONTH_GAP); // Apply the year offset</span>
+
+            // Create LocalDate for first day of month
+<span class="nc" id="L112">            LocalDate firstOfMonth = LocalDate.of(year, monthIndex + 1, 1);</span>
+<span class="nc" id="L113">            String    monthName    = firstOfMonth.getMonth().toString();</span>
+
+<span class="nc" id="L115">            drawMonthName(graphics2D, monthStartX, monthStartY, monthName);</span>
+
+<span class="nc" id="L117">            drawWeekDays(graphics2D, monthStartX, monthStartY, firstOfMonth);</span>
+
+            // Determine first day of week for this month (0 = Sunday, 6 = Saturday)
+<span class="nc" id="L120">            int firstDayOfWeek = firstOfMonth.getDayOfWeek().getValue() % 7;</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">            if (firstDayOfWeek == 0) firstDayOfWeek = 7;  // Convert Sunday from 0 to 7</span>
+<span class="nc" id="L122">            firstDayOfWeek--; // Adjust to 0-based index</span>
+
+            // Last day of month
+<span class="nc" id="L125">            int lastDay = firstOfMonth.lengthOfMonth();</span>
+
+            // Calculate starting Y position for the first week, adding adequate space after weekday headers
+<span class="nc" id="L128">            int daysStartY = monthStartY + HEADER_HEIGHT + WEEKDAY_HEADER_HEIGHT + 10; // Added 10px extra spacing</span>
+
+            // Draw days from previous month to fill the gaps at the beginning
+<span class="nc bnc" id="L131" title="All 2 branches missed.">            if (firstDayOfWeek &gt; 0) {</span>
+                // Get the previous month
+<span class="nc" id="L133">                LocalDate prevMonth        = firstOfMonth.minusMonths(1);</span>
+<span class="nc" id="L134">                int       prevMonthLastDay = prevMonth.lengthOfMonth();</span>
+
+                // Draw the days from the previous month
+<span class="nc bnc" id="L137" title="All 2 branches missed.">                for (int i = 0; i &lt; firstDayOfWeek; i++) {</span>
+<span class="nc" id="L138">                    int prevDay    = prevMonthLastDay - firstDayOfWeek + i + 1;</span>
+<span class="nc" id="L139">                    int dayX       = monthStartX + 10 + (i * DAY_SIZE);</span>
+<span class="nc" id="L140">                    int dayY       = daysStartY;</span>
+<span class="nc" id="L141">                    int dayCenterX = dayX + (DAY_SIZE / 2);</span>
+<span class="nc" id="L142">                    int dayCenterY = dayY + (DAY_SIZE / 2) - 6;</span>
+
+                    // Draw with filling text color
+<span class="nc" id="L145">                    graphics2D.setColor(graphicsTheme.calendarFillingDayTextColor);</span>
+<span class="nc" id="L146">                    drawDayOfMonth(graphics2D, dayCenterX, dayCenterY, prevDay);</span>
+                }
+            }
+
+<span class="nc bnc" id="L150" title="All 2 branches missed.">            for (int day = 1; day &lt;= lastDay; day++) {</span>
+<span class="nc" id="L151">                LocalDate currentDate = LocalDate.of(year, monthIndex + 1, day);</span>
+<span class="nc" id="L152">                int       dayOfWeek   = (firstDayOfWeek + day - 1) % 7;</span>
+<span class="nc" id="L153">                int       weekNum     = (firstDayOfWeek + day - 1) / 7;</span>
+<span class="nc" id="L154">                int       dayX        = monthStartX + 10 + (dayOfWeek * DAY_SIZE);</span>
+<span class="nc" id="L155">                int       dayY        = daysStartY + (weekNum * DAY_SIZE);</span>
+                // Calculate center position for the day cell
+<span class="nc" id="L157">                int dayCenterX = dayX + (DAY_SIZE / 2);</span>
+<span class="nc" id="L158">                int dayCenterY = dayY + (DAY_SIZE / 2) - 6; // Adjusted to center the text better</span>
+
+<span class="nc" id="L160">                ProjectCalendar pc        = user.getCalendar();</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">                boolean         isWeekend = !pc.isWorkingDay(currentDate.getDayOfWeek());</span>
+                // Check if today
+<span class="nc" id="L163">                boolean isToday = currentDate.equals(today);</span>
+
+                // Check off days
+<span class="nc" id="L166">                Color bgColor   = null;</span>
+<span class="nc" id="L167">                Color textColor = graphicsTheme.calendarNormalDayTextColor;</span>
+
+<span class="nc bnc" id="L169" title="All 2 branches missed.">                if (isWeekend) {</span>
+<span class="nc" id="L170">                    bgColor   = graphicsTheme.calendarWeekendBgColor;</span>
+<span class="nc" id="L171">                    textColor = graphicsTheme.calendarWeekendTextColor;</span>
+                } else {
+<span class="nc" id="L173">                    ProjectCalendarException exception = pc.getException(currentDate);</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">                    if (exception != null) {</span>
+<span class="nc" id="L175">                        String name = exception.getName();</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">                        if (name.equals(OffDayType.VACATION.name())) {</span>
+<span class="nc" id="L177">                            bgColor   = graphicsTheme.calendarVacationBgColor;</span>
+<span class="nc" id="L178">                            textColor = graphicsTheme.calendarVacationTextColor;</span>
+<span class="nc" id="L179">                            vacationDays++;</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">                        } else if (name.equals(OffDayType.SICK.name())) {</span>
+<span class="nc" id="L181">                            bgColor   = graphicsTheme.calendarSickBgColor;</span>
+<span class="nc" id="L182">                            textColor = graphicsTheme.calendarSickTextColor;</span>
+<span class="nc" id="L183">                            sickDays++;</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">                        } else if (name.equals(OffDayType.TRIP.name())) {</span>
+<span class="nc" id="L185">                            bgColor   = graphicsTheme.calendarTripBgColor;</span>
+<span class="nc" id="L186">                            textColor = graphicsTheme.calendarTripTextColor;</span>
+<span class="nc" id="L187">                            tripDays++;</span>
+                        } else {
+<span class="nc" id="L189">                            bgColor   = graphicsTheme.calendarHolidayBgColor;</span>
+<span class="nc" id="L190">                            textColor = graphicsTheme.calendarHolidayTextColor;</span>
+<span class="nc" id="L191">                            this.holidays++;</span>
+                        }
+                    }
+                }
+
+<span class="nc bnc" id="L196" title="All 2 branches missed.">                if (bgColor != null) {</span>
+<span class="nc" id="L197">                    graphics2D.setColor(bgColor);</span>
+<span class="nc" id="L198">                    graphics2D.fillRect(dayCenterX - (DAY_SIZE / 2) + 1, dayCenterY - (DAY_SIZE / 2) + 1, DAY_SIZE - 1, DAY_SIZE - 1);</span>
+                }
+
+<span class="nc" id="L201">                graphics2D.setColor(textColor);</span>
+                //today can be any day, even weekend, holiday, vacation or sock day.
+<span class="nc bnc" id="L203" title="All 2 branches missed.">                if (isToday) {</span>
+<span class="nc" id="L204">                    drawToday(graphics2D, dayCenterX, dayCenterY);</span>
+                }
+<span class="nc" id="L206">                drawDayOfMonth(graphics2D, dayCenterX, dayCenterY, day);</span>
+            }
+
+            // Draw days from next month to fill the gaps at the end
+<span class="nc" id="L210">            int lastDayOfWeek = (firstDayOfWeek + lastDay - 1) % 7;</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">            if (lastDayOfWeek &lt; 6) { // If the month doesn't end on a Sunday</span>
+<span class="nc" id="L212">                int daysToAdd = 6 - lastDayOfWeek;</span>
+
+<span class="nc bnc" id="L214" title="All 2 branches missed.">                for (int i = 1; i &lt;= daysToAdd; i++) {</span>
+<span class="nc" id="L215">                    int weekNum    = (firstDayOfWeek + lastDay - 1 + i) / 7;</span>
+<span class="nc" id="L216">                    int dayOfWeek  = (firstDayOfWeek + lastDay - 1 + i) % 7;</span>
+<span class="nc" id="L217">                    int dayX       = monthStartX + 10 + (dayOfWeek * DAY_SIZE);</span>
+<span class="nc" id="L218">                    int dayY       = daysStartY + (weekNum * DAY_SIZE);</span>
+<span class="nc" id="L219">                    int dayCenterX = dayX + (DAY_SIZE / 2);</span>
+<span class="nc" id="L220">                    int dayCenterY = dayY + (DAY_SIZE / 2) - 6;</span>
+
+                    // Draw with filling text color
+<span class="nc" id="L223">                    graphics2D.setColor(graphicsTheme.calendarFillingDayTextColor);</span>
+<span class="nc" id="L224">                    drawDayOfMonth(graphics2D, dayCenterX, dayCenterY, i);</span>
+                }
+            }
+        }
+<span class="nc" id="L228">        int legendStartY = y + (6 * DAY_SIZE) + yearOffset + 2 * (MONTH_HEIGHT + MONTH_GAP) + HEADER_HEIGHT + WEEKDAY_HEADER_HEIGHT + 10; // Added 10px extra spacing</span>
+<span class="nc" id="L229">        drawLegend(graphics2D, x + 15, legendStartY);</span>
+
+        // Restore original settings
+<span class="nc" id="L232">        graphics2D.setFont(originalFont);</span>
+<span class="nc" id="L233">        graphics2D.setColor(originalColor);</span>
+<span class="nc" id="L234">    }</span>
+
+    private static void drawDayOfMonth(Graphics2D graphics2D, int dayCenterX, int dayCenterY, int day) {
+        // Draw day number
+<span class="nc" id="L238">        String      dayStr    = String.valueOf(day);</span>
+<span class="nc" id="L239">        FontMetrics metrics   = graphics2D.getFontMetrics();</span>
+<span class="nc" id="L240">        int         textWidth = metrics.stringWidth(dayStr);</span>
+<span class="nc" id="L241">        Font        dayFont   = new Font(Font.SANS_SERIF, Font.BOLD, 10);</span>
+<span class="nc" id="L242">        graphics2D.setFont(dayFont);</span>
+<span class="nc" id="L243">        graphics2D.drawString(dayStr, dayCenterX - (textWidth / 2), dayCenterY + (metrics.getAscent() / 2));</span>
+<span class="nc" id="L244">    }</span>
+
+    // Helper method to draw example day numbers in legend
+    private void drawExampleDayNumber(Graphics2D graphics2D, int x, int y, int squareSize, String dayNumber) {
+<span class="nc" id="L248">        Font originalFont = graphics2D.getFont();</span>
+        // Use the same font style as in the actual calendar
+<span class="nc" id="L250">        Font dayFont = new Font(Font.SANS_SERIF, Font.BOLD, 10);</span>
+<span class="nc" id="L251">        graphics2D.setFont(dayFont);</span>
+
+<span class="nc" id="L253">        FontMetrics fm        = graphics2D.getFontMetrics();</span>
+<span class="nc" id="L254">        int         textWidth = fm.stringWidth(dayNumber);</span>
+<span class="nc" id="L255">        int         yShift    = fm.getAscent() - fm.getHeight() / 2;</span>
+
+        // Center the day number in the square
+<span class="nc" id="L258">        int centerX = x + squareSize / 2;</span>
+<span class="nc" id="L259">        int centerY = y + squareSize / 2;</span>
+
+<span class="nc" id="L261">        graphics2D.drawString(dayNumber, centerX - (textWidth / 2), centerY + yShift);</span>
+
+        // Restore original font
+<span class="nc" id="L264">        graphics2D.setFont(originalFont);</span>
+<span class="nc" id="L265">    }</span>
+
+    private void drawLegend(Graphics2D graphics2D, int x, int y) {
+        // Save original font and color
+<span class="nc" id="L269">        Font  originalFont  = graphics2D.getFont();</span>
+<span class="nc" id="L270">        Color originalColor = graphics2D.getColor();</span>
+
+<span class="nc" id="L272">        Font legendFont = new Font(Font.SANS_SERIF, Font.PLAIN, 12);</span>
+<span class="nc" id="L273">        graphics2D.setFont(legendFont);</span>
+
+<span class="nc" id="L275">        int itemWidth  = 100;</span>
+<span class="nc" id="L276">        int itemHeight = 20;</span>
+<span class="nc" id="L277">        int squareSize = 16;</span>
+<span class="nc" id="L278">        int gap        = 10;</span>
+
+        // Create legend items
+<span class="nc" id="L281">        List&lt;LegendItem&gt; legendItems = Arrays.asList(</span>
+                new LegendItem(graphicsTheme.calendarVacationBgColor, graphicsTheme.calendarVacationTextColor, &quot;Vacation&quot;, &quot;&quot; + vacationDays),
+                new LegendItem(graphicsTheme.calendarSickBgColor, graphicsTheme.calendarSickTextColor, &quot;Sick Leave&quot;, &quot;&quot; + sickDays),
+                new LegendItem(graphicsTheme.calendarHolidayBgColor, graphicsTheme.calendarHolidayTextColor, &quot;Holiday&quot;, &quot;&quot; + holidays),
+                new LegendItem(graphicsTheme.calendarTripBgColor, graphicsTheme.calendarTripTextColor, &quot;Business Trip&quot;, &quot;&quot; + tripDays)
+        );
+
+        // Draw each legend item
+<span class="nc bnc" id="L289" title="All 2 branches missed.">        for (int i = 0; i &lt; legendItems.size(); i++) {</span>
+<span class="nc" id="L290">            LegendItem item  = legendItems.get(i);</span>
+<span class="nc" id="L291">            int        itemX = x + (itemWidth * i);</span>
+
+            // Draw the colored box
+<span class="nc" id="L294">            graphics2D.setColor(item.bgColor);</span>
+<span class="nc" id="L295">            graphics2D.fillRect(itemX, y, squareSize, squareSize);</span>
+
+            // Draw example day number
+<span class="nc" id="L298">            graphics2D.setColor(item.textColor);</span>
+<span class="nc" id="L299">            drawExampleDayNumber(graphics2D, itemX, y, squareSize, item.exampleNumber);</span>
+
+            // Draw the label
+<span class="nc" id="L302">            FontMetrics fm     = graphics2D.getFontMetrics();</span>
+<span class="nc" id="L303">            int         yShift = fm.getAscent() - fm.getHeight() / 2;</span>
+<span class="nc" id="L304">            graphics2D.drawString(item.label, itemX + squareSize + 5, y + squareSize / 2 + yShift);</span>
+        }
+
+        // Restore original settings
+<span class="nc" id="L308">        graphics2D.setFont(originalFont);</span>
+<span class="nc" id="L309">        graphics2D.setColor(originalColor);</span>
+<span class="nc" id="L310">    }</span>
+
+    private void drawMonthName(Graphics2D graphics2D, int monthStartX, int monthStartY, String monthName) {
+        // Draw month name
+<span class="nc" id="L314">        Font monthFont = new Font(Font.SANS_SERIF, Font.PLAIN, 14);</span>
+<span class="nc" id="L315">        graphics2D.setFont(monthFont);</span>
+<span class="nc" id="L316">        graphics2D.setColor(graphicsTheme.calendarMonthNameColor);</span>
+<span class="nc" id="L317">        FontMetrics monthMetrics = graphics2D.getFontMetrics();</span>
+<span class="nc" id="L318">        int         monthAscent  = monthMetrics.getAscent();</span>
+<span class="nc" id="L319">        graphics2D.drawString(monthName, monthStartX + 10 + DAY_SIZE / 2 - 5, monthStartY + monthAscent);</span>
+<span class="nc" id="L320">    }</span>
+
+    private void drawToday(Graphics2D graphics2D, int dayCenterX, int dayCenterY) {
+<span class="nc" id="L323">        graphics2D.setColor(graphicsTheme.calendarTodayBgColor);</span>
+<span class="nc" id="L324">        graphics2D.fillOval(dayCenterX - (DAY_SIZE / 2) + 1, dayCenterY - (DAY_SIZE / 2) + 1, DAY_SIZE - 1, DAY_SIZE - 1);</span>
+<span class="nc" id="L325">        graphics2D.setColor(graphicsTheme.calendarTodayTextColor);</span>
+<span class="nc" id="L326">    }</span>
+
+    private void drawWeekDays(Graphics2D graphics2D, int monthStartX, int monthStartY, LocalDate firstOfMonth) {
+        // Draw weekday headers
+        // Day of week labels
+<span class="nc" id="L331">        String[] weekdays    = {&quot;M&quot;, &quot;T&quot;, &quot;W&quot;, &quot;T&quot;, &quot;F&quot;, &quot;S&quot;, &quot;S&quot;};</span>
+<span class="nc" id="L332">        Font     weekdayFont = new Font(Font.SANS_SERIF, Font.BOLD, 10);</span>
+<span class="nc" id="L333">        graphics2D.setFont(weekdayFont);</span>
+<span class="nc" id="L334">        FontMetrics weekdayMetrics = graphics2D.getFontMetrics();</span>
+<span class="nc" id="L335">        int         weekdayAscent  = weekdayMetrics.getAscent();</span>
+<span class="nc bnc" id="L336" title="All 2 branches missed.">        for (int i = 0; i &lt; 7; i++) {</span>
+<span class="nc" id="L337">            int weekdayX = monthStartX + 10 + (i * DAY_SIZE);</span>
+            // Center the weekday text vertically in the weekday header area
+<span class="nc" id="L339">            int weekdayY = monthStartY + HEADER_HEIGHT + (WEEKDAY_HEADER_HEIGHT / 2) + (weekdayAscent / 2);</span>
+            // Get the calendar day type from the user's calendar
+<span class="nc" id="L341">            ProjectCalendar pc      = user.getCalendar();</span>
+<span class="nc" id="L342">            LocalDate       dayDate = firstOfMonth.withDayOfMonth(1).plusDays(i);</span>
+<span class="nc" id="L343">            graphics2D.setColor(graphicsTheme.calendarWeekDayTextColor);</span>
+<span class="nc" id="L344">            graphics2D.drawString(weekdays[i], weekdayX + DAY_SIZE / 2 - 5, weekdayY);</span>
+        }
+<span class="nc" id="L346">    }</span>
+
+    private int drawYear(Graphics2D graphics2D, int year, int x, int y) throws IOException, FontFormatException {
+<span class="nc" id="L349">        Font yearFont = new Font(Font.SANS_SERIF, Font.PLAIN, 24);</span>
+//        Font yearFont = loadFont(&quot;Inter[opsz,wght].ttf&quot;, 24f);
+<span class="nc" id="L351">        graphics2D.setFont(yearFont);</span>
+<span class="nc" id="L352">        graphics2D.setColor(graphicsTheme.calendarYearTextColor);</span>
+<span class="nc" id="L353">        String yearText = String.valueOf(year);</span>
+
+        // Calculate year text dimensions
+<span class="nc" id="L356">        FontMetrics yearMetrics    = graphics2D.getFontMetrics(yearFont);</span>
+<span class="nc" id="L357">        int         yearTextHeight = yearMetrics.getHeight();</span>
+<span class="nc" id="L358">        int         yearTextWidth  = yearMetrics.stringWidth(yearText);</span>
+
+        // Center the year text
+<span class="nc" id="L361">        graphics2D.drawString(yearText, x + 5, y + yearMetrics.getAscent());</span>
+<span class="nc" id="L362">        return yearTextHeight;</span>
+    }
+
+    Font loadFont(String fontName, float size) {
+<span class="nc" id="L366">        try (FileInputStream fontStream = new FileInputStream(&quot;resources/fonts/ofl/inter/&quot; + fontName)) {</span>
+<span class="nc" id="L367">            Font font = Font.createFont(Font.TRUETYPE_FONT, fontStream);</span>
+            // Use FontVariation API for Java 17+
+<span class="nc" id="L369">            Map map = Map.of(TextAttribute.WEIGHT, TextAttribute.WEIGHT_LIGHT);</span>
+<span class="nc" id="L370">            return font.deriveFont(map).deriveFont(size);</span>
+
+<span class="nc" id="L372">        } catch (FontFormatException | IOException e) {</span>
+<span class="nc" id="L373">            logger.error(e.getMessage(), e);</span>
+<span class="nc" id="L374">            return new Font(Font.SANS_SERIF, Font.PLAIN, 24);</span>
+        }
+    }
+
+    private static class LegendItem {
+        private final Color  bgColor;
+        private final String exampleNumber;
+        private final String label;
+        private final Color  textColor;
+
+<span class="nc" id="L384">        public LegendItem(Color bgColor, Color textColor, String label, String exampleNumber) {</span>
+<span class="nc" id="L385">            this.bgColor       = bgColor;</span>
+<span class="nc" id="L386">            this.textColor     = textColor;</span>
+<span class="nc" id="L387">            this.label         = label;</span>
+<span class="nc" id="L388">            this.exampleNumber = exampleNumber;</span>
+<span class="nc" id="L389">        }</span>
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

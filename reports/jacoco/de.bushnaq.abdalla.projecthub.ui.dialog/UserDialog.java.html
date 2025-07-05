@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserDialog.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.ui.dialog</a> &gt; <span class="el_source">UserDialog.java</span></div><h1>UserDialog.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.ui.dialog;
+
+import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.EmailField;
+import com.vaadin.flow.component.textfield.TextField;
+import de.bushnaq.abdalla.projecthub.dto.User;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+import org.vaadin.addons.tatu.ColorPicker;
+
+import java.awt.*;
+import java.util.List;
+import java.util.function.Consumer;
+
+/**
+ * A reusable dialog for creating and editing users.
+ */
+public class UserDialog extends Dialog {
+
+    public static final String         CANCEL_BUTTON                 = &quot;cancel-user-button&quot;;
+    public static final String         CONFIRM_BUTTON                = &quot;save-user-button&quot;;
+    public static final String         USER_COLOR_PICKER             = &quot;user-color-picker&quot;;
+    public static final String         USER_DIALOG                   = &quot;user-dialog&quot;;
+    public static final String         USER_EMAIL_FIELD              = &quot;user-email-field&quot;;
+    public static final String         USER_FIRST_WORKING_DAY_PICKER = &quot;user-first-working-day-picker&quot;;
+    public static final String         USER_LAST_WORKING_DAY_PICKER  = &quot;user-last-working-day-picker&quot;;
+    public static final String         USER_NAME_FIELD               = &quot;user-name-field&quot;;
+    private final       ColorPicker    colorPicker;
+    private final       EmailField     emailField;
+    private final       DatePicker     firstWorkingDayPicker;
+    private final       boolean        isEditMode;
+    private final       DatePicker     lastWorkingDayPicker;
+    private final       TextField      nameField;
+    private final       Consumer&lt;User&gt; saveCallback;
+    private final       User           user;
+
+    /**
+     * Creates a dialog for creating or editing a user.
+     *
+     * @param user         The user to edit, or null for creating a new user
+     * @param saveCallback Callback that receives the user with updated values
+     */
+<span class="nc" id="L66">    public UserDialog(User user, Consumer&lt;User&gt; saveCallback) {</span>
+<span class="nc" id="L67">        this.user         = user;</span>
+<span class="nc" id="L68">        this.saveCallback = saveCallback;</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">        isEditMode        = user != null;</span>
+
+        // Set the dialog title with an icon
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        String title = isEditMode ? &quot;Edit User&quot; : &quot;Create User&quot;;</span>
+
+        // Create a custom header with icon
+<span class="nc" id="L75">        HorizontalLayout headerLayout = new HorizontalLayout();</span>
+<span class="nc" id="L76">        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);</span>
+<span class="nc" id="L77">        headerLayout.setSpacing(true);</span>
+
+<span class="nc" id="L79">        Icon titleIcon = new Icon(VaadinIcon.USER);</span>
+<span class="nc" id="L80">        titleIcon.getStyle().set(&quot;margin-right&quot;, &quot;0.5em&quot;);</span>
+
+<span class="nc" id="L82">        com.vaadin.flow.component.html.H3 titleLabel = new com.vaadin.flow.component.html.H3(title);</span>
+<span class="nc" id="L83">        titleLabel.getStyle().set(&quot;margin&quot;, &quot;0&quot;);</span>
+
+<span class="nc" id="L85">        headerLayout.add(titleIcon, titleLabel);</span>
+
+        // Set the custom header
+<span class="nc" id="L88">        setHeaderTitle(null); // Clear the default title</span>
+<span class="nc" id="L89">        getHeader().add(headerLayout);</span>
+
+<span class="nc" id="L91">        setId(USER_DIALOG);</span>
+<span class="nc" id="L92">        setWidth(&quot;500px&quot;);</span>
+
+<span class="nc" id="L94">        VerticalLayout dialogLayout = new VerticalLayout();</span>
+<span class="nc" id="L95">        dialogLayout.setPadding(false);</span>
+<span class="nc" id="L96">        dialogLayout.setSpacing(true);</span>
+
+        // Name field
+<span class="nc" id="L99">        nameField = new TextField(&quot;Name&quot;);</span>
+<span class="nc" id="L100">        nameField.setId(USER_NAME_FIELD);</span>
+<span class="nc" id="L101">        nameField.setWidthFull();</span>
+<span class="nc" id="L102">        nameField.setRequired(true);</span>
+<span class="nc" id="L103">        nameField.setPrefixComponent(new Icon(VaadinIcon.USER));</span>
+
+        // Email field
+<span class="nc" id="L106">        emailField = new EmailField(&quot;Email&quot;);</span>
+<span class="nc" id="L107">        emailField.setId(USER_EMAIL_FIELD);</span>
+<span class="nc" id="L108">        emailField.setWidthFull();</span>
+<span class="nc" id="L109">        emailField.setPrefixComponent(new Icon(VaadinIcon.ENVELOPE));</span>
+
+        // Color picker (using the community add-on)
+<span class="nc" id="L112">        colorPicker = new ColorPicker();</span>
+<span class="nc" id="L113">        colorPicker.setId(USER_COLOR_PICKER);</span>
+<span class="nc" id="L114">        colorPicker.setWidth(&quot;100%&quot;);</span>
+
+        // Set predefined color presets
+<span class="nc" id="L117">        colorPicker.setPresets(List.of(</span>
+                new ColorPicker.ColorPreset(&quot;#FF0000&quot;, &quot;Red&quot;),
+                new ColorPicker.ColorPreset(&quot;#0000FF&quot;, &quot;Blue&quot;),
+                new ColorPicker.ColorPreset(&quot;#008000&quot;, &quot;Green&quot;),
+                new ColorPicker.ColorPreset(&quot;#FFFF00&quot;, &quot;Yellow&quot;),
+                new ColorPicker.ColorPreset(&quot;#FFA500&quot;, &quot;Orange&quot;),
+                new ColorPicker.ColorPreset(&quot;#800080&quot;, &quot;Purple&quot;),
+                new ColorPicker.ColorPreset(&quot;#FFC0CB&quot;, &quot;Pink&quot;),
+                new ColorPicker.ColorPreset(&quot;#00FFFF&quot;, &quot;Cyan&quot;),
+                new ColorPicker.ColorPreset(&quot;#FF00FF&quot;, &quot;Magenta&quot;),
+                new ColorPicker.ColorPreset(&quot;#D3D3D3&quot;, &quot;Light Gray&quot;),
+                new ColorPicker.ColorPreset(&quot;#808080&quot;, &quot;Gray&quot;),
+                new ColorPicker.ColorPreset(&quot;#A9A9A9&quot;, &quot;Dark Gray&quot;),
+                new ColorPicker.ColorPreset(&quot;#000000&quot;, &quot;Black&quot;)
+        ));
+
+        // First working day picker
+<span class="nc" id="L134">        firstWorkingDayPicker = new DatePicker(&quot;First Working Day&quot;);</span>
+<span class="nc" id="L135">        firstWorkingDayPicker.setId(USER_FIRST_WORKING_DAY_PICKER);</span>
+<span class="nc" id="L136">        firstWorkingDayPicker.setWidthFull();</span>
+<span class="nc" id="L137">        firstWorkingDayPicker.setPrefixComponent(new Icon(VaadinIcon.CALENDAR_USER));</span>
+
+        // Last working day picker
+<span class="nc" id="L140">        lastWorkingDayPicker = new DatePicker(&quot;Last Working Day&quot;);</span>
+<span class="nc" id="L141">        lastWorkingDayPicker.setId(USER_LAST_WORKING_DAY_PICKER);</span>
+<span class="nc" id="L142">        lastWorkingDayPicker.setWidthFull();</span>
+<span class="nc" id="L143">        lastWorkingDayPicker.setPrefixComponent(new Icon(VaadinIcon.CALENDAR_USER));</span>
+
+        // Add validation to ensure last working day is after first working day
+<span class="nc" id="L146">        firstWorkingDayPicker.addValueChangeListener(event -&gt; {</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">            if (event.getValue() != null) {</span>
+<span class="nc" id="L148">                lastWorkingDayPicker.setMin(event.getValue());</span>
+            }
+<span class="nc" id="L150">        });</span>
+
+<span class="nc" id="L152">        lastWorkingDayPicker.addValueChangeListener(event -&gt; {</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">            if (event.getValue() != null) {</span>
+<span class="nc" id="L154">                firstWorkingDayPicker.setMax(event.getValue());</span>
+            }
+<span class="nc" id="L156">        });</span>
+
+<span class="nc bnc" id="L158" title="All 2 branches missed.">        if (isEditMode) {</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">            nameField.setValue(user.getName() != null ? user.getName() : &quot;&quot;);</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">            emailField.setValue(user.getEmail() != null ? user.getEmail() : &quot;&quot;);</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">            if (user.getColor() != null) {</span>
+<span class="nc" id="L162">                String colorHex = &quot;#&quot; + Integer.toHexString(user.getColor().getRGB()).substring(2);</span>
+<span class="nc" id="L163">                colorPicker.setValue(colorHex);</span>
+            }
+<span class="nc" id="L165">            firstWorkingDayPicker.setValue(user.getFirstWorkingDay());</span>
+<span class="nc" id="L166">            lastWorkingDayPicker.setValue(user.getLastWorkingDay());</span>
+        }
+
+<span class="nc" id="L169">        dialogLayout.add(</span>
+                nameField,
+                emailField,
+                colorPicker,
+                firstWorkingDayPicker,
+                lastWorkingDayPicker
+        );
+
+<span class="nc" id="L177">        dialogLayout.add(VaadinUtils.createDialogButtonLayout(&quot;Save&quot;, CONFIRM_BUTTON, &quot;Cancel&quot;, CANCEL_BUTTON, this::save, this));</span>
+<span class="nc" id="L178">        add(dialogLayout);</span>
+<span class="nc" id="L179">    }</span>
+
+    private void save() {
+<span class="nc bnc" id="L182" title="All 2 branches missed.">        if (nameField.getValue().trim().isEmpty()) {</span>
+<span class="nc" id="L183">            Notification.show(&quot;Please enter a user name&quot;, 3000, Notification.Position.MIDDLE);</span>
+<span class="nc" id="L184">            return;</span>
+        }
+
+        User userToSave;
+<span class="nc bnc" id="L188" title="All 2 branches missed.">        if (isEditMode) {</span>
+<span class="nc" id="L189">            userToSave = user;</span>
+        } else {
+<span class="nc" id="L191">            userToSave = new User();</span>
+        }
+
+<span class="nc" id="L194">        userToSave.setName(nameField.getValue().trim());</span>
+<span class="nc" id="L195">        userToSave.setEmail(emailField.getValue().trim());</span>
+
+        // Convert Vaadin color string to AWT Color
+<span class="nc" id="L198">        String colorValue = colorPicker.getValue();</span>
+<span class="nc bnc" id="L199" title="All 4 branches missed.">        if (colorValue != null &amp;&amp; !colorValue.isEmpty()) {</span>
+<span class="nc" id="L200">            userToSave.setColor(Color.decode(colorValue));</span>
+        }
+
+<span class="nc" id="L203">        userToSave.setFirstWorkingDay(firstWorkingDayPicker.getValue());</span>
+<span class="nc" id="L204">        userToSave.setLastWorkingDay(lastWorkingDayPicker.getValue());</span>
+
+<span class="nc" id="L206">        saveCallback.accept(userToSave);</span>
+<span class="nc" id="L207">        close();</span>
+
+<span class="nc" id="L209">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LocationDialog.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.ui.dialog</a> &gt; <span class="el_source">LocationDialog.java</span></div><h1>LocationDialog.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.ui.dialog;
+
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import de.bushnaq.abdalla.projecthub.dto.Location;
+import de.bushnaq.abdalla.projecthub.dto.User;
+import de.bushnaq.abdalla.projecthub.rest.api.LocationApi;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+import de.focus_shift.jollyday.core.HolidayManager;
+import de.focus_shift.jollyday.core.ManagerParameters;
+
+import java.time.LocalDate;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+public class LocationDialog extends Dialog {
+    public static final String           CANCEL_BUTTON             = &quot;location-dialog-cancel&quot;;
+    public static final String           CONFIRM_BUTTON            = &quot;location-dialog-confirm&quot;;
+    public static final String           LOCATION_COUNTRY_FIELD    = &quot;location-country-field&quot;;
+    public static final String           LOCATION_DIALOG           = &quot;location-dialog&quot;;
+    public static final String           LOCATION_START_DATE_FIELD = &quot;location-start-date-field&quot;;
+    public static final String           LOCATION_STATE_FIELD      = &quot;location-state-field&quot;;
+<span class="nc" id="L50">    private final       ComboBox&lt;String&gt; countryComboBox           = new ComboBox&lt;&gt;(&quot;Country&quot;);</span>
+    private             Location         location;
+    private final       LocationApi      locationApi;
+    private final       Consumer&lt;Void&gt;   onSaveCallback;
+<span class="nc" id="L54">    private final       DatePicker       startDatePicker           = new DatePicker(&quot;Start Date&quot;);</span>
+<span class="nc" id="L55">    private final       ComboBox&lt;String&gt; stateComboBox             = new ComboBox&lt;&gt;(&quot;State/Region&quot;);</span>
+    private final       User             user;
+
+<span class="nc" id="L58">    public LocationDialog(Location location, User user, LocationApi locationApi, Consumer&lt;Void&gt; onSaveCallback) {</span>
+<span class="nc" id="L59">        this.location       = location;</span>
+<span class="nc" id="L60">        this.user           = user;</span>
+<span class="nc" id="L61">        this.locationApi    = locationApi;</span>
+<span class="nc" id="L62">        this.onSaveCallback = onSaveCallback;</span>
+
+        // Set the dialog title with an icon
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        String title = location != null ? &quot;Edit Location&quot; : &quot;Create Location&quot;;</span>
+
+        // Create a custom header with icon
+<span class="nc" id="L68">        HorizontalLayout headerLayout = new HorizontalLayout();</span>
+<span class="nc" id="L69">        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);</span>
+<span class="nc" id="L70">        headerLayout.setSpacing(true);</span>
+
+<span class="nc" id="L72">        Icon titleIcon = new Icon(VaadinIcon.MAP_MARKER);</span>
+<span class="nc" id="L73">        titleIcon.getStyle().set(&quot;margin-right&quot;, &quot;0.5em&quot;);</span>
+
+<span class="nc" id="L75">        com.vaadin.flow.component.html.H3 titleLabel = new com.vaadin.flow.component.html.H3(title);</span>
+<span class="nc" id="L76">        titleLabel.getStyle().set(&quot;margin&quot;, &quot;0&quot;);</span>
+
+<span class="nc" id="L78">        headerLayout.add(titleIcon, titleLabel);</span>
+
+        // Set the custom header
+<span class="nc" id="L81">        setHeaderTitle(null); // Clear the default title</span>
+<span class="nc" id="L82">        getHeader().add(headerLayout);</span>
+
+<span class="nc" id="L84">        setId(LOCATION_DIALOG);</span>
+<span class="nc" id="L85">        setWidth(&quot;480px&quot;);</span>
+
+<span class="nc" id="L87">        VerticalLayout content = createDialogContent();</span>
+<span class="nc" id="L88">        add(content);</span>
+
+<span class="nc" id="L90">        initFormValues();</span>
+<span class="nc" id="L91">    }</span>
+
+    private VerticalLayout createDialogContent() {
+<span class="nc" id="L94">        VerticalLayout content = new VerticalLayout();</span>
+<span class="nc" id="L95">        content.setPadding(false);</span>
+<span class="nc" id="L96">        content.setSpacing(true);</span>
+<span class="nc" id="L97">        content.setAlignItems(FlexComponent.Alignment.STRETCH);</span>
+
+        // Configure country combobox with ISO 3166-1 alpha-2 values
+<span class="nc" id="L100">        countryComboBox.setId(LOCATION_COUNTRY_FIELD);</span>
+<span class="nc" id="L101">        countryComboBox.setRequired(true);</span>
+<span class="nc" id="L102">        countryComboBox.setAllowCustomValue(false);</span>
+<span class="nc" id="L103">        countryComboBox.setPrefixComponent(new Icon(VaadinIcon.GLOBE));</span>
+<span class="nc" id="L104">        populateCountries();</span>
+
+        // Country change listener to update states
+<span class="nc" id="L107">        countryComboBox.addValueChangeListener(event -&gt; {</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">            if (event.getValue() != null) {</span>
+<span class="nc" id="L109">                populateStates(event.getValue());</span>
+            } else {
+<span class="nc" id="L111">                stateComboBox.setItems(new HashSet&lt;&gt;());</span>
+<span class="nc" id="L112">                stateComboBox.setEnabled(false);</span>
+            }
+<span class="nc" id="L114">        });</span>
+
+        // Configure state/region combobox
+<span class="nc" id="L117">        stateComboBox.setId(LOCATION_STATE_FIELD);</span>
+<span class="nc" id="L118">        stateComboBox.setRequired(true);</span>
+<span class="nc" id="L119">        stateComboBox.setAllowCustomValue(false);</span>
+<span class="nc" id="L120">        stateComboBox.setPrefixComponent(new Icon(VaadinIcon.MAP_MARKER));</span>
+<span class="nc" id="L121">        stateComboBox.setEnabled(false); // Initially disabled until country is selected</span>
+
+        // Configure start date picker
+<span class="nc" id="L124">        startDatePicker.setId(LOCATION_START_DATE_FIELD);</span>
+<span class="nc" id="L125">        startDatePicker.setRequired(true);</span>
+<span class="nc" id="L126">        startDatePicker.setMax(LocalDate.now().plusYears(10));</span>
+<span class="nc" id="L127">        startDatePicker.setPrefixComponent(new Icon(VaadinIcon.CALENDAR));</span>
+
+<span class="nc" id="L129">        content.add(countryComboBox, stateComboBox, startDatePicker, VaadinUtils.createDialogButtonLayout(&quot;Save&quot;, CONFIRM_BUTTON, &quot;Cancel&quot;, CANCEL_BUTTON, this::save, this));</span>
+<span class="nc" id="L130">        return content;</span>
+    }
+
+    private void initFormValues() {
+<span class="nc bnc" id="L134" title="All 2 branches missed.">        if (location != null) {</span>
+            // Edit existing location
+<span class="nc" id="L136">            countryComboBox.setValue(location.getCountry());</span>
+<span class="nc" id="L137">            stateComboBox.setValue(location.getState());</span>
+<span class="nc" id="L138">            startDatePicker.setValue(location.getStart());</span>
+        } else {
+            // Set default values for new location
+<span class="nc" id="L141">            startDatePicker.setValue(LocalDate.now());</span>
+        }
+<span class="nc" id="L143">    }</span>
+
+    private void populateCountries() {
+        // Get list of supported countries from jollyday
+<span class="nc" id="L147">        Set&lt;String&gt; countryCodeSet = new HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">        for (String countryCode : HolidayManager.getSupportedCalendarCodes()) {</span>
+<span class="nc" id="L149">            countryCodeSet.add(countryCode);</span>
+<span class="nc" id="L150">        }</span>
+
+        // Convert to list and sort by display country name
+<span class="nc" id="L153">        List&lt;String&gt; sortedCountryCodes = countryCodeSet.stream()</span>
+<span class="nc" id="L154">                .sorted((code1, code2) -&gt; {</span>
+<span class="nc" id="L155">                    Locale locale1 = new Locale(&quot;&quot;, code1);</span>
+<span class="nc" id="L156">                    Locale locale2 = new Locale(&quot;&quot;, code2);</span>
+<span class="nc" id="L157">                    return locale1.getDisplayCountry().compareTo(locale2.getDisplayCountry());</span>
+                })
+<span class="nc" id="L159">                .collect(Collectors.toList());</span>
+
+<span class="nc" id="L161">        countryComboBox.setItems(sortedCountryCodes);</span>
+
+        // Set custom label generator to display country name
+<span class="nc" id="L164">        countryComboBox.setItemLabelGenerator(countryCode -&gt; {</span>
+<span class="nc" id="L165">            Locale locale = new Locale(&quot;&quot;, countryCode);</span>
+<span class="nc" id="L166">            return locale.getDisplayCountry() + &quot; (&quot; + countryCode + &quot;)&quot;;</span>
+        });
+<span class="nc" id="L168">    }</span>
+
+    private void populateStates(String countryCode) {
+        // Get list of supported states for the selected country from jollyday
+<span class="nc" id="L172">        Set&lt;String&gt; stateCodeSet = new HashSet&lt;&gt;();</span>
+        try {
+<span class="nc" id="L174">            HolidayManager manager = HolidayManager.getInstance(ManagerParameters.create(countryCode));</span>
+<span class="nc" id="L175">            stateCodeSet.addAll(manager.getCalendarHierarchy().getChildren().keySet());</span>
+
+            // If there are no states, add an empty one to represent the whole country
+<span class="nc bnc" id="L178" title="All 2 branches missed.">            if (stateCodeSet.isEmpty()) {</span>
+<span class="nc" id="L179">                stateCodeSet.add(countryCode);</span>
+<span class="nc" id="L180">                stateComboBox.setItems(stateCodeSet);</span>
+            } else {
+                // Create a map of descriptions to state codes
+<span class="nc" id="L183">                Map&lt;String, String&gt; stateDescriptionMap = null;</span>
+
+                // Function to get the best description for a state
+<span class="nc" id="L186">                Function&lt;String, String&gt; getStateDescription = stateCode -&gt; {</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">                    if (stateCode.equals(countryCode)) {</span>
+<span class="nc" id="L188">                        return &quot;All of &quot; + new Locale(&quot;&quot;, countryCode).getDisplayCountry();</span>
+                    }
+
+                    try {
+<span class="nc" id="L192">                        String description = manager.getCalendarHierarchy().getChildren().get(stateCode).getDescription();</span>
+<span class="nc" id="L193">                        return description;</span>
+<span class="nc" id="L194">                    } catch (Exception e) {</span>
+                        // If we can't get the description, just use the code
+                    }
+
+<span class="nc" id="L198">                    return stateCode;</span>
+                };
+
+                // Sort state codes by their descriptions
+<span class="nc" id="L202">                List&lt;String&gt; sortedStateCodes = stateCodeSet.stream()</span>
+<span class="nc" id="L203">                        .sorted((code1, code2) -&gt; {</span>
+<span class="nc" id="L204">                            String desc1 = getStateDescription.apply(code1);</span>
+<span class="nc" id="L205">                            String desc2 = getStateDescription.apply(code2);</span>
+<span class="nc" id="L206">                            return desc1.compareTo(desc2);</span>
+                        })
+<span class="nc" id="L208">                        .collect(Collectors.toList());</span>
+
+<span class="nc" id="L210">                stateComboBox.setItems(sortedStateCodes);</span>
+            }
+
+<span class="nc" id="L213">            stateComboBox.setEnabled(true);</span>
+
+            // Set custom label generator for state names
+<span class="nc" id="L216">            stateComboBox.setItemLabelGenerator(stateCode -&gt; {</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">                if (stateCode.equals(countryCode)) {</span>
+<span class="nc" id="L218">                    return &quot;All of &quot; + new Locale(&quot;&quot;, countryCode).getDisplayCountry();</span>
+                }
+
+                // Try to get a more descriptive name from CalendarHierarchy
+                try {
+<span class="nc" id="L223">                    String description = manager.getCalendarHierarchy().getChildren().get(stateCode).getDescription();</span>
+<span class="nc bnc" id="L224" title="All 4 branches missed.">                    if (description != null &amp;&amp; !description.isEmpty()) {</span>
+<span class="nc" id="L225">                        return description + &quot; (&quot; + stateCode + &quot;)&quot;;</span>
+                    }
+<span class="nc" id="L227">                } catch (Exception e) {</span>
+                    // If we can't get the description, just use the code
+<span class="nc" id="L229">                }</span>
+
+<span class="nc" id="L231">                return stateCode;</span>
+            });
+<span class="nc" id="L233">        } catch (Exception e) {</span>
+<span class="nc" id="L234">            Notification notification = Notification.show(&quot;Error loading regions for &quot; + countryCode + &quot;: &quot; + e.getMessage(), 3000, Notification.Position.MIDDLE);</span>
+<span class="nc" id="L235">            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);</span>
+<span class="nc" id="L236">            stateComboBox.setEnabled(false);</span>
+<span class="nc" id="L237">        }</span>
+<span class="nc" id="L238">    }</span>
+
+    private void save() {
+<span class="nc bnc" id="L241" title="All 2 branches missed.">        if (!validateForm()) {</span>
+<span class="nc" id="L242">            return;</span>
+        }
+
+        try {
+<span class="nc bnc" id="L246" title="All 2 branches missed.">            boolean isNewLocation = (location == null);</span>
+<span class="nc bnc" id="L247" title="All 2 branches missed.">            if (isNewLocation) {</span>
+<span class="nc" id="L248">                location = new Location();</span>
+            }
+
+            // Set values from form
+<span class="nc" id="L252">            location.setCountry(countryComboBox.getValue());</span>
+<span class="nc" id="L253">            location.setState(stateComboBox.getValue());</span>
+<span class="nc" id="L254">            location.setStart(startDatePicker.getValue());</span>
+
+<span class="nc bnc" id="L256" title="All 2 branches missed.">            if (isNewLocation) {</span>
+<span class="nc" id="L257">                locationApi.persist(location, user.getId());</span>
+<span class="nc" id="L258">                Notification.show(&quot;Location added&quot;, 3000, Notification.Position.MIDDLE);</span>
+            } else {
+<span class="nc" id="L260">                locationApi.update(location, user.getId());</span>
+<span class="nc" id="L261">                Notification.show(&quot;Location updated&quot;, 3000, Notification.Position.MIDDLE);</span>
+            }
+
+            // Call the callback
+<span class="nc" id="L265">            onSaveCallback.accept(null);</span>
+<span class="nc" id="L266">            close();</span>
+<span class="nc" id="L267">        } catch (Exception e) {</span>
+<span class="nc" id="L268">            Notification notification = Notification.show(</span>
+<span class="nc" id="L269">                    &quot;Error saving location: &quot; + e.getMessage(),</span>
+                    3000,
+                    Notification.Position.MIDDLE);
+<span class="nc" id="L272">            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);</span>
+<span class="nc" id="L273">        }</span>
+<span class="nc" id="L274">    }</span>
+
+    private boolean validateForm() {
+<span class="nc" id="L277">        boolean isValid = true;</span>
+
+        // Validate country
+<span class="nc bnc" id="L280" title="All 4 branches missed.">        if (countryComboBox.getValue() == null || countryComboBox.getValue().isEmpty()) {</span>
+<span class="nc" id="L281">            countryComboBox.setInvalid(true);</span>
+<span class="nc" id="L282">            countryComboBox.setErrorMessage(&quot;Please select a country&quot;);</span>
+<span class="nc" id="L283">            isValid = false;</span>
+        } else {
+<span class="nc" id="L285">            countryComboBox.setInvalid(false);</span>
+        }
+
+        // Validate state
+<span class="nc bnc" id="L289" title="All 4 branches missed.">        if (stateComboBox.getValue() == null || stateComboBox.getValue().isEmpty()) {</span>
+<span class="nc" id="L290">            stateComboBox.setInvalid(true);</span>
+<span class="nc" id="L291">            stateComboBox.setErrorMessage(&quot;Please select a state/region&quot;);</span>
+<span class="nc" id="L292">            isValid = false;</span>
+        } else {
+<span class="nc" id="L294">            stateComboBox.setInvalid(false);</span>
+        }
+
+        // Validate start date
+<span class="nc bnc" id="L298" title="All 2 branches missed.">        if (startDatePicker.getValue() == null) {</span>
+<span class="nc" id="L299">            startDatePicker.setInvalid(true);</span>
+<span class="nc" id="L300">            startDatePicker.setErrorMessage(&quot;Please select a start date&quot;);</span>
+<span class="nc" id="L301">            isValid = false;</span>
+        } else {
+            // Check if this start date already exists for the user (unless it's the current location being edited)
+<span class="nc bnc" id="L304" title="All 2 branches missed.">            if (location != null &amp;&amp; user.getLocations().stream()</span>
+<span class="nc bnc" id="L305" title="All 2 branches missed.">                    .filter(loc -&gt; !loc.getId().equals(location.getId()))</span>
+<span class="nc bnc" id="L306" title="All 2 branches missed.">                    .anyMatch(loc -&gt; loc.getStart().equals(startDatePicker.getValue()))) {</span>
+<span class="nc" id="L307">                startDatePicker.setInvalid(true);</span>
+<span class="nc" id="L308">                startDatePicker.setErrorMessage(&quot;A location with this start date already exists&quot;);</span>
+<span class="nc" id="L309">                isValid = false;</span>
+<span class="nc bnc" id="L310" title="All 4 branches missed.">            } else if (location == null &amp;&amp; user.getLocations().stream().anyMatch(loc -&gt; loc.getStart().equals(startDatePicker.getValue()))) {</span>
+<span class="nc" id="L311">                startDatePicker.setInvalid(true);</span>
+<span class="nc" id="L312">                startDatePicker.setErrorMessage(&quot;A location with this start date already exists&quot;);</span>
+<span class="nc" id="L313">                isValid = false;</span>
+            } else {
+<span class="nc" id="L315">                startDatePicker.setInvalid(false);</span>
+            }
+        }
+
+<span class="nc" id="L319">        return isValid;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

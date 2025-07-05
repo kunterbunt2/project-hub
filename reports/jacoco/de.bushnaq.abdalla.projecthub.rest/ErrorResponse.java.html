@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ErrorResponse.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.rest</a> &gt; <span class="el_source">ErrorResponse.java</span></div><h1>ErrorResponse.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.rest;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Getter
+@Setter
+public class ErrorResponse {
+    private String       exceptionClass;
+    private String       message;
+    private List&lt;String&gt; stackTrace;
+    private String       status; // Status as a string for better serialization/deserialization
+
+<span class="fc" id="L37">    public ErrorResponse() {</span>
+<span class="fc" id="L38">        this.stackTrace = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L39">    }</span>
+
+    /**
+     * Constructor that accepts HttpStatus
+     *
+     * @param status  the HTTP status
+     * @param message the error message
+     * @param e       the exception that caused this error
+     */
+    public ErrorResponse(HttpStatus status, String message, Exception e) {
+<span class="fc" id="L49">        this();</span>
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">        this.status  = status != null ? status.toString() : null;</span>
+<span class="fc" id="L51">        this.message = message;</span>
+<span class="fc" id="L52">        populateExceptionDetails(e);</span>
+<span class="fc" id="L53">    }</span>
+
+    /**
+     * Constructor that accepts HttpStatusCode (for ResponseStatusException)
+     *
+     * @param statusCode the HTTP status code
+     * @param message    the error message
+     * @param e          the exception that caused this error
+     */
+    public ErrorResponse(HttpStatusCode statusCode, String message, Exception e) {
+<span class="fc" id="L63">        this();</span>
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">        this.status  = statusCode != null ? statusCode.toString() : null;</span>
+<span class="fc" id="L65">        this.message = message;</span>
+<span class="fc" id="L66">        populateExceptionDetails(e);</span>
+<span class="fc" id="L67">    }</span>
+
+    /**
+     * Get the HTTP status as an enum
+     *
+     * @return the HttpStatus enum value, or null if it can't be parsed
+     */
+    @JsonIgnore
+    public HttpStatus getHttpStatus() {
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">        if (status == null) {</span>
+<span class="nc" id="L77">            return null;</span>
+        }
+
+        try {
+            // Try to parse as a status code number
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">            if (status.matches(&quot;\\d+&quot;)) {</span>
+<span class="nc" id="L83">                return HttpStatus.valueOf(Integer.parseInt(status));</span>
+            }
+
+            // If status contains numbers and text like &quot;409 CONFLICT&quot;
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">            if (status.matches(&quot;\\d+\\s+.*&quot;)) {</span>
+<span class="fc" id="L88">                String[] parts = status.split(&quot;\\s+&quot;, 2);</span>
+<span class="fc" id="L89">                return HttpStatus.valueOf(Integer.parseInt(parts[0]));</span>
+            }
+
+            // Try to parse as a status name (like &quot;CONFLICT&quot;)
+<span class="nc" id="L93">            return HttpStatus.valueOf(status);</span>
+<span class="nc" id="L94">        } catch (Exception e) {</span>
+            // If parsing fails, return null
+<span class="nc" id="L96">            return null;</span>
+        }
+    }
+
+    /**
+     * Populates exception details like class name and stack trace
+     *
+     * @param e the exception to extract details from
+     */
+    private void populateExceptionDetails(Exception e) {
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">        if (e != null) {</span>
+<span class="fc" id="L107">            this.exceptionClass = e.getClass().getName();</span>
+
+            // Capture stack trace as strings to avoid circular references
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">            if (e.getStackTrace() != null) {</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">                for (StackTraceElement element : e.getStackTrace()) {</span>
+<span class="fc" id="L112">                    this.stackTrace.add(element.toString());</span>
+                }
+            }
+
+            // Include cause information if available
+<span class="fc" id="L117">            Throwable cause = e.getCause();</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">            if (cause != null) {</span>
+<span class="nc" id="L119">                this.stackTrace.add(&quot;Caused by: &quot; + cause.getClass().getName() + &quot;: &quot; + cause.getMessage());</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">                if (cause.getStackTrace() != null) {</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">                    for (StackTraceElement element : cause.getStackTrace()) {</span>
+<span class="nc" id="L122">                        this.stackTrace.add(&quot;    at &quot; + element.toString());</span>
+                    }
+                }
+            }
+        }
+<span class="fc" id="L127">    }</span>
+
+    /**
+     * Reconstructs an exception from the stored information.
+     * This is used client-side to recreate an exception for logging purposes.
+     *
+     * @return a new Exception with the stored information and properly formatted stack trace
+     */
+    public Exception reconstructException() {
+<span class="pc bpc" id="L136" title="3 of 6 branches missed.">        if (exceptionClass == null || stackTrace == null || stackTrace.isEmpty()) {</span>
+<span class="nc" id="L137">            return null;</span>
+        }
+
+        // Create an exception with the original message
+<span class="fc" id="L141">        Exception reconstructedException = new Exception(message + &quot; (Original exception: &quot; + exceptionClass + &quot;)&quot;);</span>
+
+        try {
+            // Parse the stack trace strings and create StackTraceElement objects
+<span class="fc" id="L145">            List&lt;StackTraceElement&gt; stackTraceElements = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L146">            boolean                 inCause            = false;</span>
+<span class="fc" id="L147">            Exception               currentException   = reconstructedException;</span>
+
+<span class="fc bfc" id="L149" title="All 2 branches covered.">            for (String line : stackTrace) {</span>
+                // Check if this is a &quot;Caused by:&quot; line indicating a nested exception
+<span class="pc bpc" id="L151" title="1 of 2 branches missed.">                if (line.startsWith(&quot;Caused by:&quot;)) {</span>
+                    // Create a cause exception
+<span class="nc" id="L153">                    String    causeInfo = line.substring(&quot;Caused by:&quot;.length()).trim();</span>
+<span class="nc" id="L154">                    Exception cause     = new Exception(causeInfo);</span>
+<span class="nc" id="L155">                    currentException.initCause(cause);</span>
+<span class="nc" id="L156">                    currentException = cause;</span>
+<span class="nc" id="L157">                    inCause          = true;</span>
+<span class="nc" id="L158">                    continue;</span>
+                }
+
+                // Process normal stack trace lines
+<span class="pc bpc" id="L162" title="1 of 2 branches missed.">                if (line.startsWith(&quot;    at &quot;)) {</span>
+<span class="nc" id="L163">                    line = line.substring(6); // Remove the &quot;    at &quot; prefix</span>
+                }
+
+                // Parse the stack trace line into a StackTraceElement
+                try {
+                    // Example format: package.Class.method(File.java:123)
+<span class="fc" id="L169">                    int openParenIndex  = line.lastIndexOf('(');</span>
+<span class="fc" id="L170">                    int closeParenIndex = line.lastIndexOf(')');</span>
+
+<span class="pc bpc" id="L172" title="2 of 4 branches missed.">                    if (openParenIndex &gt; 0 &amp;&amp; closeParenIndex &gt; openParenIndex) {</span>
+<span class="fc" id="L173">                        String methodPart = line.substring(0, openParenIndex);</span>
+<span class="fc" id="L174">                        String filePart   = line.substring(openParenIndex + 1, closeParenIndex);</span>
+
+                        // Split the method part into declaring class and method name
+<span class="fc" id="L177">                        int    lastDotIndex = methodPart.lastIndexOf('.');</span>
+<span class="fc" id="L178">                        String className    = methodPart.substring(0, lastDotIndex);</span>
+<span class="fc" id="L179">                        String methodName   = methodPart.substring(lastDotIndex + 1);</span>
+
+                        // Split the file part into filename and line number
+                        String fileName;
+<span class="fc" id="L183">                        int    lineNumber = -1;</span>
+
+<span class="fc" id="L185">                        int colonIndex = filePart.lastIndexOf(':');</span>
+<span class="fc bfc" id="L186" title="All 2 branches covered.">                        if (colonIndex &gt; 0) {</span>
+<span class="fc" id="L187">                            fileName = filePart.substring(0, colonIndex);</span>
+                            try {
+<span class="fc" id="L189">                                lineNumber = Integer.parseInt(filePart.substring(colonIndex + 1));</span>
+<span class="nc" id="L190">                            } catch (NumberFormatException e) {</span>
+                                // If line number can't be parsed, just use -1
+<span class="pc" id="L192">                            }</span>
+                        } else {
+<span class="fc" id="L194">                            fileName = filePart;</span>
+                        }
+
+                        // Create a StackTraceElement
+<span class="fc" id="L198">                        StackTraceElement element = new StackTraceElement(className, methodName, fileName, lineNumber);</span>
+
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">                        if (inCause) {</span>
+                            // If we're in a cause exception, add to the current cause
+<span class="nc" id="L202">                            List&lt;StackTraceElement&gt; causeTrace = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L203">                            causeTrace.add(element);</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">                            if (currentException != reconstructedException) {</span>
+<span class="nc" id="L205">                                currentException.setStackTrace(causeTrace.toArray(new StackTraceElement[0]));</span>
+                            }
+<span class="nc" id="L207">                        } else {</span>
+                            // Otherwise add to the main exception's stack trace
+<span class="fc" id="L209">                            stackTraceElements.add(element);</span>
+                        }
+                    }
+<span class="nc" id="L212">                } catch (Exception e) {</span>
+                    // If parsing fails for any reason, just add a placeholder element
+<span class="nc" id="L214">                    StackTraceElement fallbackElement = new StackTraceElement(</span>
+                            &quot;UnparsableStackTrace&quot;, &quot;fromLine&quot;, line, -1);
+<span class="nc" id="L216">                    stackTraceElements.add(fallbackElement);</span>
+<span class="fc" id="L217">                }</span>
+<span class="fc" id="L218">            }</span>
+
+            // Set the stack trace on the main exception
+<span class="fc" id="L221">            reconstructedException.setStackTrace(stackTraceElements.toArray(new StackTraceElement[0]));</span>
+<span class="nc" id="L222">        } catch (Exception e) {</span>
+            // If building the stack trace fails, fall back to a simpler approach
+<span class="nc" id="L224">            reconstructedException = new Exception(</span>
+                    message + &quot;\nOriginal exception: &quot; + exceptionClass +
+<span class="nc" id="L226">                            &quot;\nCouldn't reconstruct stack trace properly: &quot; + e.getMessage());</span>
+<span class="fc" id="L227">        }</span>
+
+<span class="fc" id="L229">        return reconstructedException;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

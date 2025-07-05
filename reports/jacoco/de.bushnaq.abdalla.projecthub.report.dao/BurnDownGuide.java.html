@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BurnDownGuide.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.report.dao</a> &gt; <span class="el_source">BurnDownGuide.java</span></div><h1>BurnDownGuide.java</h1><pre class="source lang-java linenums">package de.bushnaq.abdalla.projecthub.report.dao;
+
+import de.bushnaq.abdalla.projecthub.Context;
+import de.bushnaq.abdalla.util.Util;
+import de.bushnaq.abdalla.util.date.DateUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.PrintStream;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+
+public class BurnDownGuide {
+    // work planned at that day and all days before that, first day has the total
+    // and last day has the last work done
+    // public BurnDownRate[] burnDownRate;
+    // private DateUtil dateUtil = new DateUtil();
+    private final int               days;
+    // work planned at that day and all days before that, first day has the total
+    // and last day has the last work done
+<span class="nc" id="L23">    private       Duration[]        dwindlingWork = null;// work per day, were every day has the total amount reduced by the amount of</span>
+<span class="nc" id="L24">    private final Logger            logger        = LoggerFactory.getLogger(this.getClass());</span>
+<span class="nc" id="L25">    public final  DateTimeFormatter sdtf          = DateTimeFormatter.ofPattern(&quot;yyyy.MMM.dd HH:mm&quot;, Util.locale);</span>
+    // private Long sprintEndDate;
+    private final LocalDateTime     sprintStartDate;
+    // private String xlsxFile = null;
+<span class="nc" id="L29">    private       Duration[]        work          = null;// work per day, were every day has the total amount reduced by the amount of</span>
+
+    public BurnDownGuide(Context context, LocalDateTime sprintStartDate, int startDayIndex, int endDayIndex)
+<span class="nc" id="L32">            throws Exception {</span>
+
+
+<span class="nc" id="L35">        this.sprintStartDate = DateUtil.toDayPrecision(sprintStartDate);</span>
+//        this.sprintEndDate   = DateUtil.toDayPrecision(sprintEndDate);
+//        days = DateUtil.calculateDays(sprintStartDate, sprintEndDate) + 1;
+<span class="nc" id="L38">        days = endDayIndex + 1;</span>
+<span class="nc" id="L39">        work = new Duration[days];</span>
+<span class="nc bnc" id="L40" title="All 2 branches missed.">        for (int i = 0; i &lt; days; i++) {</span>
+<span class="nc" id="L41">            work[i] = Duration.ZERO;</span>
+        }
+<span class="nc" id="L43">    }</span>
+
+    /**
+     * Add milliseconds worked at that daz
+     *
+     * @param index
+     * @param value
+     */
+    public void add(int index, Duration value) {
+<span class="nc bnc" id="L52" title="All 4 branches missed.">        if (index &gt;= 0 &amp;&amp; index &lt; work.length) {</span>
+<span class="nc" id="L53">            work[index] = work[index].plus(value);</span>
+        }
+<span class="nc" id="L55">    }</span>
+
+    public void convertToAccumulatedValues() {
+<span class="nc" id="L58">        dwindlingWork = new Duration[days + 1];</span>
+<span class="nc" id="L59">        Duration total = Duration.ZERO;</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">        for (int i = 0; i &lt; days; i++) {</span>
+<span class="nc" id="L61">            total = total.plus(work[i]);</span>
+        }
+
+<span class="nc" id="L64">        dwindlingWork[0] = total;</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        for (int i = 1; i &lt;= days; i++) {</span>
+<span class="nc" id="L66">            dwindlingWork[i] = dwindlingWork[i - 1].minus(work[i - 1]);</span>
+        }
+<span class="nc" id="L68">    }</span>
+
+    public Duration get(int index) {
+<span class="nc" id="L71">        return dwindlingWork[index];</span>
+    }
+
+    public int getSize() {
+<span class="nc" id="L75">        return dwindlingWork.length;</span>
+    }
+
+    public Duration getWork(int index) {
+<span class="nc" id="L79">        return work[index];</span>
+    }
+
+    public int getWorkSize() {
+<span class="nc" id="L83">        return work.length;</span>
+    }
+
+    public void print(PrintStream out) {
+<span class="nc" id="L87">        LocalDateTime ssd = sprintStartDate.truncatedTo(ChronoUnit.DAYS).withHour(8);</span>
+
+<span class="nc" id="L89">        logger.info(&quot;-------------------------------------------------------------------------------------------------&quot;);</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">        for (int i = 0; i &lt; days; i++) {</span>
+<span class="nc" id="L91">            logger.info(String.format(&quot;%02d %s %s&quot;, i, DateUtil.createDateString(ssd, sdtf), DateUtil.createDurationString(work[i], false, true, true)));</span>
+<span class="nc" id="L92">            ssd = ssd.plusDays(1);</span>
+        }
+<span class="nc" id="L94">        logger.info(&quot;-------------------------------------------------------------------------------------------------&quot;);</span>
+<span class="nc" id="L95">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

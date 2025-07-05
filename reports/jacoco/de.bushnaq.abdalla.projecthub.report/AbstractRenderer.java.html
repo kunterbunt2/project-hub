@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractRenderer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.report</a> &gt; <span class="el_source">AbstractRenderer.java</span></div><h1>AbstractRenderer.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.report;
+
+import de.bushnaq.abdalla.projecthub.dto.User;
+import de.bushnaq.abdalla.projecthub.report.burndown.RenderDao;
+import de.bushnaq.abdalla.projecthub.report.dao.*;
+import de.bushnaq.abdalla.svg.util.ExtendedGraphics2D;
+import de.bushnaq.abdalla.util.date.DateUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.awt.*;
+import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+
+/**
+ * abstract base class used by all renderer
+ *
+ * @author abdalla.bushnaq
+ */
+public abstract class AbstractRenderer {
+    public static final    int                   MAX_DAY_WIDTH              = 20;
+    protected static final float                 STANDARD_LINE_STROKE_WIDTH = 3.1f;
+<span class="nc" id="L43">    protected final        Font                  authorFont                 = new Font(Font.SANS_SERIF, Font.BOLD, 12);</span>
+<span class="nc" id="L44">    protected              Users                 authors                    = new Users();</span>
+<span class="nc" id="L45">    protected              Font                  bankHolidayFont            = null;</span>
+    //    private                Map&lt;LocalDate, String&gt; bankHolidays;
+    private                boolean               calendarAtBottom;
+    public                 CalendarXAxes         calendarXAxes;
+    public                 int                   chartHeight;
+    public                 int                   chartWidth;
+<span class="nc" id="L51">    public                 int                   days                       = 3;</span>
+<span class="nc" id="L52">    public final           GraphSquare           diagram                    = new GraphSquare();</span>
+<span class="nc" id="L53">    protected              int                   firstDayX                  = 0;</span>
+    public                 ExtendedGraphics2D    graphics2D;
+    public                 BurnDownGraphicsTheme graphicsTheme;
+<span class="nc" id="L56">    protected final        Logger                logger                     = LoggerFactory.getLogger(this.getClass());</span>
+    public                 Milestones            milestones;
+
+<span class="nc" id="L59">    public AbstractRenderer() {</span>
+
+<span class="nc" id="L61">    }</span>
+
+<span class="nc" id="L63">    public AbstractRenderer(RenderDao dao) throws IOException {</span>
+//        this.bankHolidays  = dao.context.bankHolidays;
+<span class="nc" id="L65">        this.graphicsTheme = dao.graphicsTheme;</span>
+<span class="nc" id="L66">        this.chartWidth    = dao.chartWidth;</span>
+<span class="nc" id="L67">        this.chartHeight   = dao.chartHeight;</span>
+<span class="nc" id="L68">        milestones         = new Milestones(dao.sprintName);</span>
+<span class="nc" id="L69">        calendarXAxes      = new CalendarXAxes(this, dao.preRun, dao.postRun);</span>
+<span class="nc" id="L70">    }</span>
+
+    public AbstractRenderer(String sprintName/*, Map&lt;LocalDate, String&gt; bankHolidays*/, boolean completed/*, int chartWidth, int chartHeight*/, int preRun, int postRun,
+<span class="nc" id="L73">                            BurnDownGraphicsTheme graphicsTheme) throws IOException {</span>
+//        this.bankHolidays  = bankHolidays;
+<span class="nc" id="L75">        this.graphicsTheme = graphicsTheme;</span>
+//        this.chartWidth    = chartWidth;
+//        this.chartHeight   = chartHeight;
+<span class="nc" id="L78">        milestones    = new Milestones(sprintName);</span>
+<span class="nc" id="L79">        calendarXAxes = new CalendarXAxes(this, preRun, postRun);</span>
+<span class="nc" id="L80">    }</span>
+
+    protected int calculateChartHeight() {
+<span class="nc" id="L83">        return chartHeight;</span>
+    }
+
+    protected int calculateChartWidth() {
+<span class="nc" id="L87">        return chartWidth;</span>
+    }
+
+    protected LocalDate calculateDayFromIndex(int index) {
+<span class="nc" id="L91">        LocalDate firstMilestoneDay = milestones.firstMilestone;</span>
+<span class="nc" id="L92">        return DateUtil.addDay(firstMilestoneDay, index);</span>
+    }
+
+    protected int calculateDayIndex(LocalDate date) {
+<span class="nc" id="L96">        LocalDate firstMilestoneDay = milestones.firstMilestone;</span>
+<span class="nc" id="L97">        return DateUtil.calculateDays(firstMilestoneDay, date);</span>
+    }
+
+    protected int calculateDayIndex(LocalDateTime date) {
+<span class="nc" id="L101">        return calculateDayIndex(date.toLocalDate());</span>
+    }
+
+    protected void calculateDayWidth() {
+<span class="nc" id="L105">        days = calculateMaxDays();</span>
+<span class="nc" id="L106">        calendarXAxes.dayOfWeek.setWidth((chartWidth) / days);</span>
+<span class="nc" id="L107">    }</span>
+
+    protected int calculateDayX(LocalDate date) {
+<span class="nc" id="L110">        LocalDate firstMilestoneDay = milestones.firstMilestone;</span>
+<span class="nc" id="L111">        int       firstMilestoneX   = firstDayX + calendarXAxes.dayOfWeek.getWidth() / 2;</span>
+<span class="nc" id="L112">        return firstMilestoneX + (DateUtil.calculateDays(firstMilestoneDay, date) + calendarXAxes.getPriRun()) * calendarXAxes.dayOfWeek.getWidth();</span>
+    }
+
+    protected int calculateMaxDays() {
+<span class="nc" id="L116">        return DateUtil.calculateDays(milestones.firstMilestone, milestones.lastMilestone) + 1 + calendarXAxes.getPriRun() + calendarXAxes.getPostRun();</span>
+    }
+
+    protected int calculateX(LocalDateTime date, LocalDateTime startTime, long secondsPerDay) {
+<span class="nc" id="L120">        LocalDate firstMilestoneDay = milestones.firstMilestone;</span>
+<span class="nc" id="L121">        int       firstMilestoneX   = firstDayX + calendarXAxes.dayOfWeek.getWidth() / 2;</span>
+        // String createDateTimeString = DateUtil.createDateTimeString(date);
+        //        LocalDateTime timeOfDay = LocalDateTimeUtil.getTimeOfDayInMillis(date);
+<span class="nc" id="L124">        Duration workedToday = Duration.between(startTime, date);</span>
+<span class="nc" id="L125">        int dayX = firstMilestoneX</span>
+<span class="nc" id="L126">                + (DateUtil.calculateDays(firstMilestoneDay, DateUtil.toDayPrecision(date)) + calendarXAxes.getPriRun()) * calendarXAxes.dayOfWeek.getWidth();</span>
+<span class="nc" id="L127">        int timeOfDayX = (int) (((workedToday.getSeconds()) * calendarXAxes.dayOfWeek.getWidth()) / secondsPerDay);</span>
+<span class="nc" id="L128">        return dayX + timeOfDayX;</span>
+    }
+
+    public abstract void draw(ExtendedGraphics2D graphics2D, int x, int y) throws Exception;
+
+    protected void drawAuthor(int x, int y, int with, Color fillColor, String text, Color textColor, Font font) {
+<span class="nc" id="L134">        graphics2D.setFont(font);</span>
+<span class="nc" id="L135">        graphics2D.setColor(fillColor);</span>
+<span class="nc" id="L136">        graphics2D.fillRect(x, y - calendarXAxes.milestone.height / 2, with + 4, calendarXAxes.milestone.height - 1);</span>
+<span class="nc" id="L137">        graphics2D.setColor(textColor);</span>
+<span class="nc" id="L138">        FontMetrics fm        = graphics2D.getFontMetrics();</span>
+<span class="nc" id="L139">        int         maxAscent = fm.getMaxAscent();</span>
+<span class="nc" id="L140">        graphics2D.drawString(text, x + 2, y + maxAscent / 2 - 2);</span>
+<span class="nc" id="L141">    }</span>
+
+    protected void drawAuthorLegend(int x, int y) {
+<span class="nc" id="L144">        int authorLegendWidth = 20;</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">        for (User author : authors.getList()) {</span>
+//            String primaryAuthorName = Authors.mapToPrimaryLoginName(author.name);
+//            if (primaryAuthorName == null) {
+//                primaryAuthorName = author.name;
+//            }
+<span class="nc" id="L150">            FontMetrics metrics = graphics2D.getFontMetrics(calendarXAxes.milestone.font);</span>
+<span class="nc" id="L151">            int         adv     = metrics.stringWidth(author.getName());</span>
+<span class="nc" id="L152">            authorLegendWidth = Math.max(authorLegendWidth, adv);</span>
+<span class="nc" id="L153">        }</span>
+<span class="nc" id="L154">        int lineHeight = 14;</span>
+<span class="nc" id="L155">        int ay         = y + lineHeight * authors.getList().size();</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">        for (User author : authors.getList()) {</span>
+//            String primaryAuthorName = Authors.mapToPrimaryLoginName(author.name);
+//            if (primaryAuthorName == null) {
+//                primaryAuthorName = author.name;
+//            }
+<span class="nc" id="L161">            drawAuthor(x, ay, authorLegendWidth, author.getColor(), author.getName(), graphicsTheme.tickTextColor, calendarXAxes.milestone.font);</span>
+<span class="nc" id="L162">            ay -= lineHeight;</span>
+<span class="nc" id="L163">        }</span>
+<span class="nc" id="L164">    }</span>
+
+    protected void drawCalendar() {
+<span class="nc" id="L167">        drawCalendar(true);</span>
+<span class="nc" id="L168">    }</span>
+
+    protected void drawCalendar(boolean drawDays) {
+<span class="nc" id="L171">        calendarXAxes.drawCalendar(drawDays);</span>
+<span class="nc" id="L172">    }</span>
+
+    public void drawDayBars(LocalDate currentDay) {
+        //        Calendar day = Calendar.getInstance();
+        //        day.setTimeInMillis(currentDay);
+<span class="nc" id="L177">        Color color = GraphColorUtil.getDayOfWeekStripeColor(graphicsTheme/*, bankHolidays*/, currentDay);</span>
+<span class="nc" id="L178">        int   x     = calculateDayX(currentDay);</span>
+<span class="nc" id="L179">        graphics2D.setColor(color);</span>
+        //day vertical bar
+<span class="nc" id="L181">        graphics2D.fillRect(x - (calendarXAxes.dayOfWeek.getWidth() / 2 - 1), diagram.y, calendarXAxes.dayOfWeek.getWidth() - 1, diagram.height);//left |</span>
+        //draw vertical lines
+<span class="nc" id="L183">        graphics2D.setColor(graphicsTheme.ganttGridColor);</span>
+        //        graphics2D.setStroke(new BasicStroke(RELATION_LINE_STROKE_WIDTH));
+        //        graphics2D.drawLine(x - (calendarXAxses.dayOfWeek.getWidth() / 2 - 1) + (calendarXAxses.dayOfWeek.getWidth() - 1), diagram.y,x - (calendarXAxses.dayOfWeek.getWidth() / 2 - 1) + (calendarXAxses.dayOfWeek.getWidth() - 1), diagram.y + diagram.height);
+        //        graphics2D.draw(new Line2D.Double(x - (calendarXAxses.dayOfWeek.getWidth() / 2 - 1) + (calendarXAxses.dayOfWeek.getWidth() - 1), diagram.y,x - (calendarXAxses.dayOfWeek.getWidth() / 2 - 1) + (calendarXAxses.dayOfWeek.getWidth() - 1), diagram.y + diagram.height));
+<span class="nc" id="L187">        graphics2D.fillRect(x - (calendarXAxes.dayOfWeek.getWidth() / 2 - 1) + (calendarXAxes.dayOfWeek.getWidth() - 1), diagram.y, 1, diagram.height);//right |</span>
+        //TODO: draw bank holiday
+//        if (bankHolidays.get(currentDay) != null) {
+//            x += calendarXAxses.dayOfWeek.getWidth() / 2;
+//            graphics2D.setColor(graphicsTheme.bankHolidayColor);
+//            graphics2D.setFont(bankHolidayFont);
+//            FontMetrics fm     = graphics2D.getFontMetrics();
+//            String      string = bankHolidays.get(currentDay);
+//            int         width  = fm.stringWidth(string);
+//            int         y;
+//            y = diagram.y + width;
+//            AffineTransform transform = graphics2D.getTransform();
+//            graphics2D.rotate(-Math.PI / 2, x, y);
+//            graphics2D.drawString(string, x, y);
+//            graphics2D.setTransform(transform);
+//        }
+<span class="nc" id="L203">    }</span>
+
+    protected void drawGraphText(int x, int y, String text, Color textColor, Font font, TextAlignment aligned) {
+        // flag
+<span class="nc" id="L207">        graphics2D.setFont(font);</span>
+<span class="nc" id="L208">        FontMetrics fm    = graphics2D.getFontMetrics();</span>
+<span class="nc" id="L209">        int         width = fm.stringWidth(text);</span>
+<span class="nc" id="L210">        graphics2D.setColor(graphicsTheme.graphTextBackgroundColor);</span>
+<span class="nc bnc" id="L211" title="All 3 branches missed.">        switch (aligned) {</span>
+            case left:
+<span class="nc" id="L213">                graphics2D.fillRect(x, y - 9 + 2, width, 12);</span>
+<span class="nc" id="L214">                graphics2D.setColor(textColor);</span>
+<span class="nc" id="L215">                graphics2D.drawString(text, x, y + 2);</span>
+<span class="nc" id="L216">                break;</span>
+            case right:
+<span class="nc" id="L218">                graphics2D.fillRect(x - width, y - 9 + 2, width, 12);</span>
+<span class="nc" id="L219">                graphics2D.setColor(textColor);</span>
+<span class="nc" id="L220">                graphics2D.drawString(text, x - width, y + 2);</span>
+                break;
+        }
+
+<span class="nc" id="L224">    }</span>
+
+    protected void drawLegend(int x, int y, Color interpolationColor) {
+<span class="nc" id="L227">        int lineHeight  = 14;</span>
+<span class="nc" id="L228">        int legendY     = y + lineHeight;</span>
+<span class="nc" id="L229">        int legendX1    = x;</span>
+<span class="nc" id="L230">        int legendX2    = legendX1 + 10;</span>
+<span class="nc" id="L231">        int legendTextY = legendY + 1;</span>
+<span class="nc" id="L232">        int legendTextX = legendX2 + 4;</span>
+<span class="nc" id="L233">        int milestoneX  = legendX1 + 5;</span>
+<span class="nc" id="L234">        int milestoneY  = legendY - calendarXAxes.milestone.height / 2;</span>
+
+<span class="nc" id="L236">        graphics2D.setStroke(new BasicStroke(STANDARD_LINE_STROKE_WIDTH, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{3}, 0));</span>
+<span class="nc" id="L237">        graphics2D.setColor(graphicsTheme.surroundingSquareColor);</span>
+<span class="nc" id="L238">        graphics2D.drawLine(legendX1, legendY, legendX2, legendY);</span>
+<span class="nc" id="L239">        drawGraphText(legendTextX, legendTextY, &quot;Guideline&quot;, graphicsTheme.tickTextColor, calendarXAxes.dayOfWeek.getFont(), TextAlignment.left);</span>
+
+<span class="nc" id="L241">        legendY += lineHeight;</span>
+<span class="nc" id="L242">        legendTextY += lineHeight;</span>
+<span class="nc" id="L243">        milestoneY += lineHeight;</span>
+<span class="nc" id="L244">        graphics2D.setColor(interpolationColor);</span>
+<span class="nc" id="L245">        graphics2D.drawLine(legendX1, legendY, legendX2, legendY);</span>
+<span class="nc" id="L246">        drawGraphText(legendTextX, legendTextY, &quot;extrapolated release date&quot;, graphicsTheme.tickTextColor, calendarXAxes.dayOfWeek.getFont(),</span>
+                TextAlignment.left);
+
+<span class="nc" id="L249">        legendY += lineHeight;</span>
+<span class="nc" id="L250">        legendTextY += lineHeight;</span>
+<span class="nc" id="L251">        milestoneY += lineHeight;</span>
+<span class="nc" id="L252">        graphics2D.setStroke(new BasicStroke(STANDARD_LINE_STROKE_WIDTH));</span>
+<span class="nc" id="L253">        graphics2D.setColor(graphicsTheme.burnDownBorderColor);</span>
+<span class="nc" id="L254">        graphics2D.drawLine(legendX1, legendY, legendX2, legendY);</span>
+<span class="nc" id="L255">        drawGraphText(legendTextX, legendTextY, &quot;Remaining work&quot;, graphicsTheme.tickTextColor, calendarXAxes.dayOfWeek.getFont(), TextAlignment.left);</span>
+
+<span class="nc" id="L257">        legendY += lineHeight;</span>
+<span class="nc" id="L258">        legendTextY += lineHeight;</span>
+<span class="nc" id="L259">        milestoneY += lineHeight;</span>
+<span class="nc" id="L260">        calendarXAxes.drawMilestone(null, null, milestoneX, milestoneY, graphicsTheme.pastEventColor, &quot;S&quot;, true, null, null, false, false);// start</span>
+<span class="nc" id="L261">        drawGraphText(legendTextX, legendTextY, &quot;Start date (sprint)&quot;, graphicsTheme.tickTextColor, calendarXAxes.dayOfWeek.getFont(), TextAlignment.left);</span>
+
+<span class="nc" id="L263">        legendY += lineHeight;</span>
+<span class="nc" id="L264">        legendTextY += lineHeight;</span>
+<span class="nc" id="L265">        milestoneY += lineHeight;</span>
+<span class="nc" id="L266">        calendarXAxes.drawMilestone(null, null, milestoneX, milestoneY, graphicsTheme.nowEventColor, &quot;N&quot;, true, null, null, false, false);// now</span>
+<span class="nc" id="L267">        drawGraphText(legendTextX, legendTextY, &quot;Now date&quot;, graphicsTheme.tickTextColor, calendarXAxes.dayOfWeek.getFont(), TextAlignment.left);</span>
+
+<span class="nc" id="L269">        legendY += lineHeight;</span>
+<span class="nc" id="L270">        legendTextY += lineHeight;</span>
+<span class="nc" id="L271">        milestoneY += lineHeight;</span>
+<span class="nc" id="L272">        calendarXAxes.drawMilestone(null, null, milestoneX, milestoneY, graphicsTheme.delayEventColor, &quot;R&quot;, true, null, null, false, false);// release</span>
+<span class="nc" id="L273">        drawGraphText(legendTextX, legendTextY, &quot;Release date&quot;, graphicsTheme.tickTextColor, calendarXAxes.dayOfWeek.getFont(), TextAlignment.left);</span>
+
+<span class="nc" id="L275">        legendY += lineHeight;</span>
+<span class="nc" id="L276">        legendTextY += lineHeight;</span>
+<span class="nc" id="L277">        milestoneY += lineHeight;</span>
+<span class="nc" id="L278">        calendarXAxes.drawMilestone(null, null, milestoneX, milestoneY, graphicsTheme.futureEventColor, &quot;E&quot;, true, null, null, false, false);// end</span>
+<span class="nc" id="L279">        drawGraphText(legendTextX, legendTextY, &quot;End date (sprint)&quot;, graphicsTheme.tickTextColor, calendarXAxes.dayOfWeek.getFont(), TextAlignment.left);</span>
+
+<span class="nc" id="L281">        legendY += lineHeight;</span>
+<span class="nc" id="L282">        legendTextY += lineHeight;</span>
+<span class="nc" id="L283">        milestoneY += lineHeight;</span>
+<span class="nc" id="L284">        calendarXAxes.drawMilestone(null, null, milestoneX, milestoneY, graphicsTheme.futureEventColor, &quot;F&quot;, true, null, null, false, false);// first</span>
+<span class="nc" id="L285">        drawGraphText(legendTextX, legendTextY, &quot;First punch-in&quot;, graphicsTheme.tickTextColor, calendarXAxes.dayOfWeek.getFont(), TextAlignment.left);</span>
+
+<span class="nc" id="L287">        legendY += lineHeight;</span>
+<span class="nc" id="L288">        legendTextY += lineHeight;</span>
+<span class="nc" id="L289">        milestoneY += lineHeight;</span>
+<span class="nc" id="L290">        calendarXAxes.drawMilestone(null, null, milestoneX, milestoneY, graphicsTheme.futureEventColor, &quot;L&quot;, true, null, null, false, false);// Last</span>
+<span class="nc" id="L291">        drawGraphText(legendTextX, legendTextY, &quot;Last punch-out&quot;, graphicsTheme.tickTextColor, calendarXAxes.dayOfWeek.getFont(), TextAlignment.left);</span>
+<span class="nc" id="L292">    }</span>
+
+    protected void drawMilestones() {
+<span class="nc" id="L295">        calendarXAxes.drawMilestones();</span>
+<span class="nc" id="L296">    }</span>
+
+    public int getDayWidth() {
+<span class="nc" id="L299">        return calendarXAxes.dayOfWeek.getWidth();</span>
+    }
+
+    protected int getTaskHeight() {
+<span class="nc" id="L303">        return 13 + 4;</span>
+    }
+
+    protected void initPosition(int x, int y) throws IOException {
+<span class="nc" id="L307">        firstDayX = x;</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">        if (calendarAtBottom) {</span>
+<span class="nc" id="L309">            calendarXAxes.initPosition(x, y);</span>
+<span class="nc" id="L310">            diagram.initPosition(x, y);</span>
+<span class="nc" id="L311">            calendarXAxes.initPosition(x, diagram.y + diagram.height + 1);</span>
+        } else {
+<span class="nc" id="L313">            calendarXAxes.initPosition(x, y);</span>
+<span class="nc" id="L314">            diagram.initPosition(x, calendarXAxes.year.getY() + calendarXAxes.getHeight());</span>
+        }
+<span class="nc" id="L316">    }</span>
+
+    protected void initSize(int x, int y, boolean calendarAtBottom) throws IOException {
+<span class="nc" id="L319">        this.calendarAtBottom = calendarAtBottom;</span>
+        // this.calendarAtBottom = calendarAtBottom;
+<span class="nc" id="L321">        calculateDayWidth();</span>
+<span class="nc" id="L322">        chartWidth      = calculateChartWidth();</span>
+<span class="nc" id="L323">        chartHeight     = calculateChartHeight();</span>
+<span class="nc" id="L324">        firstDayX       = x;</span>
+<span class="nc" id="L325">        bankHolidayFont = new Font(Font.SANS_SERIF, Font.PLAIN, Math.min(14, (int) (calendarXAxes.dayOfWeek.getWidth() * 1.1)));</span>
+
+<span class="nc bnc" id="L327" title="All 2 branches missed.">        if (calendarAtBottom) {</span>
+<span class="nc" id="L328">            calendarXAxes.initSize(chartWidth, calendarXAxes.dayOfWeek.getWidth(), calendarAtBottom);</span>
+<span class="nc" id="L329">            diagram.initSize(chartWidth - x, chartHeight - calendarXAxes.getHeight());</span>
+<span class="nc" id="L330">            calendarXAxes.initSize(chartWidth, calendarXAxes.dayOfWeek.getWidth(), calendarAtBottom);</span>
+        } else {
+<span class="nc" id="L332">            calendarXAxes.initSize(chartWidth, calendarXAxes.dayOfWeek.getWidth(), calendarAtBottom);</span>
+<span class="nc" id="L333">            diagram.initSize(chartWidth, chartHeight - calendarXAxes.getHeight());</span>
+        }
+<span class="nc" id="L335">    }</span>
+
+    public void setDayWidth(int dayWidth) {
+<span class="nc" id="L338">        calendarXAxes.dayOfWeek.setWidth(dayWidth);</span>
+<span class="nc" id="L339">        calendarXAxes.dayOfMonth.setWidth(dayWidth);</span>
+<span class="nc" id="L340">        chartWidth  = calculateChartWidth();</span>
+<span class="nc" id="L341">        chartHeight = calculateChartHeight();</span>
+<span class="nc" id="L342">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

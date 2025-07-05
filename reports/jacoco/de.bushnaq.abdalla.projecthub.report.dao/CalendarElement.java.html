@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CalendarElement.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.report.dao</a> &gt; <span class="el_source">CalendarElement.java</span></div><h1>CalendarElement.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.report.dao;
+
+import java.awt.*;
+
+public class CalendarElement {
+    private Font    font;
+    private Integer height;
+    private Integer width;
+    private Integer y;
+
+<span class="nc" id="L28">    public CalendarElement(Font font, Integer y, Integer width, Integer height) {</span>
+<span class="nc" id="L29">        this.setFont(font);</span>
+<span class="nc" id="L30">        this.setY(y);</span>
+<span class="nc" id="L31">        this.setWidth(width);</span>
+<span class="nc" id="L32">        this.setHeight(height);</span>
+<span class="nc" id="L33">    }</span>
+
+    public Font getFont() {
+<span class="nc" id="L36">        return font;</span>
+    }
+
+    public Integer getHeight() {
+<span class="nc" id="L40">        return height;</span>
+    }
+
+    public Integer getWidth() {
+<span class="nc" id="L44">        return width;</span>
+    }
+
+    public Integer getY() {
+<span class="nc" id="L48">        return y;</span>
+    }
+
+    public void setFont(Font font) {
+<span class="nc" id="L52">        this.font = font;</span>
+<span class="nc" id="L53">    }</span>
+
+    public void setHeight(Integer height) {
+<span class="nc" id="L56">        this.height = height;</span>
+<span class="nc" id="L57">    }</span>
+
+    public void setWidth(Integer width) {
+<span class="nc" id="L60">        this.width = width;</span>
+<span class="nc" id="L61">    }</span>
+
+    public void setY(Integer y) {
+<span class="nc" id="L64">        this.y = y;</span>
+<span class="nc" id="L65">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

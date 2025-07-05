@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Util.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.util</a> &gt; <span class="el_source">Util.java</span></div><h1>Util.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.util;
+
+import de.bushnaq.abdalla.projecthub.Application;
+import de.bushnaq.abdalla.projecthub.report.dao.Range;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.List;
+
+<span class="nc" id="L36">public class Util {</span>
+    public static final  long   ONE_WORKING_DAY_MILLIS = 7500L * 60L * 60L;
+    private static final String buildTime;
+    public static final  String copyright;
+<span class="nc" id="L40">    public static final  Locale locale                 = Locale.US;</span>
+<span class="nc" id="L41">    private static final Logger logger                 = LoggerFactory.getLogger(Util.class);</span>
+    public static final  String module;
+    private static final String moduleName;
+    private static final String moduleVersion;
+
+    static {
+<span class="nc" id="L47">        moduleName    = MavenProperiesProvider.getProperty(Application.class, &quot;module.name&quot;);</span>
+<span class="nc" id="L48">        moduleVersion = MavenProperiesProvider.getProperty(Application.class, &quot;module.version&quot;);</span>
+<span class="nc" id="L49">        buildTime     = MavenProperiesProvider.getProperty(Application.class, &quot;build.time&quot;);</span>
+<span class="nc" id="L50">        module        = String.format(&quot;%s %s built at %s&quot;, moduleName, moduleVersion, buildTime);</span>
+<span class="nc" id="L51">        copyright     = String.format(&quot;%s %s, generated %%s&quot;, moduleName, moduleVersion);</span>
+
+<span class="nc" id="L53">    }</span>
+
+    public static Double add(Double value1, Double value2) {
+<span class="nc bnc" id="L56" title="All 4 branches missed.">        if (value1 == null &amp;&amp; value2 == null) {</span>
+<span class="nc" id="L57">            return null;</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">        } else if (value1 == null) {</span>
+<span class="nc" id="L59">            return value2;</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">        } else if (value2 == null) {</span>
+<span class="nc" id="L61">            return value1;</span>
+        } else {
+<span class="nc" id="L63">            return value1 + value2;</span>
+        }
+    }
+
+    public static String columnIdtoExcelColumnName(int number) {
+<span class="nc" id="L68">        final StringBuilder sb = new StringBuilder();</span>
+
+<span class="nc" id="L70">        int num = number - 1;</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">        while (num &gt;= 0) {</span>
+<span class="nc" id="L72">            int numChar = (num % 26) + 65;</span>
+<span class="nc" id="L73">            sb.append((char) numChar);</span>
+<span class="nc" id="L74">            num = (num / 26) - 1;</span>
+<span class="nc" id="L75">        }</span>
+<span class="nc" id="L76">        return sb.reverse().toString();</span>
+    }
+
+    public static Set&lt;String&gt; createColumnSet(PreparedStatement preparedStatement) throws SQLException {
+<span class="nc" id="L80">        Set&lt;String&gt;       columns = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L81">        ResultSetMetaData md      = preparedStatement.getMetaData();</span>
+<span class="nc" id="L82">        int               numCol  = md.getColumnCount();</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">        for (int i = 1; i &lt;= numCol; i++) {</span>
+<span class="nc" id="L84">            columns.add(md.getColumnName(i));</span>
+        }
+<span class="nc" id="L86">        return columns;</span>
+    }
+
+    public static String createTestCaseString(Long testCases) {
+<span class="nc" id="L90">        return testCases + &quot; tc&quot;;</span>
+    }
+
+    public static String extractParameters(final String aStringToParse, final Map&lt;String, Integer&gt; aParameterList) {
+<span class="nc" id="L94">        int _lastParameterIndex = 1;</span>
+<span class="nc" id="L95">        aParameterList.clear();</span>
+<span class="nc" id="L96">        final StringBuffer _stringToParse      = new StringBuffer(aStringToParse);</span>
+<span class="nc" id="L97">        int                _foundColumnAtIndex = -1;</span>
+        do {
+<span class="nc" id="L99">            _foundColumnAtIndex = _stringToParse.indexOf(&quot;:&quot;);</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">            if (_foundColumnAtIndex &gt; -1) {</span>
+<span class="nc" id="L101">                final int _foundSpaceAtIndex = findParameterEnd(_stringToParse, _foundColumnAtIndex + 1);</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">                if (_foundSpaceAtIndex &gt; -1) {</span>
+<span class="nc" id="L103">                    final String _parameterName = _stringToParse.substring(_foundColumnAtIndex + 1, _foundSpaceAtIndex);</span>
+<span class="nc" id="L104">                    aParameterList.put(_parameterName, Integer.valueOf(_lastParameterIndex++));</span>
+<span class="nc" id="L105">                    _stringToParse.replace(_foundColumnAtIndex, _foundSpaceAtIndex, &quot;?&quot;);</span>
+                } else {
+                    // ---Finished
+                    break;
+                }
+            } else {
+                // ---Finished
+                break;
+            }
+<span class="nc bnc" id="L114" title="All 2 branches missed.">        } while (_foundColumnAtIndex != -1);</span>
+<span class="nc" id="L115">        return _stringToParse.toString();</span>
+    }
+
+    public static void fillpatternRect(Graphics2D graphics2d, int x, int y, int width, int height, BufferedImage img) {
+<span class="nc" id="L119">        TexturePaint tp = new TexturePaint(img, new Rectangle(0, 0, 4, 4));</span>
+<span class="nc" id="L120">        graphics2d.setPaint(tp);</span>
+<span class="nc" id="L121">        graphics2d.fillRect(x, y, width, height);</span>
+<span class="nc" id="L122">    }</span>
+
+    public static int findParameterEnd(final StringBuffer aStringToParse, final int aStartIndex) {
+<span class="nc" id="L125">        final String[] _token = {&quot;,&quot;, &quot; &quot;, &quot;\r&quot;, &quot;)&quot;};</span>
+<span class="nc" id="L126">        int            _index = aStringToParse.length();</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">        for (int i = 0; i &lt; _token.length; i++) {</span>
+<span class="nc" id="L128">            final int _tempIndex = aStringToParse.indexOf(_token[i], aStartIndex);</span>
+<span class="nc bnc" id="L129" title="All 4 branches missed.">            if ((_tempIndex != -1) &amp;&amp; (_tempIndex &lt; _index)) {</span>
+<span class="nc" id="L130">                _index = _tempIndex;</span>
+            }
+        }
+<span class="nc" id="L133">        return _index;</span>
+    }
+
+    public static String generateCopyrightString(LocalDateTime now) {
+<span class="nc" id="L137">        DateTimeFormatter sdfForCopyright    = DateTimeFormatter.ofPattern(&quot;yyyy.MMM.dd HH:mm&quot;);</span>
+<span class="nc" id="L138">        String            populatedCopyRight = String.format(copyright, now.format(sdfForCopyright)) + &quot; CET&quot;;</span>
+<span class="nc" id="L139">        return populatedCopyRight;</span>
+    }
+
+    public static String[] getCsvList(ResultSet rs, String columnName) throws SQLException {
+<span class="nc" id="L143">        String result = rs.getString(columnName);</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">        if (rs.wasNull()) {</span>
+<span class="nc" id="L145">            return null;</span>
+        }
+<span class="nc" id="L147">        return result.split(&quot;\\|&quot;, -1);</span>
+    }
+
+    public static Range getIntersection(LocalDateTime os, LocalDateTime of, LocalDateTime ps, LocalDateTime pf) {
+        //o   |      |
+        //i   ------
+        //p |      |
+<span class="nc bnc" id="L154" title="All 4 branches missed.">        if (!os.isBefore(ps) &amp;&amp; !os.isAfter(pf)) {</span>
+<span class="nc" id="L155">            return new Range(os, pf);</span>
+        }
+        //o|  |
+        //i ---
+        //p |      |
+<span class="nc bnc" id="L160" title="All 4 branches missed.">        if (!of.isBefore(ps) &amp;&amp; !of.isAfter(pf)) {</span>
+<span class="nc" id="L161">            return new Range(ps, of);</span>
+        }
+        //o|        |
+        //i  -------
+        //p |      |
+<span class="nc bnc" id="L166" title="All 4 branches missed.">        if (!os.isAfter(ps) &amp;&amp; !of.isBefore(pf)) {</span>
+<span class="nc" id="L167">            return new Range(ps, pf);</span>
+        }
+        //o  |    |
+        //i  ------
+        //p |      |
+<span class="nc bnc" id="L172" title="All 4 branches missed.">        if (os.isAfter(ps) &amp;&amp; of.isBefore(pf)) {</span>
+<span class="nc" id="L173">            return new Range(os, of);</span>
+        }
+<span class="nc" id="L175">        return null;</span>
+    }
+
+    public static String longToString(final Long aValue, final boolean aCreateLeadingZero) {
+<span class="nc bnc" id="L179" title="All 2 branches missed.">        if (aValue != null) {</span>
+<span class="nc bnc" id="L180" title="All 4 branches missed.">            if (!aCreateLeadingZero || (aValue &gt; 9)) {</span>
+<span class="nc" id="L181">                return Long.toString(aValue);</span>
+            } else {
+<span class="nc" id="L183">                return &quot;0&quot; + aValue;</span>
+            }
+        } else {
+<span class="nc" id="L186">            return &quot;&quot;;</span>
+        }
+    }
+
+    public static String putCsvList(String[] list) {
+<span class="nc" id="L191">        StringBuilder result = new StringBuilder();</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">        if (list != null) {</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">            for (int i = 0; i &lt; list.length; i++) {</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">                if (i != 0) {</span>
+<span class="nc" id="L195">                    result.append(&quot;\\|&quot;);</span>
+                }
+<span class="nc" id="L197">                result.append(list[i]);</span>
+            }
+        } else {
+<span class="nc" id="L200">            result.append(&quot;null&quot;);</span>
+        }
+<span class="nc" id="L202">        return result.toString();</span>
+    }
+
+    public static List&lt;String&gt; toList(String[] array) {
+<span class="nc bnc" id="L206" title="All 2 branches missed.">        if (array == null) {</span>
+<span class="nc" id="L207">            return null;</span>
+        } else {
+<span class="nc" id="L209">            return Arrays.asList(array);</span>
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CaptionElement.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.report.dao</a> &gt; <span class="el_source">CaptionElement.java</span></div><h1>CaptionElement.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.report.dao;
+
+import de.bushnaq.abdalla.projecthub.report.AbstractCanvas;
+import de.bushnaq.abdalla.svg.util.ExtendedGraphics2D;
+
+import java.awt.*;
+
+public class CaptionElement {
+<span class="nc" id="L26">    private final Color  backgroundColor = Color.white;</span>
+<span class="nc" id="L27">    private final Color  color           = new Color(0x2c, 0x7b, 0xf4);</span>
+<span class="nc" id="L28">    public        Font   font            = new Font(Font.SANS_SERIF, Font.PLAIN, 18);</span>
+<span class="nc" id="L29">    public        int    height          = 26;</span>
+<span class="nc" id="L30">    private       String imageMap        = &quot;&quot;;</span>
+    private final String relateCssPath;
+    private final String text;
+    public        int    width;
+<span class="nc" id="L34">    public        int    x               = 3;</span>
+<span class="nc" id="L35">    public        int    y               = 0;</span>
+
+<span class="nc" id="L37">    public CaptionElement(String text, String relateCssPath/*, int chartWidth, int chartHeight*/) {</span>
+<span class="nc" id="L38">        this.text          = text;</span>
+<span class="nc" id="L39">        this.relateCssPath = relateCssPath;</span>
+//        this.width         = chartWidth;
+<span class="nc bnc" id="L41" title="All 2 branches missed.">        if (text == null) {</span>
+<span class="nc" id="L42">            height = 0;</span>
+        }
+<span class="nc" id="L44">    }</span>
+
+    public void draw(ExtendedGraphics2D graphics2D) {
+
+<span class="nc bnc" id="L48" title="All 2 branches missed.">        if (text != null) {</span>
+//            graphics2D.setColor(backgroundColor);
+//            graphics2D.fillRect(0, y, width, height);
+<span class="nc" id="L51">            graphics2D.setColor(color);</span>
+<span class="nc" id="L52">            graphics2D.setFont(font);</span>
+<span class="nc" id="L53">            FontMetrics fm           = graphics2D.getFontMetrics();</span>
+<span class="nc" id="L54">            int         ascent       = fm.getAscent();</span>
+<span class="nc" id="L55">            int         captionWidth = fm.stringWidth(text);</span>
+            //            father.graphics2D.fillRect(x, y, width, height);
+<span class="nc" id="L57">            String link = relateCssPath + text + &quot;.png&quot;;</span>
+<span class="nc" id="L58">            graphics2D.drawStringWithLink(text, x, y + height / 2 + (ascent - 2) / 2 - 1, link);</span>
+<span class="nc" id="L59">            link = replaceSpaceWithDash(link);</span>
+<span class="nc" id="L60">            imageMap += String.format(&quot;&lt;area shape=\&quot;rect\&quot; coords=\&quot;%d,%d,%d,%d\&quot; href=\&quot;%s\&quot; &gt;\n&quot;, AbstractCanvas.transformToMapX(x), AbstractCanvas.transformToMapY(y),</span>
+<span class="nc" id="L61">                    AbstractCanvas.transformToMapX(x + captionWidth), AbstractCanvas.transformToMapY(y + height), link);</span>
+        }
+<span class="nc" id="L63">    }</span>
+
+    public String getImageMap() {
+<span class="nc" id="L66">        return imageMap;</span>
+    }
+
+    private String replaceSpaceWithDash(String link) {
+<span class="nc" id="L70">        return link.replace(' ', '-').toLowerCase();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

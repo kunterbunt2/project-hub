@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WorklogRemaining.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.report.dao</a> &gt; <span class="el_source">WorklogRemaining.java</span></div><h1>WorklogRemaining.java</h1><pre class="source lang-java linenums">package de.bushnaq.abdalla.projecthub.report.dao;
+
+import de.bushnaq.abdalla.projecthub.dto.User;
+import lombok.Getter;
+import lombok.ToString;
+
+import java.time.Duration;
+
+//TODO do we need this class?
+@Getter
+@ToString(callSuper = false)
+public class WorklogRemaining {
+    private final User     author;
+    private final Long     issueId;
+    private final String   key;
+    //    private final Logger   logger = LoggerFactory.getLogger(this.getClass());
+    private final Duration remaining;
+    private final Long     sprintId;
+    private final Duration timeworked;
+
+<span class="nc" id="L21">    public WorklogRemaining(Long sprintId, Long issueId, String key, User author, Duration timeworked, Duration remaining) {</span>
+<span class="nc" id="L22">        this.sprintId   = sprintId;</span>
+<span class="nc" id="L23">        this.issueId    = issueId;</span>
+<span class="nc" id="L24">        this.key        = key;</span>
+<span class="nc" id="L25">        this.author     = author;</span>
+<span class="nc" id="L26">        this.timeworked = timeworked;</span>
+<span class="nc" id="L27">        this.remaining  = remaining;</span>
+<span class="nc" id="L28">    }</span>
+
+//    public String getAuthor() {
+//        return author;
+//    }
+//
+//    public Long getIssueId() {
+//        return issueId;
+//    }
+//
+//    public String getKey() {
+//        return key;
+//    }
+//
+//    public Duration getRemaining() {
+//        return remaining;
+//    }
+//
+//    public Long getSprintId() {
+//        return sprintId;
+//    }
+//
+//    public Duration getTimeworked() {
+//        return timeworked;
+//    }
+
+//    public void print() {
+//        //        DateUtil dateUtil = new DateUtil();
+//        String logString = &quot;&quot;;
+//        logString += String.format(&quot;, worklog.sprint_id=&quot; + sprintId);
+//        logString += String.format(&quot;, worklog.issue_id=&quot; + issueId);
+//        logString += String.format(&quot;, worklog.author=&quot; + author);
+//        logString += String.format(&quot;, worklog.timeworked=&quot; + timeworked);
+//        logString += String.format(&quot;, worklog.remaining=&quot; + remaining);
+//        logger.trace(logString);
+//    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

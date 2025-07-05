@@ -1,0 +1,877 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DateUtil.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.util.date</a> &gt; <span class="el_source">DateUtil.java</span></div><h1>DateUtil.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.util.date;
+
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+
+class DateTimeStruct {
+    String character;//unit
+    String separator;//from previous unit
+    int    width;//max digits
+
+<span class="nc" id="L30">    DateTimeStruct(final String aSeperator, final String aCharacter, final int aWidth) {</span>
+<span class="nc" id="L31">        separator = aSeperator;</span>
+<span class="nc" id="L32">        character = aCharacter;</span>
+<span class="nc" id="L33">        width     = aWidth;</span>
+<span class="nc" id="L34">    }</span>
+}
+
+<span class="nc" id="L37">public class DateUtil {</span>
+    private static final int               DAY_INDEX           = 4;
+    private static final int               HOUR_INDEX          = 3;
+    private static final int               MILLI_SECONDS_INDEX = 0;
+    private static final int               MINUTE_INDEX        = 2;
+    private static final int               SECONDS_INDEX       = 1;
+    private static final int               WEEK_INDEX          = 5;
+<span class="nc" id="L44">    public final         DateTimeFormatter dtfymd              = DateTimeFormatter.ofPattern(&quot;yyyy.MM.dd&quot;);</span>
+<span class="nc" id="L45">    public final         DateTimeFormatter dtfymdhm            = DateTimeFormatter.ofPattern(&quot;yyyy.MMM.dd HH:mm&quot;);</span>
+<span class="nc" id="L46">    public final         DateTimeFormatter dtfymdhms           = DateTimeFormatter.ofPattern(&quot;yyyy.MMM.dd HH:mm:ss&quot;);</span>
+<span class="nc" id="L47">    public final         DateTimeFormatter dtfymdhmss          = DateTimeFormatter.ofPattern(&quot;yyyy.MMM.dd HH:mm:ss.SSS&quot;);</span>
+
+    /**
+     * adds durations even if one of them or both are null
+     *
+     * @param d1
+     * @param d2
+     * @return
+     */
+    public static Duration add(Duration d1, Duration d2) {
+<span class="nc bnc" id="L57" title="All 4 branches missed.">        if (d1 == null &amp;&amp; d2 == null) {</span>
+<span class="nc" id="L58">            return null;</span>
+        }
+<span class="nc bnc" id="L60" title="All 2 branches missed.">        if (d2 == null) {</span>
+<span class="nc" id="L61">            return d1;</span>
+        }
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        if (d1 == null) {</span>
+<span class="nc" id="L64">            return d2;</span>
+        }
+<span class="nc" id="L66">        return d1.plus(d2);</span>
+    }
+
+    public static LocalDate addDay(LocalDate start, int days) {
+<span class="nc" id="L70">        return start.plusDays(days);</span>
+
+    }
+
+    //    public static String create24hDurationString(long aTime, final boolean aUseSeconds, final boolean aUseCharacters, final boolean aPrintLeadingZeros) {
+    //        return create24hDurationString(aTime, aUseSeconds, false, aUseCharacters, aPrintLeadingZeros);
+    //    }
+
+    public static LocalDateTime addDay(LocalDateTime start, int days) {
+<span class="nc" id="L79">        return start.plusDays(days);</span>
+
+    }
+
+    /**
+     * Hardened
+     *
+     * @param startDate
+     * @param workingDays
+     * @return
+     */
+    public static LocalDateTime addNoneWorkingDays(LocalDateTime startDate, long workingDays) {
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        if (workingDays &gt; 300) {</span>
+<span class="nc" id="L92">            return null;</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">        } else if (workingDays &gt; 2) {</span>
+            //---Do not include startDate
+<span class="nc" id="L95">            int workingDaysIndex = 1;</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">            while (workingDaysIndex &lt; workingDays) {</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">                if (isWorkDay(startDate)) {</span>
+<span class="nc" id="L98">                    workingDaysIndex++;</span>
+                } else {
+                }
+<span class="nc" id="L101">                startDate = startDate.plusDays(1);</span>
+            }
+            //---ensure the last day is not a weekend day
+<span class="nc bnc" id="L104" title="All 2 branches missed.">            while (!isWorkDay(startDate)) {</span>
+<span class="nc" id="L105">                startDate = startDate.plusDays(1);</span>
+            }
+<span class="nc" id="L107">            return startDate;</span>
+        } else {
+<span class="nc" id="L109">            return startDate;</span>
+        }
+    }
+
+    public static int calculateDays(LocalDate first, LocalDate last) {
+<span class="nc" id="L114">        return calculateDays(first.atStartOfDay(), last.atStartOfDay());</span>
+    }
+
+    public static int calculateDays(LocalDate first, LocalDateTime last) {
+<span class="nc" id="L118">        return calculateDays(first.atStartOfDay(), last);</span>
+    }
+
+    public static int calculateDays(LocalDateTime first, LocalDate last) {
+<span class="nc" id="L122">        return calculateDays(first, last.atStartOfDay());</span>
+    }
+
+    public static int calculateDays(LocalDateTime first, LocalDateTime last) {
+<span class="nc" id="L126">        Duration noOfDaysBetween = Duration.between(first, last);</span>
+<span class="nc" id="L127">        return (int) noOfDaysBetween.toDays();</span>
+    }
+
+    public static LocalDateTime calculateLunchStartTime(LocalDateTime time) {
+<span class="nc" id="L131">        return time.truncatedTo(ChronoUnit.DAYS).withHour(12);</span>
+    }
+
+    public static LocalDateTime calculateLunchStopTime(LocalDateTime time) {
+<span class="nc" id="L135">        return time.truncatedTo(ChronoUnit.DAYS).withHour(13);</span>
+    }
+
+    /**
+     * Hardened
+     *
+     * @param start
+     * @param end
+     * @return
+     */
+    public static int calculateWorkingDaysIncluding(LocalDate start, LocalDate end) {
+
+        //        logger.trace(String.format(&quot;start=%s, end=%s&quot;, Util.createDateString(startCal.getTimeInMillis(), sdtf), Util.createDateString(endCal.getTimeInMillis(), sdtf)));
+<span class="nc" id="L148">        int workDays = 0;</span>
+
+        //make sure we start with the smaller date
+<span class="nc bnc" id="L151" title="All 2 branches missed.">        if (start.isAfter(end)) {</span>
+<span class="nc" id="L152">            return 0;</span>
+        }
+<span class="nc" id="L154">        end = end.plusDays(1);</span>
+
+        do {
+            //excluding start date
+<span class="nc bnc" id="L158" title="All 4 branches missed.">            if (start.getDayOfWeek() != DayOfWeek.SATURDAY &amp;&amp; start.getDayOfWeek() != DayOfWeek.SUNDAY) {</span>
+<span class="nc" id="L159">                ++workDays;</span>
+            }
+<span class="nc" id="L161">            start = start.plusDays(1);</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">        } while (start.isBefore(end)); //excluding end date</span>
+
+<span class="nc" id="L164">        return workDays;</span>
+    }
+
+    public static int calculateWorkingDaysIncluding(LocalDateTime start, LocalDateTime end) {
+<span class="nc" id="L168">        return calculateWorkingDaysIncluding(start.toLocalDate(), end.toLocalDate());</span>
+    }
+
+    public static String create24hDurationString(Duration aTime, final boolean aUseSeconds, final boolean aUseCharacters, final boolean aPrintLeadingZeros) {
+<span class="nc bnc" id="L172" title="All 2 branches missed.">        if (aTime == null) {</span>
+<span class="nc" id="L173">            return &quot;NA&quot;;</span>
+        } else {
+<span class="nc" id="L175">            return create24hDurationString(aTime, aUseSeconds, false, aUseCharacters, aPrintLeadingZeros);</span>
+        }
+    }
+
+    /**
+     * If aUseCharacters is true, seconds will be followed with s, hours with h... Result will be xd xh:xm:xs or x x:x:x
+     *
+     * @param aTime
+     * @param aUseSeconds
+     * @param aUseCharacters
+     * @param aPrintLeadingZeros
+     * @return String
+     */
+    public static String create24hDurationString(Duration aTime, final boolean aUseSeconds, final boolean useMilliSeconds, final boolean aUseCharacters,
+                                                 final boolean aPrintLeadingZeros) {
+        String prefix;
+<span class="nc bnc" id="L191" title="All 2 branches missed.">        if (aTime.isNegative()) {</span>
+<span class="nc" id="L192">            prefix = &quot;-&quot;;</span>
+<span class="nc" id="L193">            aTime  = aTime.abs();</span>
+        } else {
+<span class="nc" id="L195">            prefix = &quot;&quot;;</span>
+        }
+<span class="nc" id="L197">        String       _result     = &quot;&quot;;</span>
+<span class="nc" id="L198">        final long[] _timePieces = {0, 0, 0, 0, 0, 0};</span>
+<span class="nc" id="L199">        final DateTimeStruct[] _time = {new DateTimeStruct(&quot;:&quot;, &quot;ms&quot;, 3), new DateTimeStruct(&quot; &quot;, &quot;s&quot;, 2), new DateTimeStruct(&quot; &quot;, &quot;m&quot;, 2),</span>
+                new DateTimeStruct(&quot; &quot;, &quot;h&quot;, 2), new DateTimeStruct(&quot; &quot;, &quot;d&quot;, 2), new DateTimeStruct(&quot; &quot;, &quot;w&quot;, 3)};
+<span class="nc" id="L201">        _timePieces[WEEK_INDEX]          = aTime.getSeconds() / (86400L * 7L);//assuming 5 day working week</span>
+<span class="nc" id="L202">        aTime                            = aTime.minusSeconds(_timePieces[WEEK_INDEX] * (86400L * 7L));//assuming 5 day working week</span>
+<span class="nc" id="L203">        _timePieces[DAY_INDEX]           = aTime.getSeconds() / 86400L;//assuming 7.5h day</span>
+<span class="nc" id="L204">        aTime                            = aTime.minusSeconds(_timePieces[DAY_INDEX] * 86400L);//assuming 7.5h day</span>
+<span class="nc" id="L205">        _timePieces[HOUR_INDEX]          = aTime.getSeconds() / 3600L;</span>
+<span class="nc" id="L206">        aTime                            = aTime.minusSeconds(_timePieces[HOUR_INDEX] * 3600L);</span>
+<span class="nc" id="L207">        _timePieces[MINUTE_INDEX]        = aTime.getSeconds() / 60L;</span>
+<span class="nc" id="L208">        aTime                            = aTime.minusSeconds(_timePieces[MINUTE_INDEX] * 60L);</span>
+<span class="nc" id="L209">        _timePieces[SECONDS_INDEX]       = aTime.getSeconds();</span>
+<span class="nc" id="L210">        aTime                            = aTime.minusSeconds(_timePieces[SECONDS_INDEX]);</span>
+<span class="nc" id="L211">        _timePieces[MILLI_SECONDS_INDEX] = aTime.getNano() / 1000000;</span>
+
+<span class="nc" id="L213">        boolean _weFoundTheFirstNonezeroValue = aPrintLeadingZeros;</span>
+<span class="nc" id="L214">        int     _indexEnd                     = 0;</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">        if (!useMilliSeconds) {</span>
+<span class="nc" id="L216">            _indexEnd = 1;</span>
+        }
+<span class="nc bnc" id="L218" title="All 2 branches missed.">        if (!aUseSeconds) {</span>
+<span class="nc" id="L219">            _indexEnd = 2;</span>
+        }
+<span class="nc bnc" id="L221" title="All 2 branches missed.">        for (int _index = WEEK_INDEX; _index &gt;= _indexEnd; _index--) {</span>
+<span class="nc bnc" id="L222" title="All 4 branches missed.">            if ((_timePieces[_index] != 0) || _weFoundTheFirstNonezeroValue) {</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">                if (aUseCharacters) {</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">                    if (_timePieces[_index] != 0) {</span>
+<span class="nc" id="L225">                        _result += longToString(_timePieces[_index], _weFoundTheFirstNonezeroValue);</span>
+<span class="nc" id="L226">                        _result += _time[_index].character;</span>
+                    }
+
+<span class="nc bnc" id="L229" title="All 2 branches missed.">                    if (_index != _indexEnd) {</span>
+<span class="nc" id="L230">                        _result += _time[_index].separator;</span>
+                    } else {
+                        // ---Do not add a seperator at the end
+<span class="nc bnc" id="L233" title="All 2 branches missed.">                        if (_timePieces[_index] == 0) {</span>
+<span class="nc" id="L234">                            _result += &quot;0&quot;;</span>
+<span class="nc" id="L235">                            _result += _time[_index].character;</span>
+                        }
+
+                    }
+                } else {
+<span class="nc" id="L240">                    _result += longToString(_timePieces[_index], _weFoundTheFirstNonezeroValue);</span>
+<span class="nc bnc" id="L241" title="All 2 branches missed.">                    if (_index != _indexEnd) {</span>
+<span class="nc" id="L242">                        _result += _time[_index].separator;</span>
+                    } else {
+                        // ---Do not add a seperator at the end
+                    }
+                }
+<span class="nc" id="L247">                _weFoundTheFirstNonezeroValue = true;</span>
+            } else {
+                // ---Ignore all leading zero values
+            }
+        }
+        // ---In case the result is empty
+<span class="nc bnc" id="L253" title="All 2 branches missed.">        if (_result.length() == 0) {</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">            if (aUseCharacters) {</span>
+<span class="nc bnc" id="L255" title="All 2 branches missed.">                if (aUseSeconds) {</span>
+<span class="nc" id="L256">                    _result = &quot;0s&quot;;</span>
+                } else {
+<span class="nc" id="L258">                    _result = &quot;0m&quot;;</span>
+                }
+            } else {
+<span class="nc" id="L261">                _result = &quot;0&quot;;</span>
+            }
+        } else {
+            // ---The result is not empty
+        }
+<span class="nc" id="L266">        return prefix + _result;</span>
+    }
+
+    public static String create24hDurationString(Duration duration, final boolean aUseSeconds, final boolean useMilliSeconds, final boolean aUseCharacters,
+                                                 final boolean aPrintLeadingZeros, boolean fixedSize) {
+        String prefix;
+<span class="nc bnc" id="L272" title="All 2 branches missed.">        if (duration.isNegative()) {</span>
+<span class="nc" id="L273">            prefix   = &quot;-&quot;;</span>
+<span class="nc" id="L274">            duration = duration.abs();</span>
+        } else {
+<span class="nc" id="L276">            prefix = &quot;&quot;;</span>
+        }
+<span class="nc" id="L278">        String       _result     = &quot;&quot;;</span>
+<span class="nc" id="L279">        final long[] _timePieces = {0, 0, 0, 0, 0, 0};</span>
+<span class="nc" id="L280">        final DateTimeStruct[] _time = {new DateTimeStruct(&quot;&quot;, &quot;ms&quot;, 3), new DateTimeStruct(&quot;:&quot;, &quot;s&quot;, 2), new DateTimeStruct(&quot; &quot;, &quot;m&quot;, 2),</span>
+                new DateTimeStruct(&quot;:&quot;, &quot;h&quot;, 2), new DateTimeStruct(&quot; &quot;, &quot;d&quot;, 1), new DateTimeStruct(&quot; &quot;, &quot;w&quot;, 2)};
+<span class="nc" id="L282">        _timePieces[WEEK_INDEX]          = duration.getSeconds() / (86400L * 7L);//assuming 5 day working week</span>
+<span class="nc" id="L283">        duration                         = duration.minusSeconds(_timePieces[WEEK_INDEX] * (86400L * 7L));//assuming 5 day working week</span>
+<span class="nc" id="L284">        _timePieces[DAY_INDEX]           = duration.getSeconds() / 86400L;//assuming 7.5h day</span>
+<span class="nc" id="L285">        duration                         = duration.minusSeconds(_timePieces[DAY_INDEX] * 86400L);//assuming 7.5h day</span>
+<span class="nc" id="L286">        _timePieces[HOUR_INDEX]          = duration.getSeconds() / 3600L;</span>
+<span class="nc" id="L287">        duration                         = duration.minusSeconds(_timePieces[HOUR_INDEX] * 3600L);</span>
+<span class="nc" id="L288">        _timePieces[MINUTE_INDEX]        = duration.getSeconds() / 60L;</span>
+<span class="nc" id="L289">        duration                         = duration.minusSeconds(_timePieces[MINUTE_INDEX] * 60L);</span>
+<span class="nc" id="L290">        _timePieces[SECONDS_INDEX]       = duration.getSeconds();</span>
+<span class="nc" id="L291">        duration                         = duration.minusSeconds(_timePieces[SECONDS_INDEX]);</span>
+<span class="nc" id="L292">        _timePieces[MILLI_SECONDS_INDEX] = duration.getNano() / 1000000;</span>
+
+<span class="nc" id="L294">        boolean _weFoundTheFirstNonezeroValue = aPrintLeadingZeros;</span>
+<span class="nc" id="L295">        int     _indexEnd                     = 0;</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">        if (!useMilliSeconds) {</span>
+<span class="nc" id="L297">            _indexEnd = 1;</span>
+        }
+<span class="nc bnc" id="L299" title="All 2 branches missed.">        if (!aUseSeconds) {</span>
+<span class="nc" id="L300">            _indexEnd = 2;</span>
+        }
+<span class="nc bnc" id="L302" title="All 2 branches missed.">        for (int _index = WEEK_INDEX; _index &gt;= _indexEnd; _index--) {</span>
+<span class="nc bnc" id="L303" title="All 4 branches missed.">            if ((_timePieces[_index] != 0) || _weFoundTheFirstNonezeroValue) {</span>
+<span class="nc bnc" id="L304" title="All 2 branches missed.">                if (aUseCharacters) {</span>
+<span class="nc bnc" id="L305" title="All 2 branches missed.">                    if (_timePieces[_index] != 0) {</span>
+<span class="nc" id="L306">                        String valueString = longToString(_timePieces[_index], false);</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">                        if (fixedSize) {</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">                            for (int i = 0; i &lt; _time[_index].width - valueString.length(); i++) {</span>
+<span class="nc" id="L309">                                _result += &quot; &quot;;</span>
+                            }
+                        }
+<span class="nc" id="L312">                        _result += valueString;</span>
+<span class="nc" id="L313">                        _result += _time[_index].character;</span>
+<span class="nc bnc" id="L314" title="All 2 branches missed.">                        if (_index != _indexEnd) {</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">                            if (_timePieces[_index - 1] != 0) {</span>
+<span class="nc" id="L316">                                _result += _time[_index].separator;</span>
+<span class="nc bnc" id="L317" title="All 2 branches missed.">                            } else if (fixedSize) {</span>
+<span class="nc" id="L318">                                _result += &quot; &quot;;</span>
+
+                            }
+                        } else {
+                            // ---Do not add a seperator at the end
+                            //                            _result += &quot;_&quot;;
+                        }
+<span class="nc" id="L325">                    } else {</span>
+<span class="nc bnc" id="L326" title="All 2 branches missed.">                        if (fixedSize) {</span>
+<span class="nc bnc" id="L327" title="All 2 branches missed.">                            for (int i = 0; i &lt; _time[_index].width; i++) {</span>
+<span class="nc" id="L328">                                _result += &quot; &quot;;</span>
+                            }
+<span class="nc bnc" id="L330" title="All 2 branches missed.">                            for (int i = 0; i &lt; _time[_index].character.length(); i++) {</span>
+<span class="nc" id="L331">                                _result += &quot; &quot;;</span>
+                            }
+                            //                        _result += _time[_index].character;
+<span class="nc bnc" id="L334" title="All 2 branches missed.">                            if (_index != _indexEnd) {</span>
+<span class="nc" id="L335">                                _result += &quot; &quot;;</span>
+                            } else {
+                                // ---Do not add a seperator at the end
+                            }
+                        }
+                    }
+
+                } else {
+<span class="nc" id="L343">                    _result += longToString(_timePieces[_index], _weFoundTheFirstNonezeroValue);</span>
+<span class="nc bnc" id="L344" title="All 2 branches missed.">                    if (_index != _indexEnd) {</span>
+<span class="nc" id="L345">                        _result += _time[_index].separator;</span>
+                    } else {
+                        // ---Do not add a seperator at the end
+                    }
+                }
+<span class="nc" id="L350">                _weFoundTheFirstNonezeroValue = true;</span>
+            } else {
+                // ---Ignore all leading zero values
+            }
+        }
+        // ---In case the result is empty
+<span class="nc bnc" id="L356" title="All 2 branches missed.">        if (_result.length() == 0) {</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">            if (aUseCharacters) {</span>
+<span class="nc bnc" id="L358" title="All 2 branches missed.">                if (aUseSeconds) {</span>
+<span class="nc" id="L359">                    _result = &quot;0s&quot;;</span>
+                } else {
+<span class="nc" id="L361">                    _result = &quot;0m&quot;;</span>
+                }
+            } else {
+<span class="nc" id="L364">                _result = &quot;0&quot;;</span>
+            }
+        } else {
+            // ---The result is not ampty
+        }
+<span class="nc" id="L369">        return prefix + _result;</span>
+    }
+
+    public static String create24hDurationString(long aTime, final boolean aUseSeconds, final boolean useMilliSeconds, final boolean aUseCharacters,
+                                                 final boolean aPrintLeadingZeros, boolean fixedSize) {
+        String prefix;
+<span class="nc bnc" id="L375" title="All 2 branches missed.">        if (aTime &lt; 0) {</span>
+<span class="nc" id="L376">            prefix = &quot;-&quot;;</span>
+<span class="nc" id="L377">            aTime  = -aTime;</span>
+        } else {
+<span class="nc" id="L379">            prefix = &quot;&quot;;</span>
+        }
+<span class="nc" id="L381">        String       _result     = &quot;&quot;;</span>
+<span class="nc" id="L382">        final long[] _timePieces = {0, 0, 0, 0, 0, 0};</span>
+<span class="nc" id="L383">        final DateTimeStruct[] _time = {new DateTimeStruct(&quot;&quot;, &quot;ms&quot;, 3), new DateTimeStruct(&quot;:&quot;, &quot;s&quot;, 2), new DateTimeStruct(&quot; &quot;, &quot;m&quot;, 2),</span>
+                new DateTimeStruct(&quot;:&quot;, &quot;h&quot;, 2), new DateTimeStruct(&quot; &quot;, &quot;d&quot;, 1), new DateTimeStruct(&quot; &quot;, &quot;w&quot;, 2)};
+<span class="nc" id="L385">        _timePieces[WEEK_INDEX]          = aTime / (86400000L * 7L);//assuming 5 day working week</span>
+<span class="nc" id="L386">                                           aTime -= _timePieces[WEEK_INDEX] * (86400000L * 7L);//assuming 5 day working week</span>
+<span class="nc" id="L387">        _timePieces[DAY_INDEX]           = aTime / 86400000L;//assuming 7.5h day</span>
+<span class="nc" id="L388">                                           aTime -= _timePieces[DAY_INDEX] * 86400000L;//assuming 7.5h day</span>
+<span class="nc" id="L389">        _timePieces[HOUR_INDEX]          = aTime / 3600000L;</span>
+<span class="nc" id="L390">                                           aTime -= _timePieces[HOUR_INDEX] * 3600000L;</span>
+<span class="nc" id="L391">        _timePieces[MINUTE_INDEX]        = aTime / 60000L;</span>
+<span class="nc" id="L392">                                           aTime -= _timePieces[MINUTE_INDEX] * 60000L;</span>
+<span class="nc" id="L393">        _timePieces[SECONDS_INDEX]       = aTime / 1000L;</span>
+<span class="nc" id="L394">                                           aTime -= _timePieces[SECONDS_INDEX] * 1000L;</span>
+<span class="nc" id="L395">        _timePieces[MILLI_SECONDS_INDEX] = aTime;</span>
+
+<span class="nc" id="L397">        boolean _weFoundTheFirstNonezeroValue = aPrintLeadingZeros;</span>
+<span class="nc" id="L398">        int     _indexEnd                     = 0;</span>
+<span class="nc bnc" id="L399" title="All 2 branches missed.">        if (!useMilliSeconds) {</span>
+<span class="nc" id="L400">            _indexEnd = 1;</span>
+        }
+<span class="nc bnc" id="L402" title="All 2 branches missed.">        if (!aUseSeconds) {</span>
+<span class="nc" id="L403">            _indexEnd = 2;</span>
+        }
+<span class="nc bnc" id="L405" title="All 2 branches missed.">        for (int _index = WEEK_INDEX; _index &gt;= _indexEnd; _index--) {</span>
+<span class="nc bnc" id="L406" title="All 4 branches missed.">            if ((_timePieces[_index] != 0) || _weFoundTheFirstNonezeroValue) {</span>
+<span class="nc bnc" id="L407" title="All 2 branches missed.">                if (aUseCharacters) {</span>
+<span class="nc bnc" id="L408" title="All 2 branches missed.">                    if (_timePieces[_index] != 0) {</span>
+<span class="nc" id="L409">                        String valueString = longToString(_timePieces[_index], false);</span>
+<span class="nc bnc" id="L410" title="All 2 branches missed.">                        if (fixedSize) {</span>
+<span class="nc bnc" id="L411" title="All 2 branches missed.">                            for (int i = 0; i &lt; _time[_index].width - valueString.length(); i++) {</span>
+<span class="nc" id="L412">                                _result += &quot; &quot;;</span>
+                            }
+                        }
+<span class="nc" id="L415">                        _result += valueString;</span>
+<span class="nc" id="L416">                        _result += _time[_index].character;</span>
+<span class="nc bnc" id="L417" title="All 2 branches missed.">                        if (_index != _indexEnd) {</span>
+<span class="nc bnc" id="L418" title="All 2 branches missed.">                            if (_timePieces[_index - 1] != 0) {</span>
+<span class="nc" id="L419">                                _result += _time[_index].separator;</span>
+<span class="nc bnc" id="L420" title="All 2 branches missed.">                            } else if (fixedSize) {</span>
+<span class="nc" id="L421">                                _result += &quot; &quot;;</span>
+
+                            }
+                        } else {
+                            // ---Do not add a seperator at the end
+                            //                            _result += &quot;_&quot;;
+                        }
+<span class="nc" id="L428">                    } else {</span>
+<span class="nc bnc" id="L429" title="All 2 branches missed.">                        if (fixedSize) {</span>
+<span class="nc bnc" id="L430" title="All 2 branches missed.">                            for (int i = 0; i &lt; _time[_index].width; i++) {</span>
+<span class="nc" id="L431">                                _result += &quot; &quot;;</span>
+                            }
+<span class="nc bnc" id="L433" title="All 2 branches missed.">                            for (int i = 0; i &lt; _time[_index].character.length(); i++) {</span>
+<span class="nc" id="L434">                                _result += &quot; &quot;;</span>
+                            }
+                            //                        _result += _time[_index].character;
+<span class="nc bnc" id="L437" title="All 2 branches missed.">                            if (_index != _indexEnd) {</span>
+<span class="nc" id="L438">                                _result += &quot; &quot;;</span>
+                            } else {
+                                // ---Do not add a seperator at the end
+                            }
+                        }
+                    }
+
+                } else {
+<span class="nc" id="L446">                    _result += longToString(_timePieces[_index], _weFoundTheFirstNonezeroValue);</span>
+<span class="nc bnc" id="L447" title="All 2 branches missed.">                    if (_index != _indexEnd) {</span>
+<span class="nc" id="L448">                        _result += _time[_index].separator;</span>
+                    } else {
+                        // ---Do not add a seperator at the end
+                    }
+                }
+<span class="nc" id="L453">                _weFoundTheFirstNonezeroValue = true;</span>
+            } else {
+                // ---Ignore all leading zero values
+            }
+        }
+        // ---In case the result is empty
+<span class="nc bnc" id="L459" title="All 2 branches missed.">        if (_result.length() == 0) {</span>
+<span class="nc bnc" id="L460" title="All 2 branches missed.">            if (aUseCharacters) {</span>
+<span class="nc bnc" id="L461" title="All 2 branches missed.">                if (aUseSeconds) {</span>
+<span class="nc" id="L462">                    _result = &quot;0s&quot;;</span>
+                } else {
+<span class="nc" id="L464">                    _result = &quot;0m&quot;;</span>
+                }
+            } else {
+<span class="nc" id="L467">                _result = &quot;0&quot;;</span>
+            }
+        } else {
+            // ---The result is not ampty
+        }
+<span class="nc" id="L472">        return prefix + _result;</span>
+    }
+
+    public static String createDateString(LocalDate date, DateTimeFormatter sdf) {
+<span class="nc bnc" id="L476" title="All 4 branches missed.">        if (date == null || sdf == null) {</span>
+<span class="nc" id="L477">            return &quot;NA&quot;;</span>
+        }
+<span class="nc" id="L479">        return date.format(sdf);</span>
+    }
+
+    public static String createDateString(LocalDateTime date, DateTimeFormatter sdf) {
+<span class="nc bnc" id="L483" title="All 4 branches missed.">        if (date == null || sdf == null) {</span>
+<span class="nc" id="L484">            return &quot;NA&quot;;</span>
+        }
+<span class="nc" id="L486">        return date.format(sdf);</span>
+    }
+
+    public String createDateString(LocalDateTime sprintStartDate) {
+<span class="nc" id="L490">        return createDateString(sprintStartDate, dtfymd);</span>
+    }
+
+    public String createDateTimeString(LocalDateTime sprintStartDate) {
+<span class="nc bnc" id="L494" title="All 2 branches missed.">        if (sprintStartDate == null) {</span>
+<span class="nc" id="L495">            return &quot;&quot;;</span>
+        }
+<span class="nc" id="L497">        return dtfymdhm.format(sprintStartDate);</span>
+    }
+
+    public static String createDurationString(Duration Duration, final boolean aUseSeconds, final boolean aUseCharacters, final boolean aPrintLeadingZeros) {
+<span class="nc bnc" id="L501" title="All 2 branches missed.">        if (Duration == null) {</span>
+<span class="nc" id="L502">            return &quot;NA&quot;;</span>
+        } else {
+<span class="nc" id="L504">            return createWorkDayDurationString(Duration, aUseSeconds, aUseCharacters, aPrintLeadingZeros);</span>
+        }
+    }
+
+    /**
+     * If aUseCharacters is true, seconds will be followed with s, hours with h... Result will be xd xh:xm:xs or x x:x:x
+     *
+     * @param duration
+     * @param aUseSeconds
+     * @param aUseCharacters
+     * @param aPrintLeadingZeros
+     * @return String
+     */
+    public static String createWorkDayDurationString(Duration duration, final boolean aUseSeconds, final boolean aUseCharacters,
+                                                     final boolean aPrintLeadingZeros) {
+<span class="nc" id="L519">        return createWorkDayDurationString(duration, aUseSeconds, false, aUseCharacters, aPrintLeadingZeros);</span>
+    }
+
+    private static String createWorkDayDurationString(Duration duration, final boolean aUseSeconds, final boolean useMilliSeconds, final boolean aUseCharacters,
+                                                      final boolean aPrintLeadingZeros) {
+
+        String prefix;
+<span class="nc bnc" id="L526" title="All 2 branches missed.">        if (duration.isNegative()) {</span>
+<span class="nc" id="L527">            prefix   = &quot;-&quot;;</span>
+<span class="nc" id="L528">            duration = duration.abs();</span>
+        } else {
+<span class="nc" id="L530">            prefix = &quot;&quot;;</span>
+        }
+<span class="nc" id="L532">        String       _result     = &quot;&quot;;</span>
+<span class="nc" id="L533">        final long[] _timePieces = {0, 0, 0, 0, 0, 0};</span>
+<span class="nc" id="L534">        final DateTimeStruct[] _time = {//</span>
+                new DateTimeStruct(&quot;:&quot;, &quot;ms&quot;, 3),//
+                new DateTimeStruct(&quot; &quot;, &quot;s&quot;, 2),//
+                new DateTimeStruct(&quot; &quot;, &quot;m&quot;, 2),//
+                new DateTimeStruct(&quot; &quot;, &quot;h&quot;, 2),//
+                new DateTimeStruct(&quot; &quot;, &quot;d&quot;, 2),//
+                new DateTimeStruct(&quot; &quot;, &quot;w&quot;, 3)//
+        };
+<span class="nc" id="L542">        _timePieces[WEEK_INDEX]          = duration.getSeconds() / (27000L * 5L);//assuming 5 day working week</span>
+<span class="nc" id="L543">        duration                         = duration.minusSeconds(_timePieces[WEEK_INDEX] * (27000L * 5L));//assuming 5 day working week</span>
+<span class="nc" id="L544">        _timePieces[DAY_INDEX]           = duration.getSeconds() / 27000L;//assuming 7.5h day</span>
+<span class="nc" id="L545">        duration                         = duration.minusSeconds(_timePieces[DAY_INDEX] * 27000L);//assuming 7.5h day</span>
+<span class="nc" id="L546">        _timePieces[HOUR_INDEX]          = duration.getSeconds() / 3600L;</span>
+<span class="nc" id="L547">        duration                         = duration.minusSeconds(_timePieces[HOUR_INDEX] * 3600L);</span>
+<span class="nc" id="L548">        _timePieces[MINUTE_INDEX]        = duration.getSeconds() / 60L;</span>
+<span class="nc" id="L549">        duration                         = duration.minusSeconds(_timePieces[MINUTE_INDEX] * 60L);</span>
+<span class="nc" id="L550">        _timePieces[SECONDS_INDEX]       = duration.getSeconds();</span>
+<span class="nc" id="L551">        duration                         = duration.minusSeconds(_timePieces[SECONDS_INDEX]);</span>
+<span class="nc" id="L552">        _timePieces[MILLI_SECONDS_INDEX] = duration.getNano() / 1000000;</span>
+
+<span class="nc" id="L554">        boolean _weFoundTheFirstNonezeroValue = aPrintLeadingZeros;</span>
+<span class="nc" id="L555">        int     _indexEnd                     = 0;</span>
+<span class="nc bnc" id="L556" title="All 2 branches missed.">        if (!useMilliSeconds) {</span>
+<span class="nc" id="L557">            _indexEnd = 1;</span>
+        }
+<span class="nc bnc" id="L559" title="All 2 branches missed.">        if (!aUseSeconds) {</span>
+<span class="nc" id="L560">            _indexEnd = 2;</span>
+        }
+<span class="nc bnc" id="L562" title="All 2 branches missed.">        for (int _index = WEEK_INDEX; _index &gt;= _indexEnd; _index--) {</span>
+<span class="nc bnc" id="L563" title="All 4 branches missed.">            if ((_timePieces[_index] != 0) || _weFoundTheFirstNonezeroValue) {</span>
+<span class="nc bnc" id="L564" title="All 2 branches missed.">                if (aUseCharacters) {</span>
+<span class="nc bnc" id="L565" title="All 2 branches missed.">                    if (_timePieces[_index] != 0) {</span>
+<span class="nc" id="L566">                        _result += longToString(_timePieces[_index], _weFoundTheFirstNonezeroValue);</span>
+<span class="nc" id="L567">                        _result += _time[_index].character;</span>
+                    }
+
+<span class="nc bnc" id="L570" title="All 2 branches missed.">                    if (_index != _indexEnd) {</span>
+<span class="nc" id="L571">                        _result += _time[_index].separator;</span>
+                    } else {
+                        // ---Do not add a seperator at the end
+<span class="nc bnc" id="L574" title="All 2 branches missed.">                        if (_timePieces[_index] == 0) {</span>
+<span class="nc" id="L575">                            _result += &quot;0&quot;;</span>
+<span class="nc" id="L576">                            _result += _time[_index].character;</span>
+                        }
+
+                    }
+                } else {
+<span class="nc" id="L581">                    _result += longToString(_timePieces[_index], _weFoundTheFirstNonezeroValue);</span>
+<span class="nc bnc" id="L582" title="All 2 branches missed.">                    if (_index != _indexEnd) {</span>
+<span class="nc" id="L583">                        _result += _time[_index].separator;</span>
+                    } else {
+                        // ---Do not add a seperator at the end
+                    }
+                }
+<span class="nc" id="L588">                _weFoundTheFirstNonezeroValue = true;</span>
+            } else {
+                // ---Ignore all leading zero values
+            }
+        }
+        // ---In case the result is empty
+<span class="nc bnc" id="L594" title="All 2 branches missed.">        if (_result.length() == 0) {</span>
+<span class="nc bnc" id="L595" title="All 2 branches missed.">            if (aUseCharacters) {</span>
+<span class="nc bnc" id="L596" title="All 2 branches missed.">                if (aUseSeconds) {</span>
+<span class="nc" id="L597">                    _result = &quot;0s&quot;;</span>
+                } else {
+<span class="nc" id="L599">                    _result = &quot;0m&quot;;</span>
+                }
+            } else {
+<span class="nc" id="L602">                _result = &quot;0&quot;;</span>
+            }
+        } else {
+            // ---The result is not empty
+        }
+<span class="nc" id="L607">        return prefix + _result;</span>
+    }
+
+    public static LocalDate dateToLocalDate(Date date) {
+<span class="nc" id="L611">        return LocalDate.ofInstant(date.toInstant(), ZoneId.systemDefault());</span>
+    }
+
+    public static LocalDateTime dateToLocalDateTime(Date date) {
+<span class="nc" id="L615">        return LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());</span>
+    }
+
+    public static LocalDate getWeekMonday(LocalDate day) {
+<span class="nc" id="L619">        DayOfWeek dayOfTheWeek = day.getDayOfWeek();</span>
+<span class="nc bnc" id="L620" title="All 8 branches missed.">        switch (dayOfTheWeek) {</span>
+            case MONDAY:
+<span class="nc" id="L622">                return day;</span>
+            case TUESDAY:
+<span class="nc" id="L624">                return day.minusDays(1);</span>
+            case WEDNESDAY:
+<span class="nc" id="L626">                return day.minusDays(2);</span>
+            case THURSDAY:
+<span class="nc" id="L628">                return day.minusDays(3);</span>
+            case FRIDAY:
+<span class="nc" id="L630">                return day.minusDays(4);</span>
+            case SATURDAY:
+<span class="nc" id="L632">                return day.minusDays(5);</span>
+            case SUNDAY:
+<span class="nc" id="L634">                return day.minusDays(6);</span>
+            default:
+<span class="nc" id="L636">                return day;</span>
+        }
+    }
+
+    public static LocalDate getWeekSunday(LocalDate day) {
+<span class="nc" id="L641">        DayOfWeek dayOfTheWeek = day.getDayOfWeek();</span>
+<span class="nc bnc" id="L642" title="All 8 branches missed.">        switch (dayOfTheWeek) {</span>
+            case MONDAY:
+<span class="nc" id="L644">                return day.plusDays(6);</span>
+            case TUESDAY:
+<span class="nc" id="L646">                return day.plusDays(5);</span>
+            case WEDNESDAY:
+<span class="nc" id="L648">                return day.plusDays(4);</span>
+            case THURSDAY:
+<span class="nc" id="L650">                return day.plusDays(3);</span>
+            case FRIDAY:
+<span class="nc" id="L652">                return day.plusDays(2);</span>
+            case SATURDAY:
+<span class="nc" id="L654">                return day.plusDays(1);</span>
+            case SUNDAY:
+<span class="nc" id="L656">                return day;</span>
+            default:
+<span class="nc" id="L658">                return day;</span>
+        }
+    }
+
+    /**
+     * Resets to last day of the month
+     *
+     * @param date
+     * @return
+     */
+    public static LocalDateTime incrementToMonthEnd(LocalDateTime date) {
+<span class="nc" id="L669">        return date.plusMonths(1).withDayOfMonth(1).minusDays(1);</span>
+    }
+
+    public static boolean isAfterOrEqual(LocalDateTime date, LocalDateTime otherDate) {
+<span class="nc bnc" id="L673" title="All 2 branches missed.">        return !date.isBefore(otherDate);</span>
+    }
+
+    public static boolean isBeforeOrEqual(LocalDateTime date, LocalDateTime otherDate) {
+<span class="nc bnc" id="L677" title="All 2 branches missed.">        return !date.isAfter(otherDate);</span>
+    }
+
+    /**
+     * This checks to see if date represents a point on the
+     * local time-line after or equal the start date-time and before or equal the end date-time.
+     *
+     * @param start
+     * @param date
+     * @param end
+     * @return true if date is located between start and end date-time on the local time-line, this includes start and end dates.
+     */
+    public static boolean isBetween(LocalDateTime start, LocalDateTime date, LocalDateTime end) {
+<span class="nc bnc" id="L690" title="All 4 branches missed.">        return isAfterOrEqual(date, start) &amp;&amp; isBeforeOrEqual(date, end);</span>
+    }
+
+    public static boolean isOverlapping(LocalDateTime os, LocalDateTime of, boolean overlapping, LocalDateTime ps, LocalDateTime pf) {
+        //o   |      |
+        //p |      |
+<span class="nc bnc" id="L696" title="All 8 branches missed.">        if ((os.isAfter(ps) || os.isEqual(ps)) &amp;&amp; (os.isBefore(pf) || os.isEqual(pf))) {</span>
+<span class="nc" id="L697">            overlapping = true;</span>
+        }
+        //o|  |
+        //p |      |
+<span class="nc bnc" id="L701" title="All 8 branches missed.">        if ((of.isAfter(ps) || of.isEqual(ps)) &amp;&amp; (of.isBefore(pf) || of.isEqual(pf))) {</span>
+<span class="nc" id="L702">            overlapping = true;</span>
+        }
+        //o|        |
+        //p |      |
+<span class="nc bnc" id="L706" title="All 8 branches missed.">        if ((os.isBefore(ps) || os.isEqual(ps)) &amp;&amp; (of.isAfter(pf) || of.isEqual(pf))) {</span>
+<span class="nc" id="L707">            overlapping = true;</span>
+        }
+        //o  |    |
+        //p |      |
+<span class="nc bnc" id="L711" title="All 4 branches missed.">        if (os.isAfter(ps) &amp;&amp; of.isBefore(pf)) {</span>
+<span class="nc" id="L712">            overlapping = true;</span>
+        }
+<span class="nc" id="L714">        return overlapping;</span>
+    }
+
+    public static boolean isWorkDay(LocalDate c) {
+<span class="nc bnc" id="L718" title="All 4 branches missed.">        return (c.getDayOfWeek() != DayOfWeek.SATURDAY &amp;&amp; c.getDayOfWeek() != DayOfWeek.SUNDAY);</span>
+    }
+
+    public static boolean isWorkDay(LocalDateTime c) {
+<span class="nc bnc" id="L722" title="All 4 branches missed.">        return (c.getDayOfWeek() != DayOfWeek.SATURDAY &amp;&amp; c.getDayOfWeek() != DayOfWeek.SUNDAY);</span>
+    }
+
+    public static Date localDateTimeToDate(LocalDateTime localDateTime) {
+<span class="nc" id="L726">        return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());</span>
+    }
+
+    /**
+     * Converts a LocalDateTime to OffsetDateTime using the system default timezone.
+     */
+    public static OffsetDateTime localDateTimeToOffsetDateTime(LocalDateTime dateTime) {
+<span class="nc bnc" id="L733" title="All 2 branches missed.">        if (dateTime == null) {</span>
+<span class="nc" id="L734">            return null;</span>
+        }
+<span class="nc" id="L736">        return dateTime.atZone(ZoneId.systemDefault()).toOffsetDateTime();</span>
+    }
+
+    public static Date localDateToDate(LocalDate localDate) {
+<span class="nc" id="L740">        return Date.from(localDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());</span>
+    }
+
+    /**
+     * Converts a LocalDate to OffsetDateTime at the start of day using the system default timezone.
+     */
+    public static OffsetDateTime localDateToOffsetDateTime(LocalDate date) {
+<span class="nc bnc" id="L747" title="All 2 branches missed.">        if (date == null) {</span>
+<span class="nc" id="L748">            return null;</span>
+        }
+<span class="nc" id="L750">        return date.atStartOfDay(ZoneId.systemDefault()).toOffsetDateTime();</span>
+    }
+
+    private static String longToString(final Long aValue, final boolean aCreateLeadingZero) {
+<span class="nc bnc" id="L754" title="All 2 branches missed.">        if (aValue != null) {</span>
+<span class="nc bnc" id="L755" title="All 4 branches missed.">            if (!aCreateLeadingZero || (aValue &gt; 9)) {</span>
+<span class="nc" id="L756">                return Long.toString(aValue);</span>
+            } else {
+<span class="nc" id="L758">                return &quot;0&quot; + aValue;</span>
+            }
+        } else {
+<span class="nc" id="L761">            return &quot;&quot;;</span>
+        }
+    }
+
+    public static Duration max(Duration maxWork, Duration worstEffortEstimation) {
+<span class="nc bnc" id="L766" title="All 2 branches missed.">        if (maxWork.compareTo(worstEffortEstimation) &gt; 0) {</span>
+<span class="nc" id="L767">            return maxWork;</span>
+        }
+<span class="nc bnc" id="L769" title="All 2 branches missed.">        if (maxWork.compareTo(worstEffortEstimation) &lt; 0) {</span>
+<span class="nc" id="L770">            return worstEffortEstimation;</span>
+        }
+<span class="nc" id="L772">        return maxWork;</span>
+    }
+
+    public static LocalDate max(LocalDate a, LocalDate b) {
+<span class="nc bnc" id="L776" title="All 2 branches missed.">        if (!a.isBefore(b)) {</span>
+<span class="nc" id="L777">            return a;</span>
+        }
+<span class="nc" id="L779">        return b;</span>
+    }
+
+    public static LocalDateTime max(LocalDateTime a, LocalDateTime b) {
+<span class="nc bnc" id="L783" title="All 2 branches missed.">        if (!a.isBefore(b)) {</span>
+<span class="nc" id="L784">            return a;</span>
+        }
+<span class="nc" id="L786">        return b;</span>
+    }
+
+    public static LocalDate min(LocalDate a, LocalDate b) {
+<span class="nc bnc" id="L790" title="All 2 branches missed.">        if (!a.isAfter(b)) {</span>
+<span class="nc" id="L791">            return a;</span>
+        }
+<span class="nc" id="L793">        return b;</span>
+    }
+
+    public static LocalDateTime min(LocalDateTime a, LocalDateTime b) {
+<span class="nc bnc" id="L797" title="All 2 branches missed.">        if (!a.isAfter(b)) {</span>
+<span class="nc" id="L798">            return a;</span>
+        }
+<span class="nc" id="L800">        return b;</span>
+    }
+
+    /**
+     * Converts an OffsetDateTime to LocalDate using the system default timezone.
+     */
+    public static LocalDate offsetDateTimeToLocalDate(OffsetDateTime offsetDateTime) {
+<span class="nc bnc" id="L807" title="All 2 branches missed.">        if (offsetDateTime == null) {</span>
+<span class="nc" id="L808">            return null;</span>
+        }
+<span class="nc" id="L810">        return offsetDateTime.atZoneSameInstant(ZoneId.systemDefault()).toLocalDate();</span>
+    }
+
+    /**
+     * Converts an OffsetDateTime to LocalDateTime using the system default timezone.
+     */
+    public static LocalDateTime offsetDateTimeToLocalDateTime(OffsetDateTime offsetDateTime) {
+<span class="nc bnc" id="L817" title="All 2 branches missed.">        if (offsetDateTime == null) {</span>
+<span class="nc" id="L818">            return null;</span>
+        }
+<span class="nc" id="L820">        return offsetDateTime.atZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();</span>
+    }
+
+    public static Duration parseDurationString(String durationString, double hoursPerDay, double hoursPerWeek) {
+<span class="nc bnc" id="L824" title="All 4 branches missed.">        if (durationString == null || durationString.trim().isEmpty()) {</span>
+<span class="nc" id="L825">            return Duration.ZERO;</span>
+        }
+
+<span class="nc" id="L828">        double   totalHours = 0;</span>
+<span class="nc" id="L829">        String[] parts      = durationString.toLowerCase().split(&quot;\\s+&quot;);</span>
+
+<span class="nc bnc" id="L831" title="All 2 branches missed.">        for (String part : parts) {</span>
+<span class="nc" id="L832">            part = part.trim();</span>
+<span class="nc bnc" id="L833" title="All 2 branches missed.">            if (part.isEmpty()) continue;</span>
+
+<span class="nc" id="L835">            double value = Double.parseDouble(part.replaceAll(&quot;[wdhm]&quot;, &quot;&quot;));</span>
+<span class="nc" id="L836">            char   unit  = part.charAt(part.length() - 1);</span>
+
+<span class="nc bnc" id="L838" title="All 5 branches missed.">            switch (unit) {</span>
+                case 'w':
+<span class="nc" id="L840">                    totalHours += value * hoursPerWeek;</span>
+<span class="nc" id="L841">                    break;</span>
+                case 'd':
+<span class="nc" id="L843">                    totalHours += value * hoursPerDay;</span>
+<span class="nc" id="L844">                    break;</span>
+                case 'h':
+<span class="nc" id="L846">                    totalHours += value;</span>
+<span class="nc" id="L847">                    break;</span>
+                case 'm':
+<span class="nc" id="L849">                    totalHours += value / 60.0;</span>
+<span class="nc" id="L850">                    break;</span>
+                default:
+<span class="nc" id="L852">                    throw new IllegalArgumentException(&quot;Invalid duration unit: &quot; + unit);</span>
+            }
+        }
+
+<span class="nc" id="L856">        long hours   = (long) totalHours;</span>
+<span class="nc" id="L857">        long minutes = Math.round((totalHours - hours) * 60);</span>
+
+<span class="nc" id="L859">        return Duration.ofHours(hours).plusMinutes(minutes);</span>
+    }
+
+    public static LocalDateTime toDayPrecision(LocalDateTime date) {
+<span class="nc bnc" id="L863" title="All 2 branches missed.">        if (date == null) {</span>
+<span class="nc" id="L864">            return null;</span>
+        }
+<span class="nc" id="L866">        return date.truncatedTo(ChronoUnit.DAYS);</span>
+    }
+
+    public static LocalDateTime toDayPrecision(OffsetDateTime date) {
+<span class="nc bnc" id="L870" title="All 2 branches missed.">        if (date == null) {</span>
+<span class="nc" id="L871">            return null;</span>
+        }
+<span class="nc" id="L873">        return DateUtil.offsetDateTimeToLocalDateTime(date).truncatedTo(ChronoUnit.DAYS);</span>
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

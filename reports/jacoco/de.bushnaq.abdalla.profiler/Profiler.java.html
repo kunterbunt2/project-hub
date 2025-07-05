@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Profiler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.profiler</a> &gt; <span class="el_source">Profiler.java</span></div><h1>Profiler.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.profiler;
+
+import de.bushnaq.abdalla.util.date.DateUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayDeque;
+import java.util.Deque;
+
+/**
+ * Measures execution time from creation to closing.
+ * Supports nested creation of such counters
+ *
+ * @author abdalla
+ */
+public class Profiler implements AutoCloseable {
+    static final String           BLACK_LEFT_POINTING_TRIANGLE  = &quot;&lt;&quot;;
+    static final String           BLACK_RIGHT_POINTING_TRIANGLE = &quot;&gt;&quot;;
+<span class="nc" id="L36">    static       boolean          enableTraceLogger             = false;</span>
+    static       ProfilerResult   intermediateResult;
+    static       SampleSet        intermediateSampleSet;
+<span class="nc" id="L39">    static       Logger           logger                        = LoggerFactory.getLogger(Profiler.class);</span>
+<span class="nc" id="L40">    static       SampleSet        sampleSet                     = new SampleSet();</span>
+<span class="nc" id="L41">    static       Deque&lt;SampleSet&gt; stack                         = new ArrayDeque&lt;&gt;();</span>
+    static       long             start;
+
+    static {
+<span class="nc bnc" id="L45" title="All 2 branches missed.">        for (SampleType type : SampleType.values()) {</span>
+<span class="nc" id="L46">            sampleSet.putSample(type, new Sample(type));</span>
+        }
+<span class="nc" id="L48">    }</span>
+
+    /**
+     * Wrap all your code with a generic profiler catching all what other profilers are missing in the Othr category
+     */
+    public Profiler() {
+<span class="nc" id="L54">        this(null, SampleType.OTHR);</span>
+<span class="nc" id="L55">    }</span>
+
+    public Profiler(SampleType type) {
+<span class="nc" id="L58">        this(null, type);</span>
+<span class="nc" id="L59">    }</span>
+
+    public Profiler(String subject) {
+<span class="nc" id="L62">        this(subject, SampleType.OTHR);</span>
+<span class="nc" id="L63">    }</span>
+
+<span class="nc" id="L65">    public Profiler(String subject, SampleType type) {</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">        if (start == 0) {</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">            if (enableTraceLogger) {</span>
+<span class="nc" id="L68">                logger.trace(String.format(&quot;start(%s)&quot;, type.name()));</span>
+            }
+            //            sampleSet.setTotalStart();
+        } else {
+<span class="nc bnc" id="L72" title="All 2 branches missed.">            if (enableTraceLogger) {</span>
+<span class="nc" id="L73">                logger.trace(String.format(&quot;pause(%s) start(%s)&quot;, Profiler.sampleSet.getType().name(), type.name()));</span>
+            }
+<span class="nc" id="L75">            measure();</span>
+<span class="nc" id="L76">            push();</span>
+        }
+<span class="nc" id="L78">        sampleSet.setSubject(subject);</span>
+<span class="nc" id="L79">        sampleSet.setType(type);</span>
+<span class="nc" id="L80">        start = System.nanoTime();</span>
+<span class="nc" id="L81">        logStart(subject);</span>
+<span class="nc" id="L82">    }</span>
+
+    @Override
+    public void close() {
+<span class="nc" id="L86">        measure();</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        if (stack.size() == 0) {</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">            if (enableTraceLogger) {</span>
+<span class="nc" id="L89">                logger.trace(String.format(&quot;close(%s)&quot;, sampleSet.getType().name()));</span>
+            }
+        } else {
+<span class="nc bnc" id="L92" title="All 2 branches missed.">            if (enableTraceLogger) {</span>
+<span class="nc" id="L93">                logger.trace(String.format(&quot;close(%s) resume(%s)&quot;, Profiler.sampleSet.getType().name(), stack.peek().getType().name()));</span>
+            }
+<span class="nc" id="L95">            sampleSet = pop();</span>
+<span class="nc" id="L96">            start     = System.nanoTime();</span>
+        }
+<span class="nc bnc" id="L98" title="All 2 branches missed.">        if (intermediateSampleSet.getSubject() != null) {</span>
+<span class="nc" id="L99">            log(intermediateSampleSet.getSubject());</span>
+        }
+<span class="nc" id="L101">    }</span>
+
+    public static void generateResult() {
+<span class="nc" id="L104">        intermediateResult = new ProfilerResult(intermediateSampleSet.getTotalStart(), intermediateSampleSet);</span>
+<span class="nc" id="L105">    }</span>
+
+    public static void incrementCounter(String counterName, long count) {
+<span class="nc" id="L108">        Long counter = sampleSet.getCounter(counterName);</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">        if (counter == null) {</span>
+<span class="nc" id="L110">            counter = Long.valueOf(0);</span>
+        }
+<span class="nc" id="L112">        counter += count;</span>
+<span class="nc" id="L113">        sampleSet.put(counterName, counter);</span>
+<span class="nc" id="L114">    }</span>
+
+    public static boolean isEnableTraceLogger() {
+<span class="nc" id="L117">        return enableTraceLogger;</span>
+    }
+
+    /**
+     * generates an intermediate result and logs it
+     *
+     * @param subject
+     */
+    public static void log(String subject) {
+<span class="nc" id="L126">        generateResult();</span>
+        //        long totalDelta = System.nanoTime() - totalStart;
+        //        long gcCount2 = 0;
+        //        long gcTime2 = 0;
+        //        for (GarbageCollectorMXBean gc : ManagementFactory.getGarbageCollectorMXBeans()) {
+        //            gcCount2 += gc.getCollectionCount();
+        //            gcTime2 += gc.getCollectionTime();
+        //        }
+
+<span class="nc" id="L135">        logger.info(&quot;--------------------------------------------------&quot;);</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">        if (subject.length() &gt; 0) {</span>
+<span class="nc" id="L137">            logger.info(String.format(BLACK_LEFT_POINTING_TRIANGLE + &quot;[%s]&quot;, subject));</span>
+        }
+
+<span class="nc bnc" id="L140" title="All 2 branches missed.">        for (SampleType type : intermediateSampleSet.sampleKeySet()) {</span>
+<span class="nc" id="L141">            Sample sample = intermediateSampleSet.getSample(type);</span>
+<span class="nc" id="L142">            logger.info(String.format(&quot;[%4s] %s&quot;, sample.getType().name(), nanoToString(sample.getTimeNanoSec())));</span>
+<span class="nc" id="L143">        }</span>
+<span class="nc" id="L144">        logger.info(String.format(&quot;[%4s] %s (%d%%)&quot;, &quot;?&quot;, nanoToString(intermediateResult.delta),</span>
+<span class="nc" id="L145">                (intermediateResult.delta * 100) / intermediateResult.totalDelta));</span>
+<span class="nc" id="L146">        logger.info(String.format(&quot;[%4s] %s&quot;, &quot;All&quot;, nanoToString(intermediateResult.totalDelta)));</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">        for (String counterName : intermediateSampleSet.counterKeySet()) {</span>
+<span class="nc" id="L148">            Long counter = intermediateSampleSet.getCounter(counterName);</span>
+<span class="nc" id="L149">            logger.info(String.format(&quot;[%4s] %d&quot;, counterName, counter));</span>
+<span class="nc" id="L150">        }</span>
+<span class="nc" id="L151">        logger.info(&quot;--------------------------------------------------&quot;);</span>
+<span class="nc" id="L152">    }</span>
+
+    private void logStart(String subject) {
+<span class="nc bnc" id="L155" title="All 2 branches missed.">        if (subject != null) {</span>
+<span class="nc" id="L156">            logger.info(&quot;--------------------------------------------------&quot;);</span>
+<span class="nc" id="L157">            logger.info(String.format(BLACK_RIGHT_POINTING_TRIANGLE + &quot;[%s]&quot;, subject));</span>
+<span class="nc" id="L158">            logger.info(&quot;--------------------------------------------------&quot;);</span>
+        }
+<span class="nc" id="L160">    }</span>
+
+    private void measure() {
+<span class="nc bnc" id="L163" title="All 2 branches missed.">        if (start != 0) {</span>
+<span class="nc" id="L164">            final long end    = System.nanoTime();</span>
+<span class="nc" id="L165">            final long delta  = end - start;</span>
+<span class="nc" id="L166">            Sample     sample = sampleSet.getSample();</span>
+<span class="nc" id="L167">            sample.addTimeNanoSec(delta);</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">            if (enableTraceLogger) {</span>
+<span class="nc" id="L169">                logger.trace(String.format(&quot;%s %dms&quot;, sampleSet.getType().name(), delta / 1000000));</span>
+            }
+<span class="nc" id="L171">            intermediateSampleSet = sampleSet;</span>
+        }
+<span class="nc" id="L173">    }</span>
+
+    private static String nanoToString(long time) {
+<span class="nc" id="L176">        return DateUtil.create24hDurationString(time / 1000000L, true, true, true, true, false);</span>
+    }
+
+    private SampleSet pop() {
+<span class="nc" id="L180">        SampleSet temp = stack.pop();</span>
+<span class="nc" id="L181">        temp.add(sampleSet);</span>
+<span class="nc" id="L182">        return temp;</span>
+
+    }
+
+    private void push() {
+        //---push current sample set on the stack
+        try {
+<span class="nc" id="L189">            stack.push(sampleSet.clone());</span>
+<span class="nc" id="L190">        } catch (CloneNotSupportedException e) {</span>
+<span class="nc" id="L191">            logger.error(e.getMessage(), e);</span>
+<span class="nc" id="L192">        }</span>
+        //---reset current sample set
+<span class="nc" id="L194">        sampleSet.reset();</span>
+<span class="nc" id="L195">    }</span>
+
+    public static void setEnableTraceLogger(boolean enableTraceLogger) {
+<span class="nc" id="L198">        Profiler.enableTraceLogger = enableTraceLogger;</span>
+<span class="nc" id="L199">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

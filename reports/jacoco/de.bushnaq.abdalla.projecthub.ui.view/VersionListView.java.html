@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VersionListView.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.ui.view</a> &gt; <span class="el_source">VersionListView.java</span></div><h1>VersionListView.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.ui.view;
+
+import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.router.*;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+import de.bushnaq.abdalla.projecthub.dto.Product;
+import de.bushnaq.abdalla.projecthub.dto.Version;
+import de.bushnaq.abdalla.projecthub.rest.api.ProductApi;
+import de.bushnaq.abdalla.projecthub.rest.api.VersionApi;
+import de.bushnaq.abdalla.projecthub.ui.MainLayout;
+import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
+import de.bushnaq.abdalla.projecthub.ui.dialog.VersionDialog;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+import jakarta.annotation.security.PermitAll;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.Clock;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.HashMap;
+import java.util.Map;
+
+@Route(&quot;version-list&quot;)
+@PageTitle(&quot;Version List Page&quot;)
+//@Menu(order = 1, icon = &quot;vaadin:factory&quot;, title = &quot;version List&quot;)
+@PermitAll // When security is enabled, allow all authenticated users
+public class VersionListView extends Main implements AfterNavigationObserver {
+    public static final String        CREATE_VERSION_BUTTON             = &quot;create-version-button&quot;;
+    public static final String        ROUTE                             = &quot;version-list&quot;;
+    public static final String        VERSION_GRID                      = &quot;version-grid&quot;;
+    public static final String        VERSION_GRID_DELETE_BUTTON_PREFIX = &quot;version-grid-delete-button-prefix-&quot;;
+    public static final String        VERSION_GRID_EDIT_BUTTON_PREFIX   = &quot;version-grid-edit-button-prefix-&quot;;
+    public static final String        VERSION_GRID_NAME_PREFIX          = &quot;version-grid-name-&quot;;
+    public static final String        VERSION_LIST_PAGE_TITLE           = &quot;version-list-page-title&quot;;
+    private final       Clock         clock;
+    private             Grid&lt;Version&gt; grid;
+    private final       ProductApi    productApi;
+    //    private             H2            pageTitle;
+    private             Long          productId;
+    private final       VersionApi    versionApi;
+
+<span class="nc" id="L72">    public VersionListView(VersionApi versionApi, ProductApi productApi, Clock clock) {</span>
+<span class="nc" id="L73">        this.versionApi = versionApi;</span>
+<span class="nc" id="L74">        this.productApi = productApi;</span>
+<span class="nc" id="L75">        this.clock      = clock;</span>
+
+<span class="nc" id="L77">        setSizeFull();</span>
+<span class="nc" id="L78">        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);</span>
+
+<span class="nc" id="L80">        add(VaadinUtils.createHeader(&quot;Versions&quot;, VERSION_LIST_PAGE_TITLE, VaadinIcon.TAG, CREATE_VERSION_BUTTON, () -&gt; openVersionDialog(null)), createGrid(clock));</span>
+<span class="nc" id="L81">    }</span>
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+        //- Get query parameters
+<span class="nc" id="L86">        Location        location        = event.getLocation();</span>
+<span class="nc" id="L87">        QueryParameters queryParameters = location.getQueryParameters();</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">        if (queryParameters.getParameters().containsKey(&quot;product&quot;)) {</span>
+<span class="nc" id="L89">            this.productId = Long.parseLong(queryParameters.getParameters().get(&quot;product&quot;).getFirst());</span>
+        }
+        //- update breadcrumbs
+<span class="nc" id="L92">        getElement().getParent().getComponent()</span>
+<span class="nc" id="L93">                .ifPresent(component -&gt; {</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">                    if (component instanceof MainLayout mainLayout) {</span>
+<span class="nc" id="L95">                        mainLayout.getBreadcrumbs().clear();</span>
+<span class="nc" id="L96">                        Product product = productApi.getById(productId);</span>
+<span class="nc" id="L97">                        mainLayout.getBreadcrumbs().addItem(&quot;Products (&quot; + product.getName() + &quot;)&quot;, ProductListView.class);</span>
+<span class="nc" id="L98">                        Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L99">                        params.put(&quot;product&quot;, String.valueOf(productId));</span>
+<span class="nc" id="L100">                        mainLayout.getBreadcrumbs().addItem(&quot;Versions&quot;, VersionListView.class, params);</span>
+                    }
+<span class="nc" id="L102">                });</span>
+
+<span class="nc" id="L104">        refreshGrid();</span>
+<span class="nc" id="L105">    }</span>
+
+    private void confirmDelete(Version version) {
+<span class="nc" id="L108">        String message = &quot;Are you sure you want to delete version \&quot;&quot; + version.getName() + &quot;\&quot;?&quot;;</span>
+<span class="nc" id="L109">        ConfirmDialog dialog = new ConfirmDialog(</span>
+                &quot;Confirm Delete&quot;,
+                message,
+                &quot;Delete&quot;,
+                () -&gt; {
+<span class="nc" id="L114">                    versionApi.deleteById(version.getId());</span>
+<span class="nc" id="L115">                    refreshGrid();</span>
+<span class="nc" id="L116">                    Notification.show(&quot;Version deleted&quot;, 3000, Notification.Position.BOTTOM_START);</span>
+<span class="nc" id="L117">                }</span>
+        );
+<span class="nc" id="L119">        dialog.open();</span>
+<span class="nc" id="L120">    }</span>
+
+    private Grid&lt;Version&gt; createGrid(Clock clock) {
+//        final Grid&lt;Version&gt; grid;
+<span class="nc" id="L124">        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());</span>
+
+<span class="nc" id="L126">        grid = new Grid&lt;&gt;();</span>
+<span class="nc" id="L127">        grid.setId(VERSION_GRID);</span>
+
+<span class="nc" id="L129">        Grid.Column&lt;Version&gt; keyColumn = grid.addColumn(Version::getKey).setHeader(&quot;Key&quot;);</span>
+<span class="nc" id="L130">        keyColumn.setId(&quot;version-grid-key-column&quot;);</span>
+<span class="nc" id="L131">        keyColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.KEY), new Div(new Text(&quot;Key&quot;))));</span>
+
+<span class="nc" id="L133">        Grid.Column&lt;Version&gt; nameColumn = grid.addColumn(new ComponentRenderer&lt;&gt;(version -&gt; {</span>
+<span class="nc" id="L134">            Div div    = new Div();</span>
+<span class="nc" id="L135">            Div square = new Div();</span>
+<span class="nc" id="L136">            square.setMinHeight(&quot;16px&quot;);</span>
+<span class="nc" id="L137">            square.setMaxHeight(&quot;16px&quot;);</span>
+<span class="nc" id="L138">            square.setMinWidth(&quot;16px&quot;);</span>
+<span class="nc" id="L139">            square.setMaxWidth(&quot;16px&quot;);</span>
+<span class="nc" id="L140">            square.getStyle().set(&quot;float&quot;, &quot;left&quot;);</span>
+<span class="nc" id="L141">            square.getStyle().set(&quot;margin&quot;, &quot;1px&quot;);</span>
+<span class="nc" id="L142">            div.add(square);</span>
+<span class="nc" id="L143">            div.add(version.getName());</span>
+<span class="nc" id="L144">            div.setId(VERSION_GRID_NAME_PREFIX + version.getName());</span>
+<span class="nc" id="L145">            return div;</span>
+<span class="nc" id="L146">        })).setHeader(&quot;Name&quot;);</span>
+<span class="nc" id="L147">        nameColumn.setId(&quot;version-grid-name-column&quot;);</span>
+<span class="nc" id="L148">        nameColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.TAG), new Div(new Text(&quot;Name&quot;))));</span>
+
+<span class="nc" id="L150">        Grid.Column&lt;Version&gt; createdColumn = grid.addColumn(version -&gt; dateTimeFormatter.format(version.getCreated())).setHeader(&quot;Created&quot;);</span>
+<span class="nc" id="L151">        createdColumn.setId(&quot;version-grid-created-column&quot;);</span>
+<span class="nc" id="L152">        createdColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text(&quot;Created&quot;))));</span>
+
+<span class="nc" id="L154">        Grid.Column&lt;Version&gt; updatedColumn = grid.addColumn(version -&gt; dateTimeFormatter.format(version.getUpdated())).setHeader(&quot;Updated&quot;);</span>
+<span class="nc" id="L155">        updatedColumn.setId(&quot;version-grid-updated-column&quot;);</span>
+<span class="nc" id="L156">        updatedColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text(&quot;Updated&quot;))));</span>
+
+        // Add actions column with direct buttons instead of context menu
+<span class="nc" id="L159">        grid.addColumn(new ComponentRenderer&lt;&gt;(version -&gt; {</span>
+<span class="nc" id="L160">            HorizontalLayout layout = new HorizontalLayout();</span>
+<span class="nc" id="L161">            layout.setAlignItems(FlexComponent.Alignment.CENTER);</span>
+<span class="nc" id="L162">            layout.setSpacing(true);</span>
+
+<span class="nc" id="L164">            Button editButton = new Button(new Icon(VaadinIcon.EDIT));</span>
+<span class="nc" id="L165">            editButton.setId(VERSION_GRID_EDIT_BUTTON_PREFIX + version.getName());</span>
+<span class="nc" id="L166">            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);</span>
+<span class="nc" id="L167">            editButton.addClickListener(e -&gt; openVersionDialog(version));</span>
+<span class="nc" id="L168">            editButton.getElement().setAttribute(&quot;title&quot;, &quot;Edit&quot;);</span>
+
+<span class="nc" id="L170">            Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));</span>
+<span class="nc" id="L171">            deleteButton.setId(VERSION_GRID_DELETE_BUTTON_PREFIX + version.getName());</span>
+<span class="nc" id="L172">            deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);</span>
+<span class="nc" id="L173">            deleteButton.addClickListener(e -&gt; confirmDelete(version));</span>
+<span class="nc" id="L174">            deleteButton.getElement().setAttribute(&quot;title&quot;, &quot;Delete&quot;);</span>
+
+<span class="nc" id="L176">            layout.add(editButton, deleteButton);</span>
+<span class="nc" id="L177">            return layout;</span>
+<span class="nc" id="L178">        })).setHeader(&quot;Actions&quot;).setFlexGrow(0).setWidth(&quot;120px&quot;);</span>
+
+<span class="nc" id="L180">        grid.setSizeFull();</span>
+
+        //- Add click listener to navigate to ProjectView with the selected version ID
+<span class="nc" id="L183">        grid.addItemClickListener(event -&gt; {</span>
+<span class="nc" id="L184">            Version selectedVersion = event.getItem();</span>
+            //- Create parameters map
+<span class="nc" id="L186">            Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L187">            params.put(&quot;product&quot;, String.valueOf(productId));</span>
+<span class="nc" id="L188">            params.put(&quot;version&quot;, String.valueOf(selectedVersion.getId()));</span>
+            //- Navigate with query parameters
+<span class="nc" id="L190">            UI.getCurrent().navigate(</span>
+                    FeatureListView.class,
+<span class="nc" id="L192">                    QueryParameters.simple(params)</span>
+            );
+<span class="nc" id="L194">        });</span>
+<span class="nc" id="L195">        return grid;</span>
+    }
+
+    private void openVersionDialog(Version version) {
+<span class="nc" id="L199">        VersionDialog dialog = new VersionDialog(version, (savedVersion, versionDialog) -&gt; {</span>
+            try {
+<span class="nc bnc" id="L201" title="All 2 branches missed.">                if (version != null) {</span>
+                    // Edit mode
+<span class="nc" id="L203">                    versionApi.update(savedVersion);</span>
+<span class="nc" id="L204">                    Notification.show(&quot;Version updated&quot;, 3000, Notification.Position.BOTTOM_START);</span>
+<span class="nc" id="L205">                    versionDialog.close();</span>
+                } else {
+                    // Create mode
+<span class="nc" id="L208">                    savedVersion.setProductId(productId);</span>
+<span class="nc" id="L209">                    versionApi.persist(savedVersion);</span>
+<span class="nc" id="L210">                    Notification.show(&quot;Version created&quot;, 3000, Notification.Position.BOTTOM_START);</span>
+<span class="nc" id="L211">                    versionDialog.close();</span>
+                }
+<span class="nc" id="L213">                refreshGrid();</span>
+<span class="nc" id="L214">            } catch (ResponseStatusException e) {</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">                if (e.getStatusCode() == HttpStatus.CONFLICT) {</span>
+                    // This is a name uniqueness violation
+<span class="nc" id="L217">                    versionDialog.setNameFieldError(e.getReason());</span>
+                } else {
+                    // Some other error
+<span class="nc" id="L220">                    Notification.show(&quot;Error: &quot; + e.getMessage(), 3000, Notification.Position.MIDDLE);</span>
+<span class="nc" id="L221">                    versionDialog.close();</span>
+                }
+<span class="nc" id="L223">            } catch (Exception ex) {</span>
+<span class="nc" id="L224">                Notification.show(&quot;Unexpected error: &quot; + ex.getMessage(), 3000, Notification.Position.MIDDLE);</span>
+<span class="nc" id="L225">                versionDialog.close();</span>
+<span class="nc" id="L226">            }</span>
+<span class="nc" id="L227">        });</span>
+<span class="nc" id="L228">        dialog.open();</span>
+<span class="nc" id="L229">    }</span>
+
+    private void refreshGrid() {
+        // Only show versions for the selected product
+<span class="nc bnc" id="L233" title="All 2 branches missed.">        if (productId != null) {</span>
+<span class="nc" id="L234">            grid.setItems(versionApi.getAll(productId));</span>
+        } else {
+<span class="nc" id="L236">            grid.setItems(versionApi.getAll());</span>
+        }
+<span class="nc" id="L238">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

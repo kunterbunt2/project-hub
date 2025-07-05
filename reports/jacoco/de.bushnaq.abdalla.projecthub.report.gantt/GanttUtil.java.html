@@ -1,0 +1,957 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GanttUtil.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.report.gantt</a> &gt; <span class="el_source">GanttUtil.java</span></div><h1>GanttUtil.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.report.gantt;
+
+import de.bushnaq.abdalla.profiler.Profiler;
+import de.bushnaq.abdalla.profiler.SampleType;
+import de.bushnaq.abdalla.projecthub.Context;
+import de.bushnaq.abdalla.projecthub.dto.*;
+import de.bushnaq.abdalla.util.GanttErrorHandler;
+import de.bushnaq.abdalla.util.MpxjUtil;
+import de.bushnaq.abdalla.util.date.DateUtil;
+import net.sf.mpxj.ProjectCalendar;
+import net.sf.mpxj.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
+import static java.time.temporal.ChronoUnit.SECONDS;
+
+public class GanttUtil {
+    private static final String DELIVERY_BUFFER          = &quot;Delivery buffer (from critical path tasks)&quot;;
+    private static final String DELIVERY_BUFFER_LEGACY_1 = &quot;delivery buffer&quot;;
+    private static final String DELIVERY_BUFFER_LEGACY_2 = &quot;time contingency reserve&quot;;
+
+    private static final String    ERROR_103_TASK_IS_MANUALLY_SCHEDULED_AND_CANNOT_FULLFILL_ITS_DEPENDENCY = &quot;Error #103: Task [%d]'%s' is manually scheduled and cannot fullfill its dependency to task [%d]'%s'.&quot;;
+    private static final String    ERROR_104_TASK_CANNOT_FULLFILL_ITS_DEPENDENCY                           = &quot;Error #104: Task [%d]'%s' start %s cannot fullfill its dependency to task [%d]'%s' finish %s.&quot;;
+    private final        Context   context;
+<span class="nc" id="L48">    private final        Task      deliveryBufferTask                                                      = null;</span>
+<span class="nc" id="L49">    private final        Set&lt;Task&gt; finishSet                                                               = new HashSet&lt;&gt;();</span>
+    //    private long count = 0;
+<span class="nc" id="L51">    private final        DateUtil  localDateTimeUtil                                                       = new DateUtil();</span>
+<span class="nc" id="L52">    private final        Logger    logger                                                                  = LoggerFactory.getLogger(this.getClass());</span>
+<span class="nc" id="L53">    private final        Set&lt;Task&gt; manualSet                                                               = new HashSet&lt;&gt;();</span>
+    int maxLoop;
+    //    private              ProjectProperties projectProperties                                                       = null;
+<span class="nc" id="L56">    private final Set&lt;Task&gt; startSet = new HashSet&lt;&gt;();</span>
+    int testCriticalCounter;
+
+<span class="nc" id="L59">    public GanttUtil(Context context) {</span>
+<span class="nc" id="L60">        this.context = context;</span>
+<span class="nc" id="L61">    }</span>
+
+//    private Duration calculateDeliveryBuffer(Sprint projectFile) throws ProjectsDashboardException {
+//        Duration deliveryBuffer = Duration.ZERO;
+//        int      i              = 0;
+//        for (Task task : projectFile.getTasks()) {
+//            for (ResourceAssignment resourceAssignment : task.getResourceAssignments()) {
+
+    /// /                Number   units = resourceAssignment.getUnits();
+//                Duration work = task.getWork();
+//                if (work != null) {
+//                    if (task.isCritical()) {
+//
+//                        MetaData md = TaskUtil.getTaskMetaData(task);
+//                        if (md != null) {
+//                            if (md.risk != null) {
+//                                Double risk         = md.risk;
+//                                double availability = 100 / units.doubleValue();
+//                                //            double a = Math.ceil(work.getDuration() * availability * 60 * 60) / (60 * 60);
+//                                //            double d = work.getDuration();
+//                                //            double a = availability * work.getDuration();
+//                                double a = work.getDuration() * availability;
+//                                //            double seconds = (Math.round(a * 60 * 10) * 6);
+//                                //                    a = (Math.round(a * 60 * 10) * 6) / (60 * 10 * 6.0);
+//                                Duration duration = Duration.getInstance(a * risk, work.getUnits());
+//                                //            duration = duration.convertUnits(TimeUnit.HOURS, projectProperties);
+//                                //            String ds = DateUtil.createDurationString(duration, true, true, true);
+//                                deliveryBuffer = Duration.add(deliveryBuffer, duration, projectProperties);
+//
+//                                //delivery buffer = (effort/availability)*risk
+//                                logger.info(String.format(&quot;Delivery buffer #%d for task '%s' %s%s.&quot;, i++, task.getName(), deliveryBuffer.getDuration(),
+//                                        deliveryBuffer.getUnits().getName()));
+//                            } else if (md.maxDuration != null) {
+//                                double maxDuration  = md.maxDuration * 7.5;
+//                                double availability = 100 / units.doubleValue();
+//                                //            double a = Math.ceil(work.getDuration() * availability * 60 * 60) / (60 * 60);
+//                                //            double d = work.getDuration();
+//                                //            double a = availability * work.getDuration();
+//                                double a = work.getDuration() * availability;
+//                                //            double seconds = (Math.round(a * 60 * 10) * 6);
+//                                //                    a = (Math.round(a * 60 * 10) * 6) / (60 * 10 * 6.0);
+//                                Duration duration = Duration.getInstance(maxDuration - a, work.getUnits());
+//                                if (duration.getDuration() &gt; 1f / (60 * 10)) {
+//                                    //            duration = duration.convertUnits(TimeUnit.HOURS, projectProperties);
+//                                    //            String ds = DateUtil.createDurationString(duration, true, true, true);
+//                                    deliveryBuffer = Duration.add(deliveryBuffer, duration, projectProperties);
+//
+//                                    //delivery buffer = (effort/availability)*risk
+//                                    logger.info(String.format(&quot;Delivery buffer #%d for task '%s' %s.&quot;, i++, task.getName(),
+//                                            DateUtil.createWorkDayDurationString(MpxjUtil.toJavaDuration(duration), false, true, false)));
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//            //            logger.info(String.format(&quot;Delivery buffer %.2f%s.&quot;, deliveryBuffer.getDuration(), deliveryBuffer.getUnits().getName()));
+//        }
+//        return deliveryBuffer;
+//    }
+    public static int calculateNumberOfTasks(Sprint sprint) {
+<span class="nc" id="L122">        int size = 0;</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">        for (Task task : sprint.getTasks()) {</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">            if (isValidTask(task)) {</span>
+<span class="nc" id="L125">                size++;</span>
+            }
+<span class="nc" id="L127">        }</span>
+<span class="nc" id="L128">        return size;</span>
+    }
+
+    public void createResourceDependencies(Sprint projectFile) throws Exception {
+<span class="nc" id="L132">        try (Profiler pc = new Profiler(SampleType.CPU)) {</span>
+<span class="nc" id="L133">            boolean anythingChanged = false;</span>
+            do {
+<span class="nc" id="L135">                anythingChanged = false;</span>
+<span class="nc" id="L136">                anythingChanged = createResourceDependencies(projectFile, anythingChanged);</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">            } while (anythingChanged);</span>
+        }
+<span class="nc" id="L139">    }</span>
+
+    /**
+     * Creates missing dependencies between tasks that are assigned to the same resource,
+     * to allow critical path calculation by just taking dependencies into consideration
+     *
+     * @param sprint
+     * @param anythingChanged
+     * @return
+     */
+    private boolean createResourceDependencies(Sprint sprint, boolean anythingChanged) {
+<span class="nc bnc" id="L150" title="All 2 branches missed.">        for (Task task1 : sprint.getTasks()) {</span>
+            //find overlapping tasks with same resource assignment
+<span class="nc bnc" id="L152" title="All 2 branches missed.">            for (Task task2 : sprint.getTasks()) {</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">                if (task1.getId() &lt; task2.getId()) {</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">                    if (useSameAssignee(task1, task2)) {</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">                        if (overlap(task1, task2)) {</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">                            if (!hasDependency(task1, task2)) {</span>
+                                //move second one after first one
+//                                Relation r     = new Relation(task1, false);
+//                                Relation saved = relationApi.persist(r);
+//                                task2.addPredecessor(saved);
+<span class="nc" id="L161">                                task2.addPredecessor(task1, false);</span>
+<span class="nc" id="L162">                                anythingChanged = true;</span>
+<span class="nc" id="L163">                                return true;</span>
+                            }
+                        }
+                    }
+                }
+<span class="nc" id="L168">            }</span>
+<span class="nc" id="L169">        }</span>
+<span class="nc" id="L170">        return anythingChanged;</span>
+    }
+
+    public static boolean equals(ProjectCalendar calendar, LocalDateTime d1, LocalDateTime d2) {
+<span class="nc bnc" id="L174" title="All 4 branches missed.">        if (d1 == null &amp;&amp; d2 == null) {</span>
+<span class="nc" id="L175">            return true;</span>
+        }
+<span class="nc bnc" id="L177" title="All 4 branches missed.">        if (d1 == null || d2 == null) {</span>
+<span class="nc" id="L178">            return false;</span>
+        }
+<span class="nc bnc" id="L180" title="All 2 branches missed.">        if (d1.equals(d2)) {</span>
+<span class="nc" id="L181">            return true;</span>
+        }
+        //TODO reintroduce calendar fixed
+        {
+            //Date might be end of a working day, while reference is beginning of next working day?
+<span class="nc" id="L186">            LocalDateTime nextDay = calendar.getNextWorkStart(d1);</span>
+
+<span class="nc bnc" id="L188" title="All 2 branches missed.">            if (nextDay.equals(d2)) {</span>
+<span class="nc" id="L189">                return true;</span>
+            }
+        }
+        {
+            //Date might be beginning of next day working day, while reference is end of previous working day?
+<span class="nc" id="L194">            LocalDateTime nextDay = calendar.getNextWorkStart(d2);</span>
+<span class="nc" id="L195">            return d1.equals(nextDay);</span>
+        }
+    }
+
+    public static boolean equals(Duration duration, Duration duration2) {
+<span class="nc" id="L200">        return DateUtil.createDurationString(duration, true, true, true).equals(DateUtil.createDurationString(duration2, true, true, true));</span>
+    }
+
+//    /**
+//     * equal timestamps even if there is a out of office duration in between
+//     *
+//     * @param calendar
+//     * @param d1
+//     * @param d2
+//     * @return
+//     */
+//    public static boolean equals(ProjectCalendar calendar, LocalDateTime d1, LocalDateTime d2) {
+//        if (d1 == null &amp;&amp; d2 == null) {
+//            return true;
+//        }
+//        if (d1 == null || d2 == null) {
+//            return false;
+//        }
+//        if (d1.equals(d2)) {
+//            return true;
+//        }
+//        {
+//            //Date might be end of a working day, while reference is beginning of next working day?
+//            //            LocalDateTime nextDay = calendar.getDate(d1, Duration.getInstance(0, TimeUnit.DAYS));
+//            LocalDateTime nextDay = calendar.getNextWorkStart(d1);
+//
+//            if (nextDay.equals(d2)) {
+//                return true;
+//            }
+//        }
+//        {
+//            //Date might be beginning of next day working day, while reference is end of previous working day?
+//            //            LocalDateTime nextDay = calendar.getDate(d2, Duration.getInstance(0, TimeUnit.DAYS));
+//            LocalDateTime nextDay = calendar.getNextWorkStart(d2);
+//            return d1.equals(nextDay);
+//        }
+//    }
+
+    public static ProjectCalendar getCalendar(Task task) {
+<span class="nc" id="L239">        return task.getEffectiveCalendar();</span>
+    }
+
+
+    public Task getDeliveryBufferTask() {
+<span class="nc" id="L244">        return deliveryBufferTask;</span>
+    }
+
+    private Duration getDurationFromWork(GanttErrorHandler eh, Task task) {
+<span class="nc" id="L248">        float availability = 1;//tasks without resources have 100% availability</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">        if (task.getAssignedUser() != null) {</span>
+<span class="nc" id="L250">            User resourceAssignment = task.getAssignedUser();</span>
+<span class="nc" id="L251">            availability = resourceAssignment.getAvailabilities().getLast().getAvailability();</span>
+        }
+<span class="nc" id="L253">        Duration work = task.getOriginalEstimate();</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">        if (work != null) {</span>
+            {
+<span class="nc" id="L256">                double inverseAvailability = 1 / availability;</span>
+<span class="nc" id="L257">                double durationUnits       = inverseAvailability * work.getSeconds();</span>
+<span class="nc" id="L258">                durationUnits = Math.round(durationUnits / 6) * 6;</span>
+
+<span class="nc" id="L260">                return Duration.of((long) durationUnits, SECONDS);</span>
+            }
+        } else {
+<span class="nc" id="L263">            return Duration.ZERO;</span>
+        }
+    }
+
+    public static LocalDateTime getEarliestStartDate(Sprint projectFile) {
+<span class="nc" id="L268">        LocalDateTime earliestDate = null;</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">        for (Task task : projectFile.getTasks()) {</span>
+<span class="nc bnc" id="L270" title="All 2 branches missed.">            if (GanttUtil.isValidTask(task)) {</span>
+<span class="nc bnc" id="L271" title="All 8 branches missed.">                if (!task.isMilestone() &amp;&amp; (task.getChildTasks().isEmpty()) &amp;&amp; (task.getDuration() != null &amp;&amp; !task.getDuration().isZero())) {</span>
+<span class="nc bnc" id="L272" title="All 4 branches missed.">                    if (earliestDate == null || task.getStart().isBefore(earliestDate)) {</span>
+<span class="nc" id="L273">                        earliestDate = task.getStart();</span>
+                    }
+                } else {
+                    //ignore milestones
+                }
+            }
+<span class="nc" id="L279">        }</span>
+<span class="nc" id="L280">        return earliestDate;</span>
+    }
+
+    private LocalDateTime getFirstChildStart(Task task) {
+<span class="nc" id="L284">        LocalDateTime start = null;</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">        for (Task child : task.getChildTasks()) {</span>
+<span class="nc bnc" id="L286" title="All 6 branches missed.">            if (child.getStart() != null &amp;&amp; (start == null || child.getStart().isBefore(start))) {</span>
+<span class="nc" id="L287">                start = child.getStart();</span>
+            }
+<span class="nc" id="L289">        }</span>
+<span class="nc" id="L290">        return start;</span>
+    }
+
+    private LocalDateTime getFirstManualChildStart(Task task) {
+<span class="nc" id="L294">        LocalDateTime start = null;</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">        for (Task child : task.getChildTasks()) {</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">            if (isManual(child)) {</span>
+<span class="nc bnc" id="L297" title="All 6 branches missed.">                if (child.getStart() != null &amp;&amp; (start == null || child.getStart().isBefore(start))) {</span>
+<span class="nc" id="L298">                    start = child.getStart();</span>
+                }
+            }
+<span class="nc" id="L301">        }</span>
+<span class="nc" id="L302">        return start;</span>
+    }
+
+    private LocalDateTime getLastChildFinish(Task task) {
+<span class="nc" id="L306">        LocalDateTime finish = null;</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">        for (Task child : task.getChildTasks()) {</span>
+<span class="nc bnc" id="L308" title="All 6 branches missed.">            if (child.getFinish() != null &amp;&amp; (finish == null || child.getFinish().isAfter(finish))) {</span>
+<span class="nc" id="L309">                finish = child.getFinish();</span>
+            }
+<span class="nc" id="L311">        }</span>
+<span class="nc" id="L312">        return finish;</span>
+    }
+
+    private LocalDateTime getLastStartConstraint(Task task) {
+<span class="nc" id="L316">        LocalDateTime finish = null;</span>
+<span class="nc bnc" id="L317" title="All 2 branches missed.">        for (Relation relation : task.getPredecessors()) {</span>
+<span class="nc" id="L318">            Task sourceTask = task;</span>
+<span class="nc" id="L319">            Task targetTask = task.getSprint().getTaskById(relation.getPredecessorId());</span>
+            //            if (sourceTask.getUniqueID() == task.getUniqueID() &amp;&amp; targetTask.getStart() != null &amp;&amp; targetTask.getDuration() != null) {
+            //                Date localFinish = calendar.getDate(targetTask.getStart(), targetTask.getDuration(), true);
+            //                if (finish == null || calendar.getDate(targetTask.getStart(), targetTask.getDuration(), true).after(finish)) {
+            //                    finish = localFinish;
+            //                }
+            //            }
+<span class="nc bnc" id="L326" title="All 4 branches missed.">            if (sourceTask.getId() == task.getId() &amp;&amp; targetTask.getFinish() != null) {</span>
+                //                Date localFinish = calendar.getDate(targetTask.getStart(), targetTask.getDuration(), true);
+                //                Date localFinish = targetTask.getFinish();
+<span class="nc bnc" id="L329" title="All 4 branches missed.">                if (finish == null || targetTask.getFinish().isAfter(finish)) {</span>
+<span class="nc" id="L330">                    finish = targetTask.getFinish();</span>
+                }
+            }
+<span class="nc" id="L333">        }</span>
+<span class="nc bnc" id="L334" title="All 4 branches missed.">        if (finish != null &amp;&amp; task.getParentTask() != null) {</span>
+<span class="nc bnc" id="L335" title="All 4 branches missed.">            if (task.getParentTask().getStart() != null &amp;&amp; task.getParentTask().getStart().isAfter(finish)) {</span>
+<span class="nc" id="L336">                finish = task.getParentTask().getStart();</span>
+            }
+        }
+<span class="nc" id="L339">        return finish;</span>
+    }
+
+    private LocalDateTime getStart(Task task) {
+<span class="nc bnc" id="L343" title="All 2 branches missed.">        if (task == null) {</span>
+<span class="nc" id="L344">            return null;</span>
+        }
+<span class="nc" id="L346">        return task.getStart();</span>
+    }
+
+    private boolean hasChildTasks(Task task) {
+<span class="nc bnc" id="L350" title="All 2 branches missed.">        return !task.getChildTasks().isEmpty();</span>
+    }
+
+    private boolean hasDependency(Task task1, Task task2) {
+
+        //is task2 one of task1's its predecessors?
+<span class="nc bnc" id="L356" title="All 2 branches missed.">        for (Relation r : task1.getPredecessors()) {</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">            if (Objects.equals(r.getPredecessorId(), task2.getId())) {</span>
+<span class="nc" id="L358">                return true;</span>
+            }
+<span class="nc" id="L360">        }</span>
+        //is task1 one of task2's its predecessors?
+<span class="nc bnc" id="L362" title="All 2 branches missed.">        for (Relation r : task2.getPredecessors()) {</span>
+<span class="nc bnc" id="L363" title="All 2 branches missed.">            if (Objects.equals(r.getPredecessorId(), task1.getId())) {</span>
+<span class="nc" id="L364">                return true;</span>
+            }
+<span class="nc" id="L366">        }</span>
+<span class="nc" id="L367">        return false;</span>
+    }
+
+    private boolean hasDirectDependencies(Task task) {
+<span class="nc bnc" id="L371" title="All 2 branches missed.">        if (task == null) {</span>
+<span class="nc" id="L372">            return false;</span>
+        }
+<span class="nc bnc" id="L374" title="All 2 branches missed.">        return !task.getPredecessors().isEmpty();</span>
+    }
+
+    private boolean hasHierarchicalDependencies(Task task) {
+        //the task has no predecessors
+        //none of its parents has predecessor
+<span class="nc bnc" id="L380" title="All 2 branches missed.">        if (task == null) {</span>
+<span class="nc" id="L381">            return false;</span>
+        }
+<span class="nc bnc" id="L383" title="All 2 branches missed.">        if (!task.getPredecessors().isEmpty())</span>
+<span class="nc" id="L384">            return true;</span>
+<span class="nc" id="L385">        return hasHierarchicalDependencies(task.getParentTask());</span>
+    }
+
+    private boolean hasStart(Task task) {
+<span class="nc bnc" id="L389" title="All 4 branches missed.">        return task != null &amp;&amp; task.getStart() != null;</span>
+    }
+
+    private boolean isDeliveryBufferTask(Task task) {
+<span class="nc bnc" id="L393" title="All 4 branches missed.">        return task.getName().equalsIgnoreCase(DELIVERY_BUFFER) || task.getName().equalsIgnoreCase(DELIVERY_BUFFER_LEGACY_1)</span>
+<span class="nc bnc" id="L394" title="All 2 branches missed.">                || task.getName().equalsIgnoreCase(DELIVERY_BUFFER_LEGACY_2);</span>
+    }
+
+    private boolean isManual(Task task) {
+<span class="nc bnc" id="L398" title="All 2 branches missed.">        return task.getTaskMode() == TaskMode.MANUALLY_SCHEDULED;</span>
+    }
+
+    public static boolean isValidTask(Task task) {
+<span class="nc" id="L402">        return true;</span>
+    }
+
+    public void levelResources(GanttErrorHandler eh, Sprint sprint, String projectRequestKey, LocalDateTime currentStartTime) {
+        try {
+<span class="nc" id="L407">            long checks     = 0;</span>
+<span class="nc" id="L408">            int  iterations = 0;</span>
+<span class="nc" id="L409">            logger.trace(String.format(&quot;Calculating critical path for %d tasks.&quot;, sprint.getTasks().size()));</span>
+<span class="nc" id="L410">            maxLoop = Math.max(sprint.getTasks().size() * sprint.getTasks().size(), sprint.getTasks().size() * 5);</span>
+<span class="nc" id="L411">            boolean anythingChanged = false;</span>
+<span class="nc" id="L412">            printCase(&quot;#&quot;, &quot;ID&quot;, &quot;Task Name&quot;, &quot;Method&quot;, &quot;Start&quot;, &quot;Finish&quot;, &quot;Duration&quot;);</span>
+            //        logger.trace(String.format(&quot;[#] [ID][Task Name           ][ Method__ start_______________ finish_______________&quot;));
+            do {
+<span class="nc" id="L415">                anythingChanged = false;</span>
+                do {
+//                    logger.trace(String.format(&quot;Iteration %d/%d.&quot;, iterations, maxLoop));
+<span class="nc" id="L418">                    anythingChanged = false;</span>
+                    //[M] manual
+                    //+manual
+                    //-milestone
+                    //-duration
+                    //-children, this means +work
+<span class="nc bnc" id="L424" title="All 2 branches missed.">                    for (Task task : sprint.getTasks()) {</span>
+<span class="nc" id="L425">                        checks++;</span>
+<span class="nc bnc" id="L426" title="All 10 branches missed.">                        if (isManual(task) /*&amp;&amp; !task.isMilestone()*/ &amp;&amp; (task.getDuration() == null || (task.getDuration().isZero() &amp;&amp; !task.isMilestone())) &amp;&amp; !hasChildTasks(task)) {</span>
+<span class="nc" id="L427">                            Duration duration = getDurationFromWork(eh, task);</span>
+<span class="nc" id="L428">                            task.setDuration(duration);</span>
+<span class="nc bnc" id="L429" title="All 4 branches missed.">                            if (task.getStart() != null &amp;&amp; duration != null) {</span>
+                                //TODO reintroduce calendar fixed
+<span class="nc" id="L431">                                ProjectCalendar calendar = getCalendar(task);</span>
+<span class="nc" id="L432">                                LocalDateTime   finish   = calendar.getDate(task.getStart(), MpxjUtil.toMpjxDuration(duration));</span>
+//                            LocalDateTime finish = task.getStart().plus(duration);
+<span class="nc" id="L434">                                task.setFinish(finish);</span>
+                            }
+<span class="nc" id="L436">                            anythingChanged = true;</span>
+<span class="nc" id="L437">                            printCase(&quot;M&quot;, &quot;setFinish&quot;, task);</span>
+                        }
+<span class="nc" id="L439">                    }</span>
+
+                    //[2]
+<span class="nc bnc" id="L442" title="All 2 branches missed.">                    for (Task task : sprint.getTasks()) {</span>
+<span class="nc" id="L443">                        checks++;</span>
+                        //-manual
+                        //-children
+                        //-dependencies
+                        //-parent with start
+                        //TODO reintroduce calendar fixed
+<span class="nc" id="L449">                        ProjectCalendar calendar = getCalendar(task);</span>
+<span class="nc bnc" id="L450" title="All 8 branches missed.">                        if (!isManual(task) &amp;&amp; !hasChildTasks(task) &amp;&amp; !hasHierarchicalDependencies(task) &amp;&amp; !hasStart(task.getParentTask())</span>
+<span class="nc bnc" id="L451" title="All 2 branches missed.">                                &amp;&amp; !equals(calendar, currentStartTime, task.getStart())) {</span>
+<span class="nc" id="L452">                            setStart(eh, task, currentStartTime);</span>
+<span class="nc" id="L453">                            anythingChanged = true;</span>
+<span class="nc" id="L454">                            printCase(&quot;2&quot;, &quot;setStart&quot;, task);</span>
+                        }
+<span class="nc" id="L456">                    }</span>
+
+                    //[3]
+                    {
+<span class="nc bnc" id="L460" title="All 2 branches missed.">                        for (Task task : sprint.getTasks()) {</span>
+<span class="nc" id="L461">                            checks++;</span>
+<span class="nc" id="L462">                            LocalDateTime start = getLastStartConstraint(task);</span>
+                            //-manual
+                            //-children
+                            //+dependency with finish
+<span class="nc bnc" id="L466" title="All 4 branches missed.">                            if (!isManual(task) &amp;&amp; !hasChildTasks(task)) {</span>
+<span class="nc bnc" id="L467" title="All 2 branches missed.">                                if (start != null) {</span>
+                                    //TODO reintroduce calendar fixed
+<span class="nc" id="L469">                                    ProjectCalendar calendar = getCalendar(task);</span>
+<span class="nc" id="L470">                                    start = calendar.getNextWorkStart(start);//ensure we are not starting on a none-working-day</span>
+<span class="nc bnc" id="L471" title="All 2 branches missed.">                                    if (!equals(getCalendar(task), start, task.getStart())) {</span>
+<span class="nc" id="L472">                                        setStart(eh, task, start);</span>
+<span class="nc" id="L473">                                        anythingChanged = true;</span>
+<span class="nc" id="L474">                                        printCase(&quot;3&quot;, &quot;setStart&quot;, task);</span>
+                                    }
+                                }
+                            }
+
+<span class="nc" id="L479">                        }</span>
+                    }
+
+                    //[1]
+                    {
+<span class="nc bnc" id="L484" title="All 2 branches missed.">                        for (Task task : sprint.getTasks()) {</span>
+<span class="nc" id="L485">                            checks++;</span>
+<span class="nc" id="L486">                            boolean depends = hasHierarchicalDependencies(task);</span>
+                            //-manual
+                            //+children
+                            //-dependency
+<span class="nc" id="L490">                            LocalDateTime start = getFirstChildStart(task);</span>
+                            //TODO reintroduce calendar fixed
+<span class="nc" id="L492">                            ProjectCalendar calendar = getCalendar(task);</span>
+<span class="nc bnc" id="L493" title="All 6 branches missed.">                            if (!isManual(task) &amp;&amp; hasChildTasks(task) &amp;&amp; !depends) {</span>
+<span class="nc bnc" id="L494" title="All 4 branches missed.">                                if (start != null &amp;&amp; !equals(calendar, start, task.getStart())) {</span>
+<span class="nc" id="L495">                                    setStart(eh, task, start);</span>
+<span class="nc" id="L496">                                    anythingChanged = true;</span>
+<span class="nc" id="L497">                                    printCase(&quot;1&quot;, &quot;setStart&quot;, task);</span>
+                                }
+                            }
+<span class="nc" id="L500">                            LocalDateTime finish = getLastChildFinish(task);</span>
+<span class="nc bnc" id="L501" title="All 6 branches missed.">                            if (!isManual(task) &amp;&amp; hasChildTasks(task) &amp;&amp; !depends) {</span>
+<span class="nc bnc" id="L502" title="All 4 branches missed.">                                if (finish != null &amp;&amp; !equals(calendar, finish, task.getFinish())) {</span>
+<span class="nc" id="L503">                                    setFinish(task, finish);</span>
+<span class="nc" id="L504">                                    anythingChanged = true;</span>
+<span class="nc" id="L505">                                    printCase(&quot;1&quot;, &quot;setFinish&quot;, task);</span>
+                                }
+                            }
+
+<span class="nc" id="L509">                        }</span>
+                    }
+
+                    //[4]
+                    {
+<span class="nc bnc" id="L514" title="All 2 branches missed.">                        for (Task task : sprint.getTasks()) {</span>
+<span class="nc" id="L515">                            checks++;</span>
+                            //-manual
+                            //+children
+                            //+dependencies
+                            //+dependency with finish
+                            //TBD +children without start
+                            //TODO should also check if children have constraints for start
+<span class="nc bnc" id="L522" title="All 6 branches missed.">                            if (!isManual(task) &amp;&amp; hasChildTasks(task) &amp;&amp; hasDirectDependencies(task)) {</span>
+<span class="nc" id="L523">                                LocalDateTime lastStartConstraint   = getLastStartConstraint(task);</span>
+<span class="nc" id="L524">                                LocalDateTime firstManualChildStart = getFirstManualChildStart(task);</span>
+<span class="nc" id="L525">                                LocalDateTime firstChildStart       = getFirstChildStart(task);</span>
+                                //we have to start at least after the constraints and before the children
+                                LocalDateTime start;
+<span class="nc bnc" id="L528" title="All 4 branches missed.">                                if (firstChildStart != null &amp;&amp; lastStartConstraint != null</span>
+<span class="nc bnc" id="L529" title="All 4 branches missed.">                                        &amp;&amp; (lastStartConstraint.isBefore(firstChildStart) || lastStartConstraint.isEqual(firstChildStart))) {</span>
+<span class="nc" id="L530">                                    start = firstChildStart;</span>
+<span class="nc bnc" id="L531" title="All 2 branches missed.">                                } else if (firstManualChildStart != null) {</span>
+<span class="nc" id="L532">                                    start = firstManualChildStart;</span>
+                                } else {
+<span class="nc" id="L534">                                    start = lastStartConstraint;</span>
+                                }
+<span class="nc" id="L536">                                LocalDateTime finish = getLastChildFinish(task);</span>
+                                //TODO reintroduce calendar fixed
+<span class="nc" id="L538">                                ProjectCalendar calendar = getCalendar(task);</span>
+<span class="nc bnc" id="L539" title="All 2 branches missed.">                                if (start != null) {</span>
+<span class="nc" id="L540">                                    start = calendar.getNextWorkStart(start);</span>
+<span class="nc bnc" id="L541" title="All 2 branches missed.">                                    if (!equals(calendar, start, task.getStart())) {</span>
+<span class="nc" id="L542">                                        setStart(eh, task, start);</span>
+<span class="nc" id="L543">                                        anythingChanged = true;</span>
+<span class="nc" id="L544">                                        printCase(&quot;4&quot;, &quot;setStart&quot;, task);</span>
+                                    }
+                                }
+<span class="nc bnc" id="L547" title="All 4 branches missed.">                                if (finish != null &amp;&amp; !equals(calendar, finish, task.getFinish())) {</span>
+<span class="nc" id="L548">                                    setFinish(task, finish);</span>
+<span class="nc" id="L549">                                    anythingChanged = true;</span>
+<span class="nc" id="L550">                                    printCase(&quot;4&quot;, &quot;setFinish&quot;, task);</span>
+                                }
+                            }
+<span class="nc" id="L553">                        }</span>
+                    }
+                    //[5]
+<span class="nc bnc" id="L556" title="All 2 branches missed.">                    for (Task task : sprint.getTasks()) {</span>
+<span class="nc" id="L557">                        checks++;</span>
+                        //-manual
+                        //-children
+                        //-dependencies
+                        //+parent with dependencies
+<span class="nc" id="L562">                        LocalDateTime start = getStart(task.getParentTask());</span>
+<span class="nc bnc" id="L563" title="All 8 branches missed.">                        if (!isManual(task) &amp;&amp; !hasChildTasks(task) &amp;&amp; !hasDirectDependencies(task) &amp;&amp; hasHierarchicalDependencies(task.getParentTask())) {</span>
+<span class="nc bnc" id="L564" title="All 2 branches missed.">                            if (start != null) {</span>
+                                //TODO reintroduce calendar fixed
+<span class="nc" id="L566">                                ProjectCalendar calendar = getCalendar(task);</span>
+<span class="nc" id="L567">                                start = calendar.getNextWorkStart(start);</span>
+<span class="nc bnc" id="L568" title="All 2 branches missed.">                                if (!equals(calendar, start, task.getStart())) {</span>
+
+<span class="nc" id="L570">                                    setStart(eh, task, start);</span>
+<span class="nc" id="L571">                                    anythingChanged = true;</span>
+<span class="nc" id="L572">                                    printCase(&quot;5&quot;, &quot;setStart&quot;, task);</span>
+                                }
+                            }
+                        }
+<span class="nc" id="L576">                    }</span>
+<span class="nc" id="L577">                    iterations++;</span>
+
+                    //TODO debugging code
+                    {
+<span class="nc" id="L581">                        Duration days = Duration.between(sprint.getEarliestStartDate(), sprint.getLatestFinishDate());</span>
+<span class="nc bnc" id="L582" title="All 2 branches missed.">                        if (days.minus(Duration.ofDays(365)).isPositive()) {</span>
+<span class="nc" id="L583">                            throw new LevelingResourcesException(String.format(&quot;Could not level resources after %d days, assuming dependency loop.&quot;, days.toDays()));</span>
+                        }
+                    }
+
+
+<span class="nc bnc" id="L588" title="All 4 branches missed.">                    if (!eh.isTrue(&quot;Error #040. We have detected a dependency loop involving tasks and Categories. Please check the generated team planner chart and fix the dependency loop in your Excel sheet.&quot;, iterations &lt; maxLoop)) {</span>
+<span class="nc" id="L589">                        throw new LevelingResourcesException(String.format(&quot;Could not level resources after %d iterations, assuming dependency loop.&quot;, iterations));</span>
+                    }
+<span class="nc bnc" id="L591" title="All 2 branches missed.">                    if (checks % sprint.getTasks().size() == 0) {</span>
+<span class="nc" id="L592">                        System.out.print(&quot;.&quot;);</span>
+                    }
+<span class="nc bnc" id="L594" title="All 2 branches missed.">                } while (anythingChanged);</span>
+<span class="nc" id="L595">                anythingChanged = createResourceDependencies(sprint, anythingChanged);</span>
+<span class="nc bnc" id="L596" title="All 2 branches missed.">            } while (anythingChanged);</span>
+<span class="nc" id="L597">            checks = testForNull(/*eh,*/ sprint, checks);</span>
+<span class="nc" id="L598">            checks = testRelationsAreHonored(eh, sprint, checks, &quot;&quot;);</span>
+<span class="nc" id="L599">            markCriticalPath(eh, sprint, currentStartTime);</span>
+<span class="nc" id="L600">            logger.trace(String.format(&quot;executed %d checks to level resources.&quot;, checks));</span>
+<span class="nc" id="L601">        } catch (LevelingResourcesException e) {</span>
+<span class="nc" id="L602">            logger.error(&quot;Error leveling resources: &quot; + e.getMessage());</span>
+<span class="nc" id="L603">        }</span>
+<span class="nc" id="L604">        sprint.setStart(sprint.getEarliestStartDate());</span>
+<span class="nc" id="L605">        logger.trace(&quot;Setting start date of sprint to earliest start date: {}&quot;, sprint.getStart());</span>
+<span class="nc" id="L606">        sprint.setEnd(sprint.getLatestFinishDate());</span>
+<span class="nc" id="L607">        logger.trace(&quot;Setting end date of sprint to latest finish date: {}&quot;, sprint.getEnd());</span>
+<span class="nc" id="L608">    }</span>
+
+    private void markCriticalPath(GanttErrorHandler eh, Sprint sprint, LocalDateTime currentStartTime) throws LevelingResourcesException {
+<span class="nc" id="L611">        LocalDateTime startDate  = sprint.getEarliestStartDate();</span>
+<span class="nc" id="L612">        LocalDateTime finishDate = sprint.getLatestFinishDate();</span>
+<span class="nc bnc" id="L613" title="All 2 branches missed.">        for (Task task : sprint.getTasks()) {</span>
+<span class="nc" id="L614">            task.setCritical(false);</span>
+<span class="nc" id="L615">        }</span>
+<span class="nc" id="L616">        startSet.clear();</span>
+
+<span class="nc" id="L618">        long    checks = 0;</span>
+        boolean anythingChanged;
+//        do {
+<span class="nc" id="L621">        anythingChanged = false;</span>
+        do {
+<span class="nc" id="L623">            anythingChanged     = false;</span>
+<span class="nc" id="L624">            testCriticalCounter = 0;</span>
+<span class="nc bnc" id="L625" title="All 2 branches missed.">            for (Task task : sprint.getTasks()) {</span>
+<span class="nc" id="L626">                anythingChanged = testCritical(eh, startDate, finishDate, anythingChanged, task);</span>
+<span class="nc" id="L627">                checks++;</span>
+<span class="nc" id="L628">            }</span>
+<span class="nc bnc" id="L629" title="All 4 branches missed.">            if (!eh.isTrue(&quot;Error #040. We have detected a dependency loop involving tasks and Categories. Please check the generated team planner chart and fix the dependency loop in your Excel sheet.&quot;, checks &lt; maxLoop)) {</span>
+<span class="nc" id="L630">                throw new LevelingResourcesException(String.format(&quot;Could not mark critical path  after %d iterations, assuming dependency loop.&quot;, checks));</span>
+            }
+<span class="nc bnc" id="L632" title="All 2 branches missed.">            if (checks % sprint.getTasks().size() == 0) {</span>
+<span class="nc" id="L633">                System.out.print(&quot;.&quot;);</span>
+            }
+<span class="nc bnc" id="L635" title="All 2 branches missed.">        } while (anythingChanged);</span>
+//        } while (anythingChanged);
+
+<span class="nc bnc" id="L638" title="All 2 branches missed.">        for (Task task : sprint.getTasks()) {</span>
+<span class="nc bnc" id="L639" title="All 8 branches missed.">            if (task.getChildTasks().isEmpty() &amp;&amp; (startSet.contains(task) || manualSet.contains(task)) &amp;&amp; finishSet.contains(task)) {</span>
+<span class="nc" id="L640">                task.setCritical(true);</span>
+            }
+<span class="nc" id="L642">        }</span>
+
+<span class="nc" id="L644">        logger.trace(String.format(&quot;executed %d checks to mark critical path.&quot;, checks));</span>
+<span class="nc" id="L645">    }</span>
+
+    private boolean overlap(Task task1, Task task2) {
+        //  s1   f1
+        //s2   f2
+        //    s2   f2
+        //---overlapping
+<span class="nc bnc" id="L652" title="All 8 branches missed.">        if (task1.getStart() != null &amp;&amp; task1.getFinish() != null &amp;&amp; task2.getStart() != null &amp;&amp; task2.getFinish() != null) {</span>
+            //            long os = task1.getStart();
+            //            long of = task1.getFinish();
+            //            long ps = task2.getStart();
+            //            long pf = task2.getFinish();
+<span class="nc bnc" id="L657" title="All 2 branches missed.">            boolean overlapping = !task1.getStart().isEqual(task1.getFinish())</span>
+<span class="nc bnc" id="L658" title="All 2 branches missed.">                    &amp;&amp; DateUtil.isOverlapping(task1.getStart(), task1.getFinish(), false, task2.getStart(), task2.getFinish());</span>
+<span class="nc" id="L659">            return overlapping;</span>
+        }
+<span class="nc" id="L661">        return false;</span>
+    }
+
+    private void printCase(String caseName, String id, String taskName, String methodName, String start, String finish, String duration) {
+<span class="nc" id="L665">        logger.trace(String.format(&quot;[%s] [%2s][%-20s][%-9s][%20s][%20s][%19s]&quot;, caseName, id, taskName, methodName, start, finish, duration));</span>
+<span class="nc" id="L666">    }</span>
+
+    private void printCase(String caseName, String methodName, Task task) {
+<span class="nc" id="L669">        printCase(caseName, &quot;&quot; + task.getId(), task.getName(), methodName, DateUtil.createDateString(task.getStart(), localDateTimeUtil.dtfymdhms),</span>
+<span class="nc" id="L670">                DateUtil.createDateString(task.getFinish(), localDateTimeUtil.dtfymdhms),</span>
+<span class="nc" id="L671">                DateUtil.createDurationString(task.getDuration(), true, true, true));</span>
+<span class="nc" id="L672">    }</span>
+
+    private void printTasks(Sprint projectFile) {
+<span class="nc bnc" id="L675" title="All 2 branches missed.">        for (Task task : projectFile.getTasks()) {</span>
+<span class="nc" id="L676">            printCase(&quot;PR&quot;, &quot;printTasks&quot;, task);</span>
+<span class="nc" id="L677">        }</span>
+<span class="nc" id="L678">    }</span>
+
+    public static int queryNumberOfChildren(Task task) {
+<span class="nc" id="L681">        int count = 1;</span>
+<span class="nc bnc" id="L682" title="All 2 branches missed.">        for (Task child : task.getChildTasks()) {</span>
+<span class="nc" id="L683">            count += queryNumberOfChildren(child);</span>
+<span class="nc" id="L684">        }</span>
+<span class="nc" id="L685">        return count;</span>
+    }
+
+    private void setFinish(Task task, LocalDateTime finish) {
+<span class="nc" id="L689">        task.setFinish(finish);</span>
+<span class="nc bnc" id="L690" title="All 2 branches missed.">        if (!task.getChildTasks().isEmpty()) {</span>
+<span class="nc" id="L691">            LocalDateTime start = task.getStart();</span>
+<span class="nc bnc" id="L692" title="All 4 branches missed.">            if (finish != null &amp;&amp; start != null) {</span>
+<span class="nc" id="L693">                ProjectCalendar calendar = getCalendar(task);</span>
+<span class="nc" id="L694">                Duration        duration = MpxjUtil.toJavaDuration(calendar.getWork(start, finish, TimeUnit.DAYS));</span>
+<span class="nc" id="L695">                task.setDuration(duration);</span>
+            }
+        }
+<span class="nc" id="L698">    }</span>
+
+    private void setStart(GanttErrorHandler eh, Task task, LocalDateTime endOfLastTask) {
+<span class="nc" id="L701">        ProjectCalendar calendar = getCalendar(task);</span>
+<span class="nc" id="L702">        LocalDateTime   start    = calendar.getNextWorkStart(endOfLastTask);</span>
+<span class="nc" id="L703">        task.setStart(start);</span>
+<span class="nc bnc" id="L704" title="All 2 branches missed.">        if (task.isMilestone()) {</span>
+<span class="nc" id="L705">            task.setFinish(start);</span>
+<span class="nc" id="L706">            Duration duration = Duration.ZERO;</span>
+<span class="nc" id="L707">            task.setDuration(duration);</span>
+<span class="nc bnc" id="L708" title="All 2 branches missed.">        } else if (!hasChildTasks(task)) {//task</span>
+<span class="nc" id="L709">            Duration duration = getDurationFromWork(eh, task);</span>
+<span class="nc" id="L710">            task.setDuration(duration);</span>
+<span class="nc" id="L711">            LocalDateTime finish = calendar.getDate(start, MpxjUtil.toMpjxDuration(duration));</span>
+<span class="nc" id="L712">            task.setFinish(finish);</span>
+<span class="nc" id="L713">        } else {//parent</span>
+<span class="nc" id="L714">            LocalDateTime finish = task.getFinish();</span>
+<span class="nc bnc" id="L715" title="All 6 branches missed.">            if (start != null &amp; finish != null) {</span>
+<span class="nc" id="L716">                Duration duration = MpxjUtil.toJavaDuration(calendar.getWork(start, finish, TimeUnit.DAYS));</span>
+<span class="nc" id="L717">                task.setDuration(duration);</span>
+<span class="nc" id="L718">                task.setFinish(finish);</span>
+            }
+        }
+<span class="nc" id="L721">    }</span>
+
+    /**
+     * Task is critical if it cannot move and all tasks that depend on it can also not move until the end date
+     *
+     * @param startDate
+     * @param finishDate
+     * @param anythingChanged
+     * @param task
+     * @return
+     */
+    private boolean testCritical(GanttErrorHandler eh, LocalDateTime startDate, LocalDateTime finishDate, boolean anythingChanged, Task task) throws LevelingResourcesException {
+<span class="nc bnc" id="L733" title="All 4 branches missed.">        if (!eh.isTrue(&quot;Error #040. We have detected a dependency loop involving tasks and Categories. Please check the generated team planner chart and fix the dependency loop in your Excel sheet.&quot;,</span>
+                testCriticalCounter &lt; maxLoop * 10)) {
+<span class="nc" id="L735">            throw new LevelingResourcesException(String.format(&quot;Could not test critical path  after %d iterations, assuming dependency loop.&quot;, testCriticalCounter));</span>
+        }
+<span class="nc" id="L737">        testCriticalCounter++;</span>
+<span class="nc bnc" id="L738" title="All 2 branches missed.">        if (!startSet.contains(task)) {</span>
+            //are we starting at the beginning of the project?
+<span class="nc" id="L740">            ProjectCalendar calendar = getCalendar(task);</span>
+<span class="nc bnc" id="L741" title="All 2 branches missed.">            if (equals(calendar, task.getStart(), startDate)) {</span>
+<span class="nc" id="L742">                startSet.add(task);</span>
+<span class="nc" id="L743">                anythingChanged = true;</span>
+            }
+        }
+<span class="nc bnc" id="L746" title="All 2 branches missed.">        if (!startSet.contains(task)) {</span>
+            //are we starting after a task that is in the startSet?
+<span class="nc bnc" id="L748" title="All 2 branches missed.">            for (Relation r : task.getPredecessors()) {</span>
+<span class="nc" id="L749">                Task predecessor = task.getSprint().getTaskById(r.getPredecessorId());</span>
+<span class="nc bnc" id="L750" title="All 2 branches missed.">                if (startSet.contains(predecessor)) {</span>
+<span class="nc" id="L751">                    ProjectCalendar calendar = getCalendar(task);</span>
+<span class="nc bnc" id="L752" title="All 2 branches missed.">                    if (equals(calendar, task.getStart(), predecessor.getFinish())) {</span>
+<span class="nc" id="L753">                        startSet.add(task);</span>
+<span class="nc" id="L754">                        anythingChanged = true;</span>
+                    }
+                }
+<span class="nc" id="L757">            }</span>
+        }
+<span class="nc bnc" id="L759" title="All 2 branches missed.">        if (!startSet.contains(task)) {</span>
+            //are we starting with a parent that is in the startSet?
+<span class="nc" id="L761">            ProjectCalendar calendar = getCalendar(task);</span>
+<span class="nc" id="L762">            Task            parent   = task.getParentTask();</span>
+<span class="nc bnc" id="L763" title="All 2 branches missed.">            if (startSet.contains(parent)) {</span>
+<span class="nc bnc" id="L764" title="All 4 branches missed.">                if (parent != null &amp;&amp; equals(calendar, task.getStart(), parent.getStart())) {</span>
+<span class="nc" id="L765">                    startSet.add(task);</span>
+<span class="nc" id="L766">                    anythingChanged = true;</span>
+                }
+            }
+
+        }
+<span class="nc bnc" id="L771" title="All 2 branches missed.">        if (!startSet.contains(task)) {</span>
+            //are we starting with a child that is in the startSet
+<span class="nc bnc" id="L773" title="All 2 branches missed.">            for (Task child : task.getChildTasks()) {</span>
+<span class="nc bnc" id="L774" title="All 2 branches missed.">                if (startSet.contains(child)) {</span>
+<span class="nc" id="L775">                    ProjectCalendar calendar = getCalendar(child);</span>
+<span class="nc bnc" id="L776" title="All 2 branches missed.">                    if (equals(calendar, task.getStart(), child.getStart())) {</span>
+<span class="nc" id="L777">                        startSet.add(task);</span>
+<span class="nc" id="L778">                        anythingChanged = true;</span>
+                    }
+                }
+
+<span class="nc" id="L782">            }</span>
+        }
+
+<span class="nc bnc" id="L785" title="All 2 branches missed.">        if (!manualSet.contains(task)) {</span>
+<span class="nc bnc" id="L786" title="All 2 branches missed.">            for (Relation r : task.getPredecessors()) {</span>
+<span class="nc" id="L787">                Task predecessor = task.getSprint().getTaskById(r.getPredecessorId());</span>
+<span class="nc bnc" id="L788" title="All 2 branches missed.">                if (manualSet.contains(predecessor)) {</span>
+                    //are we starting after a task that is in the manualSet?
+<span class="nc" id="L790">                    ProjectCalendar calendar = getCalendar(task);</span>
+<span class="nc bnc" id="L791" title="All 2 branches missed.">                    if (equals(calendar, task.getStart(), predecessor.getFinish())) {</span>
+<span class="nc" id="L792">                        manualSet.add(task);</span>
+<span class="nc" id="L793">                        anythingChanged = true;</span>
+                    }
+                }
+<span class="nc" id="L796">            }</span>
+        }
+<span class="nc bnc" id="L798" title="All 2 branches missed.">        if (!manualSet.contains(task)) {</span>
+            //are we starting with a parent that is in the manualSet?
+<span class="nc" id="L800">            ProjectCalendar calendar = getCalendar(task);</span>
+<span class="nc" id="L801">            Task            parent   = task.getParentTask();</span>
+<span class="nc bnc" id="L802" title="All 2 branches missed.">            if (manualSet.contains(parent)) {</span>
+<span class="nc bnc" id="L803" title="All 4 branches missed.">                if (parent != null &amp;&amp; equals(calendar, task.getStart(), parent.getStart())) {</span>
+<span class="nc" id="L804">                    manualSet.add(task);</span>
+<span class="nc" id="L805">                    anythingChanged = true;</span>
+                }
+            }
+
+        }
+<span class="nc bnc" id="L810" title="All 2 branches missed.">        if (!manualSet.contains(task)) {</span>
+            //are we starting with a child that is in the manualSet
+<span class="nc bnc" id="L812" title="All 2 branches missed.">            for (Task child : task.getChildTasks()) {</span>
+<span class="nc bnc" id="L813" title="All 2 branches missed.">                if (manualSet.contains(child)) {</span>
+<span class="nc" id="L814">                    ProjectCalendar calendar = getCalendar(child);</span>
+<span class="nc bnc" id="L815" title="All 2 branches missed.">                    if (equals(calendar, task.getStart(), child.getStart())) {</span>
+<span class="nc" id="L816">                        manualSet.add(task);</span>
+<span class="nc" id="L817">                        anythingChanged = true;</span>
+                    }
+                }
+
+<span class="nc" id="L821">            }</span>
+        }
+
+<span class="nc bnc" id="L824" title="All 2 branches missed.">        if (!finishSet.contains(task)) {</span>
+<span class="nc" id="L825">            ProjectCalendar calendar = getCalendar(task);</span>
+            //are we ending at the end of the project?
+<span class="nc bnc" id="L827" title="All 2 branches missed.">            if (equals(calendar, task.getFinish(), finishDate)) {</span>
+<span class="nc" id="L828">                finishSet.add(task);</span>
+<span class="nc" id="L829">                anythingChanged = true;</span>
+            }
+        }
+<span class="nc bnc" id="L832" title="All 2 branches missed.">        if (!finishSet.contains(task)) {</span>
+            //are we ending with a parent that is in the finishSet?
+<span class="nc" id="L834">            ProjectCalendar calendar = getCalendar(task);</span>
+<span class="nc" id="L835">            Task            parent   = task.getParentTask();</span>
+<span class="nc bnc" id="L836" title="All 2 branches missed.">            if (finishSet.contains(parent)) {</span>
+<span class="nc bnc" id="L837" title="All 4 branches missed.">                if (parent != null &amp;&amp; equals(calendar, task.getFinish(), parent.getFinish())) {</span>
+<span class="nc" id="L838">                    finishSet.add(task);</span>
+<span class="nc" id="L839">                    anythingChanged = true;</span>
+                }
+            }
+
+        }
+<span class="nc bnc" id="L844" title="All 2 branches missed.">        if (finishSet.contains(task)) {</span>
+<span class="nc bnc" id="L845" title="All 2 branches missed.">            for (Relation r : task.getPredecessors()) {</span>
+<span class="nc" id="L846">                Task predecessor = task.getSprint().getTaskById(r.getPredecessorId());</span>
+<span class="nc bnc" id="L847" title="All 2 branches missed.">                if (!finishSet.contains(predecessor)) {</span>
+                    //predecessor finishes at same time a task starts that is in the finishSet?
+<span class="nc" id="L849">                    ProjectCalendar calendar = getCalendar(task);</span>
+<span class="nc bnc" id="L850" title="All 2 branches missed.">                    if (equals(calendar, predecessor.getFinish(), task.getStart())) {</span>
+<span class="nc" id="L851">                        finishSet.add(predecessor);</span>
+<span class="nc" id="L852">                        anythingChanged = true;</span>
+                    }
+                }
+<span class="nc" id="L855">            }</span>
+
+        }
+<span class="nc bnc" id="L858" title="All 2 branches missed.">        if (!finishSet.contains(task)) {</span>
+<span class="nc bnc" id="L859" title="All 2 branches missed.">            for (Task child : task.getChildTasks()) {</span>
+<span class="nc bnc" id="L860" title="All 2 branches missed.">                if (finishSet.contains(child)) {</span>
+<span class="nc" id="L861">                    ProjectCalendar calendar = getCalendar(child);</span>
+<span class="nc bnc" id="L862" title="All 2 branches missed.">                    if (equals(calendar, task.getFinish(), child.getFinish())) {</span>
+<span class="nc" id="L863">                        finishSet.add(task);</span>
+<span class="nc" id="L864">                        anythingChanged = true;</span>
+                    }
+                }
+
+<span class="nc" id="L868">            }</span>
+        }
+<span class="nc bnc" id="L870" title="All 4 branches missed.">        if (finishSet.contains(task) &amp;&amp; task.getTaskMode() == TaskMode.MANUALLY_SCHEDULED) {</span>
+<span class="nc" id="L871">            manualSet.add(task);</span>
+        }
+<span class="nc bnc" id="L873" title="All 2 branches missed.">        for (Relation r : task.getPredecessors()) {</span>
+<span class="nc" id="L874">            Task predecessor = task.getSprint().getTaskById(r.getPredecessorId());</span>
+<span class="nc" id="L875">            anythingChanged = testCritical(eh, startDate, finishDate, anythingChanged, predecessor);</span>
+<span class="nc" id="L876">        }</span>
+<span class="nc" id="L877">        return anythingChanged;</span>
+    }
+
+    private long testForNull(/*GanttErrorHandler eh,*/ Sprint projectFile, long checks) {
+<span class="nc bnc" id="L881" title="All 2 branches missed.">        for (Task task : projectFile.getTasks()) {</span>
+<span class="nc" id="L882">            printCase(&quot;TS&quot;, &quot;testForNull&quot;, task);</span>
+<span class="nc" id="L883">        }</span>
+<span class="nc bnc" id="L884" title="All 2 branches missed.">        for (Task task : projectFile.getTasks()) {</span>
+<span class="nc" id="L885">            checks++;</span>
+//            eh.isNotNull(String.format(&quot;Error #030. Task '%s' has no start date.&quot;, task.getName()), task, task.getStart());
+//            eh.isNotNull(String.format(&quot;Error #031. Task '%s' has no finish date.&quot;, task.getName()), task, task.getFinish());
+//            eh.isNotNull(String.format(&quot;Error #032. Task '%s' has no duration.&quot;, task.getName()), task, task.getDuration());
+<span class="nc" id="L889">        }</span>
+<span class="nc" id="L890">        return checks;</span>
+    }
+
+    public void testRelationsAreHonored(GanttErrorHandler eh, Sprint projectFile) throws Exception {
+<span class="nc" id="L894">        try (Profiler pc = new Profiler(SampleType.CPU)) {</span>
+<span class="nc" id="L895">            testRelationsAreHonored(eh, projectFile, 0, null);</span>
+        }
+<span class="nc" id="L897">    }</span>
+
+    private long testRelationsAreHonored(GanttErrorHandler eh, Sprint projectFile, long checks, String xlsxFile) {
+        //Test if all relations have been honored
+        //[M] manual
+        //+manual
+        //-milestone
+        //-duration
+        //-children, this means +work
+<span class="nc bnc" id="L906" title="All 2 branches missed.">        for (Task task : projectFile.getTasks()) {</span>
+<span class="nc" id="L907">            checks++;</span>
+<span class="nc bnc" id="L908" title="All 2 branches missed.">            if (isManual(task)) {</span>
+<span class="nc bnc" id="L909" title="All 2 branches missed.">                for (Relation relation : task.getPredecessors()) {</span>
+<span class="nc" id="L910">                    Task sourceTask = task;</span>
+<span class="nc" id="L911">                    Task targetTask = projectFile.getTaskById(relation.getPredecessorId());</span>
+<span class="nc bnc" id="L912" title="All 2 branches missed.">                    if (sourceTask.getId() == task.getId()) {</span>
+//                        eh.isTrue(
+//                                String.format(ERROR_103_TASK_IS_MANUALLY_SCHEDULED_AND_CANNOT_FULLFILL_ITS_DEPENDENCY, context.getRowIndexByTaskId(task),
+//                                        task.getName(), context.getRowIndexByTaskId(targetTask), targetTask.getName()),
+//                                task, task.getStart().isAfter(targetTask.getFinish()) || equals(getCalendar(task), task.getStart(), targetTask.getFinish()));
+                    }
+<span class="nc" id="L918">                }</span>
+                try {
+<span class="nc" id="L920">                    logger.trace(String.format(&quot;[M] [%d][%s] %s %s %s test&quot;, task.getId(), task.getName(),</span>
+<span class="nc" id="L921">                            DateUtil.createDateString(task.getStart(), localDateTimeUtil.dtfymdhms),</span>
+<span class="nc" id="L922">                            DateUtil.createDateString(task.getFinish(), localDateTimeUtil.dtfymdhms),</span>
+<span class="nc" id="L923">                            DateUtil.createDurationString(task.getDuration(), true, true, true)));</span>
+<span class="nc" id="L924">                } catch (Exception e) {</span>
+                    // TODO Auto-generated catch block
+<span class="nc" id="L926">                    e.printStackTrace();</span>
+<span class="nc" id="L927">                }</span>
+            } else {
+<span class="nc bnc" id="L929" title="All 2 branches missed.">                for (Relation relation : task.getPredecessors()) {</span>
+<span class="nc" id="L930">                    Task sourceTask = task;</span>
+<span class="nc" id="L931">                    Task targetTask = projectFile.getTaskById(relation.getPredecessorId());</span>
+                    //                    logger.trace(String.format(&quot;task %s %s %s&quot;, task.getName(), DateUtil.createDateString(task.getStart(), dateUtil.sdfymdhms),
+                    //                            DateUtil.createDateString(task.getFinish(), dateUtil.sdfymdhms)));
+                    //                    logger.trace(
+                    //                            String.format(&quot;targetTask %s %s %s&quot;, targetTask.getName(), DateUtil.createDateString(targetTask.getStart(), dateUtil.sdfymdhms),
+                    //                                    DateUtil.createDateString(targetTask.getFinish(), dateUtil.sdfymdhms)));
+<span class="nc bnc" id="L937" title="All 6 branches missed.">                    if (sourceTask.getId() == task.getId() &amp;&amp; task.getStart() != null &amp;&amp; targetTask.getFinish() != null) {</span>
+//                        if (eh.isTrue(
+//                                String.format(ERROR_104_TASK_CANNOT_FULLFILL_ITS_DEPENDENCY, context.getRowIndexByTaskId(task), task.getName(),
+//                                        DateUtil.createDateString(task.getStart(), localDateTimeUtil.dtfymdhms), context.getRowIndexByTaskId(targetTask),
+//                                        targetTask.getName(), DateUtil.createDateString(targetTask.getFinish(), localDateTimeUtil.dtfymdhms)),
+//                                task, task.getStart().isAfter(targetTask.getFinish()) || equals(getCalendar(task), task.getStart(), targetTask.getFinish()))) {
+//                        }
+                    }
+
+<span class="nc" id="L946">                }</span>
+            }
+<span class="nc" id="L948">        }</span>
+<span class="nc" id="L949">        return checks;</span>
+    }
+
+    private boolean useSameAssignee(Task task1, Task task2) {
+<span class="nc bnc" id="L953" title="All 4 branches missed.">        return task1.getResourceId() != null &amp;&amp; task1.getResourceId() == task2.getResourceId();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

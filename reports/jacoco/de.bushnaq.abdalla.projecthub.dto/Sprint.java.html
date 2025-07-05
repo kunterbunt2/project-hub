@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Sprint.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.dto</a> &gt; <span class="el_source">Sprint.java</span></div><h1>Sprint.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.dto;
+
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import de.bushnaq.abdalla.projecthub.report.dao.WorklogRemaining;
+import de.bushnaq.abdalla.projecthub.report.gantt.GanttContext;
+import de.bushnaq.abdalla.util.DurationDeserializer;
+import de.bushnaq.abdalla.util.DurationSerializer;
+import de.bushnaq.abdalla.util.date.DateUtil;
+import de.bushnaq.abdalla.util.date.ReportUtil;
+import lombok.*;
+import net.sf.mpxj.*;
+
+import java.time.DayOfWeek;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@ToString(callSuper = true)
+@EqualsAndHashCode(of = {&quot;id&quot;}, callSuper = false)
+public class Sprint extends AbstractTimeAware implements Comparable&lt;Sprint&gt; {
+
+    @JsonIgnore
+    private       ProjectCalendar calendar;
+    private       LocalDateTime   end;
+    @JsonIgnore
+    public        List&lt;Throwable&gt; exceptions  = new ArrayList&lt;&gt;();
+    @JsonIgnore
+    @ToString.Exclude//help intellij debugger not to go into a loop
+    private       Feature         feature;
+    private       Long            featureId;
+    private       Long            id;
+    private       String          name;
+    @JsonSerialize(using = DurationSerializer.class)
+    @JsonDeserialize(using = DurationDeserializer.class)
+    private       Duration        originalEstimation;
+    @JsonIgnore
+    private final ProjectFile     projectFile = new ProjectFile();
+    private       LocalDateTime   releaseDate;//calculated from the task work, worklogs and remaining work
+    @JsonSerialize(using = DurationSerializer.class)
+    @JsonDeserialize(using = DurationDeserializer.class)
+    private       Duration        remaining;
+    private       LocalDateTime   start;
+    private       Status          status      = Status.CREATED;
+    @JsonIgnore
+    transient     Map&lt;Long, Task&gt; taskMap     = new HashMap&lt;&gt;();
+    @JsonIgnore
+    private       List&lt;Task&gt;      tasks       = new ArrayList&lt;&gt;();
+    private       Long            userId;
+    @JsonIgnore
+    transient     Map&lt;Long, User&gt; userMap     = new HashMap&lt;&gt;();
+    @JsonSerialize(using = DurationSerializer.class)
+    @JsonDeserialize(using = DurationDeserializer.class)
+    private       Duration        worked;
+    @JsonIgnore
+    List&lt;WorklogRemaining&gt; worklogRemaining = new ArrayList&lt;&gt;();
+    @JsonIgnore
+    private List&lt;Worklog&gt; worklogs = new ArrayList&lt;&gt;();
+
+    public void addTask(Task task) {
+<span class="nc" id="L87">        tasks.add(task);</span>
+<span class="nc" id="L88">    }</span>
+
+    public void addWorklogRemaining(Task task) {
+<span class="nc" id="L91">        Duration timeSpentMinutes         = task.getTimeSpent();</span>
+<span class="nc" id="L92">        Duration remainingEstimateMinutes = task.getRemainingEstimate();</span>
+<span class="nc bnc" id="L93" title="All 4 branches missed.">        if (timeSpentMinutes.equals(Duration.ZERO) &amp;&amp; remainingEstimateMinutes.equals(Duration.ZERO)) {</span>
+<span class="nc" id="L94">            return;</span>
+        }
+<span class="nc bnc" id="L96" title="All 4 branches missed.">        if (timeSpentMinutes == null &amp;&amp; remainingEstimateMinutes == null) {</span>
+<span class="nc" id="L97">            return;</span>
+        }
+<span class="nc bnc" id="L99" title="All 2 branches missed.">        if (timeSpentMinutes == null) {</span>
+<span class="nc" id="L100">            timeSpentMinutes = Duration.ZERO;</span>
+        }
+<span class="nc bnc" id="L102" title="All 2 branches missed.">        if (remainingEstimateMinutes == null) {</span>
+<span class="nc" id="L103">            remainingEstimateMinutes = Duration.ZERO;</span>
+        }
+<span class="nc bnc" id="L105" title="All 2 branches missed.">        if (task.getResourceId() != null) {</span>
+<span class="nc" id="L106">            WorklogRemaining w = new WorklogRemaining(getId(), task.getId(), task.getKey(), task.getAssignedUser(), timeSpentMinutes, remainingEstimateMinutes);</span>
+<span class="nc" id="L107">            worklogRemaining.add(w);</span>
+<span class="nc" id="L108">        } else {</span>
+<span class="nc" id="L109">            WorklogRemaining w = new WorklogRemaining(getId(), task.getId(), task.getKey(), null, timeSpentMinutes, remainingEstimateMinutes);</span>
+<span class="nc" id="L110">            worklogRemaining.add(w);</span>
+        }
+<span class="nc" id="L112">    }</span>
+
+    @Override
+    public int compareTo(Sprint other) {
+<span class="nc" id="L116">        return this.id.compareTo(other.id);</span>
+    }
+
+    private void defineCalendar() {
+<span class="nc" id="L120">        final boolean[] DEFAULT_WORKING_WEEK = {false, true, true, true, true, true, false};</span>
+        // HolidaysDownloader hd = new HolidaysDownloader();
+        // Map&lt;LocalDate, String&gt; downloadHolidays = hd.downloadHolidays();
+
+        // define the base calendar
+<span class="nc" id="L125">        calendar = projectFile.addDefaultBaseCalendar();</span>
+<span class="nc" id="L126">        calendar.setWorkingDay(DayOfWeek.SATURDAY, false);</span>
+<span class="nc" id="L127">        calendar.setWorkingDay(DayOfWeek.SUNDAY, false);</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">        for (int index = 0; index &lt; 7; index++) {</span>
+<span class="nc" id="L129">            DayOfWeek day = DayOfWeek.of(index + 1);</span>
+            //            calendar.setWorkingDay(day, DEFAULT_WORKING_WEEK[index]);
+<span class="nc bnc" id="L131" title="All 2 branches missed.">            if (calendar.isWorkingDay(day)) {</span>
+<span class="nc" id="L132">                ProjectCalendarHours hours = calendar.addCalendarHours(DayOfWeek.of(index + 1));</span>
+<span class="nc" id="L133">                hours.add(new LocalTimeRange(LocalTime.of(8, 0), LocalTime.of(12, 0)));</span>
+<span class="nc" id="L134">                hours.add(new LocalTimeRange(LocalTime.of(13, 0), LocalTime.of(16, 30)));</span>
+            }
+        }
+//        BankHolidayReader bhr = new BankHolidayReader();
+//        context.bankHolidays = bhr.read(context.parameters.smbParameters, ParameterOptions.now.toLocalDate());
+//        for (LocalDate ld : context.bankHolidays.keySet()) {
+//            // System.out.println(ld.toString() + &quot; &quot; + bankHolidays.get(ld));
+//            ProjectCalendarException calendarException = calendar.addCalendarException(ld, ld);
+//            calendarException.setName(context.bankHolidays.get(ld));
+//        }
+<span class="nc" id="L144">    }</span>
+
+    @JsonIgnore
+    public LocalDateTime getEarliestStartDate() {
+<span class="nc" id="L148">        LocalDateTime earliestDate = null;</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">        for (Task task : getTasks()) {</span>
+<span class="nc bnc" id="L150" title="All 8 branches missed.">            if (!task.isMilestone() &amp;&amp; (task.getChildTasks().isEmpty()) &amp;&amp; (task.getDuration() != null &amp;&amp; !task.getDuration().isZero())) {</span>
+<span class="nc bnc" id="L151" title="All 4 branches missed.">                if (earliestDate == null || task.getStart().isBefore(earliestDate)) {</span>
+<span class="nc" id="L152">                    earliestDate = task.getStart();</span>
+                }
+            } else {
+                //ignore milestones
+            }
+<span class="nc" id="L157">        }</span>
+<span class="nc" id="L158">        return earliestDate;</span>
+    }
+
+    @JsonIgnore
+    public String getKey() {
+<span class="nc" id="L163">        return &quot;S-&quot; + id;</span>
+    }
+
+    @JsonIgnore
+    public LocalDateTime getLatestFinishDate() {
+<span class="nc" id="L168">        LocalDateTime latestDate = null;</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">        for (Task task : getTasks()) {</span>
+<span class="nc bnc" id="L170" title="All 8 branches missed.">            if (!task.isMilestone() &amp;&amp; (task.getChildTasks().isEmpty()) &amp;&amp; (task.getDuration() != null &amp;&amp; !task.getDuration().isZero())) {</span>
+<span class="nc bnc" id="L171" title="All 4 branches missed.">                if (latestDate == null || task.getFinish().isAfter(latestDate)) {</span>
+<span class="nc" id="L172">                    latestDate = task.getFinish();</span>
+                }
+            } else {
+                //ignore milestones
+            }
+<span class="nc" id="L177">        }</span>
+<span class="nc" id="L178">        return latestDate;</span>
+    }
+
+    public Task getTaskById(Long predecessorId) {
+<span class="nc" id="L182">        return tasks.stream().filter(task -&gt; task.getId().equals(predecessorId)).findFirst().orElse(null);</span>
+    }
+
+    @JsonIgnore
+    public User getUser() {
+<span class="nc" id="L187">        return getuser(userId);</span>
+    }
+
+    public User getuser(Long resourceId) {
+<span class="nc" id="L191">        return userMap.get(resourceId);</span>
+    }
+
+    public void initTaskMap(List&lt;Task&gt; tasks, List&lt;Worklog&gt; worklogs) {
+<span class="nc" id="L195">        this.worklogs = worklogs;</span>
+<span class="nc" id="L196">        taskMap.clear();</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">        for (Task task : tasks) {</span>
+<span class="nc" id="L198">            taskMap.put(task.getId(), task);</span>
+<span class="nc" id="L199">        }</span>
+<span class="nc" id="L200">        tasks.forEach(task -&gt; {</span>
+            //set the parent task
+<span class="nc bnc" id="L202" title="All 2 branches missed.">            if (task.getParentTaskId() != null) {</span>
+<span class="nc" id="L203">                task.setParentTask(taskMap.get(task.getParentTaskId()));</span>
+                //add the task to the parent task
+<span class="nc" id="L205">                task.getParentTask().addChildTask(task);</span>
+            }
+<span class="nc bnc" id="L207" title="All 2 branches missed.">            if (worklogs != null) {</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">                for (Worklog worklog : worklogs) {</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">                    if (worklog.getTaskId().equals(task.getId())) {</span>
+<span class="nc" id="L210">                        task.addWorklog(worklog);</span>
+                    }
+<span class="nc" id="L212">                }</span>
+            }
+<span class="nc" id="L214">            task.setSprint(this);</span>
+<span class="nc" id="L215">            task.initialize();</span>
+<span class="nc" id="L216">            addWorklogRemaining(task);</span>
+<span class="nc" id="L217">        });</span>
+<span class="nc" id="L218">        this.tasks = tasks;</span>
+<span class="nc" id="L219">    }</span>
+
+    public void initUserMap(List&lt;User&gt; users) {
+<span class="nc" id="L222">        userMap.clear();</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">        for (User user : users) {</span>
+<span class="nc" id="L224">            user.initialize(this);</span>
+<span class="nc" id="L225">            userMap.put(user.getId(), user);</span>
+<span class="nc" id="L226">        }</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">        if (userId == null) {</span>
+//            calendar = projectFile.getDefaultCalendar();
+        } else {
+<span class="nc" id="L230">            calendar = getUser().getCalendar();</span>
+        }
+<span class="nc" id="L232">    }</span>
+
+    public void initialize() {
+<span class="nc" id="L235">        setProjectProperties();</span>
+<span class="nc" id="L236">        initializeCalendar();</span>
+<span class="nc" id="L237">    }</span>
+
+    public void initialize(GanttContext gc) {
+<span class="nc" id="L240">        tasks.clear();</span>
+<span class="nc" id="L241">        taskMap.clear();</span>
+<span class="nc" id="L242">        worklogRemaining.clear();</span>
+        //map users to their ids
+<span class="nc" id="L244">        gc.allUsers.forEach(user -&gt; userMap.put(user.getId(), user));</span>
+        //populate tasks list
+<span class="nc" id="L246">        gc.allTasks.forEach(task -&gt; {</span>
+<span class="nc bnc" id="L247" title="All 2 branches missed.">            if (task.getSprintId().equals(id)) {</span>
+<span class="nc" id="L248">                addTask(task);</span>
+            }
+<span class="nc" id="L250">        });</span>
+<span class="nc" id="L251">        gc.allWorklogs.forEach(worklog -&gt; {</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">            if (worklog.getSprintId().equals(id)) {</span>
+<span class="nc" id="L253">                worklogs.add(worklog);</span>
+            }
+<span class="nc" id="L255">        });</span>
+        //map tasks to their ids
+<span class="nc" id="L257">        tasks.forEach(task -&gt; taskMap.put(task.getId(), task));</span>
+<span class="nc" id="L258">        tasks.forEach(task -&gt; {</span>
+            //set the parent task
+<span class="nc bnc" id="L260" title="All 2 branches missed.">            if (task.getParentTaskId() != null) {</span>
+<span class="nc" id="L261">                task.setParentTask(taskMap.get(task.getParentTaskId()));</span>
+                //add the task to the parent task
+<span class="nc" id="L263">                task.getParentTask().addChildTask(task);</span>
+            }
+<span class="nc bnc" id="L265" title="All 2 branches missed.">            for (Worklog worklog : worklogs) {</span>
+<span class="nc bnc" id="L266" title="All 2 branches missed.">                if (worklog.getTaskId().equals(task.getId())) {</span>
+<span class="nc" id="L267">                    task.addWorklog(worklog);</span>
+                }
+<span class="nc" id="L269">            }</span>
+<span class="nc" id="L270">            task.setSprint(this);</span>
+<span class="nc" id="L271">            task.initialize();</span>
+<span class="nc" id="L272">            addWorklogRemaining(task);</span>
+<span class="nc" id="L273">        });</span>
+<span class="nc bnc" id="L274" title="All 2 branches missed.">        if (userId == null) calendar = gc.getProjectFile().getDefaultCalendar();</span>
+        else {
+<span class="nc" id="L276">            calendar = getUser().getCalendar();</span>
+        }
+
+<span class="nc" id="L279">    }</span>
+
+    private void initializeCalendar() {
+<span class="nc" id="L282">        defineCalendar();</span>
+<span class="nc" id="L283">        ProjectProperties projectProperties = projectFile.getProjectProperties();</span>
+<span class="nc" id="L284">        ProjectCalendar   projectCalendar   = projectFile.getCalendarByName(ProjectCalendar.DEFAULT_BASE_CALENDAR_NAME);</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">        if (projectCalendar == null) {</span>
+<span class="nc" id="L286">            projectCalendar = projectFile.getDefaultCalendar();</span>
+        }
+<span class="nc bnc" id="L288" title="All 2 branches missed.">        if (projectCalendar == null) {</span>
+<span class="nc" id="L289">            projectCalendar = projectFile.addDefaultBaseCalendar();</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">            for (DayOfWeek day : DayOfWeek.values()) {</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">                if (projectCalendar.getCalendarDayType(day) == DayType.WORKING) {</span>
+<span class="nc" id="L292">                    ProjectCalendarHours hours = projectCalendar.getCalendarHours(day);</span>
+<span class="nc" id="L293">                    hours.clear();</span>
+<span class="nc" id="L294">                    hours.add(new LocalTimeRange(LocalTime.of(8, 0), LocalTime.of(12, 0)));</span>
+<span class="nc" id="L295">                    hours.add(new LocalTimeRange(LocalTime.of(13, 0), LocalTime.of(16, 30)));</span>
+                }
+            }
+//            BankHolidayReader bhr = new BankHolidayReader();
+//            context.bankHolidays = bhr.read(context.parameters.smbParameters, ParameterOptions.now.toLocalDate());
+//            for (LocalDate ld : context.bankHolidays.keySet()) {
+//                // System.out.println(ld.toString() + &quot; &quot; + bankHolidays.get(ld));
+//                ProjectCalendarException calendarException = projectCalendar.addCalendarException(ld, ld);
+//                calendarException.setName(context.bankHolidays.get(ld));
+//            }
+
+        }
+<span class="nc" id="L307">        ProjectCalendar projectPropertiesCalendar = projectProperties.getDefaultCalendar();</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">        if (projectPropertiesCalendar == null) {</span>
+<span class="nc" id="L309">            projectProperties.setDefaultCalendar(projectCalendar);</span>
+        }
+
+<span class="nc" id="L312">    }</span>
+
+    @JsonIgnore
+    public boolean isClosed() {
+<span class="nc" id="L316">        return getStatus().equals(Status.CLOSED);</span>
+    }
+
+    public void propagateTimeTracking() {
+<span class="nc" id="L320">        worked             = Duration.ZERO;</span>
+<span class="nc" id="L321">        originalEstimation = Duration.ZERO;</span>
+<span class="nc" id="L322">        remaining          = Duration.ZERO;</span>
+<span class="nc bnc" id="L323" title="All 2 branches missed.">        for (Task task : getTasks()) {</span>
+<span class="nc" id="L324">            worked             = worked.plus(task.getTimeSpent());</span>
+<span class="nc" id="L325">            originalEstimation = originalEstimation.plus(task.getOriginalEstimate());</span>
+<span class="nc" id="L326">            remaining          = remaining.plus(task.getRemainingEstimate());</span>
+<span class="nc" id="L327">        }</span>
+<span class="nc" id="L328">    }</span>
+
+    public void recalculate(LocalDateTime now) {
+<span class="nc" id="L331">        propagateTimeTracking();</span>
+<span class="nc bnc" id="L332" title="All 8 branches missed.">        if (getRemaining() != null &amp;&amp; getRemaining().isZero() &amp;&amp; worklogs != null &amp;&amp; !worklogs.isEmpty()) {</span>
+            //if all work has been done, set the release date to the last worklog date
+<span class="nc" id="L334">            releaseDate = DateUtil.offsetDateTimeToLocalDateTime(worklogs.getLast().getStart());</span>
+        } else {
+            //calculate the release date based on the work done and the remaining work
+<span class="nc" id="L337">            releaseDate = ReportUtil.calculateReleaseDate(getStart(), now, getWorked(), DateUtil.add(getWorked(), getRemaining()));</span>
+        }
+<span class="nc" id="L339">    }</span>
+
+    @JsonIgnore
+    private void setProjectProperties() {
+<span class="nc" id="L343">        ProjectProperties properties = projectFile.getProjectProperties();</span>
+//        properties.setProjectTitle(new File(XlsxUtil.removeExtension(xlsxFile)).getName());
+//        properties.setAuthor(&quot;XLSX-to-MPP &quot; + moduleVersion);
+<span class="nc" id="L346">        properties.setCurrentDate(null);</span>
+<span class="nc" id="L347">        properties.setDefaultStartTime(LocalTime.of(8, 0));</span>
+<span class="nc" id="L348">        properties.setDefaultEndTime(LocalTime.of(16, 30));</span>
+<span class="nc" id="L349">        properties.setMinutesPerDay((int) (7.5 * 60));</span>
+<span class="nc" id="L350">        properties.setMinutesPerWeek(5 * (int) (7.5 * 60));</span>
+        //        properties.setDefaultDurationUnits(TimeUnit.HOURS);
+        //        TaskUtil.createMetaData(projectFile);
+        //        Map&lt;String, Object&gt; customProperties = new HashMap&lt;&gt;();
+        //        HashMap&lt;Task, MetaData&gt; mdMap = new HashMap&lt;&gt;();
+        //        customProperties.put(MetaData.METADATA, mdMap);
+        //        properties.setCustomProperties(customProperties);
+        //        HashMap&lt;Task, MetaData&gt; mdMap1 = (HashMap&lt;Task, MetaData&gt;)projectfile.getProjectProperties().getCustomProperties().get(MetaData.METADATA);
+<span class="nc" id="L358">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

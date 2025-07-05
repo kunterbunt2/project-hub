@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileUtil.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.util</a> &gt; <span class="el_source">FileUtil.java</span></div><h1>FileUtil.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.util;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.*;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+
+<span class="nc" id="L31">public class FileUtil {</span>
+<span class="nc" id="L32">    private static final Logger logger = LoggerFactory.getLogger(FileUtil.class);</span>
+
+    /**
+     * changes extension to new extension example: x = changeExtension(&quot;data.txt&quot;,
+     * &quot;.java&quot;) will assign &quot;data.java&quot; to x.
+     *
+     * @param originalName
+     * @param newExtension
+     * @return
+     */
+    public static String changeExtension(String originalName, String newExtension) {
+<span class="nc" id="L43">        int lastDot = originalName.lastIndexOf(&quot;.&quot;);</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        if (lastDot != -1) {</span>
+<span class="nc" id="L45">            return originalName.substring(0, lastDot) + newExtension;</span>
+        } else {
+<span class="nc" id="L47">            return originalName + newExtension;</span>
+        }
+    }
+
+    public static String concatPath(String p1, String p2) {
+<span class="nc bnc" id="L52" title="All 2 branches missed.">        if (p1.endsWith(&quot;/&quot;)) {</span>
+<span class="nc" id="L53">            return p1 + p2;</span>
+        } else {
+<span class="nc" id="L55">            return p1 + &quot;/&quot; + p2;</span>
+        }
+    }
+
+    /**
+     * Copy a file from source to destination.
+     *
+     * @param source      the source
+     * @param destination the destination
+     * @return True if succeeded , False if not
+     * @throws IOException
+     */
+    public static void copyFile(InputStream source, String destination) throws IOException {
+<span class="nc" id="L68">        Files.copy(source, Paths.get(destination), StandardCopyOption.REPLACE_EXISTING);</span>
+<span class="nc" id="L69">    }</span>
+
+    public static void copyFilesFromExploded(Class&lt;?&gt; clazz, String sourceDir, String destinationDir) throws IOException {
+<span class="nc" id="L72">        logger.info(String.format(&quot;Copying files from clazz=%s sourceFolder=%s destinationFolder=%s&quot;, clazz.getCanonicalName(), sourceDir, destinationDir));</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        for (File f : FileUtil.getResourceFolderFiles(clazz, sourceDir)) {</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">            if (f.isFile()) {</span>
+<span class="nc" id="L75">                InputStream stream = clazz.getResourceAsStream(sourceDir + &quot;/&quot; + f.getName());</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">                if (stream != null) {</span>
+                    try {
+<span class="nc" id="L78">                        logger.info(&quot;Copying -&gt;&quot; + sourceDir + &quot;/&quot; + f.getName() + &quot; to -&gt;&quot; + destinationDir);</span>
+<span class="nc" id="L79">                        FileUtil.copyFile(stream, destinationDir + &quot;/&quot; + f.getName());</span>
+                    } finally {
+<span class="nc" id="L81">                        stream.close();</span>
+                    }
+                }
+            }
+        }
+<span class="nc" id="L86">    }</span>
+
+    public static void copyFilesFromJar(Class&lt;?&gt; callingClass, String jarName, String sourceDir, String destinationDir) throws IOException {
+<span class="nc" id="L89">        logger.info(String.format(&quot;Copying files from warFile=%s clazz=%s sourceFolder=%s destinationFolder=%s&quot;, jarName, callingClass.getCanonicalName(),</span>
+                sourceDir, destinationDir));
+<span class="nc" id="L91">        JarFile jarfile = new JarFile(new File(jarName));</span>
+        try {
+<span class="nc" id="L93">            java.util.Enumeration&lt;JarEntry&gt; enu = jarfile.entries();</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">            while (enu.hasMoreElements()) {</span>
+                //            String destdir = reportFolder + &quot;/report&quot;;     //abc is my destination directory
+<span class="nc" id="L96">                JarEntry je = enu.nextElement();</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">                if (je.getName().startsWith(sourceDir)) {</span>
+                    //                System.out.println(je.getName());
+<span class="nc" id="L99">                    String destinationFileName = je.getName().substring(sourceDir.length());</span>
+<span class="nc" id="L100">                    File   fl                  = new File(destinationDir, destinationFileName);</span>
+
+<span class="nc bnc" id="L102" title="All 2 branches missed.">                    if (!fl.exists()) {</span>
+<span class="nc" id="L103">                        fl.getParentFile().mkdirs();</span>
+<span class="nc" id="L104">                        fl = new File(destinationDir, destinationFileName);</span>
+                    }
+<span class="nc bnc" id="L106" title="All 2 branches missed.">                    if (je.isDirectory()) {</span>
+<span class="nc" id="L107">                        continue;</span>
+                    }
+<span class="nc" id="L109">                    InputStream is = jarfile.getInputStream(je);</span>
+                    try {
+<span class="nc" id="L111">                        java.io.FileOutputStream fo = new java.io.FileOutputStream(fl);</span>
+                        try {
+<span class="nc bnc" id="L113" title="All 2 branches missed.">                            while (is.available() &gt; 0) {</span>
+<span class="nc" id="L114">                                fo.write(is.read());</span>
+                            }
+                        } finally {
+<span class="nc" id="L117">                            fo.close();</span>
+                        }
+                    } finally {
+<span class="nc" id="L120">                        is.close();</span>
+                    }
+                }
+<span class="nc" id="L123">            }</span>
+        } finally {
+<span class="nc" id="L125">            jarfile.close();</span>
+        }
+<span class="nc" id="L127">    }</span>
+
+    public static File[] getResourceFolderFiles(Class&lt;?&gt; clazz, String location) {
+<span class="nc" id="L130">        URL    url  = clazz.getResource(location);</span>
+<span class="nc" id="L131">        String path = url.getPath();</span>
+<span class="nc" id="L132">        return new File(path).listFiles();</span>
+    }
+
+    public static String loadFile(final Object aCallingObject, final String fileName) throws IOException {
+<span class="nc bnc" id="L136" title="All 2 branches missed.">        if (aCallingObject == null) {</span>
+<span class="nc" id="L137">            StringBuilder     _command     = new StringBuilder();</span>
+<span class="nc" id="L138">            final InputStream _inputStream = new FileInputStream(new File(fileName));</span>
+            //                if (_inputStream == null) {
+            //                    throw new IOException(String.format(&quot;File '%s' not found&quot;, fileName));
+            //                }
+<span class="nc" id="L142">            final BufferedInputStream _bufferedInputStream = new BufferedInputStream(_inputStream);</span>
+<span class="nc" id="L143">            final byte[]              _array               = new byte[1000 * 10];</span>
+<span class="nc" id="L144">            int                       _number              = 0;</span>
+            do {
+<span class="nc" id="L146">                _number = _bufferedInputStream.read(_array, 0, 10000);</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">                if (_number &gt; 0) {</span>
+<span class="nc" id="L148">                    _command.append(new String(_array, 0, _number));</span>
+                }
+<span class="nc bnc" id="L150" title="All 2 branches missed.">            } while (_number != -1);</span>
+<span class="nc" id="L151">            _bufferedInputStream.close();</span>
+<span class="nc" id="L152">            return _command.toString();</span>
+        } else {
+            try {
+<span class="nc" id="L155">                String            _command     = &quot;&quot;;</span>
+<span class="nc" id="L156">                final InputStream _inputStream = aCallingObject.getClass().getResourceAsStream(fileName);</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">                if (_inputStream == null) {</span>
+<span class="nc" id="L158">                    throw new IOException(String.format(&quot;File '%s' not found&quot;, fileName));</span>
+                }
+<span class="nc" id="L160">                final BufferedInputStream _bufferedInputStream = new BufferedInputStream(_inputStream);</span>
+<span class="nc" id="L161">                final byte[]              _array               = new byte[1000 * 10];</span>
+<span class="nc" id="L162">                int                       _number              = 0;</span>
+                do {
+<span class="nc" id="L164">                    _number = _bufferedInputStream.read(_array, 0, 10000);</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">                    if (_number &gt; 0) {</span>
+<span class="nc" id="L166">                        _command += new String(_array, 0, _number);</span>
+                    }
+<span class="nc bnc" id="L168" title="All 2 branches missed.">                } while (_number != -1);</span>
+<span class="nc" id="L169">                _bufferedInputStream.close();</span>
+<span class="nc" id="L170">                return _command;</span>
+<span class="nc" id="L171">            } catch (IOException e) {</span>
+<span class="nc" id="L172">                logger.error(&quot;load &quot; + aCallingObject.getClass().getCanonicalName() + &quot;, &quot; + fileName);</span>
+<span class="nc" id="L173">                throw e;</span>
+            }
+        }
+    }
+
+    public static String removeExtension(String originalName) {
+<span class="nc bnc" id="L179" title="All 2 branches missed.">        if (originalName == null) {</span>
+<span class="nc" id="L180">            return originalName;</span>
+        }
+<span class="nc" id="L182">        int lastDot = originalName.lastIndexOf(&quot;.&quot;);</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">        if (lastDot != -1) {</span>
+<span class="nc" id="L184">            return originalName.substring(0, lastDot);</span>
+        } else {
+<span class="nc" id="L186">            return originalName;</span>
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

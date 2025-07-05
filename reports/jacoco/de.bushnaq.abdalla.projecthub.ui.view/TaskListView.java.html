@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TaskListView.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.ui.view</a> &gt; <span class="el_source">TaskListView.java</span></div><h1>TaskListView.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.ui.view;
+
+import com.vaadin.flow.component.dependency.CssImport;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.router.*;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+import de.bushnaq.abdalla.projecthub.dto.Relation;
+import de.bushnaq.abdalla.projecthub.dto.Sprint;
+import de.bushnaq.abdalla.projecthub.dto.Task;
+import de.bushnaq.abdalla.projecthub.rest.api.SprintApi;
+import de.bushnaq.abdalla.projecthub.rest.api.TaskApi;
+import de.bushnaq.abdalla.projecthub.rest.api.UserApi;
+import de.bushnaq.abdalla.projecthub.ui.MainLayout;
+import de.bushnaq.abdalla.util.date.DateUtil;
+import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
+
+import java.time.Clock;
+import java.time.Duration;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Route(&quot;task-list&quot;)
+@PageTitle(&quot;Task List Page&quot;)
+@CssImport(&quot;./styles/grid-styles.css&quot;)
+@PermitAll // When security is enabled, allow all authenticated users
+@RolesAllowed({&quot;USER&quot;, &quot;ADMIN&quot;}) // Allow access to users with specific roles
+public class TaskListView extends Main implements AfterNavigationObserver {
+    public static final String     TASK_GRID_NAME_PREFIX = &quot;task-grid-name-&quot;;
+    private final       Clock      clock;
+    private final       Grid&lt;Task&gt; grid;
+    private final       H2         pageTitle;
+    private             Long       productId;
+    private             Long       projectId;
+    private             Sprint     sprint;
+    private final       SprintApi  sprintApi;
+    private             Long       sprintId;
+    private final       TaskApi    taskApi;
+    private final       UserApi    userApi;
+    private             Long       versionId;
+
+<span class="nc" id="L72">    public TaskListView(TaskApi taskApi, SprintApi sprintApi, UserApi userApi, Clock clock) {</span>
+<span class="nc" id="L73">        this.taskApi   = taskApi;</span>
+<span class="nc" id="L74">        this.sprintApi = sprintApi;</span>
+<span class="nc" id="L75">        this.userApi   = userApi;</span>
+<span class="nc" id="L76">        this.clock     = clock;</span>
+
+        // Create title layout with icon
+<span class="nc" id="L79">        HorizontalLayout titleLayout = new HorizontalLayout();</span>
+<span class="nc" id="L80">        titleLayout.setSpacing(true);</span>
+<span class="nc" id="L81">        titleLayout.setAlignItems(FlexComponent.Alignment.CENTER);</span>
+
+<span class="nc" id="L83">        Icon taskIcon = new Icon(VaadinIcon.TASKS);</span>
+<span class="nc" id="L84">        pageTitle = new H2(&quot;Tasks&quot;);</span>
+<span class="nc" id="L85">        pageTitle.addClassNames(</span>
+                LumoUtility.Margin.Top.MEDIUM,
+                LumoUtility.Margin.Bottom.SMALL
+        );
+
+<span class="nc" id="L90">        titleLayout.add(taskIcon, pageTitle);</span>
+
+<span class="nc" id="L92">        grid = new Grid&lt;&gt;();</span>
+<span class="nc" id="L93">        setupGridColumns();</span>
+        // Add borders between columns
+<span class="nc" id="L95">        grid.addThemeVariants(GridVariant.LUMO_COLUMN_BORDERS, GridVariant.LUMO_ROW_STRIPES);</span>
+
+        // Add custom styling for more JIRA-like appearance
+<span class="nc" id="L98">        grid.addClassName(&quot;jira-style-grid&quot;);</span>
+
+        // Apply custom styling directly to make borders lighter gray
+<span class="nc" id="L101">        grid.getElement().getStyle().set(&quot;--lumo-contrast-10pct&quot;, &quot;#e0e0e0&quot;);</span>
+<span class="nc" id="L102">        grid.setSizeFull();</span>
+
+<span class="nc" id="L104">        setSizeFull();</span>
+<span class="nc" id="L105">        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);</span>
+
+<span class="nc" id="L107">        add(titleLayout, grid);</span>
+<span class="nc" id="L108">    }</span>
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+        //- Get query parameters
+<span class="nc" id="L113">        Location        location        = event.getLocation();</span>
+<span class="nc" id="L114">        QueryParameters queryParameters = location.getQueryParameters();</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">        if (queryParameters.getParameters().containsKey(&quot;product&quot;)) {</span>
+<span class="nc" id="L116">            this.productId = Long.parseLong(queryParameters.getParameters().get(&quot;product&quot;).getFirst());</span>
+        }
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        if (queryParameters.getParameters().containsKey(&quot;version&quot;)) {</span>
+<span class="nc" id="L119">            this.versionId = Long.parseLong(queryParameters.getParameters().get(&quot;version&quot;).getFirst());</span>
+        }
+<span class="nc bnc" id="L121" title="All 2 branches missed.">        if (queryParameters.getParameters().containsKey(&quot;project&quot;)) {</span>
+<span class="nc" id="L122">            this.projectId = Long.parseLong(queryParameters.getParameters().get(&quot;project&quot;).getFirst());</span>
+        }
+<span class="nc bnc" id="L124" title="All 2 branches missed.">        if (queryParameters.getParameters().containsKey(&quot;sprint&quot;)) {</span>
+<span class="nc" id="L125">            this.sprintId = Long.parseLong(queryParameters.getParameters().get(&quot;sprint&quot;).getFirst());</span>
+<span class="nc" id="L126">            pageTitle.setText(&quot;Task of Sprint ID: &quot; + sprintId);</span>
+        }
+
+        //- Update breadcrumbs
+<span class="nc" id="L130">        getElement().getParent().getComponent()</span>
+<span class="nc" id="L131">                .ifPresent(component -&gt; {</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">                    if (component instanceof MainLayout mainLayout) {</span>
+<span class="nc" id="L133">                        mainLayout.getBreadcrumbs().clear();</span>
+<span class="nc" id="L134">                        mainLayout.getBreadcrumbs().addItem(&quot;Products&quot;, ProductListView.class);</span>
+                        {
+<span class="nc" id="L136">                            Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L137">                            params.put(&quot;product&quot;, String.valueOf(productId));</span>
+<span class="nc" id="L138">                            mainLayout.getBreadcrumbs().addItem(&quot;Versions&quot;, VersionListView.class, params);</span>
+                        }
+                        {
+<span class="nc" id="L141">                            Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L142">                            params.put(&quot;product&quot;, String.valueOf(productId));</span>
+<span class="nc" id="L143">                            params.put(&quot;version&quot;, String.valueOf(versionId));</span>
+<span class="nc" id="L144">                            mainLayout.getBreadcrumbs().addItem(&quot;Projects&quot;, FeatureListView.class, params);</span>
+                        }
+                        {
+<span class="nc" id="L147">                            Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L148">                            params.put(&quot;product&quot;, String.valueOf(productId));</span>
+<span class="nc" id="L149">                            params.put(&quot;version&quot;, String.valueOf(versionId));</span>
+<span class="nc" id="L150">                            params.put(&quot;project&quot;, String.valueOf(projectId));</span>
+<span class="nc" id="L151">                            mainLayout.getBreadcrumbs().addItem(&quot;Sprints&quot;, SprintListView.class, params);</span>
+                        }
+                        {
+<span class="nc" id="L154">                            Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L155">                            params.put(&quot;product&quot;, String.valueOf(productId));</span>
+<span class="nc" id="L156">                            params.put(&quot;version&quot;, String.valueOf(versionId));</span>
+<span class="nc" id="L157">                            params.put(&quot;project&quot;, String.valueOf(projectId));</span>
+<span class="nc" id="L158">                            params.put(&quot;sprint&quot;, String.valueOf(sprintId));</span>
+<span class="nc" id="L159">                            mainLayout.getBreadcrumbs().addItem(&quot;Tasks&quot;, TaskListView.class, params);</span>
+                        }
+                    }
+<span class="nc" id="L162">                });</span>
+
+        //- populate grid
+<span class="nc" id="L165">        sprint = sprintApi.getById(sprintId);</span>
+<span class="nc" id="L166">        sprint.initUserMap(userApi.getAll(sprintId));</span>
+<span class="nc" id="L167">        sprint.initTaskMap(taskApi.getAll(sprintId), null);</span>
+<span class="nc" id="L168">        pageTitle.setText(&quot;Task of Sprint ID: &quot; + sprintId);</span>
+<span class="nc" id="L169">        grid.setItems(sprint.getTasks());</span>
+<span class="nc" id="L170">    }</span>
+
+    private void setupGridColumns() {
+<span class="nc" id="L173">        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());</span>
+
+<span class="nc" id="L175">        grid.addColumn(Task::getKey).setHeader(&quot;Key&quot;).setAutoWidth(true);</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">        grid.addColumn(task -&gt; task.getParentTask() != null ? task.getParentTask().getKey() : &quot;&quot;).setHeader(&quot;Parent&quot;).setAutoWidth(true);</span>
+<span class="nc" id="L177">        grid.addColumn(new ComponentRenderer&lt;&gt;(task -&gt; {</span>
+<span class="nc" id="L178">            Div div    = new Div();</span>
+<span class="nc" id="L179">            Div square = new Div();</span>
+<span class="nc" id="L180">            square.setMinHeight(&quot;16px&quot;);</span>
+<span class="nc" id="L181">            square.setMaxHeight(&quot;16px&quot;);</span>
+<span class="nc" id="L182">            square.setMinWidth(&quot;16px&quot;);</span>
+<span class="nc" id="L183">            square.setMaxWidth(&quot;16px&quot;);</span>
+<span class="nc" id="L184">            square.getStyle().set(&quot;float&quot;, &quot;left&quot;);</span>
+<span class="nc" id="L185">            square.getStyle().set(&quot;margin&quot;, &quot;1px&quot;);</span>
+<span class="nc" id="L186">            div.add(square);</span>
+<span class="nc" id="L187">            div.add(task.getName());</span>
+<span class="nc" id="L188">            div.setId(TASK_GRID_NAME_PREFIX + task.getName());</span>
+<span class="nc" id="L189">            return div;</span>
+<span class="nc" id="L190">        })).setHeader(&quot;Name&quot;).setAutoWidth(true);</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">        grid.addColumn(task -&gt; task.getResourceId() != null ? sprint.getuser(task.getResourceId()).getName() : &quot;&quot;).setHeader(&quot;Assigned&quot;).setAutoWidth(true);</span>
+<span class="nc" id="L192">        grid.addColumn(task -&gt; dateTimeFormatter.format(task.getStart())).setHeader(&quot;Start&quot;).setAutoWidth(true);</span>
+<span class="nc" id="L193">        grid.addColumn(task -&gt; dateTimeFormatter.format(task.getFinish())).setHeader(&quot;End&quot;).setAutoWidth(true);</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">        grid.addColumn(task -&gt; !task.getOriginalEstimate().equals(Duration.ZERO) ? DateUtil.createDurationString(task.getOriginalEstimate(), false, true, false) : &quot;&quot;).setHeader(&quot;Original Estimate&quot;).setAutoWidth(true);</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">        grid.addColumn(task -&gt; !task.getOriginalEstimate().equals(Duration.ZERO) ? DateUtil.createDurationString(task.getTimeSpent(), false, true, false) : &quot;&quot;).setHeader(&quot;Time Spent&quot;).setAutoWidth(true);</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">        grid.addColumn(task -&gt; !task.getOriginalEstimate().equals(Duration.ZERO) ? DateUtil.createDurationString(task.getRemainingEstimate(), false, true, false) : &quot;&quot;).setHeader(&quot;Remaining Estimate&quot;).setAutoWidth(true);</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">        grid.addColumn(task -&gt; !task.getOriginalEstimate().equals(Duration.ZERO) ? String.format(&quot;%2.0f%%&quot;, task.getProgress().doubleValue() * 100) : &quot;&quot;).setHeader(&quot;Progress&quot;).setAutoWidth(true);</span>
+<span class="nc" id="L198">        grid.addColumn(task -&gt; {</span>
+<span class="nc" id="L199">            List&lt;Relation&gt; relations = task.getPredecessors();</span>
+<span class="nc bnc" id="L200" title="All 4 branches missed.">            if (relations == null || relations.isEmpty()) {</span>
+<span class="nc" id="L201">                return &quot;&quot;;</span>
+            }
+
+<span class="nc" id="L204">            return relations.stream()</span>
+<span class="nc" id="L205">                    .map(relation -&gt; {</span>
+<span class="nc" id="L206">                        Task predecessor = sprint.getTaskById(relation.getPredecessorId());</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">                        return predecessor != null ? predecessor.getKey() : &quot;&quot;;</span>
+                    })
+<span class="nc bnc" id="L209" title="All 2 branches missed.">                    .filter(key -&gt; !key.isEmpty())</span>
+<span class="nc" id="L210">                    .collect(Collectors.joining(&quot;, &quot;));</span>
+<span class="nc" id="L211">        }).setHeader(&quot;Dependency&quot;).setAutoWidth(true);</span>
+<span class="nc" id="L212">        grid.addColumn(task -&gt; task.getTaskMode().name()).setHeader(&quot;Mode&quot;).setAutoWidth(true);</span>
+
+<span class="nc" id="L214">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

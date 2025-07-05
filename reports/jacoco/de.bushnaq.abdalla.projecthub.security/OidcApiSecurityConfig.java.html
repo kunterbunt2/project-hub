@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OidcApiSecurityConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.security</a> &gt; <span class="el_source">OidcApiSecurityConfig.java</span></div><h1>OidcApiSecurityConfig.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.security;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Security configuration for REST API endpoints.
+ * This class configures Spring Security to use JWT tokens for REST API authentication.
+ * It's only enabled when the 'spring.security.oauth2.client.registration.keycloak.client-id' property is defined.
+ */
+@EnableWebSecurity
+@Configuration
+@ConditionalOnProperty(name = &quot;spring.security.oauth2.client.registration.keycloak.client-id&quot;)
+<span class="nc" id="L50">public class OidcApiSecurityConfig {</span>
+
+<span class="nc" id="L52">    private final Logger logger = LoggerFactory.getLogger(OidcApiSecurityConfig.class);</span>
+
+    /**
+     * Configures Spring Security for REST API endpoints.
+     * This creates a separate security filter chain for the REST API that uses JWT tokens for authentication.
+     */
+    @Bean
+    @Order(1) // Higher precedence than the Vaadin security filter chain
+    public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
+<span class="nc" id="L61">        logger.info(&quot;&gt;&gt;&gt; Configuring security chain (1/4) JWT security for REST API endpoints&quot;);</span>
+
+        // Configure security for REST API endpoints
+<span class="nc" id="L64">        http</span>
+                // Apply this filter chain only to API endpoints
+<span class="nc" id="L66">                .securityMatcher(&quot;/api/**&quot;)</span>
+                // Disable CSRF for API endpoints
+<span class="nc" id="L68">                .csrf(csrf -&gt; csrf.disable())</span>
+                // Configure session management to be stateless
+<span class="nc" id="L70">                .sessionManagement(session -&gt; session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))</span>
+                // Configure authorization for API endpoints
+<span class="nc" id="L72">                .authorizeHttpRequests(authorize -&gt; authorize</span>
+<span class="nc" id="L73">                        .requestMatchers(new AntPathRequestMatcher(&quot;/api/**&quot;)).authenticated())</span>
+                // Configure both JWT token authentication AND HTTP Basic auth for API endpoints
+<span class="nc" id="L75">                .httpBasic() // Add HTTP Basic Authentication support</span>
+<span class="nc" id="L76">                .and()</span>
+<span class="nc" id="L77">                .oauth2ResourceServer(oauth2 -&gt; oauth2</span>
+<span class="nc" id="L78">                        .jwt(jwt -&gt; jwt</span>
+<span class="nc" id="L79">                                .jwtAuthenticationConverter(jwtAuthenticationConverter())</span>
+                        )
+                );
+
+<span class="nc" id="L83">        return http.build();</span>
+    }
+
+    /**
+     * Extract Keycloak roles from token/userinfo claims and add them as Spring Security authorities.
+     */
+    @SuppressWarnings(&quot;unchecked&quot;)
+    private void extractKeycloakRoles(Set&lt;GrantedAuthority&gt; mappedAuthorities, Map&lt;String, Object&gt; claims) {
+        // Check for realm_access claim which contains roles
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        if (claims.containsKey(&quot;realm_access&quot;)) {</span>
+<span class="nc" id="L93">            Map&lt;String, Object&gt; realmAccess = (Map&lt;String, Object&gt;) claims.get(&quot;realm_access&quot;);</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">            if (realmAccess.containsKey(&quot;roles&quot;)) {</span>
+<span class="nc" id="L95">                ((Iterable&lt;String&gt;) realmAccess.get(&quot;roles&quot;)).forEach(role -&gt; {</span>
+<span class="nc" id="L96">                    mappedAuthorities.add(new SimpleGrantedAuthority(&quot;ROLE_&quot; + role.toUpperCase()));</span>
+<span class="nc" id="L97">                });</span>
+            }
+        }
+<span class="nc" id="L100">    }</span>
+
+    /**
+     * Creates a JWT converter to extract roles from JWT tokens for REST API authorization.
+     * This is crucial for the @PreAuthorize annotations in REST controllers to work properly.
+     */
+    @Bean
+    public Converter&lt;Jwt, AbstractAuthenticationToken&gt; jwtAuthenticationConverter() {
+<span class="nc" id="L108">        JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();</span>
+<span class="nc" id="L109">        jwtConverter.setJwtGrantedAuthoritiesConverter(jwt -&gt; {</span>
+            // Log that this converter is being called
+//            logger.info(&quot;JWT Authentication Converter called for token with subject: {}, issued by: {}&quot;, jwt.getSubject(), jwt.getIssuer());
+
+            // Extract roles from the JWT claims
+<span class="nc" id="L114">            Map&lt;String, Object&gt; claims = jwt.getClaims();</span>
+//            logger.debug(&quot;JWT Token claims: {}&quot;, claims);
+
+<span class="nc" id="L117">            Set&lt;GrantedAuthority&gt; authorities = new HashSet&lt;&gt;();</span>
+
+            // Extract realm roles from the token
+//            logger.debug(&quot;Extracting Keycloak roles from JWT token&quot;);
+<span class="nc" id="L121">            extractKeycloakRoles(authorities, claims);</span>
+
+            // Log the extracted authorities
+//            if (!authorities.isEmpty()) {
+//                logger.debug(&quot;Extracted authorities from JWT: {}&quot;, authorities.stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(&quot;, &quot;)));
+//            } else {
+//                logger.warn(&quot;No authorities extracted from JWT token&quot;);
+//            }
+
+            // Add default user role if no roles are found
+<span class="nc bnc" id="L131" title="All 2 branches missed.">            if (authorities.isEmpty()) {</span>
+<span class="nc" id="L132">                authorities.add(new SimpleGrantedAuthority(&quot;ROLE_USER&quot;));</span>
+//                logger.debug(&quot;Added default ROLE_USER authority&quot;);
+            }
+
+<span class="nc" id="L136">            return authorities;</span>
+        });
+<span class="nc" id="L138">        return jwtConverter;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

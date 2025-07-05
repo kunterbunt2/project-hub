@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProductDialog.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.ui.dialog</a> &gt; <span class="el_source">ProductDialog.java</span></div><h1>ProductDialog.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.ui.dialog;
+
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import de.bushnaq.abdalla.projecthub.dto.Product;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+
+/**
+ * A reusable dialog for creating and editing products.
+ */
+public class ProductDialog extends Dialog {
+
+    public static final String       CANCEL_BUTTON      = &quot;cancel-product-button&quot;;
+    public static final String       CONFIRM_BUTTON     = &quot;save-product-button&quot;;
+    public static final String       PRODUCT_DIALOG     = &quot;product-dialog&quot;;
+    public static final String       PRODUCT_NAME_FIELD = &quot;product-name-field&quot;;
+    private final       boolean      isEditMode;
+    private final       TextField    nameField;
+    private final       Product      product;
+    private final       SaveCallback saveCallback;
+
+    /**
+     * Creates a dialog for creating or editing a product.
+     *
+     * @param product      The product to edit, or null for creating a new product
+     * @param saveCallback Callback that receives the product with updated values and a reference to this dialog
+     */
+<span class="fc" id="L51">    public ProductDialog(Product product, SaveCallback saveCallback) {</span>
+<span class="fc" id="L52">        this.product      = product;</span>
+<span class="fc" id="L53">        this.saveCallback = saveCallback;</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">        isEditMode        = product != null;</span>
+
+        // Set the dialog title with an icon
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        String title = isEditMode ? &quot;Edit Product&quot; : &quot;Create Product&quot;;</span>
+
+        // Create a custom header with icon
+<span class="fc" id="L60">        HorizontalLayout headerLayout = new HorizontalLayout();</span>
+<span class="fc" id="L61">        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);</span>
+<span class="fc" id="L62">        headerLayout.setSpacing(true);</span>
+
+<span class="fc" id="L64">        Icon titleIcon = new Icon(VaadinIcon.CUBE);</span>
+<span class="fc" id="L65">        titleIcon.getStyle().set(&quot;margin-right&quot;, &quot;0.5em&quot;);</span>
+
+<span class="fc" id="L67">        com.vaadin.flow.component.html.H3 titleLabel = new com.vaadin.flow.component.html.H3(title);</span>
+<span class="fc" id="L68">        titleLabel.getStyle().set(&quot;margin&quot;, &quot;0&quot;);</span>
+
+<span class="fc" id="L70">        headerLayout.add(titleIcon, titleLabel);</span>
+
+        // Set the custom header
+<span class="fc" id="L73">        setHeaderTitle(null); // Clear the default title</span>
+<span class="fc" id="L74">        getHeader().add(headerLayout);</span>
+
+<span class="fc" id="L76">        setId(PRODUCT_DIALOG);</span>
+<span class="fc" id="L77">        setWidth(&quot;480px&quot;);</span>
+
+<span class="fc" id="L79">        VerticalLayout dialogLayout = new VerticalLayout();</span>
+<span class="fc" id="L80">        dialogLayout.setPadding(false);</span>
+<span class="fc" id="L81">        dialogLayout.setSpacing(true);</span>
+
+        // Create name field with icon
+<span class="fc" id="L84">        nameField = new TextField(&quot;Product Name&quot;);</span>
+<span class="fc" id="L85">        nameField.setId(PRODUCT_NAME_FIELD);</span>
+<span class="fc" id="L86">        nameField.setWidthFull();</span>
+<span class="fc" id="L87">        nameField.setRequired(true);</span>
+        // Add helper text explaining the uniqueness requirement
+<span class="fc" id="L89">        nameField.setHelperText(&quot;Product name must be unique&quot;);</span>
+<span class="fc" id="L90">        nameField.setPrefixComponent(new Icon(VaadinIcon.CUBE));</span>
+
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        if (isEditMode) {</span>
+<span class="fc" id="L93">            nameField.setValue(product.getName());</span>
+        }
+
+<span class="fc" id="L96">        dialogLayout.add(nameField);</span>
+
+<span class="fc" id="L98">        dialogLayout.add(VaadinUtils.createDialogButtonLayout(&quot;Save&quot;, CONFIRM_BUTTON, &quot;Cancel&quot;, CANCEL_BUTTON, this::save, this));</span>
+
+<span class="fc" id="L100">        add(dialogLayout);</span>
+<span class="fc" id="L101">    }</span>
+
+    private void save() {
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">        if (nameField.getValue().trim().isEmpty()) {</span>
+<span class="nc" id="L105">            Notification.show(&quot;Please enter a product name&quot;, 3000, Notification.Position.MIDDLE);</span>
+<span class="nc" id="L106">            return;</span>
+        }
+
+        Product productToSave;
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        if (isEditMode) {</span>
+<span class="fc" id="L111">            productToSave = product;</span>
+<span class="fc" id="L112">            productToSave.setName(nameField.getValue().trim());</span>
+        } else {
+<span class="fc" id="L114">            productToSave = new Product();</span>
+<span class="fc" id="L115">            productToSave.setName(nameField.getValue().trim());</span>
+        }
+
+        // Call the save callback with the product and a reference to this dialog
+<span class="fc" id="L119">        saveCallback.save(productToSave, this);</span>
+
+<span class="fc" id="L121">    }</span>
+
+    /**
+     * Sets an error message on the product name field.
+     *
+     * @param errorMessage The error message to display, or null to clear the error
+     */
+    public void setNameFieldError(String errorMessage) {
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">        nameField.setInvalid(errorMessage != null);</span>
+<span class="fc" id="L130">        nameField.setErrorMessage(errorMessage);</span>
+<span class="fc" id="L131">    }</span>
+
+    /**
+     * Functional interface for the save callback that receives both the product and a reference to this dialog
+     */
+    @FunctionalInterface
+    public interface SaveCallback {
+        void save(Product product, ProductDialog dialog);
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractChart.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.report</a> &gt; <span class="el_source">AbstractChart.java</span></div><h1>AbstractChart.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.report;
+
+import de.bushnaq.abdalla.projecthub.report.dao.CaptionElement;
+import de.bushnaq.abdalla.projecthub.report.dao.FooterElement;
+import de.bushnaq.abdalla.projecthub.report.dao.GraphicsTheme;
+import de.bushnaq.abdalla.svg.util.ExtendedGraphics2D;
+import de.bushnaq.abdalla.util.Util;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+public abstract class AbstractChart extends AbstractCanvas {
+    public        CaptionElement         captionElement;
+    public        FooterElement          footerElement;
+    //    private final String                 mapName;
+<span class="nc" id="L35">    private final List&lt;AbstractRenderer&gt; renderers = new ArrayList&lt;&gt;();</span>
+
+    public AbstractChart(String caption, String projectRequestKey, String relateCssPath, String column, String imageName/*, String mapName*/, String link, String cssClass, GraphicsTheme graphicsTheme) throws IOException {
+<span class="nc" id="L38">        super(column, imageName/*, mapName*/, link, cssClass, graphicsTheme);</span>
+<span class="nc" id="L39">        captionElement = new CaptionElement(caption, relateCssPath);</span>
+<span class="nc" id="L40">        footerElement  = new FooterElement(Util.generateCopyrightString(LocalDateTime.now()), projectRequestKey);</span>
+//        this.mapName   = mapName;
+<span class="nc" id="L42">    }</span>
+
+    @Override
+    protected void drawBackground() {
+<span class="nc" id="L46">        graphics2D.setColor(graphicsTheme.chartBackgroundColor);</span>
+<span class="nc" id="L47">        graphics2D.fillRect(0, captionElement.height, getChartWidth() - 1, getChartHeight() - captionElement.height - 1);</span>
+<span class="nc" id="L48">    }</span>
+
+    @Override
+    protected void drawCaption(ExtendedGraphics2D graphics2d2) {
+<span class="nc" id="L52">        captionElement.draw(graphics2d2);</span>
+<span class="nc" id="L53">    }</span>
+
+    @Override
+    protected void drawFooter(ExtendedGraphics2D graphics2d2) {
+<span class="nc" id="L57">        footerElement.draw(graphics2d2);</span>
+<span class="nc" id="L58">    }</span>
+
+    public List&lt;AbstractRenderer&gt; getRenderers() {
+<span class="nc" id="L61">        return renderers;</span>
+    }
+
+    @Override
+    public void setChartWidth(int chartWidth) {
+<span class="nc" id="L66">        super.setChartWidth(chartWidth);</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        if (captionElement != null) {</span>
+<span class="nc" id="L68">            captionElement.width = chartWidth;</span>
+        }
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (footerElement != null) {</span>
+<span class="nc" id="L71">            footerElement.width = chartWidth;</span>
+        }
+<span class="nc" id="L73">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

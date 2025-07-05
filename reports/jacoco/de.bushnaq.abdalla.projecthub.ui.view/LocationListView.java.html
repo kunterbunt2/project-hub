@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LocationListView.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">project-hub</a> &gt; <a href="index.source.html" class="el_package">de.bushnaq.abdalla.projecthub.ui.view</a> &gt; <span class="el_source">LocationListView.java</span></div><h1>LocationListView.java</h1><pre class="source lang-java linenums">/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.ui.view;
+
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.router.*;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+import de.bushnaq.abdalla.projecthub.dto.Availability;
+import de.bushnaq.abdalla.projecthub.dto.Location;
+import de.bushnaq.abdalla.projecthub.dto.User;
+import de.bushnaq.abdalla.projecthub.rest.api.LocationApi;
+import de.bushnaq.abdalla.projecthub.rest.api.UserApi;
+import de.bushnaq.abdalla.projecthub.ui.MainLayout;
+import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
+import de.bushnaq.abdalla.projecthub.ui.dialog.LocationDialog;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+import de.focus_shift.jollyday.core.HolidayManager;
+import de.focus_shift.jollyday.core.ManagerParameters;
+import jakarta.annotation.security.PermitAll;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
+
+@Route(value = &quot;location/:username?&quot;, layout = MainLayout.class)
+@PageTitle(&quot;User Location&quot;)
+@PermitAll
+public class LocationListView extends Main implements BeforeEnterObserver, AfterNavigationObserver {
+    public static final String         CREATE_LOCATION_BUTTON             = &quot;create-location-button&quot;;
+    //    public static final String         INFO_BOX                           = &quot;location-info-box&quot;;
+    public static final String         LOCATION_GRID                      = &quot;location-grid&quot;;
+    public static final String         LOCATION_GRID_COUNTRY_PREFIX       = &quot;location-country-&quot;;
+    public static final String         LOCATION_GRID_DELETE_BUTTON_PREFIX = &quot;location-delete-button-&quot;;
+    public static final String         LOCATION_GRID_EDIT_BUTTON_PREFIX   = &quot;location-edit-button-&quot;;
+    public static final String         LOCATION_GRID_START_DATE_PREFIX    = &quot;location-start-&quot;;
+    public static final String         LOCATION_GRID_STATE_PREFIX         = &quot;location-state-&quot;;
+    public static final String         LOCATION_LIST_PAGE_TITLE           = &quot;location-page-title&quot;;
+    public static final String         ROUTE                              = &quot;location&quot;;
+    private             User           currentUser;
+    private final       LocationApi    locationApi;
+<span class="nc" id="L73">    private final       Grid&lt;Location&gt; locationGrid                       = new Grid&lt;&gt;(Location.class, false);</span>
+    private final       UserApi        userApi;
+
+<span class="nc" id="L76">    public LocationListView(LocationApi locationApi, UserApi userApi) {</span>
+<span class="nc" id="L77">        this.locationApi = locationApi;</span>
+<span class="nc" id="L78">        this.userApi     = userApi;</span>
+
+<span class="nc" id="L80">        setSizeFull();</span>
+<span class="nc" id="L81">        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);</span>
+
+<span class="nc" id="L83">        add(VaadinUtils.createHeader(&quot;User Location&quot;, LOCATION_LIST_PAGE_TITLE, VaadinIcon.MAP_MARKER, CREATE_LOCATION_BUTTON, () -&gt; openLocationDialog(null)), createLocationGrid());</span>
+<span class="nc" id="L84">    }</span>
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+<span class="nc" id="L88">        refreshLocationGrid();</span>
+<span class="nc" id="L89">    }</span>
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        // Get username from URL parameter or use the currently authenticated user
+<span class="nc" id="L94">        String usernameParam = event.getRouteParameters().get(&quot;username&quot;).orElse(null);</span>
+
+<span class="nc" id="L96">        Authentication authentication  = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">        String         currentUsername = authentication != null ? authentication.getName() : null;</span>
+
+        // If no username is provided, use the current authenticated user
+<span class="nc bnc" id="L100" title="All 4 branches missed.">        final String username = (usernameParam == null &amp;&amp; currentUsername != null) ?</span>
+<span class="nc" id="L101">                currentUsername : usernameParam;</span>
+
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        if (username != null) {</span>
+            try {
+                // Find user by username
+<span class="nc" id="L106">                currentUser = userApi.getByName(username);</span>
+<span class="nc" id="L107">            } catch (ResponseStatusException ex) {</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">                if (ex.getStatusCode().equals(HttpStatus.NOT_FOUND)) {</span>
+                    // Create a new user since one wasn't found
+<span class="nc" id="L110">                    User newUser = createDefaultUser(username);</span>
+<span class="nc" id="L111">                    currentUser = userApi.persist(newUser);</span>
+<span class="nc" id="L112">                    Notification notification = Notification.show(&quot;Created new user: &quot; + username, 3000, Notification.Position.MIDDLE);</span>
+<span class="nc" id="L113">                    notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);</span>
+<span class="nc" id="L114">                } else {</span>
+<span class="nc" id="L115">                    throw ex;</span>
+                }
+<span class="nc" id="L117">            }</span>
+        } else {
+            // Redirect to main page if no username and not authenticated
+<span class="nc" id="L120">            event.forwardTo(&quot;&quot;);</span>
+        }
+<span class="nc" id="L122">    }</span>
+
+    private void confirmDelete(Location location) {
+<span class="nc bnc" id="L125" title="All 2 branches missed.">        if (locationGrid.getListDataView().getItems().count() &lt;= 1) {</span>
+<span class="nc" id="L126">            Notification notification = Notification.show(&quot;Cannot delete - Users must have at least one location&quot;, 3000, Notification.Position.MIDDLE);</span>
+<span class="nc" id="L127">            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);</span>
+<span class="nc" id="L128">            return;</span>
+        }
+
+<span class="nc" id="L131">        ConfirmDialog dialog = new ConfirmDialog(&quot;Confirm Delete&quot;,</span>
+                &quot;Are you sure you want to delete this location record?&quot;,
+                &quot;Delete&quot;,
+                () -&gt; {
+                    try {
+<span class="nc" id="L136">                        locationApi.deleteById(currentUser, location);</span>
+<span class="nc" id="L137">                        refreshLocationGrid();</span>
+<span class="nc" id="L138">                        Notification.show(&quot;Location deleted&quot;, 3000, Notification.Position.MIDDLE);</span>
+<span class="nc" id="L139">                    } catch (Exception ex) {</span>
+<span class="nc" id="L140">                        Notification notification = Notification.show(</span>
+<span class="nc" id="L141">                                &quot;Failed to delete: &quot; + ex.getMessage(),</span>
+                                3000,
+                                Notification.Position.MIDDLE);
+<span class="nc" id="L144">                        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);</span>
+<span class="nc" id="L145">                    }</span>
+<span class="nc" id="L146">                });</span>
+<span class="nc" id="L147">        dialog.open();</span>
+<span class="nc" id="L148">    }</span>
+
+    /**
+     * Creates a default user with standard availability and location
+     *
+     * @param username The name for the new user
+     * @return A new User object with default settings
+     */
+    private User createDefaultUser(String username) {
+<span class="nc" id="L157">        User user = new User();</span>
+<span class="nc" id="L158">        user.setName(username);</span>
+<span class="nc" id="L159">        user.setEmail(username);</span>
+<span class="nc" id="L160">        user.setFirstWorkingDay(java.time.LocalDate.now());</span>
+<span class="nc" id="L161">        user.setColor(new java.awt.Color(51, 102, 204));</span>
+<span class="nc" id="L162">        Availability availability = new Availability(1.0f, java.time.LocalDate.now());</span>
+<span class="nc" id="L163">        user.addAvailability(availability);</span>
+<span class="nc" id="L164">        Location location = new Location(&quot;DE&quot;, &quot;nw&quot;, java.time.LocalDate.now());</span>
+<span class="nc" id="L165">        user.addLocation(location);</span>
+<span class="nc" id="L166">        return user;</span>
+    }
+
+    private HorizontalLayout createHeaderWithIcon(VaadinIcon icon, String text) {
+<span class="nc" id="L170">        Icon headerIcon = new Icon(icon);</span>
+<span class="nc" id="L171">        headerIcon.setSize(&quot;16px&quot;);</span>
+
+<span class="nc" id="L173">        Span headerText = new Span(text);</span>
+<span class="nc" id="L174">        headerText.addClassNames(LumoUtility.Margin.XSMALL);</span>
+
+<span class="nc" id="L176">        HorizontalLayout headerLayout = new HorizontalLayout(headerIcon, headerText);</span>
+<span class="nc" id="L177">        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);</span>
+<span class="nc" id="L178">        headerLayout.setSpacing(false);</span>
+
+<span class="nc" id="L180">        return headerLayout;</span>
+    }
+
+    private Grid&lt;Location&gt; createLocationGrid() {
+<span class="nc" id="L184">        locationGrid.setId(LOCATION_GRID);</span>
+<span class="nc" id="L185">        locationGrid.setWidthFull();</span>
+<span class="nc" id="L186">        locationGrid.addClassNames(LumoUtility.Border.ALL, LumoUtility.BorderColor.CONTRAST_10);</span>
+
+        // Add columns
+<span class="nc" id="L189">        locationGrid.addColumn(new ComponentRenderer&lt;&gt;(location -&gt; {</span>
+<span class="nc" id="L190">                    String startDateStr = location.getStart().format(DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd&quot;));</span>
+<span class="nc" id="L191">                    Span   span         = new Span(startDateStr);</span>
+<span class="nc" id="L192">                    span.setId(LOCATION_GRID_START_DATE_PREFIX + startDateStr);</span>
+<span class="nc" id="L193">                    return span;</span>
+                }))
+<span class="nc" id="L195">                .setHeader(createHeaderWithIcon(VaadinIcon.CALENDAR, &quot;Start Date&quot;))</span>
+<span class="nc" id="L196">                .setSortable(true)</span>
+<span class="nc" id="L197">                .setKey(&quot;start&quot;);</span>
+
+        // Country column with descriptive name
+<span class="nc" id="L200">        locationGrid.addColumn(new ComponentRenderer&lt;&gt;(location -&gt; {</span>
+<span class="nc" id="L201">                    String countryCode = location.getCountry();</span>
+<span class="nc" id="L202">                    Locale locale      = new Locale(&quot;&quot;, countryCode);</span>
+<span class="nc" id="L203">                    String displayText = locale.getDisplayCountry() + &quot; (&quot; + countryCode + &quot;)&quot;;</span>
+<span class="nc" id="L204">                    Span   span        = new Span(displayText);</span>
+<span class="nc" id="L205">                    span.setId(LOCATION_GRID_COUNTRY_PREFIX + displayText);</span>
+<span class="nc" id="L206">                    return span;</span>
+                }))
+<span class="nc" id="L208">                .setHeader(createHeaderWithIcon(VaadinIcon.GLOBE, &quot;Country&quot;))</span>
+<span class="nc" id="L209">                .setSortable(true)</span>
+<span class="nc" id="L210">                .setKey(&quot;country&quot;);</span>
+
+        // State column with descriptive name
+<span class="nc" id="L213">        locationGrid.addColumn(new ComponentRenderer&lt;&gt;(location -&gt; {</span>
+<span class="nc" id="L214">                    String countryCode = location.getCountry();</span>
+<span class="nc" id="L215">                    String stateCode   = location.getState();</span>
+<span class="nc" id="L216">                    String displayText = getStateDescription(countryCode, stateCode);</span>
+<span class="nc" id="L217">                    Span   span        = new Span(displayText);</span>
+<span class="nc" id="L218">                    span.setId(LOCATION_GRID_STATE_PREFIX + displayText);</span>
+<span class="nc" id="L219">                    return span;</span>
+                }))
+<span class="nc" id="L221">                .setHeader(createHeaderWithIcon(VaadinIcon.MAP_MARKER, &quot;State/Region&quot;))</span>
+<span class="nc" id="L222">                .setSortable(true)</span>
+<span class="nc" id="L223">                .setKey(&quot;state&quot;);</span>
+
+        // Add action column
+<span class="nc" id="L226">        locationGrid.addColumn(new ComponentRenderer&lt;&gt;(location -&gt; {</span>
+<span class="nc" id="L227">            String startDateStr = location.getStart().format(DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd&quot;));</span>
+
+<span class="nc" id="L229">            HorizontalLayout layout = new HorizontalLayout();</span>
+<span class="nc" id="L230">            layout.setAlignItems(FlexComponent.Alignment.CENTER);</span>
+<span class="nc" id="L231">            layout.setSpacing(true);</span>
+
+<span class="nc" id="L233">            Button editButton = new Button(new Icon(VaadinIcon.EDIT));</span>
+<span class="nc" id="L234">            editButton.setId(LOCATION_GRID_EDIT_BUTTON_PREFIX + startDateStr);</span>
+<span class="nc" id="L235">            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);</span>
+<span class="nc" id="L236">            editButton.addClickListener(e -&gt; openLocationDialog(location));</span>
+<span class="nc" id="L237">            editButton.getElement().setAttribute(&quot;title&quot;, &quot;Edit&quot;);</span>
+
+<span class="nc" id="L239">            Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));</span>
+<span class="nc" id="L240">            deleteButton.setId(LOCATION_GRID_DELETE_BUTTON_PREFIX + startDateStr);</span>
+<span class="nc" id="L241">            deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);</span>
+<span class="nc" id="L242">            deleteButton.addClickListener(e -&gt; confirmDelete(location));</span>
+<span class="nc" id="L243">            deleteButton.getElement().setAttribute(&quot;title&quot;, &quot;Delete&quot;);</span>
+
+            // Disable delete if this is the user's only location
+<span class="nc bnc" id="L246" title="All 2 branches missed.">            if (locationGrid.getListDataView().getItems().count() &lt;= 1) {</span>
+<span class="nc" id="L247">                deleteButton.setEnabled(false);</span>
+<span class="nc" id="L248">                deleteButton.getElement().setAttribute(&quot;title&quot;, &quot;Cannot delete - Users must have at least one location&quot;);</span>
+            }
+
+<span class="nc" id="L251">            layout.add(editButton, deleteButton);</span>
+<span class="nc" id="L252">            return layout;</span>
+<span class="nc" id="L253">        })).setHeader(createHeaderWithIcon(VaadinIcon.COG, &quot;Actions&quot;)).setFlexGrow(0).setWidth(&quot;120px&quot;);</span>
+
+<span class="nc" id="L255">        return locationGrid;</span>
+    }
+
+    /**
+     * Gets a descriptive name for a state/region based on its code and country.
+     * Similar to the implementation in LocationDialog.
+     *
+     * @param countryCode The country code in ISO format
+     * @param stateCode   The state/region code
+     * @return A readable description of the state/region
+     */
+    private String getStateDescription(String countryCode, String stateCode) {
+        // If state code equals country code, it represents the whole country
+<span class="nc bnc" id="L268" title="All 2 branches missed.">        if (stateCode.equals(countryCode)) {</span>
+<span class="nc" id="L269">            return &quot;All of &quot; + new Locale(&quot;&quot;, countryCode).getDisplayCountry();</span>
+        }
+
+        try {
+            // Try to get description from HolidayManager's calendar hierarchy
+<span class="nc" id="L274">            HolidayManager manager     = HolidayManager.getInstance(ManagerParameters.create(countryCode));</span>
+<span class="nc" id="L275">            String         description = manager.getCalendarHierarchy().getChildren().get(stateCode).getDescription();</span>
+
+<span class="nc bnc" id="L277" title="All 4 branches missed.">            if (description != null &amp;&amp; !description.isEmpty()) {</span>
+<span class="nc" id="L278">                return description + &quot; (&quot; + stateCode + &quot;)&quot;;</span>
+            }
+<span class="nc" id="L280">        } catch (Exception e) {</span>
+            // If we can't get the description from HolidayManager, just use the code
+<span class="nc" id="L282">        }</span>
+
+        // Default fallback is to just return the state code
+<span class="nc" id="L285">        return stateCode;</span>
+    }
+
+    private void openLocationDialog(Location location) {
+        // Create new or edit existing location
+<span class="nc" id="L290">        LocationDialog dialog = new LocationDialog(</span>
+                location,
+                this.currentUser,
+                this.locationApi,
+<span class="nc" id="L294">                ignored -&gt; refreshLocationGrid());</span>
+<span class="nc" id="L295">        dialog.open();</span>
+<span class="nc" id="L296">    }</span>
+
+    private void refreshLocationGrid() {
+<span class="nc bnc" id="L299" title="All 2 branches missed.">        if (currentUser != null) {</span>
+            // Get a fresh copy of the user to ensure we have the latest data
+<span class="nc" id="L301">            User refreshedUser = userApi.getById(currentUser.getId());</span>
+<span class="nc" id="L302">            currentUser = refreshedUser;</span>
+
+            // Sort locations by start date in descending order (latest first)
+<span class="nc" id="L305">            List&lt;Location&gt; sortedLocations = currentUser.getLocations().stream()</span>
+<span class="nc" id="L306">                    .sorted(Comparator.comparing(Location::getStart).reversed())</span>
+<span class="nc" id="L307">                    .collect(Collectors.toList());</span>
+
+<span class="nc" id="L309">            locationGrid.setItems(sortedLocations);</span>
+//            updateInfoBox();
+        }
+<span class="nc" id="L312">    }</span>
+
+//    private void updateInfoBox() {
+//        infoBox.removeAll();
+//        infoBox.setId(INFO_BOX);
+//
+//        VerticalLayout infoContent = new VerticalLayout();
+//        infoContent.setSpacing(false);
+//        infoContent.setPadding(false);
+//
+//        Span heading = new Span(&quot;Location Information&quot;);
+//        heading.getElement().getStyle().set(&quot;font-weight&quot;, &quot;bold&quot;);
+//
+//        Span info = new Span(&quot;Locations represent where you are working under contract. &quot; +
+//                &quot;Country and state/region are used to calculate official holidays.&quot;);
+//
+//        Span instruction = new Span(&quot;Start dates must be unique. The most recent location will be used for current tasks. &quot; +
+//                &quot;Your location history should cover all your time working for this organization.&quot;);
+//
+//        infoContent.add(heading, info, instruction);
+//        infoContent.addClassNames(
+//                LumoUtility.Padding.SMALL,
+//                LumoUtility.Background.CONTRAST_5,
+//                LumoUtility.Border.ALL,
+//                LumoUtility.BorderColor.CONTRAST_10,
+//                LumoUtility.Margin.Bottom.MEDIUM
+//        );
+//
+//        infoBox.add(infoContent);
+//    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
