@@ -91,6 +91,7 @@ public class SeleniumHandler {
             driver.quit();//quit the driver and close all windows
             driver = null;
         }
+        logger.info("quit selenium driver");
     }
 
     /**
@@ -295,7 +296,7 @@ public class SeleniumHandler {
         // Check if we're running in headless mode (for CI environment)
         boolean headlessMode = isSeleniumHeadless();
         if (headlessMode) {
-            logger.info("Running Chrome in headless mode");
+            logger.info("creating selenium driver, Running Chrome in headless mode");
             options.addArguments("--headless=new");
             options.addArguments("--disable-gpu");
             options.addArguments("--no-sandbox");
@@ -312,6 +313,8 @@ public class SeleniumHandler {
                     "credentials_enable_service", false,
                     "profile.password_manager_enabled", false
             ));
+        } else {
+            logger.info("creating selenium driver");
         }
 
         options.addArguments("--remote-allow-origins=*");

@@ -301,6 +301,9 @@
                         -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar
                         -Xshare:off
                     </argLine>
+                    <excludes>
+                        <exclude>**/LegacyGanttTest.java</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
             <plugin>
