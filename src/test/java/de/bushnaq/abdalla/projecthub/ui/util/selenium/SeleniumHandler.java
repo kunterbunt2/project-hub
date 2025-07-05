@@ -118,6 +118,7 @@ public class SeleniumHandler {
 
     public void ensureIsInList(String id, String userName) {
         waitUntil(ExpectedConditions.elementToBeClickable(By.id(id + userName)));
+        System.out.println("Element with ID: " + id + userName + " is in grid");
     }
 
     public void ensureIsNotInList(String id, String name) {
@@ -125,6 +126,7 @@ public class SeleniumHandler {
         setImplicitWaitDuration(Duration.ofSeconds(1));
         waitUntil(ExpectedConditions.not(ExpectedConditions.elementToBeClickable(By.id(id + name))));
         setImplicitWaitDuration(implicitTime);
+        System.out.println("Element with ID: " + id + name + " is not in grid");
     }
 
     public void ensureIsSelected(String id, String userName) {
@@ -176,6 +178,7 @@ public class SeleniumHandler {
 
     public void get(String url) {
         getDriver().get(url);
+        System.out.println("Navigated to URL: " + url);
     }
 
     public void getAndCheck(String url) {
@@ -803,7 +806,7 @@ public class SeleniumHandler {
             i.sendKeys(Keys.CONTROL + "a");
             i.sendKeys(Keys.DELETE);
         }
-        System.out.print("setTextField: " + id + " to '" + text + "'\n");
+        System.out.print("set TextField " + id + " to '" + text + "'\n");
         i.sendKeys(text);
     }
 
