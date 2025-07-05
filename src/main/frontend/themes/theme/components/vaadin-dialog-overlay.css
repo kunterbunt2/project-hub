@@ -1,0 +1,11 @@
+/* Custom styling for dialog overlay */
+[part='backdrop']
+{
+  /* Adjust the alpha channel (0.3) to control darkness (lower = less dark) */
+  background: rgba(25, 25, 25, 0.3);
+
+  /* Apply a blur effect to the background */
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px); /* For Safari compatibility */
+}
+
