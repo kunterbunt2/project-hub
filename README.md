@@ -1,6 +1,5 @@
 [![Tests](https://img.shields.io/github/actions/workflow/status/kunterbunt2/project-hub/maven-build.yml?label=tests)](https://github.com/kunterbunt2/project-hub/actions/workflows/maven-build.yml)
 [![License](https://img.shields.io/github/license/kunterbunt2/project-hub)](https://github.com/kunterbunt2/project-hub/blob/main/LICENSE)
-[![Code Coverage](https://codecov.io/gh/kunterbunt2/project-hub/branch/main/graph/badge.svg)](https://codecov.io/gh/kunterbunt2/project-hub)
 
 # kassandra
 
