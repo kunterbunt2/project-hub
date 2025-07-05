@@ -41,6 +41,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -85,8 +86,8 @@ public class SeleniumHandler {
 
         if (driver != null) {
 //            ScreenShotCreator.takeScreenShot(driver, testInfo.getDisplayName(), testInfo.getTestMethod().get().getName());
-            driver.close();//closing the browser
-            driver.quit();//quit the driver
+//            driver.close();//closing the browser will fail in headless mode
+            driver.quit();//quit the driver and close all windows
             driver = null;
         }
     }
@@ -296,12 +297,25 @@ public class SeleniumHandler {
             options.addArguments("--no-sandbox");
             options.addArguments("--disable-dev-shm-usage");
             options.addArguments("--window-size=1920,1080");
+            options.addArguments("--disable-extensions");
+            options.addArguments("--disable-browser-side-navigation");
+            options.addArguments("--disable-web-security");
+            options.addArguments("--dns-prefetch-disable");
+            // Add a longer timeout for the page load
+            options.setPageLoadTimeout(Duration.ofSeconds(60));
+            // Disable the "Save password?" prompt
+            options.setExperimentalOption("prefs", Map.of(
+                    "credentials_enable_service", false,
+                    "profile.password_manager_enabled", false
+            ));
         }
 
         options.addArguments("--remote-allow-origins=*");
         options.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
 
+        // Set a higher script timeout to prevent connection issues
         driver = new ChromeDriver(options);
+        driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(30));
         setImplicitWaitDuration(implicitWaitDuration);
         wait = new WebDriverWait(driver, waitDuration);
 
