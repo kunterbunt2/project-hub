@@ -770,6 +770,7 @@ public class SeleniumHandler {
     }
 
     public void setLoginUser(String loginUser) {
+        waitForElementToBeLocated("vaadinLoginUsername");
         WebElement usernameElement = findElement(By.id("vaadinLoginUsername"));
         usernameElement.sendKeys(loginUser);
     }
