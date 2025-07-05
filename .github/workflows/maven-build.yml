@@ -12,6 +12,7 @@ permissions:
   checks: write
   contents: write  # Needed for GitHub Pages deployment
   pages: write     # Required for GitHub Pages
+  id-token: write  # Required for GitHub Pages
 
 jobs:
   build:
@@ -106,11 +107,21 @@ jobs:
           PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
         continue-on-error: true  # Continue workflow even if tests fail to collect reports
 
+      # Generate JaCoCo coverage reports
+      - name: Generate JaCoCo Coverage Report
+        run: |
+          mvn jacoco:prepare-agent test jacoco:report
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
+        continue-on-error: true
+
       # Upload coverage reports to Codecov
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          file: ./target/site/jacoco-xml/jacoco.xml
+          token: ${{ secrets.CODECOV_TOKEN }} # Optional if repo is public
+          files: ./target/site/jacoco/jacoco.xml
           flags: unittests
           fail_ci_if_error: false
           verbose: true
