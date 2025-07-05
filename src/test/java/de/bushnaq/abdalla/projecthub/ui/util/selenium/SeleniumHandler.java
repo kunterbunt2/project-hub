@@ -76,6 +76,7 @@ public class SeleniumHandler {
         waitUntil(ExpectedConditions.elementToBeClickable(By.id(id)));
         WebElement element = findElement(By.id(id));
         element.click();
+        System.out.println("Clicked element with ID: " + id);
     }
 
     @PreDestroy
@@ -464,6 +465,7 @@ public class SeleniumHandler {
         // Find the login button using a more specific XPath selector that matches the attributes
         WebElement button = findElement(By.xpath("//vaadin-button[@slot='submit' and contains(@theme, 'submit')]"));
         button.click();
+        System.out.println("Clicked login submit button");
         waitForPageLoaded();
     }
 
@@ -529,6 +531,7 @@ public class SeleniumHandler {
             WebElement row = findElement(By.id(gridRowBaseId + rowName));
             try {
                 row.click();
+                System.out.println("Clicked row: " + gridRowBaseId + rowName);
             } catch (StaleElementReferenceException e) {
                 //ignore and retry
             }
@@ -700,6 +703,7 @@ public class SeleniumHandler {
         wait(500);
 //        setTextField(id, value);
         sendKeys(id, Keys.ARROW_DOWN, Keys.TAB);
+        System.out.println("set ComboBox value=" + text);
 //        wait(1000);
     }
 
@@ -743,7 +747,7 @@ public class SeleniumHandler {
                             "  return true;" +//
                             "}" +//
                             "return false;";
-
+            System.out.println("set DatePicker value=" + dateStr);
             return Boolean.TRUE.equals(executeJavaScript(dateScript));
         }
     }
@@ -766,12 +770,14 @@ public class SeleniumHandler {
 
     public void setLoginPassword(String loginPassword) {
         WebElement passwordElement = findElement(By.name("password"));
+        System.out.printf("sent loginPassword='%s' to element with name 'password'%n", loginPassword);
         passwordElement.sendKeys(loginPassword);
     }
 
     public void setLoginUser(String loginUser) {
         waitForElementToBeLocated("vaadinLoginUsername");
         WebElement usernameElement = findElement(By.id("vaadinLoginUsername"));
+        System.out.printf("sent loginUser='%s' to element with id 'vaadinLoginUsername'%n", loginUser);
         usernameElement.sendKeys(loginUser);
     }
 
@@ -787,7 +793,7 @@ public class SeleniumHandler {
         i.sendKeys(userName);
     }
 
-    public void setTextField(String id, String userName) {
+    public void setTextField(String id, String text) {
         waitUntil(ExpectedConditions.elementToBeClickable(By.id(id)));
         WebElement e     = findElement(By.id(id));
         WebElement i     = e.findElement(By.tagName("input"));
@@ -797,7 +803,8 @@ public class SeleniumHandler {
             i.sendKeys(Keys.CONTROL + "a");
             i.sendKeys(Keys.DELETE);
         }
-        i.sendKeys(userName);
+        System.out.print("setTextField: " + id + " to '" + text + "'\n");
+        i.sendKeys(text);
     }
 
     public void setWaitDuration(Duration waitDuration) {

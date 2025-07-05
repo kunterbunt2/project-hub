@@ -7,6 +7,11 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+# Adding permissions for checks and contents
+permissions:
+  checks: write
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -108,14 +113,15 @@ jobs:
           PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
         continue-on-error: true
 
-      # Generate test summary report
+      # Add JUnit Report step to publish test results
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v4
-        if: always()  # Always run this step to publish test results even if tests fail
+        if: always() # Always run even if the previous step fails
         with:
           report_paths: '**/target/surefire-reports/TEST-*.xml'
-          summary: true
           fail_on_failure: false
+          include_passed: true
+          detailed_summary: true
 
       # Upload test recordings and screenshots as artifacts
       - name: Upload test artifacts and reports
