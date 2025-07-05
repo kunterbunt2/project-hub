@@ -1,10 +1,14 @@
 [![Tests](https://img.shields.io/github/actions/workflow/status/kunterbunt2/project-hub/maven-build.yml?label=tests)](https://github.com/kunterbunt2/project-hub/actions/workflows/maven-build.yml)
 [![License](https://img.shields.io/github/license/kunterbunt2/project-hub)](https://github.com/kunterbunt2/project-hub/blob/main/LICENSE)
+[![Code Coverage](https://codecov.io/gh/kunterbunt2/project-hub/branch/main/graph/badge.svg)](https://codecov.io/gh/kunterbunt2/project-hub)
+
 # kassandra
 
 tiny project management server.<br>
 project effort estimation and progress tracking and release date interpolation open source server.
+
 ## features
+
 tbd
 
 [Requirements](https://github.com/kunterbunt2/project-hub/wiki/Requirements)
@@ -68,4 +72,3 @@ tbd
 # License
 
 [Apache License, version 2.0](https://github.com/kunterbunt2/project-hub/blob/main/LICENSE)
-
