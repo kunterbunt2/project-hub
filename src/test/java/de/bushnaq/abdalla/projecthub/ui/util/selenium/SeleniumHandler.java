@@ -288,7 +288,7 @@ public class SeleniumHandler {
         ChromeOptions options = new ChromeOptions();
 
         // Check if we're running in headless mode (for CI environment)
-        boolean headlessMode = Boolean.parseBoolean(System.getProperty("selenium.headless", System.getenv("SELENIUM_HEADLESS")));
+        boolean headlessMode = isSeleniumHeadless();
         if (headlessMode) {
             logger.info("Running Chrome in headless mode");
             options.addArguments("--headless=new");
@@ -440,6 +440,10 @@ public class SeleniumHandler {
 
     public boolean isRecording() {
         return videoRecorder.isRecording();
+    }
+
+    public static boolean isSeleniumHeadless() {
+        return Boolean.parseBoolean(System.getProperty("selenium.headless", System.getenv("SELENIUM_HEADLESS")));
     }
 
     public void loginSubmit() {

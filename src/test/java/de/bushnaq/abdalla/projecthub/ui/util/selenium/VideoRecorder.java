@@ -107,11 +107,12 @@ public class VideoRecorder {
     public boolean startRecording(String subFolderName, String testName, boolean contentOnly) throws IOException, AWTException {
         this.outputDirectory = new File(rootDirectory, subFolderName);
         outputDirectory.mkdirs();
-        if (GraphicsEnvironment.isHeadless()) {
-            logger.warn("WARNING: Running in headless mode despite IDE environment. Video recording disabled.");
-            logger.warn("Check your IntelliJ run configuration for -Djava.awt.headless=true flag");
+
+        if (SeleniumHandler.isSeleniumHeadless()) {
+            logger.warn("WARNING: Running in headless mode. Video recording disabled.");
             return false; // Skip recording in headless environments
         }
+
         isRecording          = true;
         this.currentTestName = testName;
         GraphicsConfiguration gc = GraphicsEnvironment.getLocalGraphicsEnvironment()
