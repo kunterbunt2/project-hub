@@ -342,7 +342,7 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         featureName = nameGenerator.generateFeatureName(0);
         sprintName  = nameGenerator.generateSprintName(0);
 
-        productListViewTester.switchToProductListViewWithOidc("christopher.paul@example.com", "password", null, testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+        productListViewTester.switchToProductListViewWithOidc("christopher.paul@kassandra.org", "password", "../project-hub.wiki/screenshots/login-view.png", testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/product-list-view.png");
         takeProductDialogScreenshots();
         productListViewTester.selectProduct(productName);

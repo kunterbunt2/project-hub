@@ -244,7 +244,7 @@ public class ProductListViewTester {
         seleniumHandler.setLoginUser("admin-user");
         seleniumHandler.setLoginPassword("test-password");
         if (screenshotFileName != null) {
-            seleniumHandler.takeElementScreenShot(seleniumHandler.findLoginOverlayElement(LoginView.LOGIN_VIEW), LoginView.LOGIN_VIEW, "../project-hub.wiki/screenshots/login-view.png");
+            seleniumHandler.takeElementScreenShot(seleniumHandler.findLoginOverlayElement(LoginView.LOGIN_VIEW), LoginView.LOGIN_VIEW, screenshotFileName);
         }
         seleniumHandler.loginSubmit();
         seleniumHandler.waitUntil(ExpectedConditions.elementToBeClickable(By.id(ProductListView.PRODUCT_LIST_PAGE_TITLE)));
@@ -271,6 +271,9 @@ public class ProductListViewTester {
 //            System.out.println("OIDC Login: Checking for OIDC login button with ID: " + LoginView.OIDC_LOGIN_BUTTON);
             if (seleniumHandler.isElementPresent(By.id(LoginView.OIDC_LOGIN_BUTTON))) {
 //                System.out.println("OIDC Login: OIDC login button found, clicking it now");
+//                if (screenshotFileName != null) {
+//                    seleniumHandler.takeElementScreenShot(seleniumHandler.findLoginOverlayElement(LoginView.LOGIN_VIEW), LoginView.LOGIN_VIEW, screenshotFileName);
+//                }
 
                 // Click with JavaScript for more reliability
                 seleniumHandler.executeJavaScript("document.getElementById('" + LoginView.OIDC_LOGIN_BUTTON + "').click();");
@@ -298,9 +301,6 @@ public class ProductListViewTester {
 //                    System.out.println("OIDC Login: Filling in credentials");
                     seleniumHandler.findElement(By.id("username")).sendKeys(username);
                     seleniumHandler.findElement(By.id("password")).sendKeys(password);
-                    if (screenshotFileName != null) {
-                        seleniumHandler.takeElementScreenShot(seleniumHandler.findLoginOverlayElement(LoginView.LOGIN_VIEW), LoginView.LOGIN_VIEW, "../project-hub.wiki/screenshots/login-view.png");
-                    }
 
                     // Click login button
 //                    System.out.println("OIDC Login: Clicking Keycloak login button");

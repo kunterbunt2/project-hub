@@ -45,7 +45,7 @@ import java.time.format.FormatStyle;
 
 @Route("user-list")
 @PageTitle("User List Page")
-@Menu(order = 2, icon = "vaadin:users", title = "User List")
+@Menu(order = 2, icon = "vaadin:users", title = "Users")
 @PermitAll // When security is enabled, allow all authenticated users
 public class UserListView extends Main implements AfterNavigationObserver {
     public static final String     CREATE_USER_BUTTON             = "create-user-button";

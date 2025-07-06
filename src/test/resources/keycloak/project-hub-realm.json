@@ -4,12 +4,12 @@
   "displayName": "Project Hub Test Realm",
   "users": [
     {
-      "username": "christopher.paul@example.com",
+      "username": "christopher.paul@kassandra.org",
       "enabled": true,
       "emailVerified": true,
       "firstName": "Test",
       "lastName": "User",
-      "email": "christopher.paul@example.com",
+      "email": "christopher.paul@kassandra.org",
       "credentials": [
         {
           "type": "password",
@@ -29,7 +29,7 @@
       "emailVerified": true,
       "firstName": "Test",
       "lastName": "User",
-      "email": "testuser@example.com",
+      "email": "testuser@kassandra.org",
       "credentials": [
         {
           "type": "password",
@@ -48,7 +48,7 @@
       "emailVerified": true,
       "firstName": "Admin",
       "lastName": "User",
-      "email": "admin@example.com",
+      "email": "admin@kassandra.org",
       "credentials": [
         {
           "type": "password",

@@ -51,7 +51,7 @@ import java.util.Map;
 
 @Route("product-list")
 @PageTitle("Product List Page")
-@Menu(order = 1, icon = "vaadin:factory", title = "product List")
+@Menu(order = 1, icon = "vaadin:factory", title = "Products")
 @PermitAll
 @RolesAllowed({"USER", "ADMIN"})
 public class ProductListView extends Main implements AfterNavigationObserver {

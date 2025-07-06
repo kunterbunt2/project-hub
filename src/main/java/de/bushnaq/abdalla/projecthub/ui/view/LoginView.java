@@ -17,7 +17,10 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view;
 
-import com.vaadin.flow.component.html.*;
+import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEnterEvent;
@@ -71,9 +74,9 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
         authContainer.add(new H3("Login with username and password"));
         authContainer.add(loginForm);
 
-        Paragraph hint = new Paragraph("Default credentials: admin / admin123");
-        hint.addClassName(Margin.Top.SMALL);
-        authContainer.add(hint);
+//        Paragraph hint = new Paragraph("Default credentials: admin / admin123");
+//        hint.addClassName(Margin.Top.SMALL);
+//        authContainer.add(hint);
 
         // Add OIDC login option if it's enabled
         if (oidcEnabled) {
