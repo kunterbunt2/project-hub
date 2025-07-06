@@ -7,12 +7,10 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
-# Adding permissions for checks, contents, and pages
+# Adding permissions for checks and contents
 permissions:
   checks: write
-  contents: write  # Needed for GitHub Pages deployment
-  pages: write     # Required for GitHub Pages
-  id-token: write  # Required for GitHub Pages
+  contents: read
 
 jobs:
   build:
@@ -91,7 +89,7 @@ jobs:
 
       - name: Run tests with UI tests in headless mode
         run: |
-          mvn test -Dtest=ProductListViewTest -Dselenium.headless=true
+          mvn test -Dselenium.headless=true
         env:
           # Set environment variables for headless testing
           SELENIUM_HEADLESS: "true"
@@ -107,38 +105,14 @@ jobs:
           PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
         continue-on-error: true  # Continue workflow even if tests fail to collect reports
 
-      # Generate JaCoCo coverage reports
-      - name: Generate JaCoCo Coverage Report
-        run: |
-          mvn jacoco:prepare-agent test jacoco:report
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
-        continue-on-error: true
-
       # Upload coverage reports to Codecov
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          token: ${{ secrets.CODECOV_TOKEN }} # Optional if repo is public
-          files: ./target/site/jacoco/jacoco.xml
+          file: ./target/site/jacoco-xml/jacoco.xml
           flags: unittests
           fail_ci_if_error: false
           verbose: true
-
-      # Create GitHub Actions run summary with coverage information
-      - name: JaCoCo Code Coverage Report
-        id: jacoco_reporter
-        uses: PavanMudigonda/jacoco-reporter@v4.8
-        with:
-          coverage_results_path: ./target/site/jacoco-xml/jacoco.xml
-          coverage_report_name: Coverage
-          coverage_report_title: JaCoCo Coverage Report
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          skip_check_run: false
-          minimum_coverage: 75
-          fail_below_threshold: false
-          publish_only_summary: false
 
       # Generate Maven site with test reports
       - name: Generate Site Reports
@@ -147,26 +121,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
         continue-on-error: true
-
-      # Publish test and coverage reports to GitHub Pages
-      - name: Publish Test and Coverage Reports
-        if: github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-and-coverage-reports
-          path: |
-            target/site/
-            test-results/
-
-      # Deploy coverage reports to GitHub Pages
-      - name: Deploy Coverage to GitHub Pages
-        if: github.ref == 'refs/heads/main'
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./target/site
-          destination_dir: reports
-          enable_jekyll: false
 
       # Add JUnit Report step to publish test results
       - name: Publish Test Report
