@@ -27,6 +27,8 @@ import com.vaadin.flow.component.textfield.TextField;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
 import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
 
+import static de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils.DIALOG_DEFAULT_WIDTH;
+
 /**
  * A reusable dialog for creating and editing sprints.
  */
@@ -73,7 +75,7 @@ public class SprintDialog extends Dialog {
         getHeader().add(headerLayout);
 
         setId(SPRINT_DIALOG);
-        setWidth("480px");
+        setWidth(DIALOG_DEFAULT_WIDTH);
 
         VerticalLayout dialogLayout = new VerticalLayout();
         dialogLayout.setPadding(false);

@@ -28,6 +28,8 @@ import com.vaadin.flow.component.textfield.TextField;
 import de.bushnaq.abdalla.projecthub.dto.Product;
 import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
 
+import static de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils.DIALOG_DEFAULT_WIDTH;
+
 /**
  * A reusable dialog for creating and editing products.
  */
@@ -53,6 +55,9 @@ public class ProductDialog extends Dialog {
         this.saveCallback = saveCallback;
         isEditMode        = product != null;
 
+        setId(PRODUCT_DIALOG);
+        setWidth(DIALOG_DEFAULT_WIDTH);
+
         // Set the dialog title with an icon
         String title = isEditMode ? "Edit Product" : "Create Product";
 
@@ -73,8 +78,6 @@ public class ProductDialog extends Dialog {
         setHeaderTitle(null); // Clear the default title
         getHeader().add(headerLayout);
 
-        setId(PRODUCT_DIALOG);
-        setWidth("480px");
 
         VerticalLayout dialogLayout = new VerticalLayout();
         dialogLayout.setPadding(false);

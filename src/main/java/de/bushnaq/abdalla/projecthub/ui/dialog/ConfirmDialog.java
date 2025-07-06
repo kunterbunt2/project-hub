@@ -24,6 +24,8 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
+import static de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils.DIALOG_DEFAULT_WIDTH;
+
 /**
  * A reusable dialog for confirming delete operations.
  */
@@ -44,7 +46,7 @@ public class ConfirmDialog extends Dialog {
     public ConfirmDialog(String title, String message, String confirmButtonText, Runnable action) {
         setHeaderTitle(title);
         setId(CONFIRM_DIALOG);
-        setWidth("480px");
+        setWidth(DIALOG_DEFAULT_WIDTH);
 
         VerticalLayout dialogLayout = new VerticalLayout();
         dialogLayout.add(message);

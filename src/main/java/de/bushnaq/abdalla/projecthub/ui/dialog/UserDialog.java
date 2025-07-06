@@ -35,6 +35,8 @@ import java.awt.*;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils.DIALOG_DEFAULT_WIDTH;
+
 /**
  * A reusable dialog for creating and editing users.
  */
@@ -89,7 +91,7 @@ public class UserDialog extends Dialog {
         getHeader().add(headerLayout);
 
         setId(USER_DIALOG);
-        setWidth("500px");
+        setWidth(DIALOG_DEFAULT_WIDTH);
 
         VerticalLayout dialogLayout = new VerticalLayout();
         dialogLayout.setPadding(false);

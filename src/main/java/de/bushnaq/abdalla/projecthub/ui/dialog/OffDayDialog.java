@@ -40,6 +40,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 
+import static de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils.DIALOG_DEFAULT_WIDTH;
+
 public class OffDayDialog extends Dialog {
     public static final String               CANCEL_BUTTON           = "offday-dialog-cancel";
     public static final String               CONFIRM_BUTTON          = "offday-dialog-confirm";
@@ -85,7 +87,7 @@ public class OffDayDialog extends Dialog {
         getHeader().add(headerLayout);
 
         setId(OFFDAY_DIALOG);
-        setWidth("480px");
+        setWidth(DIALOG_DEFAULT_WIDTH);
 //        setCloseOnEsc(true);
 //        setCloseOnOutsideClick(false);
 //        setDraggable(true);

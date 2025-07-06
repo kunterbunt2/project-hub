@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.ui.util.selenium;
 
+import de.bushnaq.abdalla.projecthub.ui.view.LoginView;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import jakarta.annotation.PreDestroy;
 import lombok.Getter;
@@ -469,7 +470,8 @@ public class SeleniumHandler {
 
     public void loginSubmit() {
         // Find the login button using a more specific XPath selector that matches the attributes
-        WebElement button = findElement(By.xpath("//vaadin-button[@slot='submit' and contains(@theme, 'submit')]"));
+//        WebElement button = findElement(By.xpath("//vaadin-button[@slot='submit' and contains(@theme, 'submit')]"));
+        WebElement button = findElement(By.id(LoginView.LOGIN_VIEW_SUBMIT_BUTTON));
         button.click();
         logger.info("Clicked login submit button");
         waitForPageLoaded();
@@ -775,15 +777,15 @@ public class SeleniumHandler {
     }
 
     public void setLoginPassword(String loginPassword) {
-        WebElement passwordElement = findElement(By.name("password"));
-        logger.info("sent loginPassword='%s' to element with name 'password'%n", loginPassword);
+        WebElement passwordElement = findElement(By.id(LoginView.LOGIN_VIEW_PASSWORD));
+        logger.info("sent loginPassword='{}' to element with name '{}}'%n", loginPassword, LoginView.LOGIN_VIEW_PASSWORD);
         passwordElement.sendKeys(loginPassword);
     }
 
     public void setLoginUser(String loginUser) {
-        waitForElementToBeLocated("vaadinLoginUsername");
-        WebElement usernameElement = findElement(By.id("vaadinLoginUsername"));
-        logger.info("sent loginUser='%s' to element with id 'vaadinLoginUsername'%n", loginUser);
+        waitForElementToBeLocated(LoginView.LOGIN_VIEW_USERNAME);
+        WebElement usernameElement = findElement(By.id(LoginView.LOGIN_VIEW_USERNAME));
+        logger.info("sent loginUser='{}' to element with id '{}'%n", loginUser, LoginView.LOGIN_VIEW_USERNAME);
         usernameElement.sendKeys(loginUser);
     }
 

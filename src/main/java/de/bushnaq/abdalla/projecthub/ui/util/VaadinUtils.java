@@ -31,6 +31,7 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
  * Utility class for common Vaadin UI components and layouts
  */
 public final class VaadinUtils {
+    public static String DIALOG_DEFAULT_WIDTH = "480px";
 
     /**
      * Creates a standardized dialog button layout with save and cancel buttons

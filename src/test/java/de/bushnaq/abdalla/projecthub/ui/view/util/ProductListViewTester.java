@@ -244,7 +244,7 @@ public class ProductListViewTester {
         seleniumHandler.setLoginUser("admin-user");
         seleniumHandler.setLoginPassword("test-password");
         if (screenshotFileName != null) {
-            seleniumHandler.takeElementScreenShot(seleniumHandler.findLoginOverlayElement(LoginView.LOGIN_VIEW), LoginView.LOGIN_VIEW, screenshotFileName);
+            seleniumHandler.takeElementScreenShot(seleniumHandler.findElement(By.id(LoginView.LOGIN_VIEW)), LoginView.LOGIN_VIEW, screenshotFileName);
         }
         seleniumHandler.loginSubmit();
         seleniumHandler.waitUntil(ExpectedConditions.elementToBeClickable(By.id(ProductListView.PRODUCT_LIST_PAGE_TITLE)));
@@ -266,14 +266,13 @@ public class ProductListViewTester {
             seleniumHandler.getAndCheck("http://localhost:" + port + "/ui/" + LoginView.ROUTE);
             seleniumHandler.startRecording(recordingFolderName, testName);
 //            System.out.println("OIDC Login: Current URL after navigation: " + seleniumHandler.getCurrentUrl());
-
             // Check if the OIDC login button is present
 //            System.out.println("OIDC Login: Checking for OIDC login button with ID: " + LoginView.OIDC_LOGIN_BUTTON);
             if (seleniumHandler.isElementPresent(By.id(LoginView.OIDC_LOGIN_BUTTON))) {
 //                System.out.println("OIDC Login: OIDC login button found, clicking it now");
-//                if (screenshotFileName != null) {
-//                    seleniumHandler.takeElementScreenShot(seleniumHandler.findLoginOverlayElement(LoginView.LOGIN_VIEW), LoginView.LOGIN_VIEW, screenshotFileName);
-//                }
+                if (screenshotFileName != null) {
+                    seleniumHandler.takeElementScreenShot(seleniumHandler.findElement(By.id(LoginView.LOGIN_VIEW)), LoginView.LOGIN_VIEW, screenshotFileName);
+                }
 
                 // Click with JavaScript for more reliability
                 seleniumHandler.executeJavaScript("document.getElementById('" + LoginView.OIDC_LOGIN_BUTTON + "').click();");

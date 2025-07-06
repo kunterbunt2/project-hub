@@ -40,6 +40,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils.DIALOG_DEFAULT_WIDTH;
+
 public class LocationDialog extends Dialog {
     public static final String           CANCEL_BUTTON             = "location-dialog-cancel";
     public static final String           CONFIRM_BUTTON            = "location-dialog-confirm";
@@ -82,7 +84,7 @@ public class LocationDialog extends Dialog {
         getHeader().add(headerLayout);
 
         setId(LOCATION_DIALOG);
-        setWidth("480px");
+        setWidth(DIALOG_DEFAULT_WIDTH);
 
         VerticalLayout content = createDialogContent();
         add(content);

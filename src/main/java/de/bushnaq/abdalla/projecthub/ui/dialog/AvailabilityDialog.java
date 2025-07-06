@@ -39,6 +39,8 @@ import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
 
 import java.time.LocalDate;
 
+import static de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils.DIALOG_DEFAULT_WIDTH;
+
 public class AvailabilityDialog extends Dialog {
     public static final String               AVAILABILITY_DIALOG           = "availability-dialog";
     public static final String               AVAILABILITY_PERCENTAGE_FIELD = "availability-percentage-field";
@@ -82,7 +84,7 @@ public class AvailabilityDialog extends Dialog {
         getHeader().add(headerLayout);
 
         setId(AVAILABILITY_DIALOG);
-        setWidth("480px");
+        setWidth(DIALOG_DEFAULT_WIDTH);
 //        setCloseOnEsc(true);
 //        setCloseOnOutsideClick(false);
 //        setDraggable(true);

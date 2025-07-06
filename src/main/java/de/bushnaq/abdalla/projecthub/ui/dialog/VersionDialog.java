@@ -28,6 +28,8 @@ import com.vaadin.flow.component.textfield.TextField;
 import de.bushnaq.abdalla.projecthub.dto.Version;
 import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
 
+import static de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils.DIALOG_DEFAULT_WIDTH;
+
 /**
  * A reusable dialog for creating and editing versions.
  */
@@ -74,7 +76,7 @@ public class VersionDialog extends Dialog {
         getHeader().add(headerLayout);
 
         setId(VERSION_DIALOG);
-        setWidth("480px");
+        setWidth(DIALOG_DEFAULT_WIDTH);
 
         VerticalLayout dialogLayout = new VerticalLayout();
         dialogLayout.setPadding(false);
