@@ -21,13 +21,10 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
 import de.bushnaq.abdalla.projecthub.dto.OffDay;
@@ -68,30 +65,10 @@ public class OffDayDialog extends Dialog {
 
         // Set the dialog title with an icon
         String title = offDay == null ? "Create Off Day" : "Edit Off Day";
-
-        // Create a custom header with icon
-        HorizontalLayout headerLayout = new HorizontalLayout();
-        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-        headerLayout.setSpacing(true);
-
-        Icon titleIcon = new Icon(VaadinIcon.CALENDAR);
-        titleIcon.getStyle().set("margin-right", "0.5em");
-
-        H3 titleLabel = new H3(title);
-        titleLabel.getStyle().set("margin", "0");
-
-        headerLayout.add(titleIcon, titleLabel);
-
-        // Set the custom header
-        setHeaderTitle(null); // Clear the default title
-        getHeader().add(headerLayout);
+        getHeader().add(VaadinUtil.createDialogHeader(title, VaadinIcon.CALENDAR));
 
         setId(OFFDAY_DIALOG);
         setWidth(DIALOG_DEFAULT_WIDTH);
-//        setCloseOnEsc(true);
-//        setCloseOnOutsideClick(false);
-//        setDraggable(true);
-//        setResizable(true);
 
         // Setup form and actions
         add(/*createHeader(),*/ createForm(), VaadinUtil.createDialogButtonLayout("Save", CONFIRM_BUTTON, "Cancel", CANCEL_BUTTON, this::save, this));

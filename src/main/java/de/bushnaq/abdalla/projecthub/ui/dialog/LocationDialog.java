@@ -25,7 +25,6 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import de.bushnaq.abdalla.projecthub.dto.Location;
 import de.bushnaq.abdalla.projecthub.dto.User;
@@ -65,23 +64,7 @@ public class LocationDialog extends Dialog {
 
         // Set the dialog title with an icon
         String title = location != null ? "Edit Location" : "Create Location";
-
-        // Create a custom header with icon
-        HorizontalLayout headerLayout = new HorizontalLayout();
-        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-        headerLayout.setSpacing(true);
-
-        Icon titleIcon = new Icon(VaadinIcon.MAP_MARKER);
-        titleIcon.getStyle().set("margin-right", "0.5em");
-
-        com.vaadin.flow.component.html.H3 titleLabel = new com.vaadin.flow.component.html.H3(title);
-        titleLabel.getStyle().set("margin", "0");
-
-        headerLayout.add(titleIcon, titleLabel);
-
-        // Set the custom header
-        setHeaderTitle(null); // Clear the default title
-        getHeader().add(headerLayout);
+        getHeader().add(VaadinUtil.createDialogHeader(title, VaadinIcon.MAP_MARKER));
 
         setId(LOCATION_DIALOG);
         setWidth(DIALOG_DEFAULT_WIDTH);

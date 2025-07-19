@@ -21,6 +21,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -68,6 +69,29 @@ public final class VaadinUtil {
         buttonLayout.getStyle().set("margin-top", "var(--lumo-space-m)");
 
         return buttonLayout;
+    }
+
+    public static HorizontalLayout createDialogHeader(String title, String icon) {
+        return createDialogHeader(title, new Icon(icon));
+    }
+
+    public static HorizontalLayout createDialogHeader(String title, VaadinIcon icon) {
+        return createDialogHeader(title, new Icon(icon));
+    }
+
+    public static HorizontalLayout createDialogHeader(String title, Icon icon) {
+        HorizontalLayout headerLayout = new HorizontalLayout();
+        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+        headerLayout.setSpacing(true);
+
+        icon.getStyle().set("margin-right", "0.5em");
+
+        H3 titleLabel = new H3(title);
+        titleLabel.getStyle().set("margin", "0");
+
+        headerLayout.add(icon, titleLabel);
+
+        return headerLayout;
     }
 
     /**
