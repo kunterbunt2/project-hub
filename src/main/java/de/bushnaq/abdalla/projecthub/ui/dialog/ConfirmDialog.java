@@ -24,7 +24,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
-import static de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils.DIALOG_DEFAULT_WIDTH;
+import static de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil.DIALOG_DEFAULT_WIDTH;
 
 /**
  * A reusable dialog for confirming delete operations.

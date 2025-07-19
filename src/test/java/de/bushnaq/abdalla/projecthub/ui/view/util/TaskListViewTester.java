@@ -18,13 +18,41 @@
 package de.bushnaq.abdalla.projecthub.ui.view.util;
 
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 
+@Component
+@Lazy
 public class TaskListViewTester {
     private final SeleniumHandler seleniumHandler;
 
+    /**
+     * Constructs a new SprintViewTester with the given Selenium handler.
+     *
+     * @param seleniumHandler the handler for Selenium operations
+     */
     public TaskListViewTester(SeleniumHandler seleniumHandler) {
         this.seleniumHandler = seleniumHandler;
     }
+
+    /**
+     * Navigates to the TaskListView by clicking on the "Tasks" link in the breadcrumb
+     *
+     * @param testClassName The name of the test class
+     * @param testCaseName The name of the test case
+     * @param url Optional URL to navigate to before clicking the Tasks link. If null, assumes we're already on a page with a breadcrumb.
+     */
+//    public void switchToTaskListView(String testClassName, String testCaseName, String url) {
+//        if (url != null) {
+//            seleniumHandler.navigateTo(url);
+//        }
+//
+//        // Find and click the Tasks link in the breadcrumb
+//        seleniumHandler.click("Tasks");
+//
+//        // Wait for the task grid to be visible
+//        seleniumHandler.waitForElementToBeClickable(TaskListView.TASK_GRID_NAME_PREFIX);
+//    }
 
 //    public void selectTask(String name) {
 //        seleniumHandler.selectGridRow(TASK_GRID_NAME_PREFIX, TaskView.class, name);

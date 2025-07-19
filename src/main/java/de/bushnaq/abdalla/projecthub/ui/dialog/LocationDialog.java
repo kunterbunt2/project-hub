@@ -30,7 +30,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import de.bushnaq.abdalla.projecthub.dto.Location;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.rest.api.LocationApi;
-import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
 import de.focus_shift.jollyday.core.HolidayManager;
 import de.focus_shift.jollyday.core.ManagerParameters;
 
@@ -40,7 +40,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils.DIALOG_DEFAULT_WIDTH;
+import static de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil.DIALOG_DEFAULT_WIDTH;
 
 public class LocationDialog extends Dialog {
     public static final String           CANCEL_BUTTON             = "location-dialog-cancel";
@@ -128,7 +128,7 @@ public class LocationDialog extends Dialog {
         startDatePicker.setMax(LocalDate.now().plusYears(10));
         startDatePicker.setPrefixComponent(new Icon(VaadinIcon.CALENDAR));
 
-        content.add(countryComboBox, stateComboBox, startDatePicker, VaadinUtils.createDialogButtonLayout("Save", CONFIRM_BUTTON, "Cancel", CANCEL_BUTTON, this::save, this));
+        content.add(countryComboBox, stateComboBox, startDatePicker, VaadinUtil.createDialogButtonLayout("Save", CONFIRM_BUTTON, "Cancel", CANCEL_BUTTON, this::save, this));
         return content;
     }
 

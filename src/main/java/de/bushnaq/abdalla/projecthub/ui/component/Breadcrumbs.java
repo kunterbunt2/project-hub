@@ -63,7 +63,7 @@ public class Breadcrumbs extends HorizontalLayout {
             }
         }
 
-        items.add(new BreadcrumbItem(title, view, params));
+        items.add(new BreadcrumbItem(title, view, title, params));
         updateUI();
     }
 
@@ -93,6 +93,9 @@ public class Breadcrumbs extends HorizontalLayout {
             } else {
                 RouterLink link;
                 link = new RouterLink(item.title, item.view);
+                if (item.id != null) {
+                    link.setId(item.id);
+                }
                 if (item.params != null) {
                     link.setQueryParameters(QueryParameters.simple(item.params));
                 }
@@ -103,14 +106,16 @@ public class Breadcrumbs extends HorizontalLayout {
     }
 
     private static class BreadcrumbItem {
+        private final String                     id;
         private final Map<String, String>        params;
         private final String                     title;
         private final Class<? extends Component> view;
 
-        public BreadcrumbItem(String title, Class<? extends Component> view, Map<String, String> params) {
+        public BreadcrumbItem(String title, Class<? extends Component> view, String id, Map<String, String> params) {
             this.title  = title;
             this.view   = view;
             this.params = params;
+            this.id     = id;
         }
     }
 }

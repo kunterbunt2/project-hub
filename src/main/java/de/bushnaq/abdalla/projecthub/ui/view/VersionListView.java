@@ -39,7 +39,7 @@ import de.bushnaq.abdalla.projecthub.rest.api.VersionApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.VersionDialog;
-import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
 import jakarta.annotation.security.PermitAll;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -77,7 +77,7 @@ public class VersionListView extends Main implements AfterNavigationObserver {
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        add(VaadinUtils.createHeader("Versions", VERSION_LIST_PAGE_TITLE, VaadinIcon.TAG, CREATE_VERSION_BUTTON, () -> openVersionDialog(null)), createGrid(clock));
+        add(VaadinUtil.createHeader("Versions", VERSION_LIST_PAGE_TITLE, VaadinIcon.TAG, CREATE_VERSION_BUTTON, () -> openVersionDialog(null)), createGrid(clock));
     }
 
     @Override

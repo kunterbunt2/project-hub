@@ -37,7 +37,7 @@ import de.bushnaq.abdalla.projecthub.rest.api.ProductApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ProductDialog;
-import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.http.HttpStatus;
@@ -73,7 +73,7 @@ public class ProductListView extends Main implements AfterNavigationObserver {
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        add(VaadinUtils.createHeader("Products", PRODUCT_LIST_PAGE_TITLE, VaadinIcon.CUBE, CREATE_PRODUCT_BUTTON, () -> openProductDialog(null)), createGrid(clock));
+        add(VaadinUtil.createHeader("Products", PRODUCT_LIST_PAGE_TITLE, VaadinIcon.CUBE, CREATE_PRODUCT_BUTTON, () -> openProductDialog(null)), createGrid(clock));
     }
 
     @Override

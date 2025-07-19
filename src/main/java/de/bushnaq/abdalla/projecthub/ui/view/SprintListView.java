@@ -43,7 +43,7 @@ import de.bushnaq.abdalla.projecthub.rest.api.VersionApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.SprintDialog;
-import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
 import de.bushnaq.abdalla.util.date.DateUtil;
 import jakarta.annotation.security.PermitAll;
 import org.springframework.http.HttpStatus;
@@ -62,6 +62,7 @@ import java.util.Map;
 public class SprintListView extends Main implements AfterNavigationObserver {
     public static final String       CREATE_SPRINT_BUTTON             = "create-sprint-button";
     public static final String       SPRINT_GRID                      = "sprint-grid";
+    public static final String       SPRINT_GRID_CONFIG_BUTTON_PREFIX = "sprint-grid-config-button-prefix-";
     public static final String       SPRINT_GRID_DELETE_BUTTON_PREFIX = "sprint-grid-delete-button-prefix-";
     public static final String       SPRINT_GRID_EDIT_BUTTON_PREFIX   = "sprint-grid-edit-button-prefix-";
     public static final String       SPRINT_GRID_NAME_PREFIX          = "sprint-grid-name-";
@@ -87,7 +88,7 @@ public class SprintListView extends Main implements AfterNavigationObserver {
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        add(VaadinUtils.createHeader("Sprints", SPRINT_LIST_PAGE_TITLE, "vaadin:exit", CREATE_SPRINT_BUTTON, () -> openSprintDialog(null)), createGrid(clock));
+        add(VaadinUtil.createHeader("Sprints", SPRINT_LIST_PAGE_TITLE, "vaadin:exit", CREATE_SPRINT_BUTTON, () -> openSprintDialog(null)), createGrid(clock));
     }
 
     @Override
@@ -112,13 +113,11 @@ public class SprintListView extends Main implements AfterNavigationObserver {
                         mainLayout.getBreadcrumbs().clear();
                         Product product = productApi.getById(productId);
                         mainLayout.getBreadcrumbs().addItem("Products (" + product.getName() + ")", ProductListView.class);
-//                        mainLayout.getBreadcrumbs().addItem("Products", ProductListView.class);
                         {
                             Map<String, String> params = new HashMap<>();
                             params.put("product", String.valueOf(productId));
                             Version version = versionApi.getById(versionId);
                             mainLayout.getBreadcrumbs().addItem("Versions (" + version.getName() + ")", VersionListView.class, params);
-//                            mainLayout.getBreadcrumbs().addItem("Versions", VersionListView.class, params);
                         }
                         {
                             Map<String, String> params = new HashMap<>();
@@ -126,7 +125,6 @@ public class SprintListView extends Main implements AfterNavigationObserver {
                             params.put("version", String.valueOf(versionId));
                             Feature feature = featureApi.getById(featureId);
                             mainLayout.getBreadcrumbs().addItem("Features (" + feature.getName() + ")", FeatureListView.class, params);
-//                            mainLayout.getBreadcrumbs().addItem("Features", FeatureListView.class, params);
                         }
                         {
                             Map<String, String> params = new HashMap<>();
@@ -219,15 +217,31 @@ public class SprintListView extends Main implements AfterNavigationObserver {
             editButton.addClickListener(e -> openSprintDialog(sprint));
             editButton.getElement().setAttribute("title", "Edit");
 
+            Button configButton = new Button(new Icon(VaadinIcon.COG));
+            configButton.setId(SPRINT_GRID_CONFIG_BUTTON_PREFIX + sprint.getName());
+            configButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
+            configButton.addClickListener(e -> {
+                Map<String, String> params = new HashMap<>();
+                params.put("product", String.valueOf(productId));
+                params.put("version", String.valueOf(versionId));
+                params.put("feature", String.valueOf(featureId));
+                params.put("sprint", String.valueOf(sprint.getId()));
+                UI.getCurrent().navigate(
+                        TaskListView.class,
+                        QueryParameters.simple(params)
+                );
+            });
+            configButton.getElement().setAttribute("title", "Tasks Configuration");
+
             Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));
             deleteButton.setId(SPRINT_GRID_DELETE_BUTTON_PREFIX + sprint.getName());
             deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
             deleteButton.addClickListener(e -> confirmDelete(sprint));
             deleteButton.getElement().setAttribute("title", "Delete");
 
-            layout.add(editButton, deleteButton);
+            layout.add(editButton, configButton, deleteButton);
             return layout;
-        })).setWidth("120px").setFlexGrow(0);
+        })).setWidth("160px").setFlexGrow(0);
 
         grid.setSizeFull();
         //- Add click listener to navigate to TaskView with the selected version ID

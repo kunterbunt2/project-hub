@@ -30,7 +30,7 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 /**
  * Utility class for common Vaadin UI components and layouts
  */
-public final class VaadinUtils {
+public final class VaadinUtil {
     public static String DIALOG_DEFAULT_WIDTH = "480px";
 
     /**

@@ -35,11 +35,11 @@ import com.vaadin.flow.data.validator.RangeValidator;
 import de.bushnaq.abdalla.projecthub.dto.Availability;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.rest.api.AvailabilityApi;
-import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
 
 import java.time.LocalDate;
 
-import static de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils.DIALOG_DEFAULT_WIDTH;
+import static de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil.DIALOG_DEFAULT_WIDTH;
 
 public class AvailabilityDialog extends Dialog {
     public static final String               AVAILABILITY_DIALOG           = "availability-dialog";
@@ -91,7 +91,7 @@ public class AvailabilityDialog extends Dialog {
 //        setResizable(true);
 
         // Setup form and actions
-        add(createHeader(), createForm(), VaadinUtils.createDialogButtonLayout("Save", CONFIRM_BUTTON, "Cancel", CANCEL_BUTTON, this::save, this));
+        add(/*createHeader(),*/ createForm(), VaadinUtil.createDialogButtonLayout("Save", CONFIRM_BUTTON, "Cancel", CANCEL_BUTTON, this::save, this));
         configureFormBinder();
     }
 
@@ -147,12 +147,12 @@ public class AvailabilityDialog extends Dialog {
         return formLayout;
     }
 
-    private H3 createHeader() {
-        String title  = isNewAvailability ? "Add New Availability" : "Edit Availability";
-        H3     header = new H3(title);
-        header.getStyle().set("margin-top", "0");
-        return header;
-    }
+//    private H3 createHeader() {
+//        String title  = isNewAvailability ? "Add New Availability" : "Edit Availability";
+//        H3     header = new H3(title);
+//        header.getStyle().set("margin-top", "0");
+//        return header;
+//    }
 
     private void save() {
         try {

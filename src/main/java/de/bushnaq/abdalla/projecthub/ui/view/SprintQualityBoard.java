@@ -21,18 +21,14 @@ import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.router.Location;
-import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.Context;
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
-import de.bushnaq.abdalla.projecthub.report.burndown.BurnDownChart;
-import de.bushnaq.abdalla.projecthub.report.burndown.RenderDao;
-import de.bushnaq.abdalla.projecthub.report.gantt.GanttChart;
 import de.bushnaq.abdalla.projecthub.rest.api.*;
 import de.bushnaq.abdalla.projecthub.ui.HtmlColor;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
-import de.bushnaq.abdalla.util.Util;
+import de.bushnaq.abdalla.projecthub.ui.util.RenderUtil;
 import de.bushnaq.abdalla.util.date.DateUtil;
 import de.bushnaq.abdalla.util.date.ReportUtil;
 import jakarta.annotation.security.PermitAll;
@@ -43,13 +39,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,8 +57,6 @@ import java.util.function.Function;
 @PageTitle("Sprint Quality Board")
 @PermitAll // When security is enabled, allow all authenticated users
 public class SprintQualityBoard extends Main implements AfterNavigationObserver {
-    public static final String        BURNDOWN_CHART          = "burndown-chart";
-    public static final String        GANTT_CHART             = "gantt-chart";
     public static final String        SPRINT_GRID_NAME_PREFIX = "sprint-grid-name-";
     private final       Clock         clock;
     @Autowired
@@ -157,7 +148,7 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
                             Map<String, String> params = new HashMap<>();
                             params.put("product", String.valueOf(productId));
                             params.put("version", String.valueOf(versionId));
-                            params.put("FEATURE", String.valueOf(featureId));
+                            params.put("feature", String.valueOf(featureId));
                             Sprint sprint = sprintApi.getById(sprintId);
                             mainLayout.getBreadcrumbs().addItem("Sprints (" + sprint.getName() + ")", SprintListView.class, params);
 //                            mainLayout.getBreadcrumbs().addItem("Sprints", SprintListView.class, params);
@@ -166,7 +157,7 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
                             Map<String, String> params = new HashMap<>();
                             params.put("product", String.valueOf(productId));
                             params.put("version", String.valueOf(versionId));
-                            params.put("FEATURE", String.valueOf(featureId));
+                            params.put("feature", String.valueOf(featureId));
                             params.put("sprint", String.valueOf(sprintId));
                             mainLayout.getBreadcrumbs().addItem("Tasks", TaskListView.class, params);
                         }
@@ -242,7 +233,7 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
     private void createGanttChart() {
         try {
             long  time       = System.currentTimeMillis();
-            Image ganttChart = generateGanttChartImage();
+            Image ganttChart = RenderUtil.generateGanttChartImage(context, sprint);
             ganttChart.getStyle()//.set("object-fit", "contain") // Maintain aspect ratio
                     .set("margin-top", "var(--lumo-space-m)");
             add(ganttChart);
@@ -250,30 +241,6 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
         } catch (Exception e) {
             add(new Paragraph("Error generating gantt chart: " + e.getMessage()));
         }
-    }
-
-    private RenderDao createRenderDao(Context context, Sprint sprint, String column, LocalDateTime now, int chartWidth, int chartHeight, String link) {
-        RenderDao dao = new RenderDao();
-        dao.context            = context;
-        dao.column             = column;
-        dao.sprintName         = column + "-burn-down";
-        dao.link               = link;
-        dao.start              = sprint.getStart();
-        dao.now                = now;
-        dao.end                = sprint.getEnd();
-        dao.release            = sprint.getReleaseDate();
-        dao.chartWidth         = chartWidth;
-        dao.chartHeight        = chartHeight;
-        dao.sprint             = sprint;
-        dao.estimatedBestWork  = DateUtil.add(sprint.getWorked(), sprint.getRemaining());
-        dao.estimatedWorstWork = null;
-        dao.maxWorked          = DateUtil.add(sprint.getWorked(), sprint.getRemaining());
-        dao.remaining          = sprint.getRemaining();
-        dao.worklog            = sprint.getWorklogs();
-        dao.worklogRemaining   = sprint.getWorklogRemaining();
-        dao.cssClass           = "scheduleWithMargin";
-        dao.graphicsTheme      = context.parameters.graphicsTheme;
-        return dao;
     }
 
     private void createSprintDetailsLayout() {
@@ -349,7 +316,7 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
 
         try {
             long  time          = System.currentTimeMillis();
-            Image burndownChart = generateBurnDownImage();
+            Image burndownChart = RenderUtil.generateBurnDownImage(context, sprint);
             burndownChart.getStyle().set("object-fit", "contain") // Maintain aspect ratio
                     .set("margin-top", "var(--lumo-space-m)");
             spanningColumn.add(burndownChart);
@@ -387,32 +354,6 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
             container.add(value, name);
             return container;
         });
-    }
-
-    private Image generateBurnDownImage() {
-        StreamResource resource = new StreamResource("burndown.svg", () -> {
-            try (ByteArrayOutputStream outputStream = renderBurnDownChart()) {
-                // Convert ByteArrayOutputStream to ByteArrayInputStream
-                return new ByteArrayInputStream(outputStream.toByteArray());
-            } catch (Exception e) {
-                logger.error("Error creating burndown chart", e);
-                return new ByteArrayInputStream(new byte[0]); // Empty stream in case of error
-            }
-        });
-        // Create an image component with the SVG resource
-        Image burndownChart = new Image(resource, "Sprint Burndown Chart");
-        burndownChart.setId(BURNDOWN_CHART);
-        burndownChart.setWidthFull();
-        return burndownChart;
-    }
-
-    private Image generateGanttChartImage() throws Exception {
-        List<Throwable> exceptions = new ArrayList<>();
-        GanttChart      chart      = new GanttChart(context, "", "/", "Gantt Chart", sprint.getName() + "-gant-chart", exceptions, ParameterOptions.getLocalNow(), false, sprint/*, 1887, 1000*/, "scheduleWithMargin", context.parameters.graphicsTheme);
-        Image           ganttChart = renderGanttImage(chart);
-        ganttChart.setId(GANTT_CHART);
-        ganttChart.setWidth(chart.getChartWidth() + "px");
-        return ganttChart;
     }
 
     private void loadData() {
@@ -502,51 +443,5 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
         logger.info("generated page in {}", DateUtil.create24hDurationString(Duration.between(created, LocalDateTime.now()), true, true, true, false));
     }
 
-    ByteArrayOutputStream renderBurnDownChart() {
-        RenderDao             dao = createRenderDao(context, sprint, "burn-down", ParameterOptions.getLocalNow(), 640, 400, "sprint-" + sprint.getId() + "/sprint.html");
-        ByteArrayOutputStream o   = new ByteArrayOutputStream(64 * 1024); // 64 KB
-        try {
-            BurnDownChart chart = new BurnDownChart("/", dao);
-            chart.render(Util.generateCopyrightString(ParameterOptions.getLocalNow()), o);
-            return o;
-        } catch (Exception e) {
-            try {
-                o.close(); // Close the stream in case of error
-            } catch (Exception closeException) {
-                logger.warn("Failed to close output stream", closeException);
-            }
-            throw new RuntimeException(e);
-        }
-    }
-
-    ByteArrayOutputStream renderGanttChart(GanttChart chart) {
-        ByteArrayOutputStream o = new ByteArrayOutputStream(64 * 1024); //begin size 64 KB
-        try {
-            chart.render(Util.generateCopyrightString(ParameterOptions.getLocalNow()), o);
-            return o;
-        } catch (Exception e) {
-            try {
-                o.close(); // Close the stream in case of error
-            } catch (Exception closeException) {
-                logger.warn("Failed to close output stream", closeException);
-            }
-            throw new RuntimeException(e);
-        }
-    }
-
-    private Image renderGanttImage(GanttChart chart) {
-        StreamResource resource = new StreamResource("gantt.svg", () -> {
-            try (ByteArrayOutputStream outputStream = renderGanttChart(chart)) {
-                // Convert ByteArrayOutputStream to ByteArrayInputStream
-                return new ByteArrayInputStream(outputStream.toByteArray());
-            } catch (Exception e) {
-                logger.error("Error creating gantt chart", e);
-                return new ByteArrayInputStream(new byte[0]); // Empty stream in case of error
-            }
-        });
-        // Create an image component with the SVG resource
-        Image ganttChart = new Image(resource, "Sprint Gantt Chart");
-        return ganttChart;
-    }
 
 }

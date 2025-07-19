@@ -39,7 +39,7 @@ import de.bushnaq.abdalla.projecthub.rest.api.UserApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.LocationDialog;
-import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
 import de.focus_shift.jollyday.core.HolidayManager;
 import de.focus_shift.jollyday.core.ManagerParameters;
 import jakarta.annotation.security.PermitAll;
@@ -80,7 +80,7 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        add(VaadinUtils.createHeader("User Location", LOCATION_LIST_PAGE_TITLE, VaadinIcon.MAP_MARKER, CREATE_LOCATION_BUTTON, () -> openLocationDialog(null)), createLocationGrid());
+        add(VaadinUtil.createHeader("User Location", LOCATION_LIST_PAGE_TITLE, VaadinIcon.MAP_MARKER, CREATE_LOCATION_BUTTON, () -> openLocationDialog(null)), createLocationGrid());
     }
 
     @Override

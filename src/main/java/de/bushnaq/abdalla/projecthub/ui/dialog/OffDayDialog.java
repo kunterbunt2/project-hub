@@ -34,13 +34,13 @@ import de.bushnaq.abdalla.projecthub.dto.OffDay;
 import de.bushnaq.abdalla.projecthub.dto.OffDayType;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.rest.api.OffDayApi;
-import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 
-import static de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils.DIALOG_DEFAULT_WIDTH;
+import static de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil.DIALOG_DEFAULT_WIDTH;
 
 public class OffDayDialog extends Dialog {
     public static final String               CANCEL_BUTTON           = "offday-dialog-cancel";
@@ -94,7 +94,7 @@ public class OffDayDialog extends Dialog {
 //        setResizable(true);
 
         // Setup form and actions
-        add(createHeader(), createForm(), VaadinUtils.createDialogButtonLayout("Save", CONFIRM_BUTTON, "Cancel", CANCEL_BUTTON, this::save, this));
+        add(/*createHeader(),*/ createForm(), VaadinUtil.createDialogButtonLayout("Save", CONFIRM_BUTTON, "Cancel", CANCEL_BUTTON, this::save, this));
         configureFormBinder();
     }
 
@@ -154,12 +154,12 @@ public class OffDayDialog extends Dialog {
         return formLayout;
     }
 
-    private H3 createHeader() {
-        String title  = isNewOffDay ? "Add New Off Day" : "Edit Off Day";
-        H3     header = new H3(title);
-        header.getStyle().set("margin-top", "0");
-        return header;
-    }
+//    private H3 createHeader() {
+//        String title  = isNewOffDay ? "Add New Off Day" : "Edit Off Day";
+//        H3     header = new H3(title);
+//        header.getStyle().set("margin-top", "0");
+//        return header;
+//    }
 
     private void save() {
         try {

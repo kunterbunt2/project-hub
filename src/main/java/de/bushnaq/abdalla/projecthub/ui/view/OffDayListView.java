@@ -39,7 +39,7 @@ import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.component.YearCalendarComponent;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.OffDayDialog;
-import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
 import jakarta.annotation.security.PermitAll;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -79,7 +79,7 @@ public class OffDayListView extends Main implements BeforeEnterObserver, AfterNa
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        add(VaadinUtils.createHeader("User Off-Days", OFFDAY_LIST_PAGE_TITLE, VaadinIcon.CALENDAR, CREATE_OFFDAY_BUTTON, () -> openOffDayDialog(null)), new HorizontalLayout(createGrid(), createCalendar()));
+        add(VaadinUtil.createHeader("User Off-Days", OFFDAY_LIST_PAGE_TITLE, VaadinIcon.CALENDAR, CREATE_OFFDAY_BUTTON, () -> openOffDayDialog(null)), new HorizontalLayout(createGrid(), createCalendar()));
     }
 
     @Override

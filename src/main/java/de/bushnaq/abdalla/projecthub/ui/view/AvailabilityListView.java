@@ -40,7 +40,7 @@ import de.bushnaq.abdalla.projecthub.rest.api.UserApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.dialog.AvailabilityDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
-import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
 import jakarta.annotation.security.PermitAll;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -79,7 +79,7 @@ public class AvailabilityListView extends Main implements BeforeEnterObserver, A
 
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
-        add(VaadinUtils.createHeader("User Availability", AVAILABILITY_LIST_PAGE_TITLE, VaadinIcon.CHART, CREATE_AVAILABILITY_BUTTON, () -> openAvailabilityDialog(null)), createGrid());
+        add(VaadinUtil.createHeader("User Availability", AVAILABILITY_LIST_PAGE_TITLE, VaadinIcon.CHART, CREATE_AVAILABILITY_BUTTON, () -> openAvailabilityDialog(null)), createGrid());
     }
 
     @Override

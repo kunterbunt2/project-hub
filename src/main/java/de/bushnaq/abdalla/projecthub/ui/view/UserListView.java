@@ -36,7 +36,7 @@ import de.bushnaq.abdalla.projecthub.rest.api.UserApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.UserDialog;
-import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
 import jakarta.annotation.security.PermitAll;
 
 import java.time.Clock;
@@ -65,7 +65,7 @@ public class UserListView extends Main implements AfterNavigationObserver {
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        add(VaadinUtils.createHeader("Users", USER_LIST_PAGE_TITLE, VaadinIcon.USERS, CREATE_USER_BUTTON, () -> openUserDialog(null)), createGrid(clock));
+        add(VaadinUtil.createHeader("Users", USER_LIST_PAGE_TITLE, VaadinIcon.USERS, CREATE_USER_BUTTON, () -> openUserDialog(null)), createGrid(clock));
     }
 
     @Override

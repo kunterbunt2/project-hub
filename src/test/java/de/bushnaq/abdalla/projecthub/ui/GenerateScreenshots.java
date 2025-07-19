@@ -21,6 +21,7 @@ import dasniko.testcontainers.keycloak.KeycloakContainer;
 import de.bushnaq.abdalla.projecthub.dto.OffDayType;
 import de.bushnaq.abdalla.projecthub.ui.dialog.*;
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
+import de.bushnaq.abdalla.projecthub.ui.util.RenderUtil;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.*;
 import de.bushnaq.abdalla.projecthub.ui.view.util.*;
@@ -99,6 +100,9 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
     @Autowired
     private              SprintListViewTester       sprintListViewTester;
     private              String                     sprintName;
+    @Autowired
+    private              TaskListViewTester         taskListViewTester;
+    private              String                     taskName;
     private final        OffDayType                 typeRecord1     = OffDayType.VACATION;
     @Autowired
     private              UserListViewTester         userListViewTester;
@@ -341,6 +345,7 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         versionName = nameGenerator.generateVersionName(0);
         featureName = nameGenerator.generateFeatureName(0);
         sprintName  = nameGenerator.generateSprintName(0);
+        taskName    = nameGenerator.generateSprintName(0);
 
         productListViewTester.switchToProductListViewWithOidc("christopher.paul@kassandra.org", "password", "../project-hub.wiki/screenshots/login-view.png", testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/product-list-view.png");
@@ -357,9 +362,18 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
 
         seleniumHandler.setWindowSize(1800, 1200);
         sprintListViewTester.selectSprint(sprintName);
-        seleniumHandler.waitForElementToBeClickable(SprintQualityBoard.GANTT_CHART);
-        seleniumHandler.waitForElementToBeClickable(SprintQualityBoard.BURNDOWN_CHART);
+        seleniumHandler.waitForElementToBeClickable(RenderUtil.GANTT_CHART);
+        seleniumHandler.waitForElementToBeClickable(RenderUtil.BURNDOWN_CHART);
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/sprint-quality-board.png");
+
+        // After visiting the SprintQualityBoard, go back to SprintListView and use the column config button
+        seleniumHandler.click("Sprints (" + sprintName + ")"); // Go back to SprintListView using breadcrumb
+
+        // Find and click the column configuration button
+        seleniumHandler.click(SprintListView.SPRINT_GRID_CONFIG_BUTTON_PREFIX + sprintName);
+        seleniumHandler.waitForElementToBeClickable(RenderUtil.GANTT_CHART);
+        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/task-list-view.png");
+
 
         userListViewTester.switchToUserListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/user-list-view.png");
@@ -407,6 +421,42 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement(ConfirmDialog.CONFIRM_DIALOG), ConfirmDialog.CONFIRM_DIALOG, "../project-hub.wiki/screenshots/sprint-delete-dialog.png");
         seleniumHandler.click(ConfirmDialog.CANCEL_BUTTON);
     }
+
+    /**
+     * Takes screenshots of Task view and dialogs
+     */
+//    private void takeTaskListViewScreenshots() {
+//        // Navigate to the TaskListView page
+//        seleniumHandler.click("task-list"); // Click on the Tasks link in the breadcrumb
+//        seleniumHandler.waitForElementToBeClickable("task-grid-name-"); // Wait for the task grid to be loaded
+//
+//        // Take a screenshot of the task list view
+//        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/task-list-view.png");
+//
+//        // Create task dialog (if there's a create button similar to other views)
+//        if (seleniumHandler.isElementPresent("create-task-button")) {
+//            seleniumHandler.click("create-task-button");
+//            seleniumHandler.waitForDialogToOpen();
+//            seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement("task-dialog"), "task-dialog", "../project-hub.wiki/screenshots/task-create-dialog.png");
+//            seleniumHandler.click("cancel-button"); // Assume there's a cancel button in the dialog
+//        }
+//
+//        // If tasks exist, try to edit one
+//        if (seleniumHandler.isElementPresent("task-grid-edit-button-")) {
+//            seleniumHandler.click("task-grid-edit-button-");
+//            seleniumHandler.waitForDialogToOpen();
+//            seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement("task-dialog"), "task-dialog", "../project-hub.wiki/screenshots/task-edit-dialog.png");
+//            seleniumHandler.click("cancel-button");
+//        }
+//
+//        // If tasks exist, try to delete one
+//        if (seleniumHandler.isElementPresent("task-grid-delete-button-")) {
+//            seleniumHandler.click("task-grid-delete-button-");
+//            seleniumHandler.waitForElementToBeClickable(ConfirmDialog.CANCEL_BUTTON);
+//            seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement(ConfirmDialog.CONFIRM_DIALOG), ConfirmDialog.CONFIRM_DIALOG, "../project-hub.wiki/screenshots/task-delete-dialog.png");
+//            seleniumHandler.click(ConfirmDialog.CANCEL_BUTTON);
+//        }
+//    }
 
     /**
      * Takes screenshots of User create, edit and delete dialogs

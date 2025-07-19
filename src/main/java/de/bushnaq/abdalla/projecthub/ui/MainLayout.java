@@ -18,6 +18,7 @@
 package de.bushnaq.abdalla.projecthub.ui;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.avatar.AvatarVariant;
@@ -35,6 +36,7 @@ import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.Layout;
 import com.vaadin.flow.server.menu.MenuConfiguration;
 import com.vaadin.flow.server.menu.MenuEntry;
+import com.vaadin.flow.theme.lumo.Lumo;
 import de.bushnaq.abdalla.projecthub.security.SecurityUtils;
 import de.bushnaq.abdalla.projecthub.ui.component.Breadcrumbs;
 import de.bushnaq.abdalla.projecthub.ui.component.ThemeToggle;
@@ -53,6 +55,7 @@ import static com.vaadin.flow.theme.lumo.LumoUtility.*;
 public final class MainLayout extends AppLayout {
 
     private final Breadcrumbs      breadcrumbs  = new Breadcrumbs();
+    private       Image            logoImage;   // Store reference to logo image
     private final Map<Tab, String> tabToPathMap = new HashMap<>();
     private final Tabs             tabs         = new Tabs();
 
@@ -72,7 +75,9 @@ public final class MainLayout extends AppLayout {
         // Add navigation tabs to the center
         createNavTabs();
         tabs.addClassNames(Margin.Horizontal.MEDIUM);
-        ThemeToggle themeToggle = new ThemeToggle();
+
+        // Create theme toggle and register theme change listener
+        ThemeToggle themeToggle = createThemeToggle();
 
         // Add user menu to the right
         Component userMenu = createUserMenu();
@@ -100,9 +105,16 @@ public final class MainLayout extends AppLayout {
     }
 
     private Image createLogo() {
-        Image logo = new Image("images/logo.svg", "Kassandra Logo");
-        logo.setHeight("32px");
-        return logo;
+        // Create the logo image component
+        logoImage = new Image("images/logo.svg", "Kassandra Logo");
+        logoImage.setHeight("32px");
+
+        // Check initial theme and set appropriate logo
+        UI      ui          = UI.getCurrent();
+        boolean isDarkTheme = ui.getElement().getThemeList().contains(Lumo.DARK);
+        updateLogoBasedOnTheme(isDarkTheme);
+
+        return logoImage;
     }
 
     private void createNavTabs() {
@@ -137,6 +149,24 @@ public final class MainLayout extends AppLayout {
         } else {
             return new Tab(text);
         }
+    }
+
+    /**
+     * Creates a theme toggle button and adds a listener to update the logo when theme changes
+     *
+     * @return the theme toggle button
+     */
+    private ThemeToggle createThemeToggle() {
+        ThemeToggle themeToggle = new ThemeToggle();
+
+        // Add click listener to update logo when theme is toggled
+        themeToggle.addClickListener(event -> {
+            UI      ui          = UI.getCurrent();
+            boolean isDarkTheme = ui.getElement().getThemeList().contains(Lumo.DARK);
+            updateLogoBasedOnTheme(isDarkTheme);
+        });
+
+        return themeToggle;
     }
 
     private Component createUserMenu() {
@@ -198,5 +228,20 @@ public final class MainLayout extends AppLayout {
 
     private void navigateToOffDays(String username) {
         getUI().ifPresent(ui -> ui.navigate("offday/" + username));
+    }
+
+    /**
+     * Updates the logo source based on the theme
+     *
+     * @param isDarkTheme true if dark theme is active, false otherwise
+     */
+    private void updateLogoBasedOnTheme(boolean isDarkTheme) {
+        if (logoImage != null) {
+            if (isDarkTheme) {
+                logoImage.setSrc("images/logo-dark.svg");
+            } else {
+                logoImage.setSrc("images/logo.svg");
+            }
+        }
     }
 }

@@ -41,7 +41,7 @@ import de.bushnaq.abdalla.projecthub.rest.api.VersionApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.FeatureDialog;
-import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtils;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.http.HttpStatus;
@@ -82,7 +82,7 @@ public class FeatureListView extends Main implements AfterNavigationObserver {
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        add(VaadinUtils.createHeader("Features", FEATURE_LIST_PAGE_TITLE, VaadinIcon.LIGHTBULB, CREATE_FEATURE_BUTTON_ID, () -> openFeatureDialog(null)), grid);
+        add(VaadinUtil.createHeader("Features", FEATURE_LIST_PAGE_TITLE, VaadinIcon.LIGHTBULB, CREATE_FEATURE_BUTTON_ID, () -> openFeatureDialog(null)), grid);
     }
 
     @Override
