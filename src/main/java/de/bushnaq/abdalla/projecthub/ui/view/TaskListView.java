@@ -415,14 +415,6 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         // Create an editable column for the task name with validation for text and numbers only
         Grid.Column<Task> nameColumn = grid.addColumn(new ComponentRenderer<>(task -> {
             Div div = new Div();
-//            Div square = new Div();
-//            square.setMinHeight("16px");
-//            square.setMaxHeight("16px");
-//            square.setMinWidth("16px");
-//            square.setMaxWidth("16px");
-//            square.getStyle().set("float", "left");
-//            square.getStyle().set("margin", "1px");
-//            div.add(square);
             div.add(task.getName());
             div.setId(TASK_GRID_NAME_PREFIX + task.getName());
             return div;

@@ -19,15 +19,12 @@ package de.bushnaq.abdalla.projecthub.ui.view;
 
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
@@ -116,14 +113,6 @@ public class ProductListView extends Main implements AfterNavigationObserver {
         {
             Grid.Column<Product> column = grid.addColumn(new ComponentRenderer<>(product -> {
                 Div div = new Div();
-//                Div square = new Div();
-//                square.setMinHeight("16px");
-//                square.setMaxHeight("16px");
-//                square.setMinWidth("16px");
-//                square.setMaxWidth("16px");
-//                square.getStyle().set("float", "left");
-//                square.getStyle().set("margin", "1px");
-//                div.add(square);
                 div.add(product.getName());
                 div.setId(PRODUCT_GRID_NAME_PREFIX + product.getName());
                 return div;
@@ -142,27 +131,15 @@ public class ProductListView extends Main implements AfterNavigationObserver {
             column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("Updated"))));
         }
 
-        // Add actions column with direct buttons instead of context menu
-        grid.addColumn(new ComponentRenderer<>(product -> {
-            HorizontalLayout layout = new HorizontalLayout();
-            layout.setAlignItems(FlexComponent.Alignment.CENTER);
-            layout.setSpacing(true);
-
-            Button editButton = new Button(new Icon(VaadinIcon.EDIT));
-            editButton.setId(PRODUCT_GRID_EDIT_BUTTON_PREFIX + product.getName());
-            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
-            editButton.addClickListener(e -> openProductDialog(product));
-            editButton.getElement().setAttribute("title", "Edit");
-
-            Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));
-            deleteButton.setId(PRODUCT_GRID_DELETE_BUTTON_PREFIX + product.getName());
-            deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
-            deleteButton.addClickListener(e -> confirmDelete(product));
-            deleteButton.getElement().setAttribute("title", "Delete");
-
-            layout.add(editButton, deleteButton);
-            return layout;
-        })).setHeader("Actions").setFlexGrow(0).setWidth("120px");
+        // Add actions column using VaadinUtil
+        VaadinUtil.addActionColumn(
+                grid,
+                PRODUCT_GRID_EDIT_BUTTON_PREFIX,
+                PRODUCT_GRID_DELETE_BUTTON_PREFIX,
+                Product::getName,
+                this::openProductDialog,
+                this::confirmDelete
+        );
 
         grid.setSizeFull();
 

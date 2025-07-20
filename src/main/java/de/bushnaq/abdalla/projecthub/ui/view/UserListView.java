@@ -18,15 +18,12 @@
 package de.bushnaq.abdalla.projecthub.ui.view;
 
 import com.vaadin.flow.component.Text;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
@@ -152,27 +149,15 @@ public class UserListView extends Main implements AfterNavigationObserver {
             column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("Updated"))));
         }
 
-        // Add actions column with direct buttons instead of context menu
-        grid.addColumn(new ComponentRenderer<>(user -> {
-            HorizontalLayout layout = new HorizontalLayout();
-            layout.setAlignItems(FlexComponent.Alignment.CENTER);
-            layout.setSpacing(true);
-
-            Button editButton = new Button(new Icon(VaadinIcon.EDIT));
-            editButton.setId(USER_GRID_EDIT_BUTTON_PREFIX + user.getName());
-            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
-            editButton.addClickListener(e -> openUserDialog(user));
-            editButton.getElement().setAttribute("title", "Edit");
-
-            Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));
-            deleteButton.setId(USER_GRID_DELETE_BUTTON_PREFIX + user.getName());
-            deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
-            deleteButton.addClickListener(e -> confirmDelete(user));
-            deleteButton.getElement().setAttribute("title", "Delete");
-
-            layout.add(editButton, deleteButton);
-            return layout;
-        })).setWidth("120px").setFlexGrow(0);
+        // Add actions column using VaadinUtil
+        VaadinUtil.addActionColumn(
+                grid,
+                USER_GRID_EDIT_BUTTON_PREFIX,
+                USER_GRID_DELETE_BUTTON_PREFIX,
+                User::getName,
+                this::openUserDialog,
+                this::confirmDelete
+        );
 
         grid.setSizeFull();
         return grid;

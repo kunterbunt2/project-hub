@@ -20,19 +20,99 @@ package de.bushnaq.abdalla.projecthub.ui.util;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Utility class for common Vaadin UI components and layouts
  */
 public final class VaadinUtil {
     public static String DIALOG_DEFAULT_WIDTH = "480px";
+
+    /**
+     * Creates a standardized action column with edit and delete buttons for a grid
+     *
+     * @param <T>                    The type of the item displayed in the grid
+     * @param editButtonIdPrefix     Prefix for the edit button ID (will be appended with the item identifier)
+     * @param deleteButtonIdPrefix   Prefix for the delete button ID (will be appended with the item identifier)
+     * @param itemIdentifierFunction Function to extract a unique identifier from the item (typically getName or getId)
+     * @param editClickHandler       Handler for edit button clicks
+     * @param deleteClickHandler     Handler for delete button clicks
+     * @return A configured Grid.Column with the action buttons
+     */
+    public static <T> Grid.Column<T> addActionColumn(
+            Grid<T> grid,
+            String editButtonIdPrefix,
+            String deleteButtonIdPrefix,
+            Function<T, String> itemIdentifierFunction,
+            Consumer<T> editClickHandler,
+            Consumer<T> deleteClickHandler) {
+
+        return addActionColumn(grid, editButtonIdPrefix, deleteButtonIdPrefix, itemIdentifierFunction,
+                editClickHandler, deleteClickHandler, null);
+    }
+
+    /**
+     * Creates a standardized action column with edit and delete buttons for a grid, with optional delete button validation
+     *
+     * @param <T>                    The type of the item displayed in the grid
+     * @param editButtonIdPrefix     Prefix for the edit button ID (will be appended with the item identifier)
+     * @param deleteButtonIdPrefix   Prefix for the delete button ID (will be appended with the item identifier)
+     * @param itemIdentifierFunction Function to extract a unique identifier from the item (typically getName or getId)
+     * @param editClickHandler       Handler for edit button clicks
+     * @param deleteClickHandler     Handler for delete button clicks
+     * @param deleteValidator        Optional validator function that returns a validation result to control delete button state
+     * @return A configured Grid.Column with the action buttons
+     */
+    public static <T> Grid.Column<T> addActionColumn(
+            Grid<T> grid,
+            String editButtonIdPrefix,
+            String deleteButtonIdPrefix,
+            Function<T, String> itemIdentifierFunction,
+            Consumer<T> editClickHandler,
+            Consumer<T> deleteClickHandler,
+            Function<T, DeleteValidationResult> deleteValidator) {
+
+        return grid.addColumn(new ComponentRenderer<>(item -> {
+            HorizontalLayout layout = new HorizontalLayout();
+            layout.setAlignItems(FlexComponent.Alignment.CENTER);
+            layout.setSpacing(true);
+
+            Button editButton = new Button(new Icon(VaadinIcon.EDIT));
+            editButton.setId(editButtonIdPrefix + itemIdentifierFunction.apply(item));
+            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
+            editButton.addClickListener(e -> editClickHandler.accept(item));
+            editButton.getElement().setAttribute("title", "Edit");
+
+            Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));
+            deleteButton.setId(deleteButtonIdPrefix + itemIdentifierFunction.apply(item));
+            deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
+            deleteButton.addClickListener(e -> deleteClickHandler.accept(item));
+            deleteButton.getElement().setAttribute("title", "Delete");
+
+            // Apply validation if validator is provided
+            if (deleteValidator != null) {
+                DeleteValidationResult validationResult = deleteValidator.apply(item);
+                if (!validationResult.isValid()) {
+                    deleteButton.setEnabled(false);
+                    deleteButton.getElement().setAttribute("title", validationResult.getMessage());
+                }
+            }
+
+            layout.add(editButton, deleteButton);
+            return layout;
+        })).setHeader("Actions").setFlexGrow(0).setWidth("120px");
+    }
 
     /**
      * Creates a standardized dialog button layout with save and cancel buttons
@@ -71,10 +151,6 @@ public final class VaadinUtil {
         return buttonLayout;
     }
 
-    public static HorizontalLayout createDialogHeader(String title, String icon) {
-        return createDialogHeader(title, new Icon(icon));
-    }
-
     public static HorizontalLayout createDialogHeader(String title, VaadinIcon icon) {
         return createDialogHeader(title, new Icon(icon));
     }
@@ -92,6 +168,28 @@ public final class VaadinUtil {
         headerLayout.add(icon, titleLabel);
 
         return headerLayout;
+    }
+
+    public static HorizontalLayout createDialogHeader(String title, String icon) {
+        return createDialogHeader(title, new Icon(icon));
+    }
+
+    public static HorizontalLayout createHeader(
+            String title,
+            String titleId,
+            String titleIcon,
+            String createButtonId,
+            CreateButtonClickHandler createButtonClickHandler) {
+        return createHeader(title, titleId, new Icon(titleIcon), createButtonId, createButtonClickHandler);
+    }
+
+    public static HorizontalLayout createHeader(
+            String title,
+            String titleId,
+            VaadinIcon titleIcon,
+            String createButtonId,
+            CreateButtonClickHandler createButtonClickHandler) {
+        return createHeader(title, titleId, new Icon(titleIcon), createButtonId, createButtonClickHandler);
     }
 
     /**
@@ -139,24 +237,6 @@ public final class VaadinUtil {
         return headerLayout;
     }
 
-    public static HorizontalLayout createHeader(
-            String title,
-            String titleId,
-            String titleIcon,
-            String createButtonId,
-            CreateButtonClickHandler createButtonClickHandler) {
-        return createHeader(title, titleId, new Icon(titleIcon), createButtonId, createButtonClickHandler);
-    }
-
-    public static HorizontalLayout createHeader(
-            String title,
-            String titleId,
-            VaadinIcon titleIcon,
-            String createButtonId,
-            CreateButtonClickHandler createButtonClickHandler) {
-        return createHeader(title, titleId, new Icon(titleIcon), createButtonId, createButtonClickHandler);
-    }
-
     /**
      * Functional interface for create button click handlers
      */
@@ -171,5 +251,46 @@ public final class VaadinUtil {
     @FunctionalInterface
     public interface SaveButtonClickHandler {
         void onClick();
+    }
+
+    /**
+     * Class to represent the result of delete button validation
+     */
+    public static class DeleteValidationResult {
+        private final String  message;
+        private final boolean valid;
+
+        private DeleteValidationResult(boolean valid, String message) {
+            this.valid   = valid;
+            this.message = message;
+        }
+
+        /**
+         * @return the message to display as tooltip for the delete button
+         */
+        public String getMessage() {
+            return message;
+        }
+
+        /**
+         * Creates an invalid result with a specified error message
+         */
+        public static DeleteValidationResult invalid(String message) {
+            return new DeleteValidationResult(false, message);
+        }
+
+        /**
+         * @return true if the delete action is valid, false otherwise
+         */
+        public boolean isValid() {
+            return valid;
+        }
+
+        /**
+         * Creates a valid result with no message
+         */
+        public static DeleteValidationResult valid() {
+            return new DeleteValidationResult(true, "Delete");
+        }
     }
 }

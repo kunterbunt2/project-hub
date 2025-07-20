@@ -17,8 +17,6 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view;
 
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Span;
@@ -209,27 +207,15 @@ public class OffDayListView extends Main implements BeforeEnterObserver, AfterNa
                 .setSortable(true)
                 .setKey("type");
 
-        // Add action column
-        grid.addColumn(new ComponentRenderer<>(offDay -> {
-            HorizontalLayout layout = new HorizontalLayout();
-            layout.setAlignItems(FlexComponent.Alignment.CENTER);
-            layout.setSpacing(true);
-
-            Button editButton = new Button(new Icon(VaadinIcon.EDIT));
-            editButton.setId(OFFDAY_GRID_EDIT_BUTTON_PREFIX + offDay.getId());
-            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
-            editButton.addClickListener(e -> openOffDayDialog(offDay));
-            editButton.getElement().setAttribute("title", "Edit");
-
-            Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));
-            deleteButton.setId(OFFDAY_GRID_DELETE_BUTTON_PREFIX + offDay.getId());
-            deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
-            deleteButton.addClickListener(e -> confirmDelete(offDay));
-            deleteButton.getElement().setAttribute("title", "Delete");
-
-            layout.add(editButton, deleteButton);
-            return layout;
-        })).setHeader(createHeaderWithIcon(VaadinIcon.COG, "Actions")).setFlexGrow(0).setWidth("120px");
+        // Add action column using VaadinUtil
+        VaadinUtil.addActionColumn(
+                grid,
+                OFFDAY_GRID_EDIT_BUTTON_PREFIX,
+                OFFDAY_GRID_DELETE_BUTTON_PREFIX,
+                offDay -> String.valueOf(offDay.getId()),
+                this::openOffDayDialog,
+                this::confirmDelete
+        );
 
         return grid;
     }

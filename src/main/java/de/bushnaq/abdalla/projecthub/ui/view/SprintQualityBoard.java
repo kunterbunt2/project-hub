@@ -432,14 +432,14 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
         }
     }
 
-    @Deprecated
-    private void loadDataOld() {
-        sprint = sprintApi.getById(sprintId);
-        sprint.initialize();
-        sprint.initUserMap(userApi.getAll(sprintId));
-        sprint.initTaskMap(taskApi.getAll(sprintId), worklogApi.getAll(sprintId));
-        sprint.recalculate(ParameterOptions.getLocalNow());
-    }
+//    @Deprecated
+//    private void loadDataOld() {
+//        sprint = sprintApi.getById(sprintId);
+//        sprint.initialize();
+//        sprint.initUserMap(userApi.getAll(sprintId));
+//        sprint.initTaskMap(taskApi.getAll(sprintId), worklogApi.getAll(sprintId));
+//        sprint.recalculate(ParameterOptions.getLocalNow());
+//    }
 
     private void logTime() {
         logger.info("generated page in {}", DateUtil.create24hDurationString(Duration.between(created, LocalDateTime.now()), true, true, true, false));

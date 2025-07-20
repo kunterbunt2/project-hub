@@ -17,8 +17,6 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view;
 
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Span;
@@ -222,35 +220,22 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
                 .setSortable(true)
                 .setKey("state");
 
-        // Add action column
-        locationGrid.addColumn(new ComponentRenderer<>(location -> {
-            String startDateStr = location.getStart().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-
-            HorizontalLayout layout = new HorizontalLayout();
-            layout.setAlignItems(FlexComponent.Alignment.CENTER);
-            layout.setSpacing(true);
-
-            Button editButton = new Button(new Icon(VaadinIcon.EDIT));
-            editButton.setId(LOCATION_GRID_EDIT_BUTTON_PREFIX + startDateStr);
-            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
-            editButton.addClickListener(e -> openLocationDialog(location));
-            editButton.getElement().setAttribute("title", "Edit");
-
-            Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));
-            deleteButton.setId(LOCATION_GRID_DELETE_BUTTON_PREFIX + startDateStr);
-            deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
-            deleteButton.addClickListener(e -> confirmDelete(location));
-            deleteButton.getElement().setAttribute("title", "Delete");
-
-            // Disable delete if this is the user's only location
-            if (locationGrid.getListDataView().getItems().count() <= 1) {
-                deleteButton.setEnabled(false);
-                deleteButton.getElement().setAttribute("title", "Cannot delete - Users must have at least one location");
-            }
-
-            layout.add(editButton, deleteButton);
-            return layout;
-        })).setHeader(createHeaderWithIcon(VaadinIcon.COG, "Actions")).setFlexGrow(0).setWidth("120px");
+        // Add actions column using VaadinUtil with delete validation
+        VaadinUtil.addActionColumn(
+                locationGrid,
+                LOCATION_GRID_EDIT_BUTTON_PREFIX,
+                LOCATION_GRID_DELETE_BUTTON_PREFIX,
+                location -> location.getStart().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                this::openLocationDialog,
+                this::confirmDelete,
+                location -> {
+                    // Validate: Users must have at least one location
+                    if (locationGrid.getListDataView().getItems().count() <= 1) {
+                        return VaadinUtil.DeleteValidationResult.invalid("Cannot delete - Users must have at least one location");
+                    }
+                    return VaadinUtil.DeleteValidationResult.valid();
+                }
+        );
 
         return locationGrid;
     }

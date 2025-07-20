@@ -19,15 +19,12 @@ package de.bushnaq.abdalla.projecthub.ui.view;
 
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
@@ -132,14 +129,6 @@ public class VersionListView extends Main implements AfterNavigationObserver {
 
         Grid.Column<Version> nameColumn = grid.addColumn(new ComponentRenderer<>(version -> {
             Div div = new Div();
-//            Div square = new Div();
-//            square.setMinHeight("16px");
-//            square.setMaxHeight("16px");
-//            square.setMinWidth("16px");
-//            square.setMaxWidth("16px");
-//            square.getStyle().set("float", "left");
-//            square.getStyle().set("margin", "1px");
-//            div.add(square);
             div.add(version.getName());
             div.setId(VERSION_GRID_NAME_PREFIX + version.getName());
             return div;
@@ -155,27 +144,15 @@ public class VersionListView extends Main implements AfterNavigationObserver {
         updatedColumn.setId("version-grid-updated-column");
         updatedColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("Updated"))));
 
-        // Add actions column with direct buttons instead of context menu
-        grid.addColumn(new ComponentRenderer<>(version -> {
-            HorizontalLayout layout = new HorizontalLayout();
-            layout.setAlignItems(FlexComponent.Alignment.CENTER);
-            layout.setSpacing(true);
-
-            Button editButton = new Button(new Icon(VaadinIcon.EDIT));
-            editButton.setId(VERSION_GRID_EDIT_BUTTON_PREFIX + version.getName());
-            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
-            editButton.addClickListener(e -> openVersionDialog(version));
-            editButton.getElement().setAttribute("title", "Edit");
-
-            Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));
-            deleteButton.setId(VERSION_GRID_DELETE_BUTTON_PREFIX + version.getName());
-            deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
-            deleteButton.addClickListener(e -> confirmDelete(version));
-            deleteButton.getElement().setAttribute("title", "Delete");
-
-            layout.add(editButton, deleteButton);
-            return layout;
-        })).setHeader("Actions").setFlexGrow(0).setWidth("120px");
+        // Add actions column using VaadinUtil
+        VaadinUtil.addActionColumn(
+                grid,
+                VERSION_GRID_EDIT_BUTTON_PREFIX,
+                VERSION_GRID_DELETE_BUTTON_PREFIX,
+                Version::getName,
+                this::openVersionDialog,
+                this::confirmDelete
+        );
 
         grid.setSizeFull();
 

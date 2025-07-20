@@ -17,8 +17,6 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view;
 
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Span;
@@ -191,35 +189,22 @@ public class AvailabilityListView extends Main implements BeforeEnterObserver, A
                 .setSortable(true)
                 .setKey("availability");
 
-        // Add action column
-        grid.addColumn(new ComponentRenderer<>(availability -> {
-            String startDateStr = availability.getStart().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-
-            HorizontalLayout layout = new HorizontalLayout();
-            layout.setAlignItems(FlexComponent.Alignment.CENTER);
-            layout.setSpacing(true);
-
-            Button editButton = new Button(new Icon(VaadinIcon.EDIT));
-            editButton.setId(AVAILABILITY_GRID_EDIT_BUTTON_PREFIX + startDateStr);
-            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
-            editButton.addClickListener(e -> openAvailabilityDialog(availability));
-            editButton.getElement().setAttribute("title", "Edit");
-
-            Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));
-            deleteButton.setId(AVAILABILITY_GRID_DELETE_BUTTON_PREFIX + startDateStr);
-            deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
-            deleteButton.addClickListener(e -> confirmDelete(availability));
-            deleteButton.getElement().setAttribute("title", "Delete");
-
-            // Disable delete if this is the user's only availability
-            if (grid.getListDataView().getItems().count() <= 1) {
-                deleteButton.setEnabled(false);
-                deleteButton.getElement().setAttribute("title", "Cannot delete - Users must have at least one availability");
-            }
-
-            layout.add(editButton, deleteButton);
-            return layout;
-        })).setHeader("Actions").setFlexGrow(0).setWidth("120px");
+        // Add actions column using VaadinUtil with delete validation
+        VaadinUtil.addActionColumn(
+                grid,
+                AVAILABILITY_GRID_EDIT_BUTTON_PREFIX,
+                AVAILABILITY_GRID_DELETE_BUTTON_PREFIX,
+                availability -> availability.getStart().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                this::openAvailabilityDialog,
+                this::confirmDelete,
+                availability -> {
+                    // Validate: Users must have at least one availability
+                    if (grid.getListDataView().getItems().count() <= 1) {
+                        return VaadinUtil.DeleteValidationResult.invalid("Cannot delete - Users must have at least one availability");
+                    }
+                    return VaadinUtil.DeleteValidationResult.valid();
+                }
+        );
 
         return grid;
     }

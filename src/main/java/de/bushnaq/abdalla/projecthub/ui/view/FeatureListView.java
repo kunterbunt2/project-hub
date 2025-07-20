@@ -19,15 +19,12 @@ package de.bushnaq.abdalla.projecthub.ui.view;
 
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
@@ -151,15 +148,6 @@ public class FeatureListView extends Main implements AfterNavigationObserver {
 
         Grid.Column<Feature> nameColumn = grid.addColumn(new ComponentRenderer<>(feature -> {
             Div div = new Div();
-//            Div square = new Div();
-//            square.setMinHeight("16px");
-//            square.setMaxHeight("16px");
-//            square.setMinWidth("16px");
-//            square.setMaxWidth("16px");
-//            square.getStyle().set("background-color", "#" + ColorUtil.colorToHtmlColor(feature.getColor()));
-//            square.getStyle().set("float", "left");
-//            square.getStyle().set("margin", "1px");
-//            div.add(square);
             div.add(feature.getName());
             div.setId(FEATURE_GRID_NAME_PREFIX + feature.getName());
             return div;
@@ -171,31 +159,19 @@ public class FeatureListView extends Main implements AfterNavigationObserver {
         createdColumn.setId("feature-grid-created-column");
         createdColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("Created"))));
 
-        Grid.Column<Feature> updatedColumn = grid.addColumn(version -> dateTimeFormatter.format(version.getUpdated())).setHeader("Updated");
+        Grid.Column<Feature> updatedColumn = grid.addColumn(feature -> dateTimeFormatter.format(feature.getUpdated())).setHeader("Updated");
         updatedColumn.setId("feature-grid-updated-column");
         updatedColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("Updated"))));
 
-        // Add actions column with direct buttons instead of context menu
-        grid.addColumn(new ComponentRenderer<>(feature -> {
-            HorizontalLayout layout = new HorizontalLayout();
-            layout.setAlignItems(FlexComponent.Alignment.CENTER);
-            layout.setSpacing(true);
-
-            Button editButton = new Button(new Icon(VaadinIcon.EDIT));
-            editButton.setId(FEATURE_GRID_EDIT_BUTTON_PREFIX + feature.getName());
-            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
-            editButton.addClickListener(e -> openFeatureDialog(feature));
-            editButton.getElement().setAttribute("title", "Edit");
-
-            Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));
-            deleteButton.setId(FEATURE_GRID_DELETE_BUTTON_PREFIX + feature.getName());
-            deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
-            deleteButton.addClickListener(e -> confirmDelete(feature));
-            deleteButton.getElement().setAttribute("title", "Delete");
-
-            layout.add(editButton, deleteButton);
-            return layout;
-        })).setHeader("Actions").setFlexGrow(0).setWidth("120px");
+        // Add actions column using VaadinUtil
+        VaadinUtil.addActionColumn(
+                grid,
+                FEATURE_GRID_EDIT_BUTTON_PREFIX,
+                FEATURE_GRID_DELETE_BUTTON_PREFIX,
+                Feature::getName,
+                this::openFeatureDialog,
+                this::confirmDelete
+        );
 
         grid.setSizeFull();
 
