@@ -153,6 +153,25 @@ public class UserApiTest extends AbstractEntityGenerator {
     }
 
     @Test
+    public void search() throws Exception {
+        {
+            setUser("admin-user", "ROLE_ADMIN");
+            //create the users
+            addRandomUsers(10);
+            setUser("user", "ROLE_USER");
+        }
+
+        //get user by id
+        {
+            List<User> users = userApi.searchByName("ri");
+            assertEquals(3, users.size());
+        }
+
+        testUsers();
+        printTables();
+    }
+
+    @Test
     @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void update() throws Exception {
         Long id;

@@ -86,6 +86,18 @@ public class UserController {
         return userRepository.save(user);
     }
 
+    /**
+     * Search for users by partial name, ignoring case sensitivity.
+     *
+     * @param partialName The partial name to search for
+     * @return A list of users whose names contain the specified partial name (case-insensitive)
+     */
+    @GetMapping("/search/{partialName}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public List<UserDAO> searchByNameContaining(@PathVariable String partialName) {
+        return userRepository.findByNameContainingIgnoreCase(partialName);
+    }
+
     @PutMapping()
     @PreAuthorize("hasRole('ADMIN')")
     public void update(@RequestBody UserDAO user) {

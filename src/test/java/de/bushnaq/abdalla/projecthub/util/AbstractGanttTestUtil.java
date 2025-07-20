@@ -97,10 +97,10 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         String actualJson   = Files.readString(Paths.get(testResultFolder, TestInfoUtil.getTestMethodName(testInfo) + ".json"));
 
         try {
-            TypeReference<Map<String, Object>> typeRef      = new TypeReference<>() {
+            TypeReference<Map<String, Object>> typeRef = new TypeReference<>() {
             };
-            Map<String, Object>                referenceMap = objectMapper.readValue(expectedJson, typeRef);
-            Map<String, Object>                map          = objectMapper.readValue(actualJson, typeRef);
+            Map<String, Object> referenceMap = objectMapper.readValue(expectedJson, typeRef);
+            Map<String, Object> map          = objectMapper.readValue(actualJson, typeRef);
 
             // Compare users
             Map<String, User> referenceUsers = objectMapper.convertValue(referenceMap.get("users"), new TypeReference<Map<String, User>>() {
@@ -279,36 +279,38 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
     private void generateSprint(TestInfo testInfo, RandomCase randomCase, Feature project) throws Exception {
         int numberOfUsers = randomCase.getMaxNumberOfUsers();
 //        System.out.println("Number of users=" + numberOfUsers);
-        int           numberOfStories = random.nextInt(randomCase.getMaxNumberOfStories()) + 1;
-        LocalDateTime startDateTime   = randomCase.getMinStartDate().plusDays(random.nextInt((int) randomCase.getMaxStartDateShift().toDays())).atStartOfDay().plusHours(8);
         try (Profiler pc1 = new Profiler(SampleType.JPA)) {
-            Sprint savedSprint    = addRandomSprint(project);
-            Sprint sprint         = sprintApi.getById(savedSprint.getId());
-            Task   startMilestone = addTask(sprint, null, "Start", startDateTime, Duration.ZERO, null, null, TaskMode.MANUALLY_SCHEDULED, true);
-            for (int f = 0; f < numberOfStories; f++) {
-                String storyName     = nameGenerator.generateStoryName(f);
-                Task   story         = addParentTask(storyName, sprint, null, startMilestone);
-                int    numberOfTasks = random.nextInt(randomCase.getMaxNumberOfTasks()) + 1;
-                for (int t = 0; t < numberOfTasks; t++) {
-                    int userIndex = random.nextInt(numberOfUsers);
+            Sprint generatedSprint = addRandomSprint(project);
+            Sprint sprint          = sprintApi.getById(generatedSprint.getId());
+            if (randomCase.getMaxNumberOfStories() > 0) {
+                int           numberOfStories = random.nextInt(randomCase.getMaxNumberOfStories()) + 1;
+                LocalDateTime startDateTime   = randomCase.getMinStartDate().plusDays(random.nextInt((int) randomCase.getMaxStartDateShift().toDays())).atStartOfDay().plusHours(8);
+                Task          startMilestone  = addTask(sprint, null, "Start", startDateTime, Duration.ZERO, null, null, TaskMode.MANUALLY_SCHEDULED, true);
+                for (int f = 0; f < numberOfStories; f++) {
+                    String storyName     = nameGenerator.generateStoryName(f);
+                    Task   story         = addParentTask(storyName, sprint, null, startMilestone);
+                    int    numberOfTasks = random.nextInt(randomCase.getMaxNumberOfTasks()) + 1;
+                    for (int t = 0; t < numberOfTasks; t++) {
+                        int userIndex = random.nextInt(numberOfUsers);
 //                    System.out.println("User index=" + userIndex);
-                    User   user             = expectedUsers.stream().toList().get(userIndex);
-                    String duration         = String.format("%dh", (int) (random.nextFloat(randomCase.getMaxDurationDays() * 7.5f) + 1));
-                    String workName         = NameGenerator.generateWorkName(storyName, t);
-                    Task   depenedenycyTask = null;
-                    if (random.nextFloat(1) > 0.5f) {
-                        int tries = 8;
-                        do {
-                            depenedenycyTask = sprint.getTasks().get(random.nextInt(sprint.getTasks().size()));
-                            //make sure this task is not a parent of our parent and not a milestone
-                            if (depenedenycyTask.isMilestone() || depenedenycyTask.isAncestor(story)) {
-                                depenedenycyTask = null;
-                                tries--;
+                        User   user             = expectedUsers.stream().toList().get(userIndex);
+                        String duration         = String.format("%dh", (int) (random.nextFloat(randomCase.getMaxDurationDays() * 7.5f) + 1));
+                        String workName         = NameGenerator.generateWorkName(storyName, t);
+                        Task   depenedenycyTask = null;
+                        if (random.nextFloat(1) > 0.5f) {
+                            int tries = 8;
+                            do {
+                                depenedenycyTask = sprint.getTasks().get(random.nextInt(sprint.getTasks().size()));
+                                //make sure this task is not a parent of our parent and not a milestone
+                                if (depenedenycyTask.isMilestone() || depenedenycyTask.isAncestor(story)) {
+                                    depenedenycyTask = null;
+                                    tries--;
+                                }
                             }
+                            while (depenedenycyTask == null && tries > 0);
                         }
-                        while (depenedenycyTask == null && tries > 0);
+                        addTask(workName, duration, user, sprint, story, depenedenycyTask);
                     }
-                    addTask(workName, duration, user, sprint, story, depenedenycyTask);
                 }
             }
             try (Profiler pc2 = new Profiler(SampleType.CPU)) {

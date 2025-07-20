@@ -29,6 +29,15 @@ public interface UserRepository extends ListCrudRepository<UserDAO, Long> {
 
     Optional<UserDAO> findByName(String name);
 
+    /**
+     * Find users whose names contain the given string, ignoring case sensitivity.
+     *
+     * @param partialName The partial name to search for in user names
+     * @return A list of users whose names contain the specified string (case-insensitive)
+     */
+    @Query("SELECT u FROM UserDAO u WHERE LOWER(u.name) LIKE LOWER(CONCAT('%', :partialName, '%'))")
+    List<UserDAO> findByNameContainingIgnoreCase(@Param("partialName") String partialName);
+
     @Query("SELECT DISTINCT u FROM UserDAO u WHERE u.id IN " +
             "(SELECT t.resourceId FROM TaskDAO t WHERE t.sprintId = :sprintId AND t.resourceId IS NOT NULL)")
     List<UserDAO> findBySprintId(@Param("sprintId") Long sprintId);

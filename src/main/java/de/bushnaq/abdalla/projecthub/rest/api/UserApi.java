@@ -107,6 +107,23 @@ public class UserApi extends AbstractApi {
         return response.getBody();
     }
 
+    /**
+     * Search for users whose names contain the specified string (case-insensitive).
+     *
+     * @param partialName The partial name to search for in user names
+     * @return A list of users whose names contain the specified string (case-insensitive)
+     */
+    public List<User> searchByName(String partialName) {
+        ResponseEntity<User[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/user/search/{partialName}",
+                HttpMethod.GET,
+                createHttpEntity(),
+                User[].class,
+                partialName
+        ));
+        return Arrays.asList(response.getBody());
+    }
+
     public void update(User user) {
         executeWithErrorHandling(() -> restTemplate.exchange(
                 getBaseUrl() + "/user",

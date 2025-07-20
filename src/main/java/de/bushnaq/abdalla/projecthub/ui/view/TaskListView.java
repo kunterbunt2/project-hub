@@ -19,6 +19,7 @@ package de.bushnaq.abdalla.projecthub.ui.view;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -430,7 +431,70 @@ public class TaskListView extends Main implements AfterNavigationObserver {
                 .withValidator(name -> name.matches("[a-zA-Z0-9 ]+"), "Only letters and numbers are allowed")
                 .bind(Task::getName, Task::setName);
 
-        grid.addColumn(task -> task.getResourceId() != null ? sprint.getuser(task.getResourceId()).getName() : "").setHeader("Assigned").setAutoWidth(true);
+        // Replace with editable resource assignment column
+        Grid.Column<Task> assignedColumn = grid.addColumn(task ->
+                task.getResourceId() != null ? sprint.getuser(task.getResourceId()).getName() : ""
+        ).setHeader("Assigned").setAutoWidth(true);
+
+        // Create a ComboBox for user selection
+        ComboBox<User> userComboBox = new ComboBox<>();
+        userComboBox.setAllowCustomValue(false);
+        userComboBox.setClearButtonVisible(true);
+        userComboBox.setWidthFull();
+
+        // Configure the ComboBox to show user names
+        userComboBox.setItemLabelGenerator(User::getName);
+
+        // Set up filtering based on user input using UserApi.searchByName
+        userComboBox.setItems(query -> {
+            String filter = query.getFilter().orElse("");
+
+            // Get the pagination parameters from the query
+            int offset = query.getOffset();
+            int limit  = query.getLimit();
+
+            if (filter.isEmpty()) {
+                // If no filter, return empty list
+                return java.util.Collections.<User>emptyList().stream();
+            } else {
+                // Use the UserApi.searchByName to get filtered results
+                // Apply the pagination parameters to respect Vaadin's query contract
+                return userApi.searchByName(filter).stream()
+                        .skip(offset)
+                        .limit(limit);
+            }
+        });
+
+        // Set the ComboBox as the editor component
+        assignedColumn.setEditorComponent(userComboBox);
+
+        // Bind the ComboBox to the Task's resourceId property using a proper Converter
+        grid.getEditor().getBinder()
+                .forField(userComboBox)
+                .withConverter(
+                        // Convert User to Long resourceId
+                        new com.vaadin.flow.data.converter.Converter<User, Long>() {
+                            @Override
+                            public com.vaadin.flow.data.binder.Result<Long> convertToModel(User user,
+                                                                                           com.vaadin.flow.data.binder.ValueContext context) {
+                                return com.vaadin.flow.data.binder.Result.ok(user != null ? user.getId() : null);
+                            }
+
+                            @Override
+                            public User convertToPresentation(Long resourceId,
+                                                              com.vaadin.flow.data.binder.ValueContext context) {
+                                if (resourceId == null) {
+                                    return null;
+                                }
+                                return sprint.getuser(resourceId);
+                            }
+                        }
+                )
+                .bind(
+                        Task::getResourceId,
+                        Task::setResourceId
+                );
+
         grid.addColumn(task -> task.getStart() != null ? dateTimeFormatter.format(task.getStart()) : "").setHeader("Start").setAutoWidth(true);
         grid.addColumn(task -> task.getFinish() != null ? dateTimeFormatter.format(task.getFinish()) : "").setHeader("End").setAutoWidth(true);
 

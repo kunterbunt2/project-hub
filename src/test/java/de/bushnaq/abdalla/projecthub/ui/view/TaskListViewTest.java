@@ -21,17 +21,24 @@ import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.util.*;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import de.bushnaq.abdalla.projecthub.util.RandomCase;
+import de.bushnaq.abdalla.projecthub.util.TestInfoUtil;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Integration test for the TaskListView UI component.
@@ -76,26 +83,38 @@ public class TaskListViewTest extends AbstractUiTestUtil {
      *
      * @throws Exception if any error occurs during setup
      */
-    @BeforeEach
-    public void createPrerequisites(TestInfo testInfo) throws Exception {
-        ParameterOptions.now = OffsetDateTime.now().withHour(8).withMinute(0).withSecond(0).withNano(0);
-        // Navigate to the product list and create a product
-        productListViewTester.switchToProductListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
-        productListViewTester.createProductConfirm(productName);
-        productListViewTester.selectProduct(productName);
-
-        // Create a version
-        versionListViewTester.createVersionConfirm(versionName);
-        versionListViewTester.selectVersion(versionName);
-
-        // Create a project (feature)
-        featureListViewTester.createFeatureConfirm(featureName);
-        featureListViewTester.selectFeature(featureName);
-
-        // Create a sprint
-        sprintListViewTester.createSprintConfirm(sprintName);
-        // Navigate to TaskListView
-        sprintListViewTester.configSprint(sprintName);
+//    @BeforeEach
+//    public void createPrerequisites(TestInfo testInfo) throws Exception {
+//        ParameterOptions.now = OffsetDateTime.now().withHour(8).withMinute(0).withSecond(0).withNano(0);
+////        {
+////            setUser("admin-user", "ROLE_ADMIN");
+////            //create the users
+////            addRandomUsers(10);
+////            setUser("user", "ROLE_USER");
+////        }
+//        // Navigate to the product list and create a product
+//        productListViewTester.switchToProductListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+////        productListViewTester.createProductConfirm(productName);
+//        productListViewTester.selectProduct(productName);
+//
+//        // Create a version
+////        versionListViewTester.createVersionConfirm(versionName);
+//        versionListViewTester.selectVersion(versionName);
+//
+//        // Create a project (feature)
+////        featureListViewTester.createFeatureConfirm(featureName);
+//        featureListViewTester.selectFeature(featureName);
+//
+//        // Create a sprint
+////        sprintListViewTester.createSprintConfirm(sprintName);
+//        // Navigate to TaskListView
+//        sprintListViewTester.configSprint(sprintName);
+//    }
+    private static List<RandomCase> listRandomCases() {
+        RandomCase[] randomCases = new RandomCase[]{//
+                new RandomCase(1, LocalDate.parse("2024-12-01"), Duration.ofDays(10), 1, 1, 1, 1, 6, 0, 10, 0, 1)//
+        };
+        return Arrays.stream(randomCases).toList();
     }
 
     /**
@@ -106,8 +125,22 @@ public class TaskListViewTest extends AbstractUiTestUtil {
      *
      * @throws Exception if any error occurs during the test
      */
-    @Test
-    public void testCreate() throws Exception {
+    @ParameterizedTest
+    @MethodSource("listRandomCases")
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
+    public void testCreate(RandomCase randomCase, TestInfo testInfo) throws Exception {
+        ParameterOptions.now = OffsetDateTime.now().withHour(8).withMinute(0).withSecond(0).withNano(0);
+        TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
+        TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
+        setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
+        generateProductsIfNeeded(testInfo, randomCase);
+
+        productListViewTester.switchToProductListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+        productListViewTester.selectProduct(productName);
+        versionListViewTester.selectVersion(versionName);
+        featureListViewTester.selectFeature(featureName);
+        sprintListViewTester.configSprint(sprintName);
+
         taskListViewTester.createTask(taskName0);
         seleniumHandler.waitUntilBrowserClosed(0);
     }
