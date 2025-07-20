@@ -21,6 +21,7 @@ package de.bushnaq.abdalla.projecthub.dto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.report.dao.WorklogRemaining;
 import de.bushnaq.abdalla.projecthub.report.gantt.GanttContext;
 import de.bushnaq.abdalla.util.DurationDeserializer;
@@ -145,7 +146,7 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
 
     @JsonIgnore
     public LocalDateTime getEarliestStartDate() {
-        LocalDateTime earliestDate = LocalDateTime.now();
+        LocalDateTime earliestDate = ParameterOptions.getLocalNow();
         for (Task task : getTasks()) {
             if (task.getStart() == null) {
                 continue;
@@ -168,7 +169,7 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
 
     @JsonIgnore
     public LocalDateTime getLatestFinishDate() {
-        LocalDateTime latestDate = LocalDateTime.now();
+        LocalDateTime latestDate = ParameterOptions.getLocalNow();
         for (Task task : getTasks()) {
             if (!task.isMilestone() && (task.getChildTasks().isEmpty()) && (task.getDuration() != null && !task.getDuration().isZero())) {
                 if (task.getFinish().isAfter(latestDate)) {
