@@ -1034,6 +1034,7 @@ public class SeleniumHandler {
      * @return true if browser was closed, false if timeout occurred
      */
     public boolean waitUntilBrowserClosed(long timeoutMillis) {
+        logger.error("Waiting {}s for browser to be closed.", timeoutMillis / 1000);
         long startTime = System.currentTimeMillis();
 
         while (true) {

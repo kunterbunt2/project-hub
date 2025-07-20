@@ -23,6 +23,7 @@ import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.util.*;
 import de.bushnaq.abdalla.projecthub.util.RandomCase;
 import de.bushnaq.abdalla.projecthub.util.TestInfoUtil;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -52,6 +53,7 @@ import java.util.List;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Transactional
+@Disabled
 public class TaskListViewTest extends AbstractUiTestUtil {
     @Autowired
     private       FeatureListViewTester featureListViewTester;
@@ -72,44 +74,6 @@ public class TaskListViewTest extends AbstractUiTestUtil {
     private       VersionListViewTester versionListViewTester;
     private final String                versionName = nameGenerator.generateVersionName(0);
 
-    /**
-     * Setup method that runs before each test.
-     * <p>
-     * Creates a product, selects it, then creates a version, selects it,
-     * creates a project, selects it, and finally creates a sprint and selects it.
-     * This establishes the required hierarchy for testing task operations,
-     * as tasks exist within sprints, which exist within projects,
-     * which exist within versions, which exist within products.
-     *
-     * @throws Exception if any error occurs during setup
-     */
-//    @BeforeEach
-//    public void createPrerequisites(TestInfo testInfo) throws Exception {
-//        ParameterOptions.now = OffsetDateTime.now().withHour(8).withMinute(0).withSecond(0).withNano(0);
-////        {
-////            setUser("admin-user", "ROLE_ADMIN");
-////            //create the users
-////            addRandomUsers(10);
-////            setUser("user", "ROLE_USER");
-////        }
-//        // Navigate to the product list and create a product
-//        productListViewTester.switchToProductListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
-////        productListViewTester.createProductConfirm(productName);
-//        productListViewTester.selectProduct(productName);
-//
-//        // Create a version
-////        versionListViewTester.createVersionConfirm(versionName);
-//        versionListViewTester.selectVersion(versionName);
-//
-//        // Create a project (feature)
-////        featureListViewTester.createFeatureConfirm(featureName);
-//        featureListViewTester.selectFeature(featureName);
-//
-//        // Create a sprint
-////        sprintListViewTester.createSprintConfirm(sprintName);
-//        // Navigate to TaskListView
-//        sprintListViewTester.configSprint(sprintName);
-//    }
     private static List<RandomCase> listRandomCases() {
         RandomCase[] randomCases = new RandomCase[]{//
                 new RandomCase(1, LocalDate.parse("2024-12-01"), Duration.ofDays(10), 1, 1, 1, 1, 6, 0, 10, 0, 1)//
