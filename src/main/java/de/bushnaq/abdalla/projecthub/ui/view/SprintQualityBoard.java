@@ -233,12 +233,14 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
     private void createGanttChart() {
         try {
             long  time       = System.currentTimeMillis();
-            Image ganttChart = RenderUtil.generateGanttChartImage(context, sprint);
+            Image ganttChart = new Image();
+            RenderUtil.generateGanttChartImage(context, sprint, ganttChart);
             ganttChart.getStyle()//.set("object-fit", "contain") // Maintain aspect ratio
                     .set("margin-top", "var(--lumo-space-m)");
             add(ganttChart);
             logger.info("Gantt chart generated in {} ms", System.currentTimeMillis() - time);
         } catch (Exception e) {
+            logger.error(e.getMessage(), e);
             add(new Paragraph("Error generating gantt chart: " + e.getMessage()));
         }
     }

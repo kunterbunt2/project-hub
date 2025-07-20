@@ -387,7 +387,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     }
 
     protected Task addTask(String name, String workString, User user, Sprint sprint, Task parent, Task dependency) {
-        return addTask(sprint, parent, name, null, DateUtil.parseDurationString(workString, 7.5, 37.5), user, dependency, null, false);
+        return addTask(sprint, parent, name, null, DateUtil.parseWorkDayDurationString(workString), user, dependency, null, false);
     }
 
     protected Task addTask(Sprint sprint, Task parent, String name, LocalDateTime start, Duration work, User user, Task dependency) {

@@ -48,13 +48,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class FeatureListViewTest extends AbstractUiTestUtil {
     @Autowired
     private       FeatureListViewTester featureListViewTester;
+    private final String                featureName    = "Project-2";
     private final String                newProjectName = "NewProject-2";
     @LocalServerPort
     private       int                   port;
     @Autowired
     private       ProductListViewTester productListViewTester;
     private final String                productName    = "Product-2";
-    private final String                projectName    = "Project-2";
     @Autowired
     private       SeleniumHandler       seleniumHandler;
     @Autowired
@@ -93,7 +93,7 @@ public class FeatureListViewTest extends AbstractUiTestUtil {
      */
     @Test
     public void testCreateCancel() throws Exception {
-        featureListViewTester.createFeatureCancel(projectName);
+        featureListViewTester.createFeatureCancel(featureName);
     }
 
     /**
@@ -106,7 +106,7 @@ public class FeatureListViewTest extends AbstractUiTestUtil {
      */
     @Test
     public void testCreateConfirm() throws Exception {
-        featureListViewTester.createFeatureConfirm(projectName);
+        featureListViewTester.createFeatureConfirm(featureName);
     }
 
     /**
@@ -120,9 +120,9 @@ public class FeatureListViewTest extends AbstractUiTestUtil {
     @Test
     public void testCreateDuplicateNameFails() throws Exception {
         // First, create a feature
-        featureListViewTester.createFeatureConfirm(projectName);
+        featureListViewTester.createFeatureConfirm(featureName);
         // Then try to create another feature with the same name
-        featureListViewTester.createFeatureWithDuplicateName(projectName);
+        featureListViewTester.createFeatureWithDuplicateName(featureName);
     }
 
     /**
@@ -135,8 +135,8 @@ public class FeatureListViewTest extends AbstractUiTestUtil {
      */
     @Test
     public void testDeleteCancel() throws Exception {
-        featureListViewTester.createFeatureConfirm(projectName);
-        featureListViewTester.deleteFeatureCancel(projectName);
+        featureListViewTester.createFeatureConfirm(featureName);
+        featureListViewTester.deleteFeatureCancel(featureName);
     }
 
     /**
@@ -149,8 +149,8 @@ public class FeatureListViewTest extends AbstractUiTestUtil {
      */
     @Test
     public void testDeleteConfirm() throws Exception {
-        featureListViewTester.createFeatureConfirm(projectName);
-        featureListViewTester.deleteFeatureConfirm(projectName);
+        featureListViewTester.createFeatureConfirm(featureName);
+        featureListViewTester.deleteFeatureConfirm(featureName);
     }
 
     /**
@@ -163,8 +163,8 @@ public class FeatureListViewTest extends AbstractUiTestUtil {
      */
     @Test
     public void testEditCancel() throws Exception {
-        featureListViewTester.createFeatureConfirm(projectName);
-        featureListViewTester.editFeatureCancel(projectName, newProjectName);
+        featureListViewTester.createFeatureConfirm(featureName);
+        featureListViewTester.editFeatureCancel(featureName, newProjectName);
     }
 
     /**
@@ -177,8 +177,8 @@ public class FeatureListViewTest extends AbstractUiTestUtil {
      */
     @Test
     public void testEditConfirm() throws Exception {
-        featureListViewTester.createFeatureConfirm(projectName);
-        featureListViewTester.editFeatureConfirm(projectName, newProjectName);
+        featureListViewTester.createFeatureConfirm(featureName);
+        featureListViewTester.editFeatureConfirm(featureName, newProjectName);
     }
 
     /**
@@ -192,10 +192,10 @@ public class FeatureListViewTest extends AbstractUiTestUtil {
     @Test
     public void testEditDuplicateNameFails() throws Exception {
         // First, create two features with different names
-        featureListViewTester.createFeatureConfirm(projectName);
+        featureListViewTester.createFeatureConfirm(featureName);
         featureListViewTester.createFeatureConfirm(newProjectName);
 
         // Then try to edit the second feature to have the same name as the first
-        featureListViewTester.editFeatureWithDuplicateName(newProjectName, projectName);
+        featureListViewTester.editFeatureWithDuplicateName(newProjectName, featureName);
     }
 }

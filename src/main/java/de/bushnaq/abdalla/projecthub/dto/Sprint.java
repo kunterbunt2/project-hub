@@ -145,10 +145,13 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
 
     @JsonIgnore
     public LocalDateTime getEarliestStartDate() {
-        LocalDateTime earliestDate = null;
+        LocalDateTime earliestDate = LocalDateTime.now();
         for (Task task : getTasks()) {
+            if (task.getStart() == null) {
+                continue;
+            }
             if (!task.isMilestone() && (task.getChildTasks().isEmpty()) && (task.getDuration() != null && !task.getDuration().isZero())) {
-                if (earliestDate == null || task.getStart().isBefore(earliestDate)) {
+                if (task.getStart().isBefore(earliestDate)) {
                     earliestDate = task.getStart();
                 }
             } else {
@@ -165,10 +168,10 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
 
     @JsonIgnore
     public LocalDateTime getLatestFinishDate() {
-        LocalDateTime latestDate = null;
+        LocalDateTime latestDate = LocalDateTime.now();
         for (Task task : getTasks()) {
             if (!task.isMilestone() && (task.getChildTasks().isEmpty()) && (task.getDuration() != null && !task.getDuration().isZero())) {
-                if (latestDate == null || task.getFinish().isAfter(latestDate)) {
+                if (task.getFinish().isAfter(latestDate)) {
                     latestDate = task.getFinish();
                 }
             } else {

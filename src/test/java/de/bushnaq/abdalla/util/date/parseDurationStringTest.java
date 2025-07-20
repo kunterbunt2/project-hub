@@ -36,13 +36,13 @@ public class parseDurationStringTest {
         double hoursPerWeek = 37.5;
         {
             // Result: Duration of 9.5 hours (7.5 + 2)
-            Duration duration = DateUtil.parseDurationString("1d 2h", hoursPerDay, hoursPerWeek);
+            Duration duration = DateUtil.parseWorkDayDurationString("1d 2h", hoursPerDay, hoursPerWeek);
             assertEquals(Duration.ofHours(9).plus(30, ChronoUnit.MINUTES), duration);
         }
 
         {
             // Result: Duration of 52.5 hours (37.5 + 15)
-            Duration duration = DateUtil.parseDurationString("1w 2d", hoursPerDay, hoursPerWeek);
+            Duration duration = DateUtil.parseWorkDayDurationString("1w 2d", hoursPerDay, hoursPerWeek);
             assertEquals(Duration.ofHours(52).plus(30, ChronoUnit.MINUTES), duration);
         }
 

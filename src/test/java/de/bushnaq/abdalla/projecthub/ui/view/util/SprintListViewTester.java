@@ -52,6 +52,10 @@ public class SprintListViewTester {
         this.seleniumHandler = seleniumHandler;
     }
 
+    public void configSprint(String sprintName) {
+        seleniumHandler.click(SprintListView.SPRINT_GRID_CONFIG_BUTTON_PREFIX + sprintName);
+    }
+
     /**
      * Tests the creation of a sprint where the user cancels the operation.
      * <p>

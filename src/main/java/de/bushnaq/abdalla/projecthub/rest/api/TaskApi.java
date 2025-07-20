@@ -25,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -63,7 +64,7 @@ public class TaskApi extends AbstractApi {
                 Task[].class,
                 sprintId
         ));
-        return Arrays.asList(response.getBody());
+        return new ArrayList<>(Arrays.asList(response.getBody()));
     }
 
     public List<Task> getAll() {

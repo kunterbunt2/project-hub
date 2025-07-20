@@ -17,14 +17,18 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view;
 
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.html.*;
-import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Image;
+import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.router.Location;
@@ -32,9 +36,12 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.Context;
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
+import de.bushnaq.abdalla.projecthub.report.gantt.GanttUtil;
 import de.bushnaq.abdalla.projecthub.rest.api.*;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.util.RenderUtil;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
+import de.bushnaq.abdalla.util.GanttErrorHandler;
 import de.bushnaq.abdalla.util.date.DateUtil;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
@@ -45,8 +52,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.time.Clock;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.HashMap;
@@ -62,25 +72,30 @@ import java.util.stream.Collectors;
 @PermitAll // When security is enabled, allow all authenticated users
 @RolesAllowed({"USER", "ADMIN"}) // Allow access to users with specific roles
 public class TaskListView extends Main implements AfterNavigationObserver {
-    public static final String     TASK_GRID_NAME_PREFIX = "task-grid-name-";
-    private final       Clock      clock;
+    public static final String            CREATE_TASK_BUTTON    = "create-task-button";
+    public static final String            TASK_GRID_NAME_PREFIX = "task-grid-name-";
+    public static final String            TASK_LIST_PAGE_TITLE  = "task-list-page-title";
+    private final       Clock             clock;
     @Autowired
-    protected           Context    context;
-    private final       FeatureApi featureApi;
-    private             Long       featureId;
-    private final       Grid<Task> grid;
-    final               Logger     logger                = LoggerFactory.getLogger(this.getClass());
-    private final       H2         pageTitle;
-    private final       ProductApi productApi;
-    private             Long       productId;
-    private             Sprint     sprint;
-    private final       SprintApi  sprintApi;
-    private             Long       sprintId;
-    private final       TaskApi    taskApi;
-    private final       UserApi    userApi;
-    private final       VersionApi versionApi;
-    private             Long       versionId;
-    private final       WorklogApi worklogApi;
+    protected           Context           context;
+    private final       GanttErrorHandler eh                    = new GanttErrorHandler();
+    private final       FeatureApi        featureApi;
+    private             Long              featureId;
+    private final       Image             ganttChart            = new Image();
+    private             GanttUtil         ganttUtil;
+    private             Grid<Task>        grid;
+    private final       Logger            logger                = LoggerFactory.getLogger(this.getClass());
+    private final       ProductApi        productApi;
+    private             Long              productId;
+    private             Sprint            sprint;
+    private final       SprintApi         sprintApi;
+    private             Long              sprintId;
+    private final       LocalDateTime     start                 = LocalDateTime.now().withHour(8).withMinute(0).withSecond(0).withNano(0);
+    private final       TaskApi           taskApi;
+    private final       UserApi           userApi;
+    private final       VersionApi        versionApi;
+    private             Long              versionId;
+    private final       WorklogApi        worklogApi;
 
     public TaskListView(WorklogApi worklogApi, TaskApi taskApi, SprintApi sprintApi, ProductApi productApi, VersionApi versionApi, FeatureApi featureApi, UserApi userApi, Clock clock) {
         this.worklogApi = worklogApi;
@@ -92,41 +107,46 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         this.userApi    = userApi;
         this.clock      = clock;
 
-        // Create title layout with icon
-        HorizontalLayout titleLayout = new HorizontalLayout();
-        titleLayout.setSpacing(true);
-        titleLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+        try {
+            setSizeFull();
+            addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
+            add(VaadinUtil.createHeader("Tasks", TASK_LIST_PAGE_TITLE, VaadinIcon.TASKS, CREATE_TASK_BUTTON, () -> createTask()), createGrid(clock));
+        } catch (Exception e) {
+            logger.error("Error initializing TaskListView", e);
+            throw e;
+        }
+    }
 
-        Icon taskIcon = new Icon(VaadinIcon.TASKS);
-        pageTitle = new H2("Tasks");
-        pageTitle.addClassNames(
-                LumoUtility.Margin.Top.MEDIUM,
-                LumoUtility.Margin.Bottom.SMALL
-        );
+    /**
+     * Adds a column with edit/save/cancel buttons for inline editing
+     */
+    private void addEditColumn() {
+        Grid.Column<Task> editorColumn = grid.addComponentColumn(task -> {
+            Button editButton = new com.vaadin.flow.component.button.Button("Edit");
+            editButton.addThemeVariants(com.vaadin.flow.component.button.ButtonVariant.LUMO_SMALL);
 
-        titleLayout.add(taskIcon, pageTitle);
+            // Start edit mode when the edit button is clicked
+            editButton.addClickListener(e -> {
+                if (grid.getEditor().isOpen()) {
+                    grid.getEditor().cancel();
+                }
+                grid.getEditor().editItem(task);
+            });
 
-        grid = new Grid<>();
-        setupGridColumns();
-        // Add borders between columns
-        grid.addThemeVariants(GridVariant.LUMO_COLUMN_BORDERS, GridVariant.LUMO_ROW_STRIPES);
+            return editButton;
+        }).setWidth("150px").setHeader("Actions").setFlexGrow(0);
 
-        // Add custom styling for more JIRA-like appearance
-        grid.addClassName("jira-style-grid");
+        // Add save and cancel buttons to the editor toolbar
+        Button saveButton = new Button("Save", e -> grid.getEditor().save());
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SMALL);
 
-        // Apply custom styling directly to make borders lighter gray
-        grid.getElement().getStyle().set("--lumo-contrast-10pct", "#e0e0e0");
+        Button cancelButton = new Button(VaadinIcon.CLOSE.create(), e -> grid.getEditor().cancel());
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_ERROR);
 
-        // Remove the built-in scrollbar from the grid
-        grid.getElement().getStyle().set("overflow", "visible");
+        HorizontalLayout actions = new HorizontalLayout(saveButton, cancelButton);
+        actions.setPadding(false);
 
-        // Set height to auto instead of 100% to allow grid to take only needed space
-        grid.setHeight("auto");
-        grid.setAllRowsVisible(true);
-        setWidthFull();
-        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
-
-        add(titleLayout, grid);
+        editorColumn.setEditorComponent(actions);
     }
 
     @Override
@@ -145,8 +165,9 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         }
         if (queryParameters.getParameters().containsKey("sprint")) {
             this.sprintId = Long.parseLong(queryParameters.getParameters().get("sprint").getFirst());
-            pageTitle.setText("Task of Sprint ID: " + sprintId);
+//            pageTitle.setText("Task of Sprint ID: " + sprintId);
         }
+        ganttUtil = new GanttUtil(context);
         loadData();
 
         //- Update breadcrumbs
@@ -190,13 +211,87 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         //- populate grid
 //        pageTitle.setText("Task of Sprint ID: " + sprintId);
         grid.setItems(sprint.getTasks());
-        createGanttChart();
+        generateGanttChart();
     }
 
-    private void createGanttChart() {
+    /**
+     * Creates a text field component for editing task durations
+     *
+     * @return TextField component for the duration editor
+     */
+    private TextField createDurationEditor() {
+        TextField durationField = new TextField();
+        durationField.setWidthFull();
+
+
+        return durationField;
+    }
+
+    private Grid<Task> createGrid(Clock clock) {
+        grid = new Grid<>();
+
+        // Create and configure binder for the grid editor
+        com.vaadin.flow.data.binder.Binder<Task> binder = new com.vaadin.flow.data.binder.Binder<>(Task.class);
+        grid.getEditor().setBinder(binder);
+
+        setupGridColumns();
+        // Add borders between columns
+        grid.addThemeVariants(GridVariant.LUMO_COLUMN_BORDERS, GridVariant.LUMO_ROW_STRIPES);
+
+        // Add custom styling for more JIRA-like appearance
+        grid.addClassName("jira-style-grid");
+
+        // Apply custom styling directly to make borders lighter gray
+        grid.getElement().getStyle().set("--lumo-contrast-10pct", "#e0e0e0");
+
+        // Remove the built-in scrollbar from the grid
+        grid.getElement().getStyle().set("overflow", "visible");
+
+        // Set height to auto instead of 100% to allow grid to take only needed space
+        grid.setHeight("auto");
+        grid.setAllRowsVisible(true);
+        setWidthFull();
+        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
+
+        add(grid);
+        return grid;
+    }
+
+    /**
+     * Creates a text field component for editing task names
+     *
+     * @return TextField component for the name editor
+     */
+    private com.vaadin.flow.component.textfield.TextField createNameEditor() {
+        com.vaadin.flow.component.textfield.TextField nameField = new com.vaadin.flow.component.textfield.TextField();
+        nameField.setWidthFull();
+
+
+        return nameField;
+    }
+
+    private void createTask() {
+        Task task = new Task();
+        task.setName("New Task");
+        task.setSprint(sprint);
+        task.setSprintId(sprint.getId());
+//        task.setStart(start);
+        Duration work = Duration.ofHours(7).plus(Duration.ofMinutes(30));
+        task.setOriginalEstimate(work);
+        task.setRemainingEstimate(work);
+
+
+        Task saved = taskApi.persist(task);
+//        saved.setSprint(sprint);
+//        sprint.addTask(saved);
+        loadData();
+        refreshGrid();
+    }
+
+    private void generateGanttChart() {
         try {
-            long  time       = System.currentTimeMillis();
-            Image ganttChart = RenderUtil.generateGanttChartImage(context, sprint);
+            long time = System.currentTimeMillis();
+            RenderUtil.generateGanttChartImage(context, sprint, ganttChart);
 
             // Configure Gantt chart for proper scrolling display
             ganttChart.getStyle()
@@ -214,7 +309,20 @@ public class TaskListView extends Main implements AfterNavigationObserver {
             add(chartContainer);
             logger.info("Gantt chart generated in {} ms", System.currentTimeMillis() - time);
         } catch (Exception e) {
-            add(new Paragraph("Error generating gantt chart: " + e.getMessage()));
+            logger.error(e.getMessage(), e);
+            // Convert stack trace to string
+            StringWriter stringWriter = new StringWriter();
+            PrintWriter  printWriter  = new PrintWriter(stringWriter);
+            e.printStackTrace(printWriter);
+            String stackTrace = stringWriter.toString();
+
+            // Display error message with stack trace
+            Paragraph errorParagraph      = new Paragraph("Error generating gantt chart: " + e.getMessage());
+            Paragraph stackTraceParagraph = new Paragraph(stackTrace);
+            stackTraceParagraph.getStyle().set("white-space", "pre-wrap").set("font-family", "monospace").set("font-size", "12px");
+
+            Div errorContainer = new Div(errorParagraph, stackTraceParagraph);
+            add(errorContainer);
         }
     }
 
@@ -290,6 +398,12 @@ public class TaskListView extends Main implements AfterNavigationObserver {
             logger.error("Error loading sprint data", e);
             // Handle exception appropriately
         }
+        ganttUtil.levelResources(eh, sprint, "", ParameterOptions.getLocalNow());
+    }
+
+    private void refreshGrid() {
+        grid.setItems(sprint.getTasks());
+        generateGanttChart();
     }
 
     private void setupGridColumns() {
@@ -297,27 +411,80 @@ public class TaskListView extends Main implements AfterNavigationObserver {
 
         grid.addColumn(Task::getKey).setHeader("Key").setAutoWidth(true);
         grid.addColumn(task -> task.getParentTask() != null ? task.getParentTask().getKey() : "").setHeader("Parent").setAutoWidth(true);
-        grid.addColumn(new ComponentRenderer<>(task -> {
-            Div div    = new Div();
-            Div square = new Div();
-            square.setMinHeight("16px");
-            square.setMaxHeight("16px");
-            square.setMinWidth("16px");
-            square.setMaxWidth("16px");
-            square.getStyle().set("float", "left");
-            square.getStyle().set("margin", "1px");
-            div.add(square);
+
+        // Create an editable column for the task name with validation for text and numbers only
+        Grid.Column<Task> nameColumn = grid.addColumn(new ComponentRenderer<>(task -> {
+            Div div = new Div();
+//            Div square = new Div();
+//            square.setMinHeight("16px");
+//            square.setMaxHeight("16px");
+//            square.setMinWidth("16px");
+//            square.setMaxWidth("16px");
+//            square.getStyle().set("float", "left");
+//            square.getStyle().set("margin", "1px");
+//            div.add(square);
             div.add(task.getName());
             div.setId(TASK_GRID_NAME_PREFIX + task.getName());
             return div;
         })).setHeader("Name").setAutoWidth(true);
+
+        // Create the name editor field
+        com.vaadin.flow.component.textfield.TextField nameEditor = createNameEditor();
+        nameColumn.setEditorComponent(nameEditor);
+
+        // Bind the name field to the Task's name property
+        grid.getEditor().getBinder()
+                .forField(nameEditor)
+                .withValidator(name -> name.matches("[a-zA-Z0-9 ]+"), "Only letters and numbers are allowed")
+                .bind(Task::getName, Task::setName);
+
         grid.addColumn(task -> task.getResourceId() != null ? sprint.getuser(task.getResourceId()).getName() : "").setHeader("Assigned").setAutoWidth(true);
-        grid.addColumn(task -> dateTimeFormatter.format(task.getStart())).setHeader("Start").setAutoWidth(true);
-        grid.addColumn(task -> dateTimeFormatter.format(task.getFinish())).setHeader("End").setAutoWidth(true);
-        grid.addColumn(task -> !task.getOriginalEstimate().equals(Duration.ZERO) ? DateUtil.createDurationString(task.getOriginalEstimate(), false, true, false) : "").setHeader("Original Estimate").setAutoWidth(true);
-        grid.addColumn(task -> !task.getOriginalEstimate().equals(Duration.ZERO) ? DateUtil.createDurationString(task.getTimeSpent(), false, true, false) : "").setHeader("Time Spent").setAutoWidth(true);
-        grid.addColumn(task -> !task.getOriginalEstimate().equals(Duration.ZERO) ? DateUtil.createDurationString(task.getRemainingEstimate(), false, true, false) : "").setHeader("Remaining Estimate").setAutoWidth(true);
-        grid.addColumn(task -> !task.getOriginalEstimate().equals(Duration.ZERO) ? String.format("%2.0f%%", task.getProgress().doubleValue() * 100) : "").setHeader("Progress").setAutoWidth(true);
+        grid.addColumn(task -> task.getStart() != null ? dateTimeFormatter.format(task.getStart()) : "").setHeader("Start").setAutoWidth(true);
+        grid.addColumn(task -> task.getFinish() != null ? dateTimeFormatter.format(task.getFinish()) : "").setHeader("End").setAutoWidth(true);
+
+        // Add an editable column for original estimate
+        Grid.Column<Task> originalEstimateColumn = grid.addColumn(
+                task -> !task.getOriginalEstimate().equals(Duration.ZERO) ? DateUtil.createWorkDayDurationString(task.getOriginalEstimate()) : ""
+        ).setHeader("Original Estimate").setAutoWidth(true);
+
+        // Create a text field for duration editing
+        com.vaadin.flow.component.textfield.TextField originalEstimateEditor = createDurationEditor();
+        originalEstimateColumn.setEditorComponent(originalEstimateEditor);
+
+        // Bind the duration field to the Task's originalEstimate property with validation
+        grid.getEditor().getBinder()
+                .forField(originalEstimateEditor)
+                .withValidator(duration -> {
+                    try {
+                        DateUtil.parseWorkDayDurationString(duration.strip());
+                        return true;
+                    } catch (IllegalArgumentException e) {
+                        return false;
+                    }
+                }, "Invalid duration format. Use format like '1d 2h 30m'")
+                .withConverter(
+                        // String to Duration conversion
+                        duration -> {
+                            try {
+                                return DateUtil.parseWorkDayDurationString(duration.strip());
+                            } catch (IllegalArgumentException e) {
+                                return Duration.ZERO;
+                            }
+                        },
+                        // Duration to String conversion
+                        duration -> DateUtil.createWorkDayDurationString(duration)
+                )
+                .bind(Task::getOriginalEstimate, (task, newEstimate) -> {
+                    task.setOriginalEstimate(newEstimate);
+                    // Also update remaining estimate if it was equal to the original estimate
+                    if (task.getRemainingEstimate().equals(task.getOriginalEstimate()) || task.getRemainingEstimate().equals(Duration.ZERO)) {
+                        task.setRemainingEstimate(newEstimate);
+                    }
+                });
+
+        grid.addColumn(task -> !task.getTimeSpent().equals(Duration.ZERO) ? DateUtil.createWorkDayDurationString(task.getTimeSpent()) : "").setHeader("Time Spent").setAutoWidth(true);
+        grid.addColumn(task -> !task.getRemainingEstimate().equals(Duration.ZERO) ? DateUtil.createWorkDayDurationString(task.getRemainingEstimate()) : "").setHeader("Remaining Estimate").setAutoWidth(true);
+        grid.addColumn(task -> task.getProgress() != null ? String.format("%2.0f%%", task.getProgress().doubleValue() * 100) : "").setHeader("Progress").setAutoWidth(true);
         grid.addColumn(task -> {
             List<Relation> relations = task.getPredecessors();
             if (relations == null || relations.isEmpty()) {
@@ -334,6 +501,24 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         }).setHeader("Dependency").setAutoWidth(true);
         grid.addColumn(task -> task.getTaskMode().name()).setHeader("Mode").setAutoWidth(true);
 
+        // Add edit column with edit and save buttons
+        addEditColumn();
+
+        // Make the grid editable with buffered mode
+        grid.getEditor().setBuffered(true);
+
+        // Close the editor when clicking outside
+        grid.getEditor().addCloseListener(e -> {
+            Task task = e.getItem();
+            if (task != null) {
+                // Check if editor was closed with a save operation
+                // We need to manually track the save operation since isSaved() is not available
+                task.setStart(null);// Reset start date to null to force recalculation of duration and finish
+                taskApi.persist(task);
+                loadData();
+                refreshGrid();
+            }
+        });
     }
 
 }

@@ -115,15 +115,15 @@ public class ProductListView extends Main implements AfterNavigationObserver {
         }
         {
             Grid.Column<Product> column = grid.addColumn(new ComponentRenderer<>(product -> {
-                Div div    = new Div();
-                Div square = new Div();
-                square.setMinHeight("16px");
-                square.setMaxHeight("16px");
-                square.setMinWidth("16px");
-                square.setMaxWidth("16px");
-                square.getStyle().set("float", "left");
-                square.getStyle().set("margin", "1px");
-                div.add(square);
+                Div div = new Div();
+//                Div square = new Div();
+//                square.setMinHeight("16px");
+//                square.setMaxHeight("16px");
+//                square.setMinWidth("16px");
+//                square.setMaxWidth("16px");
+//                square.getStyle().set("float", "left");
+//                square.getStyle().set("margin", "1px");
+//                div.add(square);
                 div.add(product.getName());
                 div.setId(PRODUCT_GRID_NAME_PREFIX + product.getName());
                 return div;

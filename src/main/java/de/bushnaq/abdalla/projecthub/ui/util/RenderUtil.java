@@ -82,10 +82,10 @@ public class RenderUtil {
         return burndownChart;
     }
 
-    public static Image generateGanttChartImage(Context context, Sprint sprint) throws Exception {
+    public static Image generateGanttChartImage(Context context, Sprint sprint, Image container) throws Exception {
         List<Throwable> exceptions = new ArrayList<>();
         GanttChart      chart      = new GanttChart(context, "", "/", "Gantt Chart", sprint.getName() + "-gant-chart", exceptions, ParameterOptions.getLocalNow(), false, sprint/*, 1887, 1000*/, "scheduleWithMargin", context.parameters.graphicsTheme);
-        Image           ganttChart = RenderUtil.renderGanttImage(chart);
+        Image           ganttChart = RenderUtil.renderGanttImage(chart, container);
         ganttChart.setId(GANTT_CHART);
         ganttChart.setWidth(chart.getChartWidth() + "px");
         return ganttChart;
@@ -124,7 +124,7 @@ public class RenderUtil {
         }
     }
 
-    private static Image renderGanttImage(GanttChart chart) {
+    private static Image renderGanttImage(GanttChart chart, Image container) {
         StreamResource resource = new StreamResource("gantt.svg", () -> {
             try (ByteArrayOutputStream outputStream = renderGanttChart(chart)) {
                 // Convert ByteArrayOutputStream to ByteArrayInputStream
@@ -135,8 +135,13 @@ public class RenderUtil {
             }
         });
         // Create an image component with the SVG resource
-        Image ganttChart = new Image(resource, "Sprint Gantt Chart");
-        return ganttChart;
+        if (container == null)
+            return new Image(resource, "Sprint Gantt Chart");
+        else {
+            container.setSrc(resource);
+            container.setAlt("Sprint Gantt Chart");
+            return container;
+        }
     }
 
 

@@ -370,7 +370,6 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         seleniumHandler.click("Sprints (" + sprintName + ")"); // Go back to SprintListView using breadcrumb
 
         // Find and click the column configuration button
-        seleniumHandler.click(SprintListView.SPRINT_GRID_CONFIG_BUTTON_PREFIX + sprintName);
         seleniumHandler.waitForElementToBeClickable(RenderUtil.GANTT_CHART);
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/task-list-view.png");
 

@@ -407,7 +407,7 @@ public class GanttUtil {
             long checks     = 0;
             int  iterations = 0;
             logger.trace(String.format("Calculating critical path for %d tasks.", sprint.getTasks().size()));
-            maxLoop = Math.max(sprint.getTasks().size() * sprint.getTasks().size(), sprint.getTasks().size() * 5);
+            maxLoop = Math.max(sprint.getTasks().size() * sprint.getTasks().size(), sprint.getTasks().size() * 10);
             boolean anythingChanged = false;
             printCase("#", "ID", "Task Name", "Method", "Start", "Finish", "Duration");
             //        logger.trace(String.format("[#] [ID][Task Name           ][ Method__ start_______________ finish_______________"));

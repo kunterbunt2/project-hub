@@ -150,16 +150,16 @@ public class FeatureListView extends Main implements AfterNavigationObserver {
         keyColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.KEY), new Div(new Text("Key"))));
 
         Grid.Column<Feature> nameColumn = grid.addColumn(new ComponentRenderer<>(feature -> {
-            Div div    = new Div();
-            Div square = new Div();
-            square.setMinHeight("16px");
-            square.setMaxHeight("16px");
-            square.setMinWidth("16px");
-            square.setMaxWidth("16px");
+            Div div = new Div();
+//            Div square = new Div();
+//            square.setMinHeight("16px");
+//            square.setMaxHeight("16px");
+//            square.setMinWidth("16px");
+//            square.setMaxWidth("16px");
 //            square.getStyle().set("background-color", "#" + ColorUtil.colorToHtmlColor(feature.getColor()));
-            square.getStyle().set("float", "left");
-            square.getStyle().set("margin", "1px");
-            div.add(square);
+//            square.getStyle().set("float", "left");
+//            square.getStyle().set("margin", "1px");
+//            div.add(square);
             div.add(feature.getName());
             div.setId(FEATURE_GRID_NAME_PREFIX + feature.getName());
             return div;

@@ -607,6 +607,91 @@ public class DateUtil {
         return prefix + _result;
     }
 
+    /**
+     * Creates a simple, clean duration string without trailing zeros.
+     * For example: 1d 2h 30m, 1d 2h, 1h, 30m, etc.
+     *
+     * @param duration     The duration to format
+     * @param hoursPerDay  Number of hours in a workday
+     * @param hoursPerWeek Number of hours in a workweek
+     * @return Formatted duration string
+     */
+    public static String createWorkDayDurationString(Duration duration, double hoursPerDay, double hoursPerWeek) {
+        if (duration == null || duration.isZero()) {
+            return "0m";
+        }
+
+        // Handle negative durations
+        boolean isNegative = duration.isNegative();
+        if (isNegative) {
+            duration = duration.abs();
+        }
+
+        StringBuilder result = new StringBuilder();
+
+        // Extract total seconds
+        long totalSeconds = duration.getSeconds();
+
+        // Calculate weeks (if applicable)
+        long secondsPerWeek = (long) (hoursPerWeek * 3600);
+        long weeks          = 0;
+        if (secondsPerWeek > 0) {
+            weeks = totalSeconds / secondsPerWeek;
+            totalSeconds %= secondsPerWeek;
+        }
+
+        // Calculate days
+        long secondsPerDay = (long) (hoursPerDay * 3600);
+        long days          = 0;
+        if (secondsPerDay > 0) {
+            days = totalSeconds / secondsPerDay;
+            totalSeconds %= secondsPerDay;
+        }
+
+        // Calculate hours and minutes
+        long hours = totalSeconds / 3600;
+        totalSeconds %= 3600;
+        long minutes = totalSeconds / 60;
+
+        // Append non-zero components
+        if (weeks > 0) {
+            result.append(weeks).append("w");
+        }
+
+        if (days > 0) {
+            if (result.length() > 0) {
+                result.append(" ");
+            }
+            result.append(days).append("d");
+        }
+
+        if (hours > 0) {
+            if (result.length() > 0) {
+                result.append(" ");
+            }
+            result.append(hours).append("h");
+        }
+
+        if (minutes > 0 || (weeks == 0 && days == 0 && hours == 0)) {
+            if (result.length() > 0) {
+                result.append(" ");
+            }
+            result.append(minutes).append("m");
+        }
+
+        return isNegative ? "-" + result : result.toString();
+    }
+
+    /**
+     * Creates a work duration string with default values of 8 hours per day and 40 hours per week
+     *
+     * @param duration The duration to format
+     * @return Formatted duration string
+     */
+    public static String createWorkDayDurationString(Duration duration) {
+        return createWorkDayDurationString(duration, 7.5, 37.5);
+    }
+
     public static LocalDate dateToLocalDate(Date date) {
         return LocalDate.ofInstant(date.toInstant(), ZoneId.systemDefault());
     }
@@ -820,7 +905,11 @@ public class DateUtil {
         return offsetDateTime.atZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
     }
 
-    public static Duration parseDurationString(String durationString, double hoursPerDay, double hoursPerWeek) {
+    public static Duration parseWorkDayDurationString(String durationString) throws IllegalArgumentException {
+        return parseWorkDayDurationString(durationString, 7.5, 37.5);
+    }
+
+    public static Duration parseWorkDayDurationString(String durationString, double hoursPerDay, double hoursPerWeek) throws IllegalArgumentException {
         if (durationString == null || durationString.trim().isEmpty()) {
             return Duration.ZERO;
         }
@@ -832,24 +921,33 @@ public class DateUtil {
             part = part.trim();
             if (part.isEmpty()) continue;
 
-            double value = Double.parseDouble(part.replaceAll("[wdhm]", ""));
-            char   unit  = part.charAt(part.length() - 1);
+            try {
+                // Validate that the part has the correct format (number followed by unit)
+                if (!part.matches("^\\d+(\\.\\d+)?[wdhm]$")) {
+                    throw new IllegalArgumentException("Invalid duration format: " + part + ". Expected format: number followed by w, d, h, or m (e.g. 2d 4h 30m)");
+                }
 
-            switch (unit) {
-                case 'w':
-                    totalHours += value * hoursPerWeek;
-                    break;
-                case 'd':
-                    totalHours += value * hoursPerDay;
-                    break;
-                case 'h':
-                    totalHours += value;
-                    break;
-                case 'm':
-                    totalHours += value / 60.0;
-                    break;
-                default:
-                    throw new IllegalArgumentException("Invalid duration unit: " + unit);
+                double value = Double.parseDouble(part.replaceAll("[wdhm]", ""));
+                char   unit  = part.charAt(part.length() - 1);
+
+                switch (unit) {
+                    case 'w':
+                        totalHours += value * hoursPerWeek;
+                        break;
+                    case 'd':
+                        totalHours += value * hoursPerDay;
+                        break;
+                    case 'h':
+                        totalHours += value;
+                        break;
+                    case 'm':
+                        totalHours += value / 60.0;
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Invalid duration unit: " + unit + ". Valid units are w (weeks), d (days), h (hours), m (minutes)");
+                }
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Invalid number in duration: " + part, e);
             }
         }
 
@@ -873,4 +971,3 @@ public class DateUtil {
         return DateUtil.offsetDateTimeToLocalDateTime(date).truncatedTo(ChronoUnit.DAYS);
     }
 }
-

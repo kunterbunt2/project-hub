@@ -131,15 +131,15 @@ public class VersionListView extends Main implements AfterNavigationObserver {
         keyColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.KEY), new Div(new Text("Key"))));
 
         Grid.Column<Version> nameColumn = grid.addColumn(new ComponentRenderer<>(version -> {
-            Div div    = new Div();
-            Div square = new Div();
-            square.setMinHeight("16px");
-            square.setMaxHeight("16px");
-            square.setMinWidth("16px");
-            square.setMaxWidth("16px");
-            square.getStyle().set("float", "left");
-            square.getStyle().set("margin", "1px");
-            div.add(square);
+            Div div = new Div();
+//            Div square = new Div();
+//            square.setMinHeight("16px");
+//            square.setMaxHeight("16px");
+//            square.setMinWidth("16px");
+//            square.setMaxWidth("16px");
+//            square.getStyle().set("float", "left");
+//            square.getStyle().set("margin", "1px");
+//            div.add(square);
             div.add(version.getName());
             div.setId(VERSION_GRID_NAME_PREFIX + version.getName());
             return div;
