@@ -55,8 +55,6 @@ public class ProductDialog extends Dialog {
 
         setId(PRODUCT_DIALOG);
         setWidth(DIALOG_DEFAULT_WIDTH);
-
-        // Set the dialog title with an icon
         String title = isEditMode ? "Edit Product" : "Create Product";
         getHeader().add(VaadinUtil.createDialogHeader(title, VaadinIcon.CUBE));
 

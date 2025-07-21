@@ -17,12 +17,11 @@
 
 package de.bushnaq.abdalla.projecthub.ui.dialog;
 
-import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
 
 import static de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil.DIALOG_DEFAULT_WIDTH;
 
@@ -44,28 +43,29 @@ public class ConfirmDialog extends Dialog {
      * @param action            Runnable to execute when confirmed
      */
     public ConfirmDialog(String title, String message, String confirmButtonText, Runnable action) {
-        setHeaderTitle(title);
         setId(CONFIRM_DIALOG);
         setWidth(DIALOG_DEFAULT_WIDTH);
+        getHeader().add(VaadinUtil.createDialogHeader(title, VaadinIcon.HOURGLASS));
 
         VerticalLayout dialogLayout = new VerticalLayout();
         dialogLayout.add(message);
-        dialogLayout.setPadding(true);
+        dialogLayout.setPadding(false);
+        dialogLayout.setSpacing(true);
 
-        Button confirmButton = new Button(confirmButtonText, e -> {
-            action.run();
-            close();
-        });
-        confirmButton.setId(CONFIRM_BUTTON);
-        confirmButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
+        var buttonLayout = VaadinUtil.createDialogButtonLayout(
+                confirmButtonText,
+                CONFIRM_BUTTON,
+                "Cancel",
+                CANCEL_BUTTON,
+                () -> {
+                    action.run();
+                    close();
+                },
+                this
+        );
 
-        Button cancelButton = new Button("Cancel", e -> close());
-        cancelButton.setId(CANCEL_BUTTON);
-
-        HorizontalLayout buttonLayout = new HorizontalLayout();
-        buttonLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
-        buttonLayout.add(cancelButton, confirmButton);
-        buttonLayout.setWidthFull();
+        // Add error theme variant to the confirm button (first button in layout)
+        buttonLayout.getComponentAt(0).getElement().getThemeList().add(ButtonVariant.LUMO_ERROR.getVariantName());
 
         dialogLayout.add(buttonLayout);
         add(dialogLayout);

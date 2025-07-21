@@ -146,7 +146,7 @@ public final class VaadinUtil {
         HorizontalLayout buttonLayout = new HorizontalLayout(saveButton, cancelButton);
         buttonLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
         buttonLayout.setWidthFull();
-        buttonLayout.getStyle().set("margin-top", "var(--lumo-space-m)");
+        buttonLayout.getStyle().set("margin-top", "var(--lumo-space-xl)");
 
         return buttonLayout;
     }
@@ -166,6 +166,9 @@ public final class VaadinUtil {
         titleLabel.getStyle().set("margin", "0");
 
         headerLayout.add(icon, titleLabel);
+
+        // Add bottom margin to create space between the header and content
+        headerLayout.getStyle().set("margin-bottom", "var(--lumo-space-m)");
 
         return headerLayout;
     }

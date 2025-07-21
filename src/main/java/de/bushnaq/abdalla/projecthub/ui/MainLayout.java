@@ -63,6 +63,54 @@ public final class MainLayout extends AppLayout {
         setPrimarySection(Section.NAVBAR);
 
         // Create main navigation bar components
+        HorizontalLayout navbarLayout        = createNavBar();
+        Div              breadcrumbContainer = createBreadcrumbs();
+
+        var navAndBreadcrumbs = new VerticalLayout();
+        navAndBreadcrumbs.setPadding(false);
+        navAndBreadcrumbs.setSpacing(false);
+        navAndBreadcrumbs.setMargin(false);
+
+        navAndBreadcrumbs.add(navbarLayout, breadcrumbContainer);
+
+        // Add the combined layout to the navbar area
+        addToNavbar(true, navAndBreadcrumbs);
+        // Remove margins from navbar layout and apply padding to the container instead
+        navAndBreadcrumbs.getStyle().set("padding-left", "var(--lumo-space-m)");
+        navAndBreadcrumbs.getStyle().set("padding-right", "var(--lumo-space-m)");
+        navAndBreadcrumbs.getStyle().set("padding-bottom", "var(--lumo-space-m)");
+        // Remove these lines that are causing the overflow
+        this.getStyle().set("padding-left", "var(--lumo-space-m)");
+        this.getStyle().set("padding-right", "var(--lumo-space-m)");
+
+    }
+
+    private Div createBreadcrumbs() {
+        Div breadcrumbContainer = new Div(breadcrumbs);
+        breadcrumbContainer.addClassNames(
+                Padding.Horizontal.MEDIUM,
+                Padding.Vertical.XSMALL,
+                Width.FULL,
+                Background.CONTRAST_5
+        );
+
+        return breadcrumbContainer;
+    }
+
+    private Image createLogo() {
+        // Create the logo image component
+        logoImage = new Image("images/logo.svg", "Kassandra Logo");
+        logoImage.setHeight("32px");
+
+        // Check initial theme and set appropriate logo
+        UI      ui          = UI.getCurrent();
+        boolean isDarkTheme = ui.getElement().getThemeList().contains(Lumo.DARK);
+        updateLogoBasedOnTheme(isDarkTheme);
+
+        return logoImage;
+    }
+
+    private HorizontalLayout createNavBar() {
         HorizontalLayout navbarLayout = new HorizontalLayout();
         navbarLayout.setWidthFull();
         navbarLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
@@ -84,37 +132,7 @@ public final class MainLayout extends AppLayout {
 
         navbarLayout.add(logoLayout, tabs, themeToggle, userMenu);
         navbarLayout.expand(tabs);
-
-        Div breadcrumbContainer = new Div(breadcrumbs);
-        breadcrumbContainer.addClassNames(
-                Padding.Horizontal.MEDIUM,
-                Padding.Vertical.XSMALL,
-                Width.FULL,
-                Background.CONTRAST_5
-        );
-
-        var navAndBreadcrumbs = new VerticalLayout();
-        navAndBreadcrumbs.setPadding(false);
-        navAndBreadcrumbs.setSpacing(false);
-        navAndBreadcrumbs.setMargin(false);
-
-        navAndBreadcrumbs.add(breadcrumbContainer, navbarLayout);
-
-        // Add the combined layout to the navbar area
-        addToNavbar(true, navAndBreadcrumbs);
-    }
-
-    private Image createLogo() {
-        // Create the logo image component
-        logoImage = new Image("images/logo.svg", "Kassandra Logo");
-        logoImage.setHeight("32px");
-
-        // Check initial theme and set appropriate logo
-        UI      ui          = UI.getCurrent();
-        boolean isDarkTheme = ui.getElement().getThemeList().contains(Lumo.DARK);
-        updateLogoBasedOnTheme(isDarkTheme);
-
-        return logoImage;
+        return navbarLayout;
     }
 
     private void createNavTabs() {
