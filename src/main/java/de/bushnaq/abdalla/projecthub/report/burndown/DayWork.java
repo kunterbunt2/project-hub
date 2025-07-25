@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.report.burndown;
 
+import de.bushnaq.abdalla.projecthub.dto.Sprint;
 import de.bushnaq.abdalla.projecthub.dto.Worklog;
 import de.bushnaq.abdalla.util.date.DateUtil;
 
@@ -35,10 +36,10 @@ public class DayWork {
         this.duration = duration;
     }
 
-    public void add(Worklog work) {
+    public void add(Sprint sprint, Worklog work) {
         List<String> list = new ArrayList<>();
         //TODO get key
-//        list.add(String.format("%s", work.getTaskId() );
+        list.add(String.format("%s", sprint.getTaskById(work.getTaskId()).getKey()));
         list.add(String.format("<b>%s</b>", DateUtil.create24hDurationString(work.getTimeSpent(), false, true, false)));
         list.add(String.format("%s", work.getComment()));
         transactions.add(list);

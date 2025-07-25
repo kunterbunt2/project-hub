@@ -52,6 +52,7 @@ import static com.vaadin.flow.theme.lumo.LumoUtility.*;
 
 @Layout
 @PermitAll // When security is enabled, allow all authenticated users
+//@JsModule("/tooltips.js")
 public final class MainLayout extends AppLayout {
 
     private final Breadcrumbs      breadcrumbs  = new Breadcrumbs();
@@ -60,6 +61,7 @@ public final class MainLayout extends AppLayout {
     private final Tabs             tabs         = new Tabs();
 
     MainLayout() {
+        UI.getCurrent().getPage().addJavaScript("/tooltips.js");
         setPrimarySection(Section.NAVBAR);
 
         // Create main navigation bar components

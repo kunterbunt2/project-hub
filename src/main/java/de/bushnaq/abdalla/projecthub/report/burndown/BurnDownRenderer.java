@@ -69,7 +69,7 @@ public class BurnDownRenderer extends AbstractRenderer {
     private final        Duration               maxActualWorked;
     private              Duration               maxWorked;
     private              int                    numberOfWorkExceptions                                    = 0;
-    private final        Sprint                 request;
+    private final        Sprint                 sprint;
     private              boolean                sprintClosed;
     protected            AuthorsContribution    usersTotalContribution                                    = new AuthorsContribution();
     private final        Map<User, DayWork[]>   usersWorkPerDayAccumulated                                = new HashMap<>();// work per author and day, were every day has the amount of work done at all previous days, first day has 0 work done
@@ -79,7 +79,7 @@ public class BurnDownRenderer extends AbstractRenderer {
 
     public BurnDownRenderer(RenderDao dao) throws Exception {
         super(dao);
-        this.request = dao.sprint;
+        this.sprint = dao.sprint;
         processingInit(dao);
         // populateGuide(context, start, end, request);
         initGanttGuide(context, dao.start, dao.end);
@@ -90,7 +90,7 @@ public class BurnDownRenderer extends AbstractRenderer {
             this.maxWorked = DateUtil.max(maxWorked, ganttWorkWithBufferPerDayAccumulated.get(0));
         }
         if (numberOfWorkExceptions != 0) {
-            request.exceptions.add(new WarnException(String.format("%s %d times.", WORK_OUTSIDE_ALLOWED_TIME_BOUNDARIES_OCCURRED, numberOfWorkExceptions)));
+            sprint.exceptions.add(new WarnException(String.format("%s %d times.", WORK_OUTSIDE_ALLOWED_TIME_BOUNDARIES_OCCURRED, numberOfWorkExceptions)));
         }
     }
 
@@ -108,10 +108,10 @@ public class BurnDownRenderer extends AbstractRenderer {
         }
         if (worklogList != null) {
             for (Worklog work : worklogList) {
-                AuthorContribution ac = authorsContribution.get(request.getuser(work.getAuthorId()));
+                AuthorContribution ac = authorsContribution.get(sprint.getuser(work.getAuthorId()));
                 if (ac == null) {
                     ac = new AuthorContribution();
-                    authorsContribution.put(request.getuser(work.getAuthorId()), ac);
+                    authorsContribution.put(sprint.getuser(work.getAuthorId()), ac);
                 }
                 ac.addWorked(work.getTimeSpent());
             }
@@ -153,7 +153,7 @@ public class BurnDownRenderer extends AbstractRenderer {
         if (!task.isMilestone() && task.getResourceId() != null) {
             if (GanttUtil.isValidTask(task) && !task.isMilestone() && task.getChildTasks().isEmpty()) {
                 if (stop.isBefore(start) || stop.isEqual(start)) {
-                    request.exceptions.add(new ErrorException(String.format("Task %s finish time has to be after start time. Ignoring task.", task.getName())));
+                    sprint.exceptions.add(new ErrorException(String.format("Task %s finish time has to be after start time. Ignoring task.", task.getName())));
                 } else {
                     //                    Duration duration0 = task.getDuration();
 //                    for (User assignment : task.getAssignedUser())
@@ -638,16 +638,16 @@ public class BurnDownRenderer extends AbstractRenderer {
         if (worklog != null) {
             int lastDayIndexWithValue = 0;// the last day any author has data
             for (Worklog work : worklog) {
-                Duration  aws     = authorWorkSum.get(request.getuser(work.getAuthorId()));
-                DayWork[] dayWork = usersWorkPerDayAccumulated.get(request.getuser(work.getAuthorId()));
+                Duration  aws     = authorWorkSum.get(sprint.getuser(work.getAuthorId()));
+                DayWork[] dayWork = usersWorkPerDayAccumulated.get(sprint.getuser(work.getAuthorId()));
                 if (dayWork == null) {
                     // create a list of work per day for authors that have worked
                     dayWork    = new DayWork[days + 3];// first value is 0
                     dayWork[0] = new DayWork();
-                    usersWorkPerDayAccumulated.put(request.getuser(work.getAuthorId()), dayWork);
+                    usersWorkPerDayAccumulated.put(sprint.getuser(work.getAuthorId()), dayWork);
                 }
                 aws = aws.plus(work.getTimeSpent());
-                authorWorkSum.put(request.getuser(work.getAuthorId()), aws);
+                authorWorkSum.put(sprint.getuser(work.getAuthorId()), aws);
                 int day = (DateUtil.calculateDays(milestones.firstMilestone, DateUtil.toDayPrecision(work.getStart())));
                 if (day < 0) {
                     // ignore any data before first day of sprint
@@ -657,10 +657,10 @@ public class BurnDownRenderer extends AbstractRenderer {
                     {
                         if (dayWork[day + 1] != null) {
                             dayWork[day + 1].setDuration(aws);
-                            dayWork[day + 1].add(work);
+                            dayWork[day + 1].add(sprint, work);
                         } else {
                             dayWork[day + 1] = new DayWork(aws);// every day has the amount of work done at that day and all days before that
-                            dayWork[day + 1].add(work);
+                            dayWork[day + 1].add(sprint, work);
                         }
                         if (!aws.isZero()) {
                             lastDayIndexWithValue = Math.max(day, lastDayIndexWithValue);
@@ -728,7 +728,7 @@ public class BurnDownRenderer extends AbstractRenderer {
 
         ganttWorkWithoutBufferPerDayAccumulated = new BurnDownGuide(context, sprintStartDate, startDayIndex, stopDayIndex);
         ganttWorkWithBufferPerDayAccumulated    = new BurnDownGuide(context, sprintStartDate, startDayIndex, stopDayIndex);
-        for (Task task : request.getTasks()) {
+        for (Task task : sprint.getTasks()) {
             if (!task.isMilestone() && task.getChildTasks().isEmpty()) {
                 //only include tasks that have an impact on the cost, as otherwise they are also not included in the sprint (e.g. delivery buffers)
                 if (task.isImpactOnCost()) {
@@ -757,7 +757,7 @@ public class BurnDownRenderer extends AbstractRenderer {
 //                || request.getRequestStatus().equals(AbstractIssue.REQUEST_STATUS_ON_HOLD)
 //                || request.getRequestStatus().equals(AbstractIssue.REQUEST_STATUS_REJECTED)
 //                || request.getRequestStatus().equals(AbstractIssue.REQUEST_STATUS_WAITING_FOR_QUOTATION_REQUEST));
-        return request.isClosed();
+        return sprint.isClosed();
     }
 
     protected boolean isHideNow(LocalDateTime now, LocalDateTime end, boolean completed) {

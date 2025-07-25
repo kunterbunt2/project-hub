@@ -17,8 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.ui.util;
 
-import com.vaadin.flow.component.html.Image;
-import com.vaadin.flow.server.StreamResource;
+import com.vaadin.flow.component.Svg;
 import de.bushnaq.abdalla.projecthub.Context;
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
@@ -30,8 +29,8 @@ import de.bushnaq.abdalla.util.date.DateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,51 +64,44 @@ public class RenderUtil {
         return dao;
     }
 
-    public static Image generateBurnDownImage(Context context, Sprint sprint) {
-        StreamResource resource = new StreamResource("burndown.svg", () -> {
-            try (ByteArrayOutputStream outputStream = renderBurnDownChart(context, sprint)) {
-                // Convert ByteArrayOutputStream to ByteArrayInputStream
-                return new ByteArrayInputStream(outputStream.toByteArray());
-            } catch (Exception e) {
-                logger.error("Error creating burndown chart", e);
-                return new ByteArrayInputStream(new byte[0]); // Empty stream in case of error
-            }
-        });
-        // Create an image component with the SVG resource
-        Image burndownChart = new Image(resource, "Sprint Burndown Chart");
-        burndownChart.setId(BURNDOWN_CHART);
-        burndownChart.setWidthFull();
-        return burndownChart;
+    /**
+     * Generates a BurnDown chart SVG for the given sprint and updates the provided Svg component.
+     *
+     * @param context the application context
+     * @param sprint  the sprint for which to generate the BurnDown chart
+     * @param svg     the Svg component to update with the BurnDown chart
+     * @throws Exception if an error occurs during BurnDown chart generation
+     */
+    public static void generateBurnDownChartSvg(Context context, Sprint sprint, Svg svg) throws Exception {
+        List<Throwable> exceptions = new ArrayList<>();
+        RenderDao       dao        = createRenderDao(context, sprint, "burn-down", ParameterOptions.getLocalNow(), 640, 400, "sprint-" + sprint.getId() + "/sprint.html");
+        BurnDownChart   chart      = new BurnDownChart("/", dao);
+        RenderUtil.renderSvg(chart, svg);
+        svg.setId(BURNDOWN_CHART);
     }
 
-    public static Image generateGanttChartImage(Context context, Sprint sprint, Image container) throws Exception {
+    /**
+     * Generates a Gantt chart SVG for the given sprint and updates the provided Svg component.
+     *
+     * @param context the application context
+     * @param sprint  the sprint for which to generate the Gantt chart
+     * @param svg     the Svg component to update with the Gantt chart
+     * @throws Exception if an error occurs during Gantt chart generation
+     */
+    public static void generateGanttChartSvg(Context context, Sprint sprint, Svg svg) throws Exception {
         List<Throwable> exceptions = new ArrayList<>();
         GanttChart      chart      = new GanttChart(context, "", "/", "Gantt Chart", sprint.getName() + "-gant-chart", exceptions, ParameterOptions.getLocalNow(), false, sprint/*, 1887, 1000*/, "scheduleWithMargin", context.parameters.graphicsTheme);
-        Image           ganttChart = RenderUtil.renderGanttImage(chart, container);
-        ganttChart.setId(GANTT_CHART);
-        ganttChart.setWidth(chart.getChartWidth() + "px");
-        return ganttChart;
+        RenderUtil.renderSvg(chart, svg);
+        svg.setId(GANTT_CHART);
     }
 
-
-    private static ByteArrayOutputStream renderBurnDownChart(Context context, Sprint sprint) {
-        RenderDao             dao = createRenderDao(context, sprint, "burn-down", ParameterOptions.getLocalNow(), 640, 400, "sprint-" + sprint.getId() + "/sprint.html");
-        ByteArrayOutputStream o   = new ByteArrayOutputStream(64 * 1024); // 64 KB
-        try {
-            BurnDownChart chart = new BurnDownChart("/", dao);
-            chart.render(Util.generateCopyrightString(ParameterOptions.getLocalNow()), o);
-            return o;
-        } catch (Exception e) {
-            try {
-                o.close(); // Close the stream in case of error
-            } catch (Exception closeException) {
-                logger.warn("Failed to close output stream", closeException);
-            }
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static ByteArrayOutputStream renderGanttChart(GanttChart chart) {
+    /**
+     * Renders a BurnDownChart to a ByteArrayOutputStream.
+     *
+     * @param chart the BurnDownChart to render
+     * @return ByteArrayOutputStream containing the rendered BurnDownChart
+     */
+    private static ByteArrayOutputStream render(BurnDownChart chart) {
         ByteArrayOutputStream o = new ByteArrayOutputStream(64 * 1024); //begin size 64 KB
         try {
             chart.render(Util.generateCopyrightString(ParameterOptions.getLocalNow()), o);
@@ -124,25 +116,57 @@ public class RenderUtil {
         }
     }
 
-    private static Image renderGanttImage(GanttChart chart, Image container) {
-        StreamResource resource = new StreamResource("gantt.svg", () -> {
-            try (ByteArrayOutputStream outputStream = renderGanttChart(chart)) {
-                // Convert ByteArrayOutputStream to ByteArrayInputStream
-                return new ByteArrayInputStream(outputStream.toByteArray());
-            } catch (Exception e) {
-                logger.error("Error creating gantt chart", e);
-                return new ByteArrayInputStream(new byte[0]); // Empty stream in case of error
+    /**
+     * Renders a Gantt chart to a ByteArrayOutputStream.
+     *
+     * @param chart the GanttChart to render
+     * @return ByteArrayOutputStream containing the rendered Gantt chart
+     */
+    private static ByteArrayOutputStream render(GanttChart chart) {
+        ByteArrayOutputStream o = new ByteArrayOutputStream(64 * 1024); //begin size 64 KB
+        try {
+            chart.render(Util.generateCopyrightString(ParameterOptions.getLocalNow()), o);
+            return o;
+        } catch (Exception e) {
+            try {
+                o.close(); // Close the stream in case of error
+            } catch (Exception closeException) {
+                logger.warn("Failed to close output stream", closeException);
             }
-        });
-        // Create an image component with the SVG resource
-        if (container == null)
-            return new Image(resource, "Sprint Gantt Chart");
-        else {
-            container.setSrc(resource);
-            container.setAlt("Sprint Gantt Chart");
-            return container;
+            throw new RuntimeException(e);
         }
     }
 
+    /**
+     * Renders a BurnDownChart to a Svg component.
+     *
+     * @param chart the BurnDownChart to render
+     * @param svg   the Svg component to update or create
+     */
+    private static void renderSvg(BurnDownChart chart, Svg svg) {
+        try (ByteArrayOutputStream outputStream = render(chart)) {
+            String svgString = outputStream.toString(StandardCharsets.UTF_8);
+            // Update existing Svg with new content
+            svg.setSvg(svgString);
+        } catch (Exception e) {
+            logger.error("Error creating Burn-Down chart", e);
+        }
+    }
+
+    /**
+     * Renders a Gantt chart to a Svg component.
+     *
+     * @param chart the GanttChart to render
+     * @param svg   the Svg component to update
+     */
+    private static void renderSvg(GanttChart chart, Svg svg) {
+        try (ByteArrayOutputStream outputStream = render(chart)) {
+            String svgString = outputStream.toString(StandardCharsets.UTF_8);
+            // Update existing Svg with new content
+            svg.setSvg(svgString);
+        } catch (Exception e) {
+            logger.error("Error creating gantt chart", e);
+        }
+    }
 
 }

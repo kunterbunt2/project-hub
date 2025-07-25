@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view;
 
+import com.vaadin.flow.component.Svg;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -24,7 +25,6 @@ import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -82,7 +82,7 @@ public class TaskListView extends Main implements AfterNavigationObserver {
     private final       GanttErrorHandler eh                    = new GanttErrorHandler();
     private final       FeatureApi        featureApi;
     private             Long              featureId;
-    private final       Image             ganttChart            = new Image();
+    private final       Svg               ganttChart            = new Svg();
     private             GanttUtil         ganttUtil;
     private             Grid<Task>        grid;
     private final       Logger            logger                = LoggerFactory.getLogger(this.getClass());
@@ -292,7 +292,7 @@ public class TaskListView extends Main implements AfterNavigationObserver {
     private void generateGanttChart() {
         try {
             long time = System.currentTimeMillis();
-            RenderUtil.generateGanttChartImage(context, sprint, ganttChart);
+            RenderUtil.generateGanttChartSvg(context, sprint, ganttChart);
 
             // Configure Gantt chart for proper scrolling display
             ganttChart.getStyle()

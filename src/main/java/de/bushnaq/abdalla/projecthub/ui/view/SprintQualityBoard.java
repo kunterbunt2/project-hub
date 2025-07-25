@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view;
 
+import com.vaadin.flow.component.Svg;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
@@ -232,12 +233,12 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
 
     private void createGanttChart() {
         try {
-            long  time       = System.currentTimeMillis();
-            Image ganttChart = new Image();
-            RenderUtil.generateGanttChartImage(context, sprint, ganttChart);
-            ganttChart.getStyle()//.set("object-fit", "contain") // Maintain aspect ratio
+            long time = System.currentTimeMillis();
+            Svg  svg  = new Svg();
+            RenderUtil.generateGanttChartSvg(context, sprint, svg);
+            svg.getStyle()//.set("object-fit", "contain") // Maintain aspect ratio
                     .set("margin-top", "var(--lumo-space-m)");
-            add(ganttChart);
+            add(svg);
             logger.info("Gantt chart generated in {} ms", System.currentTimeMillis() - time);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -317,11 +318,12 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
                 .set("background-color", "var(--lumo-base-color)");
 
         try {
-            long  time          = System.currentTimeMillis();
-            Image burndownChart = RenderUtil.generateBurnDownImage(context, sprint);
-            burndownChart.getStyle().set("object-fit", "contain") // Maintain aspect ratio
+            long time = System.currentTimeMillis();
+            Svg  svg  = new Svg();
+            RenderUtil.generateBurnDownChartSvg(context, sprint, svg);
+            svg.getStyle().set("object-fit", "contain") // Maintain aspect ratio
                     .set("margin-top", "var(--lumo-space-m)");
-            spanningColumn.add(burndownChart);
+            spanningColumn.add(svg);
             logger.info("Burndown chart generated in {} ms", System.currentTimeMillis() - time);
         } catch (Exception e) {
             spanningColumn.add(new Paragraph("Error loading burndown chart: " + e.getMessage()));
