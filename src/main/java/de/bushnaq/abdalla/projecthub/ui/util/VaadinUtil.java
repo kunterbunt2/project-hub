@@ -23,13 +23,20 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -112,6 +119,200 @@ public final class VaadinUtil {
             layout.add(editButton, deleteButton);
             return layout;
         })).setHeader("Actions").setFlexGrow(0).setWidth("120px");
+    }
+
+    /**
+     * Applies filter headers to all columns in a grid.
+     *
+     * @param <T>             The type of items in the grid
+     * @param grid            The grid to which filtering will be added
+     * @param filterFunctions Map of column keys to filter functions
+     * @param sortable        Whether the columns should be sortable
+     * @return Map of column keys to their corresponding filter fields
+     */
+    private static <T> Map<String, TextField> addFilterHeadersToGrid(
+            Grid<T> grid,
+            Map<String, Function<T, String>> filterFunctions,
+            boolean sortable) {
+
+        Map<String, TextField> filterFields = new HashMap<>();
+
+        for (Grid.Column<T> column : grid.getColumns()) {
+            String key = column.getKey();
+            if (filterFunctions.containsKey(key)) {
+                TextField filterField = addFilterableHeader(
+                        grid,
+                        column,
+                        column.getHeaderText(),
+                        filterFunctions.get(key),
+                        sortable
+                );
+                filterFields.put(key, filterField);
+            }
+        }
+
+        return filterFields;
+    }
+
+    /**
+     * Applies filter headers to all columns in a grid.
+     *
+     * @param <T>             The type of items in the grid
+     * @param grid            The grid to which filtering will be added
+     * @param filterFunctions Map of column keys to filter functions
+     * @return Map of column keys to their corresponding filter fields
+     */
+    private static <T> Map<String, TextField> addFilterHeadersToGrid(
+            Grid<T> grid,
+            Map<String, Function<T, String>> filterFunctions) {
+        return addFilterHeadersToGrid(grid, filterFunctions, true);
+    }
+
+    /**
+     * Adds filtering capability to a grid column.
+     *
+     * @param <T>            The type of items in the grid
+     * @param grid           The grid to which filtering will be added
+     * @param column         The column to make filterable
+     * @param headerText     The text to display in the column header
+     * @param headerIcon     The icon to display in the column header (optional, can be null)
+     * @param filterFunction The function that extracts the property to filter on from the item
+     * @param sortable       Whether the column should be sortable
+     * @return The filter text field for further customization if needed
+     */
+    private static <T> TextField addFilterableHeader(
+            Grid<T> grid,
+            Grid.Column<T> column,
+            String headerText,
+            Icon headerIcon,
+            Function<T, String> filterFunction,
+            boolean sortable) {
+
+        // Create filter field
+        TextField filterField = new TextField();
+        filterField.setPlaceholder("Filter");
+        filterField.setClearButtonVisible(true);
+        filterField.setValueChangeMode(ValueChangeMode.EAGER);
+        filterField.addClassName("filter-text-field");
+        filterField.getStyle().set("max-width", "100%");
+        filterField.getStyle().set("--lumo-contrast-10pct", "var(--lumo-shade-10pct)");
+
+        // Add filter change listener
+        filterField.addValueChangeListener(e -> {
+            ListDataProvider<T> dataProvider = (ListDataProvider<T>) grid.getDataProvider();
+            dataProvider.setFilter(item -> {
+                String value = filterFunction.apply(item);
+                return value != null &&
+                        value.toLowerCase().contains(e.getValue().toLowerCase());
+            });
+        });
+
+        // Create column header layout
+        VerticalLayout layout = new VerticalLayout();
+        layout.setPadding(false);
+        layout.setSpacing(false);
+
+        // Create header with icon and text
+        HorizontalLayout header = new HorizontalLayout();
+        header.setAlignItems(FlexComponent.Alignment.CENTER);
+        header.setSpacing(true);
+
+        if (headerIcon != null) {
+            header.add(headerIcon);
+        }
+
+        Span headerLabel = new Span(headerText);
+        header.add(headerLabel);
+
+        // Add sort indicator if column is sortable
+        if (sortable) {
+            column.setSortable(true);
+        }
+
+        layout.add(header, filterField);
+        column.setHeader(layout);
+
+        return filterField;
+    }
+
+    /**
+     * Adds filtering capability to a grid column with text header.
+     *
+     * @param <T>            The type of items in the grid
+     * @param grid           The grid to which filtering will be added
+     * @param column         The column to make filterable
+     * @param headerText     The text to display in the column header
+     * @param filterFunction The function that extracts the property to filter on from the item
+     * @param sortable       Whether the column should be sortable
+     * @return The filter text field for further customization if needed
+     */
+    public static <T> TextField addFilterableHeader(
+            Grid<T> grid,
+            Grid.Column<T> column,
+            String headerText,
+            Function<T, String> filterFunction,
+            boolean sortable) {
+        return addFilterableHeader(grid, column, headerText, (Icon) null, filterFunction, sortable);
+    }
+
+    /**
+     * Adds filtering capability to a grid column with text header.
+     *
+     * @param <T>            The type of items in the grid
+     * @param grid           The grid to which filtering will be added
+     * @param column         The column to make filterable
+     * @param headerText     The text to display in the column header
+     * @param filterFunction The function that extracts the property to filter on from the item
+     * @return The filter text field for further customization if needed
+     */
+    public static <T> TextField addFilterableHeader(
+            Grid<T> grid,
+            Grid.Column<T> column,
+            String headerText,
+            Function<T, String> filterFunction) {
+        return addFilterableHeader(grid, column, headerText, (Icon) null, filterFunction, true);
+    }
+
+    /**
+     * Adds filtering capability to a grid column with icon.
+     *
+     * @param <T>            The type of items in the grid
+     * @param grid           The grid to which filtering will be added
+     * @param column         The column to make filterable
+     * @param headerText     The text to display in the column header
+     * @param iconName       The Vaadin icon to display in the header
+     * @param filterFunction The function that extracts the property to filter on from the item
+     * @param sortable       Whether the column should be sortable
+     * @return The filter text field for further customization if needed
+     */
+    public static <T> TextField addFilterableHeader(
+            Grid<T> grid,
+            Grid.Column<T> column,
+            String headerText,
+            VaadinIcon iconName,
+            Function<T, String> filterFunction,
+            boolean sortable) {
+        return addFilterableHeader(grid, column, headerText, new Icon(iconName), filterFunction, sortable);
+    }
+
+    /**
+     * Adds filtering capability to a grid column with icon.
+     *
+     * @param <T>            The type of items in the grid
+     * @param grid           The grid to which filtering will be added
+     * @param column         The column to make filterable
+     * @param headerText     The text to display in the column header
+     * @param iconName       The Vaadin icon to display in the header
+     * @param filterFunction The function that extracts the property to filter on from the item
+     * @return The filter text field for further customization if needed
+     */
+    public static <T> TextField addFilterableHeader(
+            Grid<T> grid,
+            Grid.Column<T> column,
+            String headerText,
+            VaadinIcon iconName,
+            Function<T, String> filterFunction) {
+        return addFilterableHeader(grid, column, headerText, new Icon(iconName), filterFunction, true);
     }
 
     /**

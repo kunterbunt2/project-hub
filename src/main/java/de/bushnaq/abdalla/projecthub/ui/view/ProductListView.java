@@ -17,15 +17,12 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view;
 
-import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Main;
-import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -104,43 +101,6 @@ public class ProductListView extends Main implements AfterNavigationObserver {
 
         grid = new Grid<>();
         grid.setId(PRODUCT_GRID);
-        refreshGrid();
-        {
-            Grid.Column<Product> column = grid.addColumn(Product::getKey).setHeader("Key");
-            column.setId("product-grid-key-column");
-            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.KEY), new Div(new Text("Key"))));
-        }
-        {
-            Grid.Column<Product> column = grid.addColumn(new ComponentRenderer<>(product -> {
-                Div div = new Div();
-                div.add(product.getName());
-                div.setId(PRODUCT_GRID_NAME_PREFIX + product.getName());
-                return div;
-            })).setHeader("Name");
-            column.setId("product-grid-name-column");
-            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CUBE), new Div(new Text("Name"))));
-        }
-        {
-            Grid.Column<Product> column = grid.addColumn(product -> dateTimeFormatter.format(product.getCreated())).setHeader("Created");
-            column.setId("product-grid-created-column");
-            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("Created"))));
-        }
-        {
-            Grid.Column<Product> column = grid.addColumn(product -> dateTimeFormatter.format(product.getUpdated())).setHeader("Updated");
-            column.setId("product-grid-updated-column");
-            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("Updated"))));
-        }
-
-        // Add actions column using VaadinUtil
-        VaadinUtil.addActionColumn(
-                grid,
-                PRODUCT_GRID_EDIT_BUTTON_PREFIX,
-                PRODUCT_GRID_DELETE_BUTTON_PREFIX,
-                Product::getName,
-                this::openProductDialog,
-                this::confirmDelete
-        );
-
         grid.setSizeFull();
 
         // Add click listener to navigate to VersionView with the selected product ID
@@ -152,6 +112,45 @@ public class ProductListView extends Main implements AfterNavigationObserver {
             // Navigate with query parameters
             UI.getCurrent().navigate(VersionListView.class, QueryParameters.simple(params));
         });
+
+        refreshGrid();
+
+        {
+            Grid.Column<Product> keyColumn = grid.addColumn(Product::getKey);
+            VaadinUtil.addFilterableHeader(grid, keyColumn, "Key", VaadinIcon.KEY, Product::getKey);
+        }
+        {
+            Grid.Column<Product> nameColumn = grid.addColumn(new ComponentRenderer<>(product -> {
+                Div div = new Div();
+                div.add(product.getName());
+                div.setId(PRODUCT_GRID_NAME_PREFIX + product.getName());
+                return div;
+            }));
+
+            // Configure a custom comparator to properly sort by the name property
+            nameColumn.setComparator((product1, product2) ->
+                    product1.getName().compareToIgnoreCase(product2.getName()));
+
+            VaadinUtil.addFilterableHeader(grid, nameColumn, "Name", VaadinIcon.CUBE, Product::getName);
+        }
+        {
+            Grid.Column<Product> createdColumn = grid.addColumn(product -> dateTimeFormatter.format(product.getCreated()));
+            VaadinUtil.addFilterableHeader(grid, createdColumn, "Created", VaadinIcon.CALENDAR, product -> dateTimeFormatter.format(product.getCreated()));
+        }
+        {
+            Grid.Column<Product> updatedColumn = grid.addColumn(product -> dateTimeFormatter.format(product.getUpdated()));
+            VaadinUtil.addFilterableHeader(grid, updatedColumn, "Updated", VaadinIcon.CALENDAR, product -> dateTimeFormatter.format(product.getUpdated()));
+        }
+        // Add actions column using VaadinUtil
+        VaadinUtil.addActionColumn(
+                grid,
+                PRODUCT_GRID_EDIT_BUTTON_PREFIX,
+                PRODUCT_GRID_DELETE_BUTTON_PREFIX,
+                Product::getName,
+                this::openProductDialog,
+                this::confirmDelete
+        );
+
         return grid;
     }
 

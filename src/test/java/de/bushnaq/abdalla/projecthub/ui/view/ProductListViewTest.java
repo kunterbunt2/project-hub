@@ -52,7 +52,6 @@ public class ProductListViewTest extends AbstractUiTestUtil {
     @BeforeEach
     public void setupTest(TestInfo testInfo) {
         productListViewTester.switchToProductListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
-//        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
     }
 
     /**

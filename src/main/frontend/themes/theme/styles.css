@@ -1,5 +1,6 @@
 /* Default theme (light) */
 @import url('./components/vaadin-dialog-overlay.css');
+@import url('./components/vaadin-grid-sorter.css');
 
 :root {
   /* Calendar component colors - light theme */
