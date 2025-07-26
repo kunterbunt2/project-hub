@@ -61,7 +61,7 @@ public final class MainLayout extends AppLayout {
     private final Tabs             tabs         = new Tabs();
 
     MainLayout() {
-        UI.getCurrent().getPage().addJavaScript("/tooltips.js");
+        UI.getCurrent().getPage().addJavaScript("/js/tooltips.js");
         setPrimarySection(Section.NAVBAR);
 
         // Create main navigation bar components

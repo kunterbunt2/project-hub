@@ -88,11 +88,12 @@ public class RenderUtil {
      * @param svg     the Svg component to update with the Gantt chart
      * @throws Exception if an error occurs during Gantt chart generation
      */
-    public static void generateGanttChartSvg(Context context, Sprint sprint, Svg svg) throws Exception {
+    public static GanttChart generateGanttChartSvg(Context context, Sprint sprint, Svg svg) throws Exception {
         List<Throwable> exceptions = new ArrayList<>();
         GanttChart      chart      = new GanttChart(context, "", "/", "Gantt Chart", sprint.getName() + "-gant-chart", exceptions, ParameterOptions.getLocalNow(), false, sprint/*, 1887, 1000*/, "scheduleWithMargin", context.parameters.graphicsTheme);
         RenderUtil.renderSvg(chart, svg);
         svg.setId(GANTT_CHART);
+        return chart;
     }
 
     /**

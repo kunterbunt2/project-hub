@@ -26,6 +26,8 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.Context;
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
+import de.bushnaq.abdalla.projecthub.report.gantt.GanttChart;
+import de.bushnaq.abdalla.projecthub.report.html.util.HtmlUtil;
 import de.bushnaq.abdalla.projecthub.rest.api.*;
 import de.bushnaq.abdalla.projecthub.ui.HtmlColor;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
@@ -65,6 +67,7 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
     private final       LocalDateTime created;
     private final       FeatureApi    featureApi;
     private             Long          featureId;
+    private final       HtmlUtil      htmlUtil                = new HtmlUtil();
     final               Logger        logger                  = LoggerFactory.getLogger(this.getClass());
     private final       LocalDateTime now;
     private final       H2            pageTitle;
@@ -186,42 +189,24 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
 
         // Value part (top)
         Span valueSpan = new Span(value);
-        valueSpan.getStyle()
-                .set("font-weight", "500")
-                .set("font-size", "var(--lumo-font-size-xl)");
-
-        // Apply status-based styling if status is provided
-        if (status != null) {
-            valueSpan.getStyle()
-                    .set("padding", "0 var(--lumo-space-xs)")
-                    .set("border-radius", "var(--lumo-border-radius-s)");
-
-            switch (status) {
-                case "GOOD":
-                    valueSpan.getStyle().set("background-color", "var(--lumo-success-color)");
-                    break;
-                case "NORMAL":
-                    // Default styling
-                    break;
-                case "WARNING":
-                    valueSpan.getStyle().set("background-color", "rgba(255, 179, 0, 1)");
-                    break;
-                case "CRITICAL":
-                    valueSpan.getStyle().set("background-color", "var(--lumo-error-color)");
-                    break;
+        if (label != null) {
+            try {
+                valueSpan.setTitle(htmlUtil.getHtmlTipSnippet(label));
+            } catch (Exception e) {
+                logger.warn(e.getMessage(), e);
             }
         }
-
+        // Apply status-based styling if status is provided
+        if (status != null) {
+            valueSpan.setClassName("cell-text " + status.toLowerCase()); // Add a class for potential CSS styling
+        } else {
+            valueSpan.setClassName("cell-text");
+        }
         valueWrapper.add(valueSpan);
-
         // Name part with HTML support for special characters
         Span nameSpan = new Span();
         nameSpan.getElement().setProperty("innerHTML", label);
-        nameSpan.getStyle()
-                .set("font-size", "var(--lumo-font-size-xs)")
-                .set("color", "var(--lumo-secondary-text-color)")
-                .set("margin-top", "var(--lumo-space-xs)");
-
+        nameSpan.setClassName("cell-name");
         container.add(valueWrapper, nameSpan);
         return container;
     }
@@ -233,12 +218,16 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
 
     private void createGanttChart() {
         try {
-            long time = System.currentTimeMillis();
-            Svg  svg  = new Svg();
-            RenderUtil.generateGanttChartSvg(context, sprint, svg);
+            long       time  = System.currentTimeMillis();
+            Div        div   = new Div();
+            Svg        svg   = new Svg();
+            GanttChart chart = RenderUtil.generateGanttChartSvg(context, sprint, svg);
             svg.getStyle()//.set("object-fit", "contain") // Maintain aspect ratio
                     .set("margin-top", "var(--lumo-space-m)");
-            add(svg);
+            svg.setClassName("qtip-shadow");
+            div.setWidth(chart.getChartWidth() + "px");
+            div.add(svg);
+            add(div);
             logger.info("Gantt chart generated in {} ms", System.currentTimeMillis() - time);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -323,6 +312,7 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
             RenderUtil.generateBurnDownChartSvg(context, sprint, svg);
             svg.getStyle().set("object-fit", "contain") // Maintain aspect ratio
                     .set("margin-top", "var(--lumo-space-m)");
+            svg.setClassName("qtip-shadow");
             spanningColumn.add(svg);
             logger.info("Burndown chart generated in {} ms", System.currentTimeMillis() - time);
         } catch (Exception e) {

@@ -23,6 +23,7 @@ enum EStatus {
     WARNING
 }
 
+@Deprecated
 public class ReportCell implements Comparable<ReportCell> {
 
     public static final String  CRITICAL   = "Critical";

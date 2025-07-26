@@ -17,6 +17,8 @@
   --calendar-normal-day-text-color: #000000;
   --calendar-filling-day-color: #FFFFFF;
   --calendar-filling-day-text-color: #AAAAAA;
+
+
 }
 
 /* Calendar component styles */
@@ -74,6 +76,7 @@
   color: var(--calendar-month-name-color);
 }
 
+
 [theme~="dark"] {
   --lumo-base-color: hsl(0, 0%, 13%);
   --lumo-primary-color: hsl(0, 0%, 70%);
@@ -100,9 +103,113 @@
   --calendar-normal-day-text-color: #FFFFFF;
   --calendar-filling-day-color: #1E1E1E;
   --calendar-filling-day-text-color: #666666;
-
-  /* ...other color overrides as needed... */
-  .navbar-custom {
-    background-color: var(--lumo-base-color);
-  }
 }
+
+/* Dark theme specific styles */
+[theme~="dark"] .navbar-custom {
+  /*
+    background-color: var(--lumo-base-color);
+    */
+  background-color: #FF6B70;
+}
+.qtip-shadow {
+  -webkit-box-shadow: 1px 1px 3px 1px rgba(0, 0, 0, .15);
+  -moz-box-shadow: 1px 1px 3px 1px rgba(0, 0, 0, .15);
+  box-shadow: 1px 1px 3px 1px rgba(0, 0, 0, .15);
+}
+
+.cell-name {
+	margin-top: 5px;
+	color: #888;
+	line-height: 16px;
+	font-size: 13px;
+}
+.cell-text {
+	display: inline;
+	padding-left: 3px;
+	padding-right: 3px;
+	white-space: nowrap;
+    font-size: 18px;
+}
+
+.cell-text a {
+	border-bottom-color: rgb(202, 227, 242);
+	cursor: context-menu;
+}
+
+.critical {
+  background-color: #ee0000;
+  color: white;
+  border: 0 solid #dfe1e6;
+  border-radius: 3px;
+  display: inline-block;
+  font-weight: 700;
+  line-height: 1;
+  margin: 0;
+  padding: 2px 5px 3px;
+  text-align: center;
+  text-decoration: none;
+}
+
+.good {
+	background-color: #00aa00;
+	color: white;
+    border: 0 solid #dfe1e6;
+    border-radius: 3px;
+    display: inline-block;
+    font-weight: 700;
+    line-height: 1;
+    margin: 0;
+    padding: 2px 5px 3px;
+    text-align: center;
+    text-decoration: none;
+}
+
+.idle a {
+	/*color: #236a97;*/
+}
+
+.idle a:active, .idle a:focus, .idle a:hover {
+	color: #4b9fd5;
+}
+
+.warning
+{
+	color: white;
+	background-color: #f77700;
+    border: 0 solid #dfe1e6;
+    border-radius: 3px;
+    display: inline-block;
+    font-weight: 700;
+    line-height: 1;
+    margin: 0;
+    padding: 2px 5px 3px;
+    text-align: center;
+    text-decoration: none;
+}
+.info {
+	color: white;
+	background-color: #205081;
+    border: 0 solid #dfe1e6;
+    border-radius: 3px;
+    display: inline-block;
+    font-weight: 700;
+    line-height: 1;
+    margin: 0;
+    padding: 2px 5px 3px;
+    text-align: center;
+    text-decoration: none;
+}
+.ignore {
+	background-color: #dfe1e6;
+    color: #42526e;
+    border: 0 solid #dfe1e6;
+    border-radius: 3px;
+    display: inline-block;
+    font-weight: 700;
+    line-height: 1;
+    margin: 0;
+    padding: 2px 5px 3px;
+    text-align: center;
+    text-decoration: none;
+ }

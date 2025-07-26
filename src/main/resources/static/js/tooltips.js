@@ -4,6 +4,20 @@ console.log('Tooltips script loaded!');
 (function() {
     console.log('Tooltip initialization starting immediately');
 
+    // Define an array of selectors for tooltip triggering elements
+    // This makes it easy to add more selectors in the future
+    const tooltipSelectors = [
+        '[title]',
+        'area[alt]',
+        'rect[alt]',
+        'polygon[alt]',
+        'text[alt]'
+    ];
+
+    // Create a combined selector for querying elements
+    const combinedSelector = tooltipSelectors.join(', ');
+    console.log('Using combined selector for tooltips:', combinedSelector);
+
     // Create tooltip element
     const tooltip = document.createElement('div');
     tooltip.id = 'custom-tooltip-container';  // Add ID for easy debugging
@@ -25,11 +39,11 @@ console.log('Tooltips script loaded!');
     // Function to initialize tooltips
     function initTooltips() {
         try {
-            // Find elements with either title or alt attributes
-            const elementsWithTitle = document.querySelectorAll('[title], [alt]');
-            console.log('Found elements with title or alt attribute:', elementsWithTitle.length);
+            // Find elements matching our selectors
+            const elementsWithTooltip = document.querySelectorAll(combinedSelector);
+            console.log('Found elements with tooltip attributes:', elementsWithTooltip.length);
 
-            elementsWithTitle.forEach(element => {
+            elementsWithTooltip.forEach(element => {
                 // Check if element already has a tooltip initialized
                 if (element.hasAttribute('data-tooltip-initialized')) {
                     return;
@@ -45,7 +59,9 @@ console.log('Tooltips script loaded!');
                 element.setAttribute('data-tooltip', tooltipText);
 
                 // Remove the original attributes to prevent default browser tooltip
+                // This prevents the browser's native tooltip from showing in addition to our custom one
                 if (element.hasAttribute('title')) element.removeAttribute('title');
+                // Only remove alt for non-image elements as it's needed for accessibility on images
                 if (element.hasAttribute('alt') && element.tagName !== 'IMG') element.removeAttribute('alt');
 
                 // Mark as initialized
@@ -114,7 +130,10 @@ console.log('Tooltips script loaded!');
 
     // For dynamic content: Re-initialize tooltips when DOM changes
     try {
-        // Using MutationObserver to detect when new elements with titles or alts are added
+        // Extract attribute names from selectors for the MutationObserver
+        const attributesToObserve = ['title', 'alt'];
+
+        // Using MutationObserver to detect when new elements with tooltip attributes are added
         const observer = new MutationObserver((mutations) => {
             let shouldReinitialize = false;
 
@@ -122,7 +141,7 @@ console.log('Tooltips script loaded!');
                 if (mutation.type === 'childList') {
                     shouldReinitialize = true;
                 } else if (mutation.type === 'attributes' &&
-                        (mutation.attributeName === 'title' || mutation.attributeName === 'alt')) {
+                           attributesToObserve.includes(mutation.attributeName)) {
                     shouldReinitialize = true;
                 }
             });
@@ -138,7 +157,7 @@ console.log('Tooltips script loaded!');
             childList: true,
             subtree: true,
             attributes: true,
-            attributeFilter: ['title', 'alt']
+            attributeFilter: attributesToObserve
         });
         console.log('MutationObserver initialized and watching for changes');
     } catch (error) {
