@@ -17,15 +17,13 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view;
 
-import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Main;
-import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -44,37 +42,50 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Clock;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
 
 @Route("version-list")
 @PageTitle("Version List Page")
 //@Menu(order = 1, icon = "vaadin:factory", title = "version List")
 @PermitAll // When security is enabled, allow all authenticated users
 public class VersionListView extends Main implements AfterNavigationObserver {
-    public static final String        CREATE_VERSION_BUTTON             = "create-version-button";
-    public static final String        ROUTE                             = "version-list";
-    public static final String        VERSION_GRID                      = "version-grid";
-    public static final String        VERSION_GRID_DELETE_BUTTON_PREFIX = "version-grid-delete-button-prefix-";
-    public static final String        VERSION_GRID_EDIT_BUTTON_PREFIX   = "version-grid-edit-button-prefix-";
-    public static final String        VERSION_GRID_NAME_PREFIX          = "version-grid-name-";
-    public static final String        VERSION_LIST_PAGE_TITLE           = "version-list-page-title";
-    private final       Clock         clock;
-    private             Grid<Version> grid;
-    private final       ProductApi    productApi;
-    //    private             H2            pageTitle;
-    private             Long          productId;
-    private final       VersionApi    versionApi;
+    public static final String                    CREATE_VERSION_BUTTON             = "create-version-button";
+    public static final String                    ROUTE                             = "version-list";
+    public static final String                    VERSION_GRID                      = "version-grid";
+    public static final String                    VERSION_GRID_DELETE_BUTTON_PREFIX = "version-grid-delete-button-prefix-";
+    public static final String                    VERSION_GRID_EDIT_BUTTON_PREFIX   = "version-grid-edit-button-prefix-";
+    public static final String                    VERSION_GRID_NAME_PREFIX          = "version-grid-name-";
+    public static final String                    VERSION_LIST_PAGE_TITLE           = "version-list-page-title";
+    public static final String                    VERSION_ROW_COUNTER               = "version-row-counter";
+    private             ListDataProvider<Version> dataProvider;
+    private             Grid<Version>             grid;
+    private final       ProductApi                productApi;
+    private             Long                      productId;
+    private final       VersionApi                versionApi;
 
     public VersionListView(VersionApi versionApi, ProductApi productApi, Clock clock) {
         this.versionApi = versionApi;
         this.productApi = productApi;
-        this.clock      = clock;
 
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        add(VaadinUtil.createHeader("Versions", VERSION_LIST_PAGE_TITLE, VaadinIcon.TAG, CREATE_VERSION_BUTTON, () -> openVersionDialog(null)), createGrid(clock));
+        grid = createGrid(clock);
+        add(
+                VaadinUtil.createHeader(
+                        "Versions",
+                        VERSION_LIST_PAGE_TITLE,
+                        VaadinIcon.TAG,
+                        CREATE_VERSION_BUTTON,
+                        () -> openVersionDialog(null),
+                        grid,
+                        VERSION_ROW_COUNTER
+                ),
+                grid
+        );
     }
 
     @Override
@@ -117,32 +128,57 @@ public class VersionListView extends Main implements AfterNavigationObserver {
     }
 
     private Grid<Version> createGrid(Clock clock) {
-//        final Grid<Version> grid;
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
         grid = new Grid<>();
         grid.setId(VERSION_GRID);
+        grid.setSizeFull();
+        dataProvider = new ListDataProvider<Version>(new ArrayList<>());
+        grid.setDataProvider(dataProvider);
 
-        Grid.Column<Version> keyColumn = grid.addColumn(Version::getKey).setHeader("Key");
-        keyColumn.setId("version-grid-key-column");
-        keyColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.KEY), new Div(new Text("Key"))));
+        // Add click listener to navigate to FeatureListView with the selected version ID
+        grid.addItemClickListener(event -> {
+            Version selectedVersion = event.getItem();
+            // Create parameters map
+            Map<String, String> params = new HashMap<>();
+            params.put("product", String.valueOf(productId));
+            params.put("version", String.valueOf(selectedVersion.getId()));
+            // Navigate with query parameters
+            UI.getCurrent().navigate(
+                    FeatureListView.class,
+                    QueryParameters.simple(params)
+            );
+        });
 
-        Grid.Column<Version> nameColumn = grid.addColumn(new ComponentRenderer<>(version -> {
-            Div div = new Div();
-            div.add(version.getName());
-            div.setId(VERSION_GRID_NAME_PREFIX + version.getName());
-            return div;
-        })).setHeader("Name");
-        nameColumn.setId("version-grid-name-column");
-        nameColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.TAG), new Div(new Text("Name"))));
+        {
+            Grid.Column<Version> keyColumn = grid.addColumn(Version::getKey);
+            VaadinUtil.addFilterableHeader(grid, keyColumn, "Key", VaadinIcon.KEY, Version::getKey);
+        }
+        {
+            // Add name column with filtering and sorting
+            Grid.Column<Version> nameColumn = grid.addColumn(new ComponentRenderer<>(version -> {
+                Div div = new Div();
+                div.add(version.getName());
+                div.setId(VERSION_GRID_NAME_PREFIX + version.getName());
+                return div;
+            }));
 
-        Grid.Column<Version> createdColumn = grid.addColumn(version -> dateTimeFormatter.format(version.getCreated())).setHeader("Created");
-        createdColumn.setId("version-grid-created-column");
-        createdColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("Created"))));
+            // Configure a custom comparator to properly sort by the name property
+            nameColumn.setComparator((version1, version2) ->
+                    version1.getName().compareToIgnoreCase(version2.getName()));
 
-        Grid.Column<Version> updatedColumn = grid.addColumn(version -> dateTimeFormatter.format(version.getUpdated())).setHeader("Updated");
-        updatedColumn.setId("version-grid-updated-column");
-        updatedColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("Updated"))));
+            VaadinUtil.addFilterableHeader(grid, nameColumn, "Name", VaadinIcon.TAG, Version::getName);
+        }
+        {
+            Grid.Column<Version> createdColumn = grid.addColumn(version -> dateTimeFormatter.format(version.getCreated()));
+            VaadinUtil.addFilterableHeader(grid, createdColumn, "Created", VaadinIcon.CALENDAR,
+                    version -> dateTimeFormatter.format(version.getCreated()));
+        }
+        {
+            Grid.Column<Version> updatedColumn = grid.addColumn(version -> dateTimeFormatter.format(version.getUpdated()));
+            VaadinUtil.addFilterableHeader(grid, updatedColumn, "Updated", VaadinIcon.CALENDAR,
+                    version -> dateTimeFormatter.format(version.getUpdated()));
+        }
 
         // Add actions column using VaadinUtil
         VaadinUtil.addActionColumn(
@@ -154,21 +190,6 @@ public class VersionListView extends Main implements AfterNavigationObserver {
                 this::confirmDelete
         );
 
-        grid.setSizeFull();
-
-        //- Add click listener to navigate to ProjectView with the selected version ID
-        grid.addItemClickListener(event -> {
-            Version selectedVersion = event.getItem();
-            //- Create parameters map
-            Map<String, String> params = new HashMap<>();
-            params.put("product", String.valueOf(productId));
-            params.put("version", String.valueOf(selectedVersion.getId()));
-            //- Navigate with query parameters
-            UI.getCurrent().navigate(
-                    FeatureListView.class,
-                    QueryParameters.simple(params)
-            );
-        });
         return grid;
     }
 
@@ -206,11 +227,8 @@ public class VersionListView extends Main implements AfterNavigationObserver {
     }
 
     private void refreshGrid() {
-        // Only show versions for the selected product
-        if (productId != null) {
-            grid.setItems(versionApi.getAll(productId));
-        } else {
-            grid.setItems(versionApi.getAll());
-        }
+        dataProvider.getItems().clear();
+        dataProvider.getItems().addAll((productId != null) ? versionApi.getAll(productId) : versionApi.getAll());
+        dataProvider.refreshAll();
     }
 }

@@ -23,6 +23,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -40,6 +41,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Clock;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,25 +51,37 @@ import java.util.Map;
 @PermitAll
 @RolesAllowed({"USER", "ADMIN"})
 public class ProductListView extends Main implements AfterNavigationObserver {
-    public static final String        CREATE_PRODUCT_BUTTON             = "create-product-button";
-    public static final String        PRODUCT_GRID                      = "product-grid";
-    public static final String        PRODUCT_GRID_DELETE_BUTTON_PREFIX = "product-grid-delete-button-prefix-";
-    public static final String        PRODUCT_GRID_EDIT_BUTTON_PREFIX   = "product-grid-edit-button-prefix-";
-    public static final String        PRODUCT_GRID_NAME_PREFIX          = "product-grid-name-";
-    public static final String        PRODUCT_LIST_PAGE_TITLE           = "product-list-page-title";
-    public static final String        ROUTE                             = "product-list";
-    private final       Clock         clock;
-    private             Grid<Product> grid;
-    private final       ProductApi    productApi;
+    public static final String                    CREATE_PRODUCT_BUTTON             = "create-product-button";
+    public static final String                    PRODUCT_GRID                      = "product-grid";
+    public static final String                    PRODUCT_GRID_DELETE_BUTTON_PREFIX = "product-grid-delete-button-prefix-";
+    public static final String                    PRODUCT_GRID_EDIT_BUTTON_PREFIX   = "product-grid-edit-button-prefix-";
+    public static final String                    PRODUCT_GRID_NAME_PREFIX          = "product-grid-name-";
+    public static final String                    PRODUCT_LIST_PAGE_TITLE           = "product-list-page-title";
+    public static final String                    PRODUCT_ROW_COUNTER               = "product-row-counter";
+    public static final String                    ROUTE                             = "product-list";
+    private             ListDataProvider<Product> dataProvider;
+    private             Grid<Product>             grid;
+    private final       ProductApi                productApi;
 
     public ProductListView(ProductApi productApi, Clock clock) {
         this.productApi = productApi;
-        this.clock      = clock;
 
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        add(VaadinUtil.createHeader("Products", PRODUCT_LIST_PAGE_TITLE, VaadinIcon.CUBE, CREATE_PRODUCT_BUTTON, () -> openProductDialog(null)), createGrid(clock));
+        grid = createGrid(clock);
+        add(
+                VaadinUtil.createHeader(
+                        "Products",
+                        PRODUCT_LIST_PAGE_TITLE,
+                        VaadinIcon.CUBE,
+                        CREATE_PRODUCT_BUTTON,
+                        () -> openProductDialog(null),
+                        grid,
+                        PRODUCT_ROW_COUNTER
+                ),
+                grid
+        );
     }
 
     @Override
@@ -102,6 +116,8 @@ public class ProductListView extends Main implements AfterNavigationObserver {
         grid = new Grid<>();
         grid.setId(PRODUCT_GRID);
         grid.setSizeFull();
+        dataProvider = new ListDataProvider<Product>(new ArrayList<>());
+        grid.setDataProvider(dataProvider);
 
         // Add click listener to navigate to VersionView with the selected product ID
         grid.addItemClickListener(event -> {
@@ -188,6 +204,8 @@ public class ProductListView extends Main implements AfterNavigationObserver {
     }
 
     private void refreshGrid() {
-        grid.setItems(productApi.getAll());
+        dataProvider.getItems().clear();
+        dataProvider.getItems().addAll(productApi.getAll());
+        dataProvider.refreshAll();
     }
 }
