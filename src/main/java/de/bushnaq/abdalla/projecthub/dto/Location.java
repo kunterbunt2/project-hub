@@ -32,7 +32,7 @@ import java.time.LocalDate;
 @Setter
 @NoArgsConstructor
 @ToString(callSuper = true)
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(of = {"id"}, callSuper = false)
 public class Location extends AbstractTimeAware implements Comparable<Location> {
 
     private String    country;

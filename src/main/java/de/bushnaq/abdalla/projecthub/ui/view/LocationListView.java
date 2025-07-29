@@ -20,12 +20,10 @@ package de.bushnaq.abdalla.projecthub.ui.view;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -47,6 +45,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -56,20 +55,21 @@ import java.util.stream.Collectors;
 @PageTitle("User Location")
 @PermitAll
 public class LocationListView extends Main implements BeforeEnterObserver, AfterNavigationObserver {
-    public static final String         CREATE_LOCATION_BUTTON             = "create-location-button";
-    //    public static final String         INFO_BOX                           = "location-info-box";
-    public static final String         LOCATION_GRID                      = "location-grid";
-    public static final String         LOCATION_GRID_COUNTRY_PREFIX       = "location-country-";
-    public static final String         LOCATION_GRID_DELETE_BUTTON_PREFIX = "location-delete-button-";
-    public static final String         LOCATION_GRID_EDIT_BUTTON_PREFIX   = "location-edit-button-";
-    public static final String         LOCATION_GRID_START_DATE_PREFIX    = "location-start-";
-    public static final String         LOCATION_GRID_STATE_PREFIX         = "location-state-";
-    public static final String         LOCATION_LIST_PAGE_TITLE           = "location-page-title";
-    public static final String         ROUTE                              = "location";
-    private             User           currentUser;
-    private final       LocationApi    locationApi;
-    private final       Grid<Location> locationGrid                       = new Grid<>(Location.class, false);
-    private final       UserApi        userApi;
+    public static final String                     CREATE_LOCATION_BUTTON             = "create-location-button";
+    public static final String                     LOCATION_GRID                      = "location-grid";
+    public static final String                     LOCATION_GRID_COUNTRY_PREFIX       = "location-country-";
+    public static final String                     LOCATION_GRID_DELETE_BUTTON_PREFIX = "location-delete-button-";
+    public static final String                     LOCATION_GRID_EDIT_BUTTON_PREFIX   = "location-edit-button-";
+    public static final String                     LOCATION_GRID_START_DATE_PREFIX    = "location-start-";
+    public static final String                     LOCATION_GRID_STATE_PREFIX         = "location-state-";
+    public static final String                     LOCATION_LIST_PAGE_TITLE           = "location-page-title";
+    public static final String                     LOCATION_ROW_COUNTER               = "location-row-counter";
+    public static final String                     ROUTE                              = "location";
+    private             User                       currentUser;
+    private             ListDataProvider<Location> dataProvider;
+    private final       Grid<Location>             grid;
+    private final       LocationApi                locationApi;
+    private final       UserApi                    userApi;
 
     public LocationListView(LocationApi locationApi, UserApi userApi) {
         this.locationApi = locationApi;
@@ -78,12 +78,25 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        add(VaadinUtil.createHeader("User Location", LOCATION_LIST_PAGE_TITLE, VaadinIcon.MAP_MARKER, CREATE_LOCATION_BUTTON, () -> openLocationDialog(null)), createLocationGrid());
+        grid = createGrid();
+
+        add(
+                VaadinUtil.createHeader(
+                        "User Location",
+                        LOCATION_LIST_PAGE_TITLE,
+                        VaadinIcon.MAP_MARKER,
+                        CREATE_LOCATION_BUTTON,
+                        () -> openLocationDialog(null),
+                        grid,
+                        LOCATION_ROW_COUNTER
+                ),
+                grid
+        );
     }
 
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
-        refreshLocationGrid();
+        refreshGrid();
     }
 
     @Override
@@ -95,8 +108,7 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
         String         currentUsername = authentication != null ? authentication.getName() : null;
 
         // If no username is provided, use the current authenticated user
-        final String username = (usernameParam == null && currentUsername != null) ?
-                currentUsername : usernameParam;
+        final String username = (usernameParam == null && currentUsername != null) ? currentUsername : usernameParam;
 
         if (username != null) {
             try {
@@ -120,7 +132,7 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
     }
 
     private void confirmDelete(Location location) {
-        if (locationGrid.getListDataView().getItems().count() <= 1) {
+        if (dataProvider.getItems().size() <= 1) {
             Notification notification = Notification.show("Cannot delete - Users must have at least one location", 3000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
             return;
@@ -132,7 +144,7 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
                 () -> {
                     try {
                         locationApi.deleteById(currentUser, location);
-                        refreshLocationGrid();
+                        refreshGrid();
                         Notification.show("Location deleted", 3000, Notification.Position.MIDDLE);
                     } catch (Exception ex) {
                         Notification notification = Notification.show(
@@ -164,80 +176,101 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
         return user;
     }
 
-    private HorizontalLayout createHeaderWithIcon(VaadinIcon icon, String text) {
-        Icon headerIcon = new Icon(icon);
-        headerIcon.setSize("16px");
+    private Grid<Location> createGrid() {
+        Grid<Location> grid = new Grid<>();
+        grid.setId(LOCATION_GRID);
+        grid.setSizeFull();
+        grid.addClassNames(LumoUtility.Border.ALL, LumoUtility.BorderColor.CONTRAST_10);
 
-        Span headerText = new Span(text);
-        headerText.addClassNames(LumoUtility.Margin.XSMALL);
+        dataProvider = new ListDataProvider<>(new ArrayList<>());
+        grid.setDataProvider(dataProvider);
 
-        HorizontalLayout headerLayout = new HorizontalLayout(headerIcon, headerText);
-        headerLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-        headerLayout.setSpacing(false);
+        // Format dates consistently
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-        return headerLayout;
-    }
+        // Start Date Column
+        {
+            Grid.Column<Location> startColumn = grid.addColumn(new ComponentRenderer<>(location -> {
+                String startDateStr = location.getStart().format(dateFormatter);
+                Span   span         = new Span(startDateStr);
+                span.setId(LOCATION_GRID_START_DATE_PREFIX + startDateStr);
+                return span;
+            }));
 
-    private Grid<Location> createLocationGrid() {
-        locationGrid.setId(LOCATION_GRID);
-        locationGrid.setWidthFull();
-        locationGrid.addClassNames(LumoUtility.Border.ALL, LumoUtility.BorderColor.CONTRAST_10);
-
-        // Add columns
-        locationGrid.addColumn(new ComponentRenderer<>(location -> {
-                    String startDateStr = location.getStart().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                    Span   span         = new Span(startDateStr);
-                    span.setId(LOCATION_GRID_START_DATE_PREFIX + startDateStr);
-                    return span;
-                }))
-                .setHeader(createHeaderWithIcon(VaadinIcon.CALENDAR, "Start Date"))
-                .setSortable(true)
-                .setKey("start");
+            // Add filterable header with sorting
+            VaadinUtil.addFilterableHeader(
+                    grid,
+                    startColumn,
+                    "Start Date",
+                    VaadinIcon.CALENDAR,
+                    location -> location.getStart().format(dateFormatter)
+            );
+        }
 
         // Country column with descriptive name
-        locationGrid.addColumn(new ComponentRenderer<>(location -> {
-                    String countryCode = location.getCountry();
-                    Locale locale      = new Locale("", countryCode);
-                    String displayText = locale.getDisplayCountry() + " (" + countryCode + ")";
-                    Span   span        = new Span(displayText);
-                    span.setId(LOCATION_GRID_COUNTRY_PREFIX + displayText);
-                    return span;
-                }))
-                .setHeader(createHeaderWithIcon(VaadinIcon.GLOBE, "Country"))
-                .setSortable(true)
-                .setKey("country");
+        {
+            Grid.Column<Location> countryColumn = grid.addColumn(new ComponentRenderer<>(location -> {
+                String countryCode = location.getCountry();
+                Locale locale      = new Locale("", countryCode);
+                String displayText = locale.getDisplayCountry() + " (" + countryCode + ")";
+                Span   span        = new Span(displayText);
+                span.setId(LOCATION_GRID_COUNTRY_PREFIX + displayText);
+                return span;
+            }));
+
+            // Add filterable header with sorting
+            VaadinUtil.addFilterableHeader(
+                    grid,
+                    countryColumn,
+                    "Country",
+                    VaadinIcon.GLOBE,
+                    location -> {
+                        String countryCode = location.getCountry();
+                        Locale locale      = new Locale("", countryCode);
+                        return locale.getDisplayCountry() + " (" + countryCode + ")";
+                    }
+            );
+        }
 
         // State column with descriptive name
-        locationGrid.addColumn(new ComponentRenderer<>(location -> {
-                    String countryCode = location.getCountry();
-                    String stateCode   = location.getState();
-                    String displayText = getStateDescription(countryCode, stateCode);
-                    Span   span        = new Span(displayText);
-                    span.setId(LOCATION_GRID_STATE_PREFIX + displayText);
-                    return span;
-                }))
-                .setHeader(createHeaderWithIcon(VaadinIcon.MAP_MARKER, "State/Region"))
-                .setSortable(true)
-                .setKey("state");
+        {
+            Grid.Column<Location> stateColumn = grid.addColumn(new ComponentRenderer<>(location -> {
+                String countryCode = location.getCountry();
+                String stateCode   = location.getState();
+                String displayText = getStateDescription(countryCode, stateCode);
+                Span   span        = new Span(displayText);
+                span.setId(LOCATION_GRID_STATE_PREFIX + displayText);
+                return span;
+            }));
 
-        // Add actions column using VaadinUtil with delete validation
+            // Add filterable header with sorting
+            VaadinUtil.addFilterableHeader(
+                    grid,
+                    stateColumn,
+                    "State/Region",
+                    VaadinIcon.MAP_MARKER,
+                    location -> getStateDescription(location.getCountry(), location.getState())
+            );
+        }
+
+        // Add actions column with delete validation
         VaadinUtil.addActionColumn(
-                locationGrid,
+                grid,
                 LOCATION_GRID_EDIT_BUTTON_PREFIX,
                 LOCATION_GRID_DELETE_BUTTON_PREFIX,
-                location -> location.getStart().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                location -> location.getStart().format(dateFormatter),
                 this::openLocationDialog,
                 this::confirmDelete,
                 location -> {
                     // Validate: Users must have at least one location
-                    if (locationGrid.getListDataView().getItems().count() <= 1) {
+                    if (dataProvider.getItems().size() <= 1) {
                         return VaadinUtil.DeleteValidationResult.invalid("Cannot delete - Users must have at least one location");
                     }
                     return VaadinUtil.DeleteValidationResult.valid();
                 }
         );
 
-        return locationGrid;
+        return grid;
     }
 
     /**
@@ -276,52 +309,22 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
                 location,
                 this.currentUser,
                 this.locationApi,
-                ignored -> refreshLocationGrid());
+                this::refreshGrid);
         dialog.open();
     }
 
-    private void refreshLocationGrid() {
+    private void refreshGrid() {
         if (currentUser != null) {
             // Get a fresh copy of the user to ensure we have the latest data
             User refreshedUser = userApi.getById(currentUser.getId());
             currentUser = refreshedUser;
 
             // Sort locations by start date in descending order (latest first)
-            List<Location> sortedLocations = currentUser.getLocations().stream()
-                    .sorted(Comparator.comparing(Location::getStart).reversed())
-                    .collect(Collectors.toList());
+            List<Location> sortedLocations = currentUser.getLocations().stream().sorted(Comparator.comparing(Location::getStart).reversed()).collect(Collectors.toList());
 
-            locationGrid.setItems(sortedLocations);
-//            updateInfoBox();
+            dataProvider.getItems().clear();
+            dataProvider.getItems().addAll(sortedLocations);
+            dataProvider.refreshAll();
         }
     }
-
-//    private void updateInfoBox() {
-//        infoBox.removeAll();
-//        infoBox.setId(INFO_BOX);
-//
-//        VerticalLayout infoContent = new VerticalLayout();
-//        infoContent.setSpacing(false);
-//        infoContent.setPadding(false);
-//
-//        Span heading = new Span("Location Information");
-//        heading.getElement().getStyle().set("font-weight", "bold");
-//
-//        Span info = new Span("Locations represent where you are working under contract. " +
-//                "Country and state/region are used to calculate official holidays.");
-//
-//        Span instruction = new Span("Start dates must be unique. The most recent location will be used for current tasks. " +
-//                "Your location history should cover all your time working for this organization.");
-//
-//        infoContent.add(heading, info, instruction);
-//        infoContent.addClassNames(
-//                LumoUtility.Padding.SMALL,
-//                LumoUtility.Background.CONTRAST_5,
-//                LumoUtility.Border.ALL,
-//                LumoUtility.BorderColor.CONTRAST_10,
-//                LumoUtility.Margin.Bottom.MEDIUM
-//        );
-//
-//        infoBox.add(infoContent);
-//    }
 }

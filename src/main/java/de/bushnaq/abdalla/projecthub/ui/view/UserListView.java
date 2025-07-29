@@ -17,14 +17,12 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view;
 
-import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Main;
-import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -39,21 +37,25 @@ import jakarta.annotation.security.PermitAll;
 import java.time.Clock;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.ArrayList;
 
 @Route("user-list")
 @PageTitle("User List Page")
 @Menu(order = 2, icon = "vaadin:users", title = "Users")
 @PermitAll // When security is enabled, allow all authenticated users
 public class UserListView extends Main implements AfterNavigationObserver {
-    public static final String     CREATE_USER_BUTTON             = "create-user-button";
-    public static final String     ROUTE                          = "user-list";
-    public static final String     USER_GRID_DELETE_BUTTON_PREFIX = "user-grid-delete-button-prefix-";
-    public static final String     USER_GRID_EDIT_BUTTON_PREFIX   = "user-grid-edit-button-prefix-";
-    public static final String     USER_GRID_NAME_PREFIX          = "user-grid-name-";
-    public static final String     USER_LIST_PAGE_TITLE           = "user-list-page-title";
-    private final       Clock      clock;
-    private             Grid<User> grid;
-    private final       UserApi    userApi;
+    public static final String                 CREATE_USER_BUTTON             = "create-user-button";
+    public static final String                 ROUTE                          = "user-list";
+    public static final String                 USER_GRID                      = "user-grid";
+    public static final String                 USER_GRID_DELETE_BUTTON_PREFIX = "user-grid-delete-button-prefix-";
+    public static final String                 USER_GRID_EDIT_BUTTON_PREFIX   = "user-grid-edit-button-prefix-";
+    public static final String                 USER_GRID_NAME_PREFIX          = "user-grid-name-";
+    public static final String                 USER_LIST_PAGE_TITLE           = "user-list-page-title";
+    public static final String                 USER_ROW_COUNTER               = "user-row-counter";
+    private final       Clock                  clock;
+    private             ListDataProvider<User> dataProvider;
+    private             Grid<User>             grid;
+    private final       UserApi                userApi;
 
     public UserListView(UserApi userApi, Clock clock) {
         this.userApi = userApi;
@@ -62,7 +64,20 @@ public class UserListView extends Main implements AfterNavigationObserver {
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        add(VaadinUtil.createHeader("Users", USER_LIST_PAGE_TITLE, VaadinIcon.USERS, CREATE_USER_BUTTON, () -> openUserDialog(null)), createGrid(clock));
+        grid = createGrid(clock);
+
+        add(
+                VaadinUtil.createHeader(
+                        "Users",
+                        USER_LIST_PAGE_TITLE,
+                        VaadinIcon.USERS,
+                        CREATE_USER_BUTTON,
+                        () -> openUserDialog(null),
+                        grid,
+                        USER_ROW_COUNTER
+                ),
+                grid
+        );
     }
 
     @Override
@@ -74,6 +89,8 @@ public class UserListView extends Main implements AfterNavigationObserver {
                         mainLayout.getBreadcrumbs().addItem("Users", UserListView.class);
                     }
                 });
+
+        refreshGrid();
     }
 
     private void confirmDelete(User user) {
@@ -95,14 +112,19 @@ public class UserListView extends Main implements AfterNavigationObserver {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
         grid = new Grid<>();
-        refreshGrid();
+        grid.setId(USER_GRID);
+        grid.setSizeFull();
+        dataProvider = new ListDataProvider<User>(new ArrayList<>());
+        grid.setDataProvider(dataProvider);
+
         {
-            Grid.Column<User> column = grid.addColumn(User::getKey).setHeader("Key");
-            column.setId("user-grid-key-column");
-            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.KEY), new Div(new Text("Key"))));
+            Grid.Column<User> keyColumn = grid.addColumn(User::getKey);
+            VaadinUtil.addFilterableHeader(grid, keyColumn, "Key", VaadinIcon.KEY, User::getKey);
         }
+
         {
-            Grid.Column<User> column = grid.addColumn(new ComponentRenderer<>(user -> {
+            // Add name column with filtering and sorting
+            Grid.Column<User> nameColumn = grid.addColumn(new ComponentRenderer<>(user -> {
                 Div div = new Div();
                 // Create color indicator if available
                 if (user.getColor() != null) {
@@ -119,34 +141,44 @@ public class UserListView extends Main implements AfterNavigationObserver {
                 div.add(user.getName());
                 div.setId(USER_GRID_NAME_PREFIX + user.getName());
                 return div;
-            })).setHeader("Name");
-            column.setId("user-grid-name-column");
-            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.USER), new Div(new Text("Name"))));
+            }));
+
+            // Configure a custom comparator to properly sort by the name property
+            nameColumn.setComparator((user1, user2) ->
+                    user1.getName().compareToIgnoreCase(user2.getName()));
+
+            VaadinUtil.addFilterableHeader(grid, nameColumn, "Name", VaadinIcon.USER, User::getName);
         }
+
         {
-            Grid.Column<User> column = grid.addColumn(User::getEmail).setHeader("Email");
-            column.setId("user-grid-email-column");
-            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.ENVELOPE), new Div(new Text("Email"))));
+            Grid.Column<User> emailColumn = grid.addColumn(User::getEmail);
+            VaadinUtil.addFilterableHeader(grid, emailColumn, "Email", VaadinIcon.ENVELOPE, User::getEmail);
         }
+
         {
-            Grid.Column<User> column = grid.addColumn(user -> user.getFirstWorkingDay() != null ? user.getFirstWorkingDay().toString() : "").setHeader("First Working Day");
-            column.setId("user-grid-first-working-day-column");
-            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR_USER), new Div(new Text("First Working Day"))));
+            Grid.Column<User> firstWorkingDayColumn = grid.addColumn(
+                    user -> user.getFirstWorkingDay() != null ? user.getFirstWorkingDay().toString() : "");
+            VaadinUtil.addFilterableHeader(grid, firstWorkingDayColumn, "First Working Day", VaadinIcon.CALENDAR_USER,
+                    user -> user.getFirstWorkingDay() != null ? user.getFirstWorkingDay().toString() : "");
         }
+
         {
-            Grid.Column<User> column = grid.addColumn(user -> user.getLastWorkingDay() != null ? user.getLastWorkingDay().toString() : "").setHeader("Last Working Day");
-            column.setId("user-grid-last-working-day-column");
-            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR_USER), new Div(new Text("Last Working Day"))));
+            Grid.Column<User> lastWorkingDayColumn = grid.addColumn(
+                    user -> user.getLastWorkingDay() != null ? user.getLastWorkingDay().toString() : "");
+            VaadinUtil.addFilterableHeader(grid, lastWorkingDayColumn, "Last Working Day", VaadinIcon.CALENDAR_USER,
+                    user -> user.getLastWorkingDay() != null ? user.getLastWorkingDay().toString() : "");
         }
+
         {
-            Grid.Column<User> column = grid.addColumn(user -> dateTimeFormatter.format(user.getCreated())).setHeader("Created");
-            column.setId("user-grid-created-column");
-            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("Created"))));
+            Grid.Column<User> createdColumn = grid.addColumn(user -> dateTimeFormatter.format(user.getCreated()));
+            VaadinUtil.addFilterableHeader(grid, createdColumn, "Created", VaadinIcon.CALENDAR,
+                    user -> dateTimeFormatter.format(user.getCreated()));
         }
+
         {
-            Grid.Column<User> column = grid.addColumn(user -> dateTimeFormatter.format(user.getUpdated())).setHeader("Updated");
-            column.setId("user-grid-updated-column");
-            column.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("Updated"))));
+            Grid.Column<User> updatedColumn = grid.addColumn(user -> dateTimeFormatter.format(user.getUpdated()));
+            VaadinUtil.addFilterableHeader(grid, updatedColumn, "Updated", VaadinIcon.CALENDAR,
+                    user -> dateTimeFormatter.format(user.getUpdated()));
         }
 
         // Add actions column using VaadinUtil
@@ -159,7 +191,6 @@ public class UserListView extends Main implements AfterNavigationObserver {
                 this::confirmDelete
         );
 
-        grid.setSizeFull();
         return grid;
     }
 
@@ -180,6 +211,8 @@ public class UserListView extends Main implements AfterNavigationObserver {
     }
 
     private void refreshGrid() {
-        grid.setItems(userApi.getAll());
+        dataProvider.getItems().clear();
+        dataProvider.getItems().addAll(userApi.getAll());
+        dataProvider.refreshAll();
     }
 }

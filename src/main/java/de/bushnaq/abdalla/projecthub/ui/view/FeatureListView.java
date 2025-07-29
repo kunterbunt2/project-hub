@@ -17,15 +17,13 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view;
 
-import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Main;
-import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -47,6 +45,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Clock;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,19 +54,20 @@ import java.util.Map;
 @PermitAll // When security is enabled, allow all authenticated users
 @RolesAllowed({"USER", "ADMIN"}) // Restrict access to users with specific roles
 public class FeatureListView extends Main implements AfterNavigationObserver {
-    public static final String        CREATE_FEATURE_BUTTON_ID          = "create-feature-button";
-    public static final String        FEATURE_GRID                      = "feature-grid";
-    public static final String        FEATURE_GRID_DELETE_BUTTON_PREFIX = "feature-grid-delete-button-prefix-";
-    public static final String        FEATURE_GRID_EDIT_BUTTON_PREFIX   = "feature-grid-edit-button-prefix-";
-    public static final String        FEATURE_GRID_NAME_PREFIX          = "feature-grid-name-";
-    public static final String        FEATURE_LIST_PAGE_TITLE           = "feature-list-page-title";
-    private final       FeatureApi    featureApi;
-    private final       Grid<Feature> grid;
-    private final       ProductApi    productApi;
-    //    private             H2            pageTitle;
-    private             Long          productId;
-    private final       VersionApi    versionApi;
-    private             Long          versionId;
+    public static final String                    CREATE_FEATURE_BUTTON_ID          = "create-feature-button";
+    public static final String                    FEATURE_GRID                      = "feature-grid";
+    public static final String                    FEATURE_GRID_DELETE_BUTTON_PREFIX = "feature-grid-delete-button-prefix-";
+    public static final String                    FEATURE_GRID_EDIT_BUTTON_PREFIX   = "feature-grid-edit-button-prefix-";
+    public static final String                    FEATURE_GRID_NAME_PREFIX          = "feature-grid-name-";
+    public static final String                    FEATURE_LIST_PAGE_TITLE           = "feature-list-page-title";
+    public static final String                    FEATURE_ROW_COUNTER               = "feature-row-counter";
+    private             ListDataProvider<Feature> dataProvider;
+    private final       FeatureApi                featureApi;
+    private final       Grid<Feature>             grid;
+    private final       ProductApi                productApi;
+    private             Long                      productId;
+    private final       VersionApi                versionApi;
+    private             Long                      versionId;
 
     public FeatureListView(FeatureApi featureApi, ProductApi productApi, VersionApi versionApi, Clock clock) {
         this.featureApi = featureApi;
@@ -79,7 +79,18 @@ public class FeatureListView extends Main implements AfterNavigationObserver {
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        add(VaadinUtil.createHeader("Features", FEATURE_LIST_PAGE_TITLE, VaadinIcon.LIGHTBULB, CREATE_FEATURE_BUTTON_ID, () -> openFeatureDialog(null)), grid);
+        add(
+                VaadinUtil.createHeader(
+                        "Features",
+                        FEATURE_LIST_PAGE_TITLE,
+                        VaadinIcon.LIGHTBULB,
+                        CREATE_FEATURE_BUTTON_ID,
+                        () -> openFeatureDialog(null),
+                        grid,
+                        FEATURE_ROW_COUNTER
+                ),
+                grid
+        );
     }
 
     @Override
@@ -92,7 +103,6 @@ public class FeatureListView extends Main implements AfterNavigationObserver {
         }
         if (queryParameters.getParameters().containsKey("version")) {
             this.versionId = Long.parseLong(queryParameters.getParameters().get("version").getFirst());
-//            pageTitle.setText("Features of Version " + versionId);
         }
         //- update breadcrumbs
         getElement().getParent().getComponent()
@@ -116,7 +126,6 @@ public class FeatureListView extends Main implements AfterNavigationObserver {
                     }
                 });
 
-        //- populate grid
         refreshGrid();
     }
 
@@ -136,32 +145,58 @@ public class FeatureListView extends Main implements AfterNavigationObserver {
     }
 
     private Grid<Feature> createGrid(Clock clock) {
-        final Grid<Feature> grid;
-        DateTimeFormatter   dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
-        grid = new Grid<>();
+        Grid<Feature> grid = new Grid<>();
         grid.setId(FEATURE_GRID);
+        grid.setSizeFull();
+        dataProvider = new ListDataProvider<Feature>(new ArrayList<>());
+        grid.setDataProvider(dataProvider);
 
-        Grid.Column<Feature> keyColumn = grid.addColumn(Feature::getKey).setHeader("Key");
-        keyColumn.setId("feature-grid-key-column");
-        keyColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.KEY), new Div(new Text("Key"))));
+        // Add click listener to navigate to SprintListView with the selected feature ID
+        grid.addItemClickListener(event -> {
+            Feature selectedFeature = event.getItem();
+            // Create parameters map
+            Map<String, String> params = new HashMap<>();
+            params.put("product", String.valueOf(productId));
+            params.put("version", String.valueOf(versionId));
+            params.put("feature", String.valueOf(selectedFeature.getId()));
+            // Navigate with query parameters
+            UI.getCurrent().navigate(
+                    SprintListView.class,
+                    QueryParameters.simple(params)
+            );
+        });
 
-        Grid.Column<Feature> nameColumn = grid.addColumn(new ComponentRenderer<>(feature -> {
-            Div div = new Div();
-            div.add(feature.getName());
-            div.setId(FEATURE_GRID_NAME_PREFIX + feature.getName());
-            return div;
-        })).setHeader("Name");
-        nameColumn.setId("feature-grid-name-column");
-        nameColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.LIGHTBULB), new Div(new Text("Name"))));
+        {
+            Grid.Column<Feature> keyColumn = grid.addColumn(Feature::getKey);
+            VaadinUtil.addFilterableHeader(grid, keyColumn, "Key", VaadinIcon.KEY, Feature::getKey);
+        }
+        {
+            // Add name column with filtering and sorting
+            Grid.Column<Feature> nameColumn = grid.addColumn(new ComponentRenderer<>(feature -> {
+                Div div = new Div();
+                div.add(feature.getName());
+                div.setId(FEATURE_GRID_NAME_PREFIX + feature.getName());
+                return div;
+            }));
 
-        Grid.Column<Feature> createdColumn = grid.addColumn(version -> dateTimeFormatter.format(version.getCreated())).setHeader("Created");
-        createdColumn.setId("feature-grid-created-column");
-        createdColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("Created"))));
+            // Configure a custom comparator to properly sort by the name property
+            nameColumn.setComparator((feature1, feature2) ->
+                    feature1.getName().compareToIgnoreCase(feature2.getName()));
 
-        Grid.Column<Feature> updatedColumn = grid.addColumn(feature -> dateTimeFormatter.format(feature.getUpdated())).setHeader("Updated");
-        updatedColumn.setId("feature-grid-updated-column");
-        updatedColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("Updated"))));
+            VaadinUtil.addFilterableHeader(grid, nameColumn, "Name", VaadinIcon.LIGHTBULB, Feature::getName);
+        }
+        {
+            Grid.Column<Feature> createdColumn = grid.addColumn(feature -> dateTimeFormatter.format(feature.getCreated()));
+            VaadinUtil.addFilterableHeader(grid, createdColumn, "Created", VaadinIcon.CALENDAR,
+                    feature -> dateTimeFormatter.format(feature.getCreated()));
+        }
+        {
+            Grid.Column<Feature> updatedColumn = grid.addColumn(feature -> dateTimeFormatter.format(feature.getUpdated()));
+            VaadinUtil.addFilterableHeader(grid, updatedColumn, "Updated", VaadinIcon.CALENDAR,
+                    feature -> dateTimeFormatter.format(feature.getUpdated()));
+        }
 
         // Add actions column using VaadinUtil
         VaadinUtil.addActionColumn(
@@ -173,22 +208,6 @@ public class FeatureListView extends Main implements AfterNavigationObserver {
                 this::confirmDelete
         );
 
-        grid.setSizeFull();
-
-        //- Add click listener to navigate to SprintView with the selected version ID
-        grid.addItemClickListener(event -> {
-            Feature selectedFeature = event.getItem();
-            //- Create parameters map
-            Map<String, String> params = new HashMap<>();
-            params.put("product", String.valueOf(productId));
-            params.put("version", String.valueOf(versionId));
-            params.put("feature", String.valueOf(selectedFeature.getId()));
-            //- Navigate with query parameters
-            UI.getCurrent().navigate(
-                    SprintListView.class,
-                    QueryParameters.simple(params)
-            );
-        });
         return grid;
     }
 
@@ -224,10 +243,8 @@ public class FeatureListView extends Main implements AfterNavigationObserver {
     }
 
     private void refreshGrid() {
-        if (versionId != null) {
-            grid.setItems(featureApi.getAll(versionId));
-        } else {
-            grid.setItems(featureApi.getAll());
-        }
+        dataProvider.getItems().clear();
+        dataProvider.getItems().addAll((versionId != null) ? featureApi.getAll(versionId) : featureApi.getAll());
+        dataProvider.refreshAll();
     }
 }

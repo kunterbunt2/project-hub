@@ -28,7 +28,7 @@ import java.time.LocalDate;
 @Setter
 @NoArgsConstructor
 @ToString(callSuper = true)
-@EqualsAndHashCode(of = {"type"}, callSuper = true)
+@EqualsAndHashCode(of = {"id"}, callSuper = true)
 @JsonIdentityInfo(
         scope = OffDay.class,
         generator = ObjectIdGenerators.PropertyGenerator.class,

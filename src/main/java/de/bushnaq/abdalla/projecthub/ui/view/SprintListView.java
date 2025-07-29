@@ -17,7 +17,6 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view;
 
-import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -29,6 +28,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -52,6 +52,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Clock;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -60,23 +61,24 @@ import java.util.Map;
 //@Menu(order = 1, icon = "vaadin:factory", title = "project List")
 @PermitAll // When security is enabled, allow all authenticated users
 public class SprintListView extends Main implements AfterNavigationObserver {
-    public static final String       CREATE_SPRINT_BUTTON             = "create-sprint-button";
-    public static final String       SPRINT_GRID                      = "sprint-grid";
-    public static final String       SPRINT_GRID_CONFIG_BUTTON_PREFIX = "sprint-grid-config-button-prefix-";
-    public static final String       SPRINT_GRID_DELETE_BUTTON_PREFIX = "sprint-grid-delete-button-prefix-";
-    public static final String       SPRINT_GRID_EDIT_BUTTON_PREFIX   = "sprint-grid-edit-button-prefix-";
-    public static final String       SPRINT_GRID_NAME_PREFIX          = "sprint-grid-name-";
-    public static final String       SPRINT_LIST_PAGE_TITLE           = "sprint-list-page-title";
-    private final       Clock        clock;
-    private final       FeatureApi   featureApi;
-    private             Long         featureId;
-    private             Grid<Sprint> grid;
-    private final       ProductApi   productApi;
-    //    private             H2           pageTitle;
-    private             Long         productId;
-    private final       SprintApi    sprintApi;
-    private final       VersionApi   versionApi;
-    private             Long         versionId;
+    public static final String                   CREATE_SPRINT_BUTTON             = "create-sprint-button";
+    public static final String                   SPRINT_GRID                      = "sprint-grid";
+    public static final String                   SPRINT_GRID_CONFIG_BUTTON_PREFIX = "sprint-grid-config-button-prefix-";
+    public static final String                   SPRINT_GRID_DELETE_BUTTON_PREFIX = "sprint-grid-delete-button-prefix-";
+    public static final String                   SPRINT_GRID_EDIT_BUTTON_PREFIX   = "sprint-grid-edit-button-prefix-";
+    public static final String                   SPRINT_GRID_NAME_PREFIX          = "sprint-grid-name-";
+    public static final String                   SPRINT_LIST_PAGE_TITLE           = "sprint-list-page-title";
+    public static final String                   SPRINT_ROW_COUNTER               = "sprint-row-counter";
+    private final       Clock                    clock;
+    private             ListDataProvider<Sprint> dataProvider;
+    private final       FeatureApi               featureApi;
+    private             Long                     featureId;
+    private             Grid<Sprint>             grid;
+    private final       ProductApi               productApi;
+    private             Long                     productId;
+    private final       SprintApi                sprintApi;
+    private final       VersionApi               versionApi;
+    private             Long                     versionId;
 
     public SprintListView(SprintApi sprintApi, ProductApi productApi, VersionApi versionApi, FeatureApi featureApi, Clock clock) {
         this.sprintApi  = sprintApi;
@@ -88,7 +90,20 @@ public class SprintListView extends Main implements AfterNavigationObserver {
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        add(VaadinUtil.createHeader("Sprints", SPRINT_LIST_PAGE_TITLE, "vaadin:exit", CREATE_SPRINT_BUTTON, () -> openSprintDialog(null)), createGrid(clock));
+        grid = createGrid(clock);
+
+        add(
+                VaadinUtil.createHeader(
+                        "Sprints",
+                        SPRINT_LIST_PAGE_TITLE,
+                        VaadinIcon.EXIT,
+                        CREATE_SPRINT_BUTTON,
+                        () -> openSprintDialog(null),
+                        grid,
+                        SPRINT_ROW_COUNTER
+                ),
+                grid
+        );
     }
 
     @Override
@@ -104,7 +119,6 @@ public class SprintListView extends Main implements AfterNavigationObserver {
         }
         if (queryParameters.getParameters().containsKey("feature")) {
             this.featureId = Long.parseLong(queryParameters.getParameters().get("feature").getFirst());
-//            pageTitle.setText("Sprints of Feature ID: " + featureId);
         }
         //- update breadcrumbs
         getElement().getParent().getComponent()
@@ -159,45 +173,95 @@ public class SprintListView extends Main implements AfterNavigationObserver {
 
         grid = new Grid<>();
         grid.setId(SPRINT_GRID);
+        grid.setSizeFull();
+        dataProvider = new ListDataProvider<Sprint>(new ArrayList<>());
+        grid.setDataProvider(dataProvider);
 
-        Grid.Column<Sprint> keyColumn = grid.addColumn(Sprint::getKey).setHeader("Key");
-        keyColumn.setId("sprint-grid-key-column");
-        keyColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.KEY), new Div(new Text("Key"))));
+        // Add click listener to navigate to SprintQualityBoard with the selected sprint ID
+        grid.addItemClickListener(event -> {
+            Sprint selectedSprint = event.getItem();
+            // Create parameters map
+            Map<String, String> params = new HashMap<>();
+            params.put("product", String.valueOf(productId));
+            params.put("version", String.valueOf(versionId));
+            params.put("feature", String.valueOf(featureId));
+            params.put("sprint", String.valueOf(selectedSprint.getId()));
+            // Navigate with query parameters
+            UI.getCurrent().navigate(
+                    SprintQualityBoard.class,
+                    QueryParameters.simple(params)
+            );
+        });
 
-        Grid.Column<Sprint> nameColumn = grid.addColumn(new ComponentRenderer<>(sprint -> {
-            Div div = new Div();
-            div.add(sprint.getName());
-            div.setId(SPRINT_GRID_NAME_PREFIX + sprint.getName());
-            return div;
-        })).setHeader("Name");
-        nameColumn.setId("sprint-grid-name-column");
-        nameColumn.setHeader(new HorizontalLayout(new Icon("vaadin:exit"), new Div(new Text("Name"))));
+        {
+            Grid.Column<Sprint> keyColumn = grid.addColumn(Sprint::getKey);
+            VaadinUtil.addFilterableHeader(grid, keyColumn, "Key", VaadinIcon.KEY, Sprint::getKey);
+        }
 
-        Grid.Column<Sprint> startColumn = grid.addColumn(sprint -> sprint.getStart() != null ? dateTimeFormatter.format(sprint.getStart()) : "").setHeader("Start");
-        startColumn.setId("sprint-grid-start-column");
-        startColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("Start"))));
+        {
+            // Add name column with filtering and sorting
+            Grid.Column<Sprint> nameColumn = grid.addColumn(new ComponentRenderer<>(sprint -> {
+                Div div = new Div();
+                div.add(sprint.getName());
+                div.setId(SPRINT_GRID_NAME_PREFIX + sprint.getName());
+                return div;
+            }));
 
-        Grid.Column<Sprint> endColumn = grid.addColumn(sprint -> sprint.getEnd() != null ? dateTimeFormatter.format(sprint.getEnd()) : "").setHeader("End");
-        endColumn.setId("sprint-grid-end-column");
-        endColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CALENDAR), new Div(new Text("End"))));
+            // Configure a custom comparator to properly sort by the name property
+            nameColumn.setComparator((sprint1, sprint2) ->
+                    sprint1.getName().compareToIgnoreCase(sprint2.getName()));
 
-        Grid.Column<Sprint> statusColumn = grid.addColumn(sprint -> sprint.getStatus().name()).setHeader("Status");
-        statusColumn.setId("sprint-grid-status-column");
-        statusColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.FLAG), new Div(new Text("Status"))));
+            VaadinUtil.addFilterableHeader(grid, nameColumn, "Name", VaadinIcon.EXIT, Sprint::getName);
+        }
 
-        Grid.Column<Sprint> originalEstimationColumn = grid.addColumn(sprint -> sprint.getOriginalEstimation() != null ? DateUtil.createDurationString(sprint.getOriginalEstimation(), false, true, true) : "").setHeader("Original Estimation");
-        originalEstimationColumn.setId("sprint-grid-original-estimation-column");
-        originalEstimationColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.CLOCK), new Div(new Text("Original Estimation"))));
+        {
+            Grid.Column<Sprint> startColumn = grid.addColumn(sprint ->
+                    sprint.getStart() != null ? dateTimeFormatter.format(sprint.getStart()) : "");
+            VaadinUtil.addFilterableHeader(grid, startColumn, "Start", VaadinIcon.CALENDAR,
+                    sprint -> sprint.getStart() != null ? dateTimeFormatter.format(sprint.getStart()) : "");
+        }
 
-        Grid.Column<Sprint> workedColumn = grid.addColumn(sprint -> sprint.getWorked() != null ? DateUtil.createDurationString(sprint.getWorked(), false, true, true) : "").setHeader("Worked");
-        workedColumn.setId("sprint-grid-worked-column");
-        workedColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.TIMER), new Div(new Text("Worked"))));
+        {
+            Grid.Column<Sprint> endColumn = grid.addColumn(sprint ->
+                    sprint.getEnd() != null ? dateTimeFormatter.format(sprint.getEnd()) : "");
+            VaadinUtil.addFilterableHeader(grid, endColumn, "End", VaadinIcon.CALENDAR,
+                    sprint -> sprint.getEnd() != null ? dateTimeFormatter.format(sprint.getEnd()) : "");
+        }
 
-        Grid.Column<Sprint> remainingColumn = grid.addColumn(sprint -> sprint.getRemaining() != null ? DateUtil.createDurationString(sprint.getRemaining(), false, true, true) : "").setHeader("Remaining");
-        remainingColumn.setId("sprint-grid-remaining-column");
-        remainingColumn.setHeader(new HorizontalLayout(new Icon(VaadinIcon.HOURGLASS), new Div(new Text("Remaining"))));
+        {
+            Grid.Column<Sprint> statusColumn = grid.addColumn(sprint -> sprint.getStatus().name());
+            VaadinUtil.addFilterableHeader(grid, statusColumn, "Status", VaadinIcon.FLAG,
+                    sprint -> sprint.getStatus().name());
+        }
 
-        // Add actions column with direct buttons instead of context menu
+        {
+            Grid.Column<Sprint> originalEstimationColumn = grid.addColumn(sprint ->
+                    sprint.getOriginalEstimation() != null ?
+                            DateUtil.createDurationString(sprint.getOriginalEstimation(), false, true, true) : "");
+            VaadinUtil.addFilterableHeader(grid, originalEstimationColumn, "Original Estimation", VaadinIcon.CLOCK,
+                    sprint -> sprint.getOriginalEstimation() != null ?
+                            DateUtil.createDurationString(sprint.getOriginalEstimation(), false, true, true) : "");
+        }
+
+        {
+            Grid.Column<Sprint> workedColumn = grid.addColumn(sprint ->
+                    sprint.getWorked() != null ?
+                            DateUtil.createDurationString(sprint.getWorked(), false, true, true) : "");
+            VaadinUtil.addFilterableHeader(grid, workedColumn, "Worked", VaadinIcon.TIMER,
+                    sprint -> sprint.getWorked() != null ?
+                            DateUtil.createDurationString(sprint.getWorked(), false, true, true) : "");
+        }
+
+        {
+            Grid.Column<Sprint> remainingColumn = grid.addColumn(sprint ->
+                    sprint.getRemaining() != null ?
+                            DateUtil.createDurationString(sprint.getRemaining(), false, true, true) : "");
+            VaadinUtil.addFilterableHeader(grid, remainingColumn, "Remaining", VaadinIcon.HOURGLASS,
+                    sprint -> sprint.getRemaining() != null ?
+                            DateUtil.createDurationString(sprint.getRemaining(), false, true, true) : "");
+        }
+
+        // Add actions column using VaadinUtil with an additional config button
         grid.addColumn(new ComponentRenderer<>(sprint -> {
             HorizontalLayout layout = new HorizontalLayout();
             layout.setAlignItems(FlexComponent.Alignment.CENTER);
@@ -235,22 +299,6 @@ public class SprintListView extends Main implements AfterNavigationObserver {
             return layout;
         })).setWidth("160px").setFlexGrow(0);
 
-        grid.setSizeFull();
-        //- Add click listener to navigate to TaskView with the selected version ID
-        grid.addItemClickListener(event -> {
-            Sprint selectedSprint = event.getItem();
-            //- Create parameters map
-            Map<String, String> params = new HashMap<>();
-            params.put("product", String.valueOf(productId));
-            params.put("version", String.valueOf(versionId));
-            params.put("feature", String.valueOf(featureId));
-            params.put("sprint", String.valueOf(selectedSprint.getId()));
-            //- Navigate with query parameters
-            UI.getCurrent().navigate(
-                    SprintQualityBoard.class,
-                    QueryParameters.simple(params)
-            );
-        });
         return grid;
     }
 
@@ -288,11 +336,8 @@ public class SprintListView extends Main implements AfterNavigationObserver {
     }
 
     private void refreshGrid() {
-        // Only show sprints for the selected project
-        if (featureId != null) {
-            grid.setItems(sprintApi.getAll(featureId));
-        } else {
-            grid.setItems(sprintApi.getAll());
-        }
+        dataProvider.getItems().clear();
+        dataProvider.getItems().addAll((featureId != null) ? sprintApi.getAll(featureId) : sprintApi.getAll());
+        dataProvider.refreshAll();
     }
 }

@@ -35,7 +35,6 @@ import de.focus_shift.jollyday.core.ManagerParameters;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -51,12 +50,12 @@ public class LocationDialog extends Dialog {
     private final       ComboBox<String> countryComboBox           = new ComboBox<>("Country");
     private             Location         location;
     private final       LocationApi      locationApi;
-    private final       Consumer<Void>   onSaveCallback;
+    private final       Runnable         onSaveCallback;
     private final       DatePicker       startDatePicker           = new DatePicker("Start Date");
     private final       ComboBox<String> stateComboBox             = new ComboBox<>("State/Region");
     private final       User             user;
 
-    public LocationDialog(Location location, User user, LocationApi locationApi, Consumer<Void> onSaveCallback) {
+    public LocationDialog(Location location, User user, LocationApi locationApi, Runnable onSaveCallback) {
         this.location       = location;
         this.user           = user;
         this.locationApi    = locationApi;
@@ -233,6 +232,8 @@ public class LocationDialog extends Dialog {
                 location = new Location();
             }
 
+            // Ensure user association is set
+            location.setUser(user);
             // Set values from form
             location.setCountry(countryComboBox.getValue());
             location.setState(stateComboBox.getValue());
@@ -247,7 +248,7 @@ public class LocationDialog extends Dialog {
             }
 
             // Call the callback
-            onSaveCallback.accept(null);
+            onSaveCallback.run();
             close();
         } catch (Exception e) {
             Notification notification = Notification.show(
