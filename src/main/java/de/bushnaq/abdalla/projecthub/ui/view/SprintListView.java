@@ -89,6 +89,8 @@ public class SprintListView extends Main implements AfterNavigationObserver {
 
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
+        this.getStyle().set("padding-left", "var(--lumo-space-m)");
+        this.getStyle().set("padding-right", "var(--lumo-space-m)");
 
         grid = createGrid(clock);
 
@@ -174,6 +176,7 @@ public class SprintListView extends Main implements AfterNavigationObserver {
         grid = new Grid<>();
         grid.setId(SPRINT_GRID);
         grid.setSizeFull();
+        grid.addThemeVariants(com.vaadin.flow.component.grid.GridVariant.LUMO_NO_BORDER, com.vaadin.flow.component.grid.GridVariant.LUMO_NO_ROW_BORDERS);
         dataProvider = new ListDataProvider<Sprint>(new ArrayList<>());
         grid.setDataProvider(dataProvider);
 

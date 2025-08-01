@@ -112,6 +112,8 @@ public class TaskListView extends Main implements AfterNavigationObserver {
             setSizeFull();
             addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
             add(VaadinUtil.createHeader("Tasks", TASK_LIST_PAGE_TITLE, VaadinIcon.TASKS, CREATE_TASK_BUTTON, () -> createTask()), createGrid(clock));
+            this.getStyle().set("padding-left", "var(--lumo-space-m)");
+            this.getStyle().set("padding-right", "var(--lumo-space-m)");
         } catch (Exception e) {
             logger.error("Error initializing TaskListView", e);
             throw e;
@@ -230,6 +232,7 @@ public class TaskListView extends Main implements AfterNavigationObserver {
 
     private Grid<Task> createGrid(Clock clock) {
         grid = new Grid<>();
+        grid.addThemeVariants(com.vaadin.flow.component.grid.GridVariant.LUMO_NO_BORDER, com.vaadin.flow.component.grid.GridVariant.LUMO_NO_ROW_BORDERS);
 
         // Create and configure binder for the grid editor
         com.vaadin.flow.data.binder.Binder<Task> binder = new com.vaadin.flow.data.binder.Binder<>(Task.class);
@@ -237,16 +240,17 @@ public class TaskListView extends Main implements AfterNavigationObserver {
 
         setupGridColumns();
         // Add borders between columns
-        grid.addThemeVariants(GridVariant.LUMO_COLUMN_BORDERS, GridVariant.LUMO_ROW_STRIPES);
+        grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+//        grid.addThemeVariants(GridVariant.LUMO_COLUMN_BORDERS, GridVariant.LUMO_ROW_STRIPES);
 
         // Add custom styling for more JIRA-like appearance
-        grid.addClassName("jira-style-grid");
+//        grid.addClassName("jira-style-grid");
 
         // Apply custom styling directly to make borders lighter gray
-        grid.getElement().getStyle().set("--lumo-contrast-10pct", "#e0e0e0");
+//        grid.getElement().getStyle().set("--lumo-contrast-10pct", "#e0e0e0");
 
         // Remove the built-in scrollbar from the grid
-        grid.getElement().getStyle().set("overflow", "visible");
+//        grid.getElement().getStyle().set("overflow", "visible");
 
         // Set height to auto instead of 100% to allow grid to take only needed space
         grid.setHeight("auto");

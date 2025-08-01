@@ -77,6 +77,8 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
 
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
+        this.getStyle().set("padding-left", "var(--lumo-space-m)");
+        this.getStyle().set("padding-right", "var(--lumo-space-m)");
 
         grid = createGrid();
 
@@ -180,8 +182,7 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
         Grid<Location> grid = new Grid<>();
         grid.setId(LOCATION_GRID);
         grid.setSizeFull();
-        grid.addClassNames(LumoUtility.Border.ALL, LumoUtility.BorderColor.CONTRAST_10);
-
+        grid.addThemeVariants(com.vaadin.flow.component.grid.GridVariant.LUMO_NO_BORDER, com.vaadin.flow.component.grid.GridVariant.LUMO_NO_ROW_BORDERS);
         dataProvider = new ListDataProvider<>(new ArrayList<>());
         grid.setDataProvider(dataProvider);
 

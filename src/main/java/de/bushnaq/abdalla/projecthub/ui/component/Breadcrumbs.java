@@ -36,7 +36,7 @@ public class Breadcrumbs extends HorizontalLayout {
     public Breadcrumbs() {
         addClassNames(
                 Padding.XSMALL,  // Reduced padding
-                Background.CONTRAST_5,
+//                Background.CONTRAST_5,
                 BorderRadius.SMALL,  // Smaller radius
                 AlignItems.CENTER,
                 Gap.XSMALL,      // Smaller gap between items

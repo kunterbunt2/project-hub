@@ -534,14 +534,18 @@ public class SeleniumHandler {
         String  url             = getRouteValue(viewClass);
         boolean outerTesting    = true;
         int     outerIterations = 12;//5 seconds
+        boolean weClicked       = false;
         //try several times
         do {
-            WebElement row = findElement(By.id(gridRowBaseId + rowName));
-            try {
-                row.click();
-                logger.info("Clicked row: " + gridRowBaseId + rowName);
-            } catch (StaleElementReferenceException e) {
-                //ignore and retry
+            if (!weClicked) {
+                WebElement row = findElement(By.id(gridRowBaseId + rowName));
+                try {
+                    row.click();
+                    weClicked = true;
+                    logger.info("Clicked row: " + gridRowBaseId + rowName);
+                } catch (StaleElementReferenceException e) {
+                    //ignore and retry
+                }
             }
             //check several times
             int     innerIterations = 10;//5 seconds

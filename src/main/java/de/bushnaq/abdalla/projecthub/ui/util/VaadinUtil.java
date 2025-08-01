@@ -395,7 +395,7 @@ public final class VaadinUtil {
      * @param rowCounterId             Optional ID for row counter (can be null if grid is null)
      * @return A configured HorizontalLayout containing the header elements
      */
-    public static <T> HorizontalLayout createHeader(
+    private static <T> HorizontalLayout createHeader(
             String title,
             String titleId,
             Icon titleIcon,
@@ -456,20 +456,21 @@ public final class VaadinUtil {
 
         rightLayout.add(createButton);
         headerLayout.add(titleLayout, rightLayout);
+        headerLayout.getStyle().set("padding-bottom", "var(--lumo-space-m)");
         return headerLayout;
     }
 
     /**
      * Convenience overload that doesn't require row counter parameters
      */
-    public static HorizontalLayout createHeader(
-            String title,
-            String titleId,
-            Icon titleIcon,
-            String createButtonId,
-            CreateButtonClickHandler createButtonClickHandler) {
-        return createHeader(title, titleId, titleIcon, createButtonId, createButtonClickHandler, null, null);
-    }
+//    public static HorizontalLayout createHeader(
+//            String title,
+//            String titleId,
+//            Icon titleIcon,
+//            String createButtonId,
+//            CreateButtonClickHandler createButtonClickHandler) {
+//        return createHeader(title, titleId, titleIcon, createButtonId, createButtonClickHandler, null, null);
+//    }
 
     /**
      * Convenience methods that use VaadinIcon instead of Icon
@@ -488,16 +489,16 @@ public final class VaadinUtil {
     /**
      * Convenience methods that use String icon name instead of Icon
      */
-    public static <T> HorizontalLayout createHeader(
-            String title,
-            String titleId,
-            String titleIcon,
-            String createButtonId,
-            CreateButtonClickHandler createButtonClickHandler,
-            Grid<T> grid,
-            String rowCounterId) {
-        return createHeader(title, titleId, new Icon(titleIcon), createButtonId, createButtonClickHandler, grid, rowCounterId);
-    }
+//    public static <T> HorizontalLayout createHeader(
+//            String title,
+//            String titleId,
+//            String titleIcon,
+//            String createButtonId,
+//            CreateButtonClickHandler createButtonClickHandler,
+//            Grid<T> grid,
+//            String rowCounterId) {
+//        return createHeader(title, titleId, new Icon(titleIcon), createButtonId, createButtonClickHandler, grid, rowCounterId);
+//    }
 
     /**
      * Convenience overload that uses VaadinIcon and doesn't require row counter
@@ -514,14 +515,14 @@ public final class VaadinUtil {
     /**
      * Convenience overload that uses String icon and doesn't require row counter
      */
-    public static HorizontalLayout createHeader(
-            String title,
-            String titleId,
-            String titleIcon,
-            String createButtonId,
-            CreateButtonClickHandler createButtonClickHandler) {
-        return createHeader(title, titleId, new Icon(titleIcon), createButtonId, createButtonClickHandler, null, null);
-    }
+//    public static HorizontalLayout createHeader(
+//            String title,
+//            String titleId,
+//            String titleIcon,
+//            String createButtonId,
+//            CreateButtonClickHandler createButtonClickHandler) {
+//        return createHeader(title, titleId, new Icon(titleIcon), createButtonId, createButtonClickHandler, null, null);
+//    }
 
     /**
      * Updates a row counter component with the current visible row count vs total rows

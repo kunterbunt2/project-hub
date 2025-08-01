@@ -77,6 +77,8 @@ public class OffDayListView extends Main implements BeforeEnterObserver, AfterNa
 
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
+        this.getStyle().set("padding-left", "var(--lumo-space-m)");
+        this.getStyle().set("padding-right", "var(--lumo-space-m)");
 
         grid = createGrid();
 
@@ -186,8 +188,7 @@ public class OffDayListView extends Main implements BeforeEnterObserver, AfterNa
         Grid<OffDay> grid = new Grid<>();
         grid.setId(OFFDAY_GRID);
         grid.setSizeFull();
-        grid.addClassNames(LumoUtility.Border.ALL, LumoUtility.BorderColor.CONTRAST_10);
-
+        grid.addThemeVariants(com.vaadin.flow.component.grid.GridVariant.LUMO_NO_BORDER, com.vaadin.flow.component.grid.GridVariant.LUMO_NO_ROW_BORDERS);
         dataProvider = new ListDataProvider<>(new ArrayList<>());
         grid.setDataProvider(dataProvider);
 

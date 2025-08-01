@@ -101,6 +101,8 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
         );
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
+        this.getStyle().set("padding-left", "var(--lumo-space-m)");
+        this.getStyle().set("padding-right", "var(--lumo-space-m)");
 
     }
 

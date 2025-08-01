@@ -76,6 +76,8 @@ public class AvailabilityListView extends Main implements BeforeEnterObserver, A
 
         setSizeFull();
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
+        this.getStyle().set("padding-left", "var(--lumo-space-m)");
+        this.getStyle().set("padding-right", "var(--lumo-space-m)");
 
         grid = createGrid();
 
@@ -177,8 +179,7 @@ public class AvailabilityListView extends Main implements BeforeEnterObserver, A
         Grid<Availability> grid = new Grid<>();
         grid.setId(AVAILABILITY_GRID);
         grid.setSizeFull();
-        grid.addClassNames(LumoUtility.Border.ALL, LumoUtility.BorderColor.CONTRAST_10);
-
+        grid.addThemeVariants(com.vaadin.flow.component.grid.GridVariant.LUMO_NO_BORDER, com.vaadin.flow.component.grid.GridVariant.LUMO_NO_ROW_BORDERS);
         dataProvider = new ListDataProvider<>(new ArrayList<>());
         grid.setDataProvider(dataProvider);
 

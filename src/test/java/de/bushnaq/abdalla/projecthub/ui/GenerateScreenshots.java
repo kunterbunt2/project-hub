@@ -332,7 +332,8 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
     @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void takeScreenshots(RandomCase randomCase, TestInfo testInfo) throws Exception {
         // Set browser window to a fixed size for consistent screenshots
-        seleniumHandler.setWindowSize(1024, 800);
+//        seleniumHandler.setWindowSize(1024, 800);
+        seleniumHandler.setWindowSize(1800, 1300);
 
 //        printAuthentication();
         TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
@@ -360,7 +361,7 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/sprint-list-view.png");
         takeSprintDialogScreenshots();
 
-        seleniumHandler.setWindowSize(1800, 1200);
+//        seleniumHandler.setWindowSize(1800, 1300);
         sprintListViewTester.selectSprint(sprintName);
         seleniumHandler.waitForElementToBeClickable(RenderUtil.GANTT_CHART);
         seleniumHandler.waitForElementToBeClickable(RenderUtil.BURNDOWN_CHART);
@@ -378,7 +379,7 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/user-list-view.png");
         takeUserDialogScreenshots();
 
-        seleniumHandler.setWindowSize(1024, 800);
+//        seleniumHandler.setWindowSize(1024, 800);
         // Navigate to AvailabilityListView for the current user and take screenshots
         availabilityListViewTester.switchToAvailabilityListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/availability-list-view.png");
@@ -390,7 +391,7 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         takeLocationDialogScreenshots();
 
         // Navigate to OffDayListView for the current user and take screenshots
-        seleniumHandler.setWindowSize(1800, 1300);
+//        seleniumHandler.setWindowSize(1800, 1300);
         offDayListViewTester.switchToOffDayListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
         seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/offday-list-view.png");
         takeOffDayDialogScreenshots();
