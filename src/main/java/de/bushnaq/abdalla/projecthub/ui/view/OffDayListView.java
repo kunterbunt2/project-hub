@@ -18,21 +18,19 @@
 package de.bushnaq.abdalla.projecthub.ui.view;
 
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.dto.Location;
 import de.bushnaq.abdalla.projecthub.rest.api.OffDayApi;
 import de.bushnaq.abdalla.projecthub.rest.api.UserApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
+import de.bushnaq.abdalla.projecthub.ui.component.AbstractMainGrid;
 import de.bushnaq.abdalla.projecthub.ui.component.YearCalendarComponent;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.OffDayDialog;
@@ -43,8 +41,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Clock;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -52,35 +50,27 @@ import java.util.stream.Collectors;
 @Route(value = "offday/:username?", layout = MainLayout.class)
 @PageTitle("User Off Days")
 @PermitAll
-public class OffDayListView extends Main implements BeforeEnterObserver, AfterNavigationObserver {
-    public static final String                   CREATE_OFFDAY_BUTTON             = "create-offday-button";
-    public static final String                   OFFDAY_GRID                      = "offday-grid";
-    public static final String                   OFFDAY_GRID_DELETE_BUTTON_PREFIX = "offday-delete-button-";
-    public static final String                   OFFDAY_GRID_EDIT_BUTTON_PREFIX   = "offday-edit-button-";
-    public static final String                   OFFDAY_GRID_END_DATE_PREFIX      = "offday-end-";
-    public static final String                   OFFDAY_GRID_START_DATE_PREFIX    = "offday-start-";
-    public static final String                   OFFDAY_GRID_TYPE_PREFIX          = "offday-type-";
-    public static final String                   OFFDAY_LIST_PAGE_TITLE           = "offday-page-title";
-    public static final String                   OFFDAY_ROW_COUNTER               = "offday-row-counter";
-    public static final String                   ROUTE                            = "offday";
-    private             User                     currentUser;
-    private             ListDataProvider<OffDay> dataProvider;
-    private final       Grid<OffDay>             grid;
-    private final       OffDayApi                offDayApi;
-    private final       UserApi                  userApi;
-    private             YearCalendarComponent    yearCalendar;
+public class OffDayListView extends AbstractMainGrid<OffDay> implements BeforeEnterObserver, AfterNavigationObserver {
+    public static final String                CREATE_OFFDAY_BUTTON             = "create-offday-button";
+    public static final String                OFFDAY_GRID                      = "offday-grid";
+    public static final String                OFFDAY_GRID_DELETE_BUTTON_PREFIX = "offday-delete-button-";
+    public static final String                OFFDAY_GRID_EDIT_BUTTON_PREFIX   = "offday-edit-button-";
+    public static final String                OFFDAY_GRID_END_DATE_PREFIX      = "offday-end-";
+    public static final String                OFFDAY_GRID_START_DATE_PREFIX    = "offday-start-";
+    public static final String                OFFDAY_GRID_TYPE_PREFIX          = "offday-type-";
+    public static final String                OFFDAY_LIST_PAGE_TITLE           = "offday-page-title";
+    public static final String                OFFDAY_ROW_COUNTER               = "offday-row-counter";
+    public static final String                ROUTE                            = "offday";
+    private             User                  currentUser;
+    private final       OffDayApi             offDayApi;
+    private final       UserApi               userApi;
+    private             YearCalendarComponent yearCalendar;
 
 
-    public OffDayListView(OffDayApi offDayApi, UserApi userApi) {
+    public OffDayListView(OffDayApi offDayApi, UserApi userApi, Clock clock) {
+        super(clock);
         this.offDayApi = offDayApi;
         this.userApi   = userApi;
-
-        setSizeFull();
-        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
-        this.getStyle().set("padding-left", "var(--lumo-space-m)");
-        this.getStyle().set("padding-right", "var(--lumo-space-m)");
-
-        grid = createGrid();
 
         add(
                 VaadinUtil.createHeader(
@@ -184,13 +174,30 @@ public class OffDayListView extends Main implements BeforeEnterObserver, AfterNa
         return user;
     }
 
-    private Grid<OffDay> createGrid() {
-        Grid<OffDay> grid = new Grid<>();
+    /**
+     * Handles clicks on calendar days that have off days
+     *
+     * @param date The date that was clicked
+     */
+    private void handleCalendarDayClick(java.time.LocalDate date) {
+        if (currentUser != null) {
+            // Find the off day that contains this date
+            OffDay matchingOffDay = currentUser.getOffDays().stream()
+                    .filter(offDay ->
+                            (date.equals(offDay.getFirstDay()) || date.isAfter(offDay.getFirstDay())) &&
+                                    (date.equals(offDay.getLastDay()) || date.isBefore(offDay.getLastDay())))
+                    .findFirst()
+                    .orElse(null);
+
+            if (matchingOffDay != null) {
+                // Open the dialog to edit this off day
+                openOffDayDialog(matchingOffDay);
+            }
+        }
+    }
+
+    protected void initGrid(Clock clock) {
         grid.setId(OFFDAY_GRID);
-        grid.setSizeFull();
-        grid.addThemeVariants(com.vaadin.flow.component.grid.GridVariant.LUMO_NO_BORDER, com.vaadin.flow.component.grid.GridVariant.LUMO_NO_ROW_BORDERS);
-        dataProvider = new ListDataProvider<>(new ArrayList<>());
-        grid.setDataProvider(dataProvider);
 
         // Format dates consistently
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -259,29 +266,6 @@ public class OffDayListView extends Main implements BeforeEnterObserver, AfterNa
                 this::confirmDelete
         );
 
-        return grid;
-    }
-
-    /**
-     * Handles clicks on calendar days that have off days
-     *
-     * @param date The date that was clicked
-     */
-    private void handleCalendarDayClick(java.time.LocalDate date) {
-        if (currentUser != null) {
-            // Find the off day that contains this date
-            OffDay matchingOffDay = currentUser.getOffDays().stream()
-                    .filter(offDay ->
-                            (date.equals(offDay.getFirstDay()) || date.isAfter(offDay.getFirstDay())) &&
-                                    (date.equals(offDay.getLastDay()) || date.isBefore(offDay.getLastDay())))
-                    .findFirst()
-                    .orElse(null);
-
-            if (matchingOffDay != null) {
-                // Open the dialog to edit this off day
-                openOffDayDialog(matchingOffDay);
-            }
-        }
     }
 
     private void openOffDayDialog(OffDay offDay) {

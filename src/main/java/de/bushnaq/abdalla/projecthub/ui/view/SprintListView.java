@@ -22,16 +22,13 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.dto.Feature;
 import de.bushnaq.abdalla.projecthub.dto.Product;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
@@ -41,6 +38,7 @@ import de.bushnaq.abdalla.projecthub.rest.api.ProductApi;
 import de.bushnaq.abdalla.projecthub.rest.api.SprintApi;
 import de.bushnaq.abdalla.projecthub.rest.api.VersionApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
+import de.bushnaq.abdalla.projecthub.ui.component.AbstractMainGrid;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.SprintDialog;
 import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
@@ -52,7 +50,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Clock;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -60,39 +57,31 @@ import java.util.Map;
 @PageTitle("Sprint List Page")
 //@Menu(order = 1, icon = "vaadin:factory", title = "project List")
 @PermitAll // When security is enabled, allow all authenticated users
-public class SprintListView extends Main implements AfterNavigationObserver {
-    public static final String                   CREATE_SPRINT_BUTTON             = "create-sprint-button";
-    public static final String                   SPRINT_GRID                      = "sprint-grid";
-    public static final String                   SPRINT_GRID_CONFIG_BUTTON_PREFIX = "sprint-grid-config-button-prefix-";
-    public static final String                   SPRINT_GRID_DELETE_BUTTON_PREFIX = "sprint-grid-delete-button-prefix-";
-    public static final String                   SPRINT_GRID_EDIT_BUTTON_PREFIX   = "sprint-grid-edit-button-prefix-";
-    public static final String                   SPRINT_GRID_NAME_PREFIX          = "sprint-grid-name-";
-    public static final String                   SPRINT_LIST_PAGE_TITLE           = "sprint-list-page-title";
-    public static final String                   SPRINT_ROW_COUNTER               = "sprint-row-counter";
-    private final       Clock                    clock;
-    private             ListDataProvider<Sprint> dataProvider;
-    private final       FeatureApi               featureApi;
-    private             Long                     featureId;
-    private             Grid<Sprint>             grid;
-    private final       ProductApi               productApi;
-    private             Long                     productId;
-    private final       SprintApi                sprintApi;
-    private final       VersionApi               versionApi;
-    private             Long                     versionId;
+public class SprintListView extends AbstractMainGrid<Sprint> implements AfterNavigationObserver {
+    public static final String     CREATE_SPRINT_BUTTON             = "create-sprint-button";
+    public static final String     SPRINT_GRID                      = "sprint-grid";
+    public static final String     SPRINT_GRID_CONFIG_BUTTON_PREFIX = "sprint-grid-config-button-prefix-";
+    public static final String     SPRINT_GRID_DELETE_BUTTON_PREFIX = "sprint-grid-delete-button-prefix-";
+    public static final String     SPRINT_GRID_EDIT_BUTTON_PREFIX   = "sprint-grid-edit-button-prefix-";
+    public static final String     SPRINT_GRID_NAME_PREFIX          = "sprint-grid-name-";
+    public static final String     SPRINT_LIST_PAGE_TITLE           = "sprint-list-page-title";
+    public static final String     SPRINT_ROW_COUNTER               = "sprint-row-counter";
+    private final       Clock      clock;
+    private final       FeatureApi featureApi;
+    private             Long       featureId;
+    private final       ProductApi productApi;
+    private             Long       productId;
+    private final       SprintApi  sprintApi;
+    private final       VersionApi versionApi;
+    private             Long       versionId;
 
     public SprintListView(SprintApi sprintApi, ProductApi productApi, VersionApi versionApi, FeatureApi featureApi, Clock clock) {
+        super(clock);
         this.sprintApi  = sprintApi;
         this.productApi = productApi;
         this.versionApi = versionApi;
         this.featureApi = featureApi;
         this.clock      = clock;
-
-        setSizeFull();
-        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
-        this.getStyle().set("padding-left", "var(--lumo-space-m)");
-        this.getStyle().set("padding-right", "var(--lumo-space-m)");
-
-        grid = createGrid(clock);
 
         add(
                 VaadinUtil.createHeader(
@@ -170,15 +159,10 @@ public class SprintListView extends Main implements AfterNavigationObserver {
         dialog.open();
     }
 
-    private Grid<Sprint> createGrid(Clock clock) {
+    protected void initGrid(Clock clock) {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
-        grid = new Grid<>();
         grid.setId(SPRINT_GRID);
-        grid.setSizeFull();
-        grid.addThemeVariants(com.vaadin.flow.component.grid.GridVariant.LUMO_NO_BORDER, com.vaadin.flow.component.grid.GridVariant.LUMO_NO_ROW_BORDERS);
-        dataProvider = new ListDataProvider<Sprint>(new ArrayList<>());
-        grid.setDataProvider(dataProvider);
 
         // Add click listener to navigate to SprintQualityBoard with the selected sprint ID
         grid.addItemClickListener(event -> {
@@ -302,7 +286,6 @@ public class SprintListView extends Main implements AfterNavigationObserver {
             return layout;
         })).setWidth("160px").setFlexGrow(0);
 
-        return grid;
     }
 
     private void openSprintDialog(Sprint sprint) {

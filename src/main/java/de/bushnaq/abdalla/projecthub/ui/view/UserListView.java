@@ -19,16 +19,14 @@ package de.bushnaq.abdalla.projecthub.ui.view;
 
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.rest.api.UserApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
+import de.bushnaq.abdalla.projecthub.ui.component.AbstractMainGrid;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.UserDialog;
 import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
@@ -37,36 +35,27 @@ import jakarta.annotation.security.PermitAll;
 import java.time.Clock;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.ArrayList;
 
 @Route("user-list")
 @PageTitle("User List Page")
 @Menu(order = 2, icon = "vaadin:users", title = "Users")
 @PermitAll // When security is enabled, allow all authenticated users
-public class UserListView extends Main implements AfterNavigationObserver {
-    public static final String                 CREATE_USER_BUTTON             = "create-user-button";
-    public static final String                 ROUTE                          = "user-list";
-    public static final String                 USER_GRID                      = "user-grid";
-    public static final String                 USER_GRID_DELETE_BUTTON_PREFIX = "user-grid-delete-button-prefix-";
-    public static final String                 USER_GRID_EDIT_BUTTON_PREFIX   = "user-grid-edit-button-prefix-";
-    public static final String                 USER_GRID_NAME_PREFIX          = "user-grid-name-";
-    public static final String                 USER_LIST_PAGE_TITLE           = "user-list-page-title";
-    public static final String                 USER_ROW_COUNTER               = "user-row-counter";
-    private final       Clock                  clock;
-    private             ListDataProvider<User> dataProvider;
-    private             Grid<User>             grid;
-    private final       UserApi                userApi;
+public class UserListView extends AbstractMainGrid<User> implements AfterNavigationObserver {
+    public static final String  CREATE_USER_BUTTON             = "create-user-button";
+    public static final String  ROUTE                          = "user-list";
+    public static final String  USER_GRID                      = "user-grid";
+    public static final String  USER_GRID_DELETE_BUTTON_PREFIX = "user-grid-delete-button-prefix-";
+    public static final String  USER_GRID_EDIT_BUTTON_PREFIX   = "user-grid-edit-button-prefix-";
+    public static final String  USER_GRID_NAME_PREFIX          = "user-grid-name-";
+    public static final String  USER_LIST_PAGE_TITLE           = "user-list-page-title";
+    public static final String  USER_ROW_COUNTER               = "user-row-counter";
+    private final       Clock   clock;
+    private final       UserApi userApi;
 
     public UserListView(UserApi userApi, Clock clock) {
+        super(clock);
         this.userApi = userApi;
         this.clock   = clock;
-
-        setSizeFull();
-        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
-        this.getStyle().set("padding-left", "var(--lumo-space-m)");
-        this.getStyle().set("padding-right", "var(--lumo-space-m)");
-
-        grid = createGrid(clock);
 
         add(
                 VaadinUtil.createHeader(
@@ -110,15 +99,10 @@ public class UserListView extends Main implements AfterNavigationObserver {
         dialog.open();
     }
 
-    private Grid<User> createGrid(Clock clock) {
+    protected void initGrid(Clock clock) {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
-        grid = new Grid<>();
         grid.setId(USER_GRID);
-        grid.setSizeFull();
-        grid.addThemeVariants(com.vaadin.flow.component.grid.GridVariant.LUMO_NO_BORDER, com.vaadin.flow.component.grid.GridVariant.LUMO_NO_ROW_BORDERS);
-        dataProvider = new ListDataProvider<User>(new ArrayList<>());
-        grid.setDataProvider(dataProvider);
 
         {
             Grid.Column<User> keyColumn = grid.addColumn(User::getKey);
@@ -194,7 +178,6 @@ public class UserListView extends Main implements AfterNavigationObserver {
                 this::confirmDelete
         );
 
-        return grid;
     }
 
     private void openUserDialog(User user) {

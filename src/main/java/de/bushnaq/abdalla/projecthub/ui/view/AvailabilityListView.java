@@ -18,22 +18,20 @@
 package de.bushnaq.abdalla.projecthub.ui.view;
 
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
-import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.NumberRenderer;
 import com.vaadin.flow.router.*;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.dto.Availability;
 import de.bushnaq.abdalla.projecthub.dto.Location;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.rest.api.AvailabilityApi;
 import de.bushnaq.abdalla.projecthub.rest.api.UserApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
+import de.bushnaq.abdalla.projecthub.ui.component.AbstractMainGrid;
 import de.bushnaq.abdalla.projecthub.ui.dialog.AvailabilityDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
@@ -44,8 +42,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.text.NumberFormat;
+import java.time.Clock;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -54,32 +52,24 @@ import java.util.stream.Collectors;
 @Route(value = "availability/:username?", layout = MainLayout.class)
 @PageTitle("User Availability")
 @PermitAll
-public class AvailabilityListView extends Main implements BeforeEnterObserver, AfterNavigationObserver {
-    public static final String                         AVAILABILITY_GRID                      = "availability-grid";
-    public static final String                         AVAILABILITY_GRID_AVAILABILITY_PREFIX  = "availability-value-";
-    public static final String                         AVAILABILITY_GRID_DELETE_BUTTON_PREFIX = "availability-delete-button-";
-    public static final String                         AVAILABILITY_GRID_EDIT_BUTTON_PREFIX   = "availability-edit-button-";
-    public static final String                         AVAILABILITY_GRID_START_DATE_PREFIX    = "availability-start-";
-    public static final String                         AVAILABILITY_LIST_PAGE_TITLE           = "availability-page-title";
-    public static final String                         AVAILABILITY_ROW_COUNTER               = "availability-row-counter";
-    public static final String                         CREATE_AVAILABILITY_BUTTON             = "create-availability-button";
-    public static final String                         ROUTE                                  = "availability";
-    private final       AvailabilityApi                availabilityApi;
-    private             User                           currentUser;
-    private             ListDataProvider<Availability> dataProvider;
-    private final       Grid<Availability>             grid;
-    private final       UserApi                        userApi;
+public class AvailabilityListView extends AbstractMainGrid<Availability> implements BeforeEnterObserver, AfterNavigationObserver {
+    public static final String          AVAILABILITY_GRID                      = "availability-grid";
+    public static final String          AVAILABILITY_GRID_AVAILABILITY_PREFIX  = "availability-value-";
+    public static final String          AVAILABILITY_GRID_DELETE_BUTTON_PREFIX = "availability-delete-button-";
+    public static final String          AVAILABILITY_GRID_EDIT_BUTTON_PREFIX   = "availability-edit-button-";
+    public static final String          AVAILABILITY_GRID_START_DATE_PREFIX    = "availability-start-";
+    public static final String          AVAILABILITY_LIST_PAGE_TITLE           = "availability-page-title";
+    public static final String          AVAILABILITY_ROW_COUNTER               = "availability-row-counter";
+    public static final String          CREATE_AVAILABILITY_BUTTON             = "create-availability-button";
+    public static final String          ROUTE                                  = "availability";
+    private final       AvailabilityApi availabilityApi;
+    private             User            currentUser;
+    private final       UserApi         userApi;
 
-    public AvailabilityListView(AvailabilityApi availabilityApi, UserApi userApi) {
+    public AvailabilityListView(AvailabilityApi availabilityApi, UserApi userApi, Clock clock) {
+        super(clock);
         this.availabilityApi = availabilityApi;
         this.userApi         = userApi;
-
-        setSizeFull();
-        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
-        this.getStyle().set("padding-left", "var(--lumo-space-m)");
-        this.getStyle().set("padding-right", "var(--lumo-space-m)");
-
-        grid = createGrid();
 
         add(
                 VaadinUtil.createHeader(
@@ -175,13 +165,8 @@ public class AvailabilityListView extends Main implements BeforeEnterObserver, A
         return user;
     }
 
-    private Grid<Availability> createGrid() {
-        Grid<Availability> grid = new Grid<>();
+    protected void initGrid(Clock clock) {
         grid.setId(AVAILABILITY_GRID);
-        grid.setSizeFull();
-        grid.addThemeVariants(com.vaadin.flow.component.grid.GridVariant.LUMO_NO_BORDER, com.vaadin.flow.component.grid.GridVariant.LUMO_NO_ROW_BORDERS);
-        dataProvider = new ListDataProvider<>(new ArrayList<>());
-        grid.setDataProvider(dataProvider);
 
         // Format dates consistently
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -238,7 +223,6 @@ public class AvailabilityListView extends Main implements BeforeEnterObserver, A
                 }
         );
 
-        return grid;
     }
 
     private void openAvailabilityDialog(Availability availability) {

@@ -20,13 +20,10 @@ package de.bushnaq.abdalla.projecthub.ui.view;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.dto.Feature;
 import de.bushnaq.abdalla.projecthub.dto.Product;
 import de.bushnaq.abdalla.projecthub.dto.Version;
@@ -34,6 +31,7 @@ import de.bushnaq.abdalla.projecthub.rest.api.FeatureApi;
 import de.bushnaq.abdalla.projecthub.rest.api.ProductApi;
 import de.bushnaq.abdalla.projecthub.rest.api.VersionApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
+import de.bushnaq.abdalla.projecthub.ui.component.AbstractMainGrid;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.FeatureDialog;
 import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
@@ -45,7 +43,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Clock;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,33 +50,25 @@ import java.util.Map;
 @PageTitle("Feature List Page")
 @PermitAll // When security is enabled, allow all authenticated users
 @RolesAllowed({"USER", "ADMIN"}) // Restrict access to users with specific roles
-public class FeatureListView extends Main implements AfterNavigationObserver {
-    public static final String                    CREATE_FEATURE_BUTTON_ID          = "create-feature-button";
-    public static final String                    FEATURE_GRID                      = "feature-grid";
-    public static final String                    FEATURE_GRID_DELETE_BUTTON_PREFIX = "feature-grid-delete-button-prefix-";
-    public static final String                    FEATURE_GRID_EDIT_BUTTON_PREFIX   = "feature-grid-edit-button-prefix-";
-    public static final String                    FEATURE_GRID_NAME_PREFIX          = "feature-grid-name-";
-    public static final String                    FEATURE_LIST_PAGE_TITLE           = "feature-list-page-title";
-    public static final String                    FEATURE_ROW_COUNTER               = "feature-row-counter";
-    private             ListDataProvider<Feature> dataProvider;
-    private final       FeatureApi                featureApi;
-    private final       Grid<Feature>             grid;
-    private final       ProductApi                productApi;
-    private             Long                      productId;
-    private final       VersionApi                versionApi;
-    private             Long                      versionId;
+public class FeatureListView extends AbstractMainGrid<Feature> implements AfterNavigationObserver {
+    public static final String     CREATE_FEATURE_BUTTON_ID          = "create-feature-button";
+    public static final String     FEATURE_GRID                      = "feature-grid";
+    public static final String     FEATURE_GRID_DELETE_BUTTON_PREFIX = "feature-grid-delete-button-prefix-";
+    public static final String     FEATURE_GRID_EDIT_BUTTON_PREFIX   = "feature-grid-edit-button-prefix-";
+    public static final String     FEATURE_GRID_NAME_PREFIX          = "feature-grid-name-";
+    public static final String     FEATURE_LIST_PAGE_TITLE           = "feature-list-page-title";
+    public static final String     FEATURE_ROW_COUNTER               = "feature-row-counter";
+    private final       FeatureApi featureApi;
+    private final       ProductApi productApi;
+    private             Long       productId;
+    private final       VersionApi versionApi;
+    private             Long       versionId;
 
     public FeatureListView(FeatureApi featureApi, ProductApi productApi, VersionApi versionApi, Clock clock) {
+        super(clock);
         this.featureApi = featureApi;
         this.productApi = productApi;
         this.versionApi = versionApi;
-
-        grid = createGrid(clock);
-
-        setSizeFull();
-        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
-        this.getStyle().set("padding-left", "var(--lumo-space-m)");
-        this.getStyle().set("padding-right", "var(--lumo-space-m)");
 
         add(
                 VaadinUtil.createHeader(
@@ -146,15 +135,10 @@ public class FeatureListView extends Main implements AfterNavigationObserver {
         dialog.open();
     }
 
-    private Grid<Feature> createGrid(Clock clock) {
+    protected void initGrid(Clock clock) {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
-        Grid<Feature> grid = new Grid<>();
         grid.setId(FEATURE_GRID);
-        grid.setSizeFull();
-        grid.addThemeVariants(com.vaadin.flow.component.grid.GridVariant.LUMO_NO_BORDER, com.vaadin.flow.component.grid.GridVariant.LUMO_NO_ROW_BORDERS);
-        dataProvider = new ListDataProvider<Feature>(new ArrayList<>());
-        grid.setDataProvider(dataProvider);
 
         // Add click listener to navigate to SprintListView with the selected feature ID
         grid.addItemClickListener(event -> {
@@ -211,7 +195,6 @@ public class FeatureListView extends Main implements AfterNavigationObserver {
                 this::confirmDelete
         );
 
-        return grid;
     }
 
     private void openFeatureDialog(Feature feature) {

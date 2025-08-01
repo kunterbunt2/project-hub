@@ -20,16 +20,14 @@ package de.bushnaq.abdalla.projecthub.ui.view;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.dto.Product;
 import de.bushnaq.abdalla.projecthub.rest.api.ProductApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
+import de.bushnaq.abdalla.projecthub.ui.component.AbstractMainGrid;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ProductDialog;
 import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
@@ -41,7 +39,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Clock;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,29 +47,21 @@ import java.util.Map;
 @Menu(order = 1, icon = "vaadin:factory", title = "Products")
 @PermitAll
 @RolesAllowed({"USER", "ADMIN"})
-public class ProductListView extends Main implements AfterNavigationObserver {
-    public static final String                    CREATE_PRODUCT_BUTTON             = "create-product-button";
-    public static final String                    PRODUCT_GRID                      = "product-grid";
-    public static final String                    PRODUCT_GRID_DELETE_BUTTON_PREFIX = "product-grid-delete-button-prefix-";
-    public static final String                    PRODUCT_GRID_EDIT_BUTTON_PREFIX   = "product-grid-edit-button-prefix-";
-    public static final String                    PRODUCT_GRID_NAME_PREFIX          = "product-grid-name-";
-    public static final String                    PRODUCT_LIST_PAGE_TITLE           = "product-list-page-title";
-    public static final String                    PRODUCT_ROW_COUNTER               = "product-row-counter";
-    public static final String                    ROUTE                             = "product-list";
-    private             ListDataProvider<Product> dataProvider;
-    private             Grid<Product>             grid;
-    private final       ProductApi                productApi;
+public class ProductListView extends AbstractMainGrid<Product> implements AfterNavigationObserver {
+    public static final String     CREATE_PRODUCT_BUTTON             = "create-product-button";
+    public static final String     PRODUCT_GRID                      = "product-grid";
+    public static final String     PRODUCT_GRID_DELETE_BUTTON_PREFIX = "product-grid-delete-button-prefix-";
+    public static final String     PRODUCT_GRID_EDIT_BUTTON_PREFIX   = "product-grid-edit-button-prefix-";
+    public static final String     PRODUCT_GRID_NAME_PREFIX          = "product-grid-name-";
+    public static final String     PRODUCT_LIST_PAGE_TITLE           = "product-list-page-title";
+    public static final String     PRODUCT_ROW_COUNTER               = "product-row-counter";
+    public static final String     ROUTE                             = "product-list";
+    private final       ProductApi productApi;
 
     public ProductListView(ProductApi productApi, Clock clock) {
+        super(clock);
         this.productApi = productApi;
 
-        setSizeFull();
-        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
-        this.getStyle().set("padding-left", "var(--lumo-space-m)");
-        this.getStyle().set("padding-right", "var(--lumo-space-m)");
-
-
-        grid = createGrid(clock);
         add(
                 VaadinUtil.createHeader(
                         "Products",
@@ -96,6 +85,7 @@ public class ProductListView extends Main implements AfterNavigationObserver {
                         mainLayout.getBreadcrumbs().addItem("Products", ProductListView.class);
                     }
                 });
+        refreshGrid();
     }
 
     private void confirmDelete(Product product) {
@@ -113,15 +103,10 @@ public class ProductListView extends Main implements AfterNavigationObserver {
         dialog.open();
     }
 
-    private Grid<Product> createGrid(Clock clock) {
+    protected void initGrid(Clock clock) {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
-        grid = new Grid<>();
         grid.setId(PRODUCT_GRID);
-        grid.setSizeFull();
-        grid.addThemeVariants(com.vaadin.flow.component.grid.GridVariant.LUMO_NO_BORDER, com.vaadin.flow.component.grid.GridVariant.LUMO_NO_ROW_BORDERS);
-        dataProvider = new ListDataProvider<Product>(new ArrayList<>());
-        grid.setDataProvider(dataProvider);
 
         // Add click listener to navigate to VersionView with the selected product ID
         grid.addItemClickListener(event -> {
@@ -133,7 +118,7 @@ public class ProductListView extends Main implements AfterNavigationObserver {
             UI.getCurrent().navigate(VersionListView.class, QueryParameters.simple(params));
         });
 
-        refreshGrid();
+//        refreshGrid();
 
         {
             Grid.Column<Product> keyColumn = grid.addColumn(Product::getKey);
@@ -171,7 +156,6 @@ public class ProductListView extends Main implements AfterNavigationObserver {
                 this::confirmDelete
         );
 
-        return grid;
     }
 
 

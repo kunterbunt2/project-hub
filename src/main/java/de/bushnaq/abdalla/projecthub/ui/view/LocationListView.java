@@ -18,21 +18,19 @@
 package de.bushnaq.abdalla.projecthub.ui.view;
 
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
-import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.dto.Availability;
 import de.bushnaq.abdalla.projecthub.dto.Location;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.rest.api.LocationApi;
 import de.bushnaq.abdalla.projecthub.rest.api.UserApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
+import de.bushnaq.abdalla.projecthub.ui.component.AbstractMainGrid;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.LocationDialog;
 import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
@@ -44,8 +42,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Clock;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -54,33 +52,25 @@ import java.util.stream.Collectors;
 @Route(value = "location/:username?", layout = MainLayout.class)
 @PageTitle("User Location")
 @PermitAll
-public class LocationListView extends Main implements BeforeEnterObserver, AfterNavigationObserver {
-    public static final String                     CREATE_LOCATION_BUTTON             = "create-location-button";
-    public static final String                     LOCATION_GRID                      = "location-grid";
-    public static final String                     LOCATION_GRID_COUNTRY_PREFIX       = "location-country-";
-    public static final String                     LOCATION_GRID_DELETE_BUTTON_PREFIX = "location-delete-button-";
-    public static final String                     LOCATION_GRID_EDIT_BUTTON_PREFIX   = "location-edit-button-";
-    public static final String                     LOCATION_GRID_START_DATE_PREFIX    = "location-start-";
-    public static final String                     LOCATION_GRID_STATE_PREFIX         = "location-state-";
-    public static final String                     LOCATION_LIST_PAGE_TITLE           = "location-page-title";
-    public static final String                     LOCATION_ROW_COUNTER               = "location-row-counter";
-    public static final String                     ROUTE                              = "location";
-    private             User                       currentUser;
-    private             ListDataProvider<Location> dataProvider;
-    private final       Grid<Location>             grid;
-    private final       LocationApi                locationApi;
-    private final       UserApi                    userApi;
+public class LocationListView extends AbstractMainGrid<Location> implements BeforeEnterObserver, AfterNavigationObserver {
+    public static final String      CREATE_LOCATION_BUTTON             = "create-location-button";
+    public static final String      LOCATION_GRID                      = "location-grid";
+    public static final String      LOCATION_GRID_COUNTRY_PREFIX       = "location-country-";
+    public static final String      LOCATION_GRID_DELETE_BUTTON_PREFIX = "location-delete-button-";
+    public static final String      LOCATION_GRID_EDIT_BUTTON_PREFIX   = "location-edit-button-";
+    public static final String      LOCATION_GRID_START_DATE_PREFIX    = "location-start-";
+    public static final String      LOCATION_GRID_STATE_PREFIX         = "location-state-";
+    public static final String      LOCATION_LIST_PAGE_TITLE           = "location-page-title";
+    public static final String      LOCATION_ROW_COUNTER               = "location-row-counter";
+    public static final String      ROUTE                              = "location";
+    private             User        currentUser;
+    private final       LocationApi locationApi;
+    private final       UserApi     userApi;
 
-    public LocationListView(LocationApi locationApi, UserApi userApi) {
+    public LocationListView(LocationApi locationApi, UserApi userApi, Clock clock) {
+        super(clock);
         this.locationApi = locationApi;
         this.userApi     = userApi;
-
-        setSizeFull();
-        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
-        this.getStyle().set("padding-left", "var(--lumo-space-m)");
-        this.getStyle().set("padding-right", "var(--lumo-space-m)");
-
-        grid = createGrid();
 
         add(
                 VaadinUtil.createHeader(
@@ -178,13 +168,38 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
         return user;
     }
 
-    private Grid<Location> createGrid() {
-        Grid<Location> grid = new Grid<>();
+    /**
+     * Gets a descriptive name for a state/region based on its code and country.
+     * Similar to the implementation in LocationDialog.
+     *
+     * @param countryCode The country code in ISO format
+     * @param stateCode   The state/region code
+     * @return A readable description of the state/region
+     */
+    private String getStateDescription(String countryCode, String stateCode) {
+        // If state code equals country code, it represents the whole country
+        if (stateCode.equals(countryCode)) {
+            return "All of " + new Locale("", countryCode).getDisplayCountry();
+        }
+
+        try {
+            // Try to get description from HolidayManager's calendar hierarchy
+            HolidayManager manager     = HolidayManager.getInstance(ManagerParameters.create(countryCode));
+            String         description = manager.getCalendarHierarchy().getChildren().get(stateCode).getDescription();
+
+            if (description != null && !description.isEmpty()) {
+                return description + " (" + stateCode + ")";
+            }
+        } catch (Exception e) {
+            // If we can't get the description from HolidayManager, just use the code
+        }
+
+        // Default fallback is to just return the state code
+        return stateCode;
+    }
+
+    protected void initGrid(Clock clock) {
         grid.setId(LOCATION_GRID);
-        grid.setSizeFull();
-        grid.addThemeVariants(com.vaadin.flow.component.grid.GridVariant.LUMO_NO_BORDER, com.vaadin.flow.component.grid.GridVariant.LUMO_NO_ROW_BORDERS);
-        dataProvider = new ListDataProvider<>(new ArrayList<>());
-        grid.setDataProvider(dataProvider);
 
         // Format dates consistently
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -271,37 +286,6 @@ public class LocationListView extends Main implements BeforeEnterObserver, After
                 }
         );
 
-        return grid;
-    }
-
-    /**
-     * Gets a descriptive name for a state/region based on its code and country.
-     * Similar to the implementation in LocationDialog.
-     *
-     * @param countryCode The country code in ISO format
-     * @param stateCode   The state/region code
-     * @return A readable description of the state/region
-     */
-    private String getStateDescription(String countryCode, String stateCode) {
-        // If state code equals country code, it represents the whole country
-        if (stateCode.equals(countryCode)) {
-            return "All of " + new Locale("", countryCode).getDisplayCountry();
-        }
-
-        try {
-            // Try to get description from HolidayManager's calendar hierarchy
-            HolidayManager manager     = HolidayManager.getInstance(ManagerParameters.create(countryCode));
-            String         description = manager.getCalendarHierarchy().getChildren().get(stateCode).getDescription();
-
-            if (description != null && !description.isEmpty()) {
-                return description + " (" + stateCode + ")";
-            }
-        } catch (Exception e) {
-            // If we can't get the description from HolidayManager, just use the code
-        }
-
-        // Default fallback is to just return the state code
-        return stateCode;
     }
 
     private void openLocationDialog(Location location) {

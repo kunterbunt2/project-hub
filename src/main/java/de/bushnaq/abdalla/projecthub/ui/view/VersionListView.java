@@ -20,18 +20,16 @@ package de.bushnaq.abdalla.projecthub.ui.view;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.bushnaq.abdalla.projecthub.dto.Product;
 import de.bushnaq.abdalla.projecthub.dto.Version;
 import de.bushnaq.abdalla.projecthub.rest.api.ProductApi;
 import de.bushnaq.abdalla.projecthub.rest.api.VersionApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
+import de.bushnaq.abdalla.projecthub.ui.component.AbstractMainGrid;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.VersionDialog;
 import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
@@ -42,40 +40,31 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Clock;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 
 @Route("version-list")
 @PageTitle("Version List Page")
-//@Menu(order = 1, icon = "vaadin:factory", title = "version List")
 @PermitAll // When security is enabled, allow all authenticated users
-public class VersionListView extends Main implements AfterNavigationObserver {
-    public static final String                    CREATE_VERSION_BUTTON             = "create-version-button";
-    public static final String                    ROUTE                             = "version-list";
-    public static final String                    VERSION_GRID                      = "version-grid";
-    public static final String                    VERSION_GRID_DELETE_BUTTON_PREFIX = "version-grid-delete-button-prefix-";
-    public static final String                    VERSION_GRID_EDIT_BUTTON_PREFIX   = "version-grid-edit-button-prefix-";
-    public static final String                    VERSION_GRID_NAME_PREFIX          = "version-grid-name-";
-    public static final String                    VERSION_LIST_PAGE_TITLE           = "version-list-page-title";
-    public static final String                    VERSION_ROW_COUNTER               = "version-row-counter";
-    private             ListDataProvider<Version> dataProvider;
-    private             Grid<Version>             grid;
-    private final       ProductApi                productApi;
-    private             Long                      productId;
-    private final       VersionApi                versionApi;
+public class VersionListView extends AbstractMainGrid<Version> implements AfterNavigationObserver {
+    public static final String     CREATE_VERSION_BUTTON             = "create-version-button";
+    public static final String     ROUTE                             = "version-list";
+    public static final String     VERSION_GRID                      = "version-grid";
+    public static final String     VERSION_GRID_DELETE_BUTTON_PREFIX = "version-grid-delete-button-prefix-";
+    public static final String     VERSION_GRID_EDIT_BUTTON_PREFIX   = "version-grid-edit-button-prefix-";
+    public static final String     VERSION_GRID_NAME_PREFIX          = "version-grid-name-";
+    public static final String     VERSION_LIST_PAGE_TITLE           = "version-list-page-title";
+    public static final String     VERSION_ROW_COUNTER               = "version-row-counter";
+    private final       ProductApi productApi;
+    private             Long       productId;
+    private final       VersionApi versionApi;
 
     public VersionListView(VersionApi versionApi, ProductApi productApi, Clock clock) {
+        super(clock);
         this.versionApi = versionApi;
         this.productApi = productApi;
 
-        setSizeFull();
-        addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
-        this.getStyle().set("padding-left", "var(--lumo-space-m)");
-        this.getStyle().set("padding-right", "var(--lumo-space-m)");
-
-        grid = createGrid(clock);
         add(
                 VaadinUtil.createHeader(
                         "Versions",
@@ -129,15 +118,10 @@ public class VersionListView extends Main implements AfterNavigationObserver {
         dialog.open();
     }
 
-    private Grid<Version> createGrid(Clock clock) {
+    protected void initGrid(Clock clock) {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
-        grid = new Grid<>();
         grid.setId(VERSION_GRID);
-        grid.setSizeFull();
-        grid.addThemeVariants(com.vaadin.flow.component.grid.GridVariant.LUMO_NO_BORDER, com.vaadin.flow.component.grid.GridVariant.LUMO_NO_ROW_BORDERS);
-        dataProvider = new ListDataProvider<Version>(new ArrayList<>());
-        grid.setDataProvider(dataProvider);
 
         // Add click listener to navigate to FeatureListView with the selected version ID
         grid.addItemClickListener(event -> {
@@ -193,7 +177,6 @@ public class VersionListView extends Main implements AfterNavigationObserver {
                 this::confirmDelete
         );
 
-        return grid;
     }
 
     private void openVersionDialog(Version version) {
