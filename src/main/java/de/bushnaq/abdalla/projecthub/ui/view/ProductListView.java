@@ -63,7 +63,7 @@ public class ProductListView extends AbstractMainGrid<Product> implements AfterN
         this.productApi = productApi;
 
         add(
-                VaadinUtil.createHeader(
+                createHeader(
                         "Products",
                         PRODUCT_LIST_PAGE_TITLE,
                         VaadinIcon.CUBE,

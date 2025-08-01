@@ -40,8 +40,8 @@ import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.report.gantt.GanttUtil;
 import de.bushnaq.abdalla.projecthub.rest.api.*;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
+import de.bushnaq.abdalla.projecthub.ui.component.AbstractMainGrid;
 import de.bushnaq.abdalla.projecthub.ui.util.RenderUtil;
-import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
 import de.bushnaq.abdalla.util.GanttErrorHandler;
 import de.bushnaq.abdalla.util.date.DateUtil;
 import jakarta.annotation.security.PermitAll;
@@ -111,7 +111,7 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         try {
             setSizeFull();
             addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
-            add(VaadinUtil.createHeader("Tasks", TASK_LIST_PAGE_TITLE, VaadinIcon.TASKS, CREATE_TASK_BUTTON, () -> createTask()), createGrid(clock));
+            add(AbstractMainGrid.createHeader("Tasks", TASK_LIST_PAGE_TITLE, VaadinIcon.TASKS, CREATE_TASK_BUTTON, () -> createTask()), createGrid(clock));
             this.getStyle().set("padding-left", "var(--lumo-space-m)");
             this.getStyle().set("padding-right", "var(--lumo-space-m)");
         } catch (Exception e) {

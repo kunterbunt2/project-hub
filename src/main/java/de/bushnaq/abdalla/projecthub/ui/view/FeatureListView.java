@@ -71,13 +71,12 @@ public class FeatureListView extends AbstractMainGrid<Feature> implements AfterN
         this.versionApi = versionApi;
 
         add(
-                VaadinUtil.createHeader(
+                createHeader(
                         "Features",
                         FEATURE_LIST_PAGE_TITLE,
                         VaadinIcon.LIGHTBULB,
                         CREATE_FEATURE_BUTTON_ID,
                         () -> openFeatureDialog(null),
-                        grid,
                         FEATURE_ROW_COUNTER
                 ),
                 grid

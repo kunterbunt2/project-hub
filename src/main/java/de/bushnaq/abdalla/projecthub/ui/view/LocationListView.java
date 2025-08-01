@@ -73,13 +73,12 @@ public class LocationListView extends AbstractMainGrid<Location> implements Befo
         this.userApi     = userApi;
 
         add(
-                VaadinUtil.createHeader(
+                createHeader(
                         "User Location",
                         LOCATION_LIST_PAGE_TITLE,
                         VaadinIcon.MAP_MARKER,
                         CREATE_LOCATION_BUTTON,
                         () -> openLocationDialog(null),
-                        grid,
                         LOCATION_ROW_COUNTER
                 ),
                 grid

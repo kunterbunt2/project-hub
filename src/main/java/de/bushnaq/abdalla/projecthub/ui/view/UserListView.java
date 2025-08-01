@@ -58,13 +58,12 @@ public class UserListView extends AbstractMainGrid<User> implements AfterNavigat
         this.clock   = clock;
 
         add(
-                VaadinUtil.createHeader(
+                createHeader(
                         "Users",
                         USER_LIST_PAGE_TITLE,
                         VaadinIcon.USERS,
                         CREATE_USER_BUTTON,
                         () -> openUserDialog(null),
-                        grid,
                         USER_ROW_COUNTER
                 ),
                 grid

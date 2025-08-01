@@ -66,13 +66,12 @@ public class VersionListView extends AbstractMainGrid<Version> implements AfterN
         this.productApi = productApi;
 
         add(
-                VaadinUtil.createHeader(
+                createHeader(
                         "Versions",
                         VERSION_LIST_PAGE_TITLE,
                         VaadinIcon.TAG,
                         CREATE_VERSION_BUTTON,
                         () -> openVersionDialog(null),
-                        grid,
                         VERSION_ROW_COUNTER
                 ),
                 grid

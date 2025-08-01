@@ -73,13 +73,12 @@ public class OffDayListView extends AbstractMainGrid<OffDay> implements BeforeEn
         this.userApi   = userApi;
 
         add(
-                VaadinUtil.createHeader(
+                createHeader(
                         "User Off-Days",
                         OFFDAY_LIST_PAGE_TITLE,
                         VaadinIcon.CALENDAR,
                         CREATE_OFFDAY_BUTTON,
                         () -> openOffDayDialog(null),
-                        grid,
                         OFFDAY_ROW_COUNTER
                 ),
                 new HorizontalLayout(grid, createCalendar())

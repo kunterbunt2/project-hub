@@ -84,13 +84,12 @@ public class SprintListView extends AbstractMainGrid<Sprint> implements AfterNav
         this.clock      = clock;
 
         add(
-                VaadinUtil.createHeader(
+                createHeader(
                         "Sprints",
                         SPRINT_LIST_PAGE_TITLE,
                         VaadinIcon.EXIT,
                         CREATE_SPRINT_BUTTON,
                         () -> openSprintDialog(null),
-                        grid,
                         SPRINT_ROW_COUNTER
                 ),
                 grid

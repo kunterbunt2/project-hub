@@ -72,13 +72,12 @@ public class AvailabilityListView extends AbstractMainGrid<Availability> impleme
         this.userApi         = userApi;
 
         add(
-                VaadinUtil.createHeader(
+                createHeader(
                         "User Availability",
                         AVAILABILITY_LIST_PAGE_TITLE,
                         VaadinIcon.CHART,
                         CREATE_AVAILABILITY_BUTTON,
                         () -> openAvailabilityDialog(null),
-                        grid,
                         AVAILABILITY_ROW_COUNTER
                 ),
                 grid
