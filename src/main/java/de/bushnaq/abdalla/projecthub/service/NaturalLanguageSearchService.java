@@ -42,9 +42,11 @@ public class NaturalLanguageSearchService {
             The JSON objects have this structure:
             {
               "id" : 1,
-              "created" : "2025-01-01T08:00:00Z",
-              "updated" : "2025-01-01T08:00:00Z",
-              "name" : "Orion"
+              "created" : "2025-01-01T08:00:00+01:00",
+              "updated" : "2025-01-01T08:00:00+01:00",
+              "name" : "Orion",
+              "versions" : [ ],
+              "key" : "P-1"
             }
             
             IMPORTANT RULES:

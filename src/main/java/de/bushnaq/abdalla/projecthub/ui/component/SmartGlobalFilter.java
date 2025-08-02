@@ -17,8 +17,10 @@
 
 package de.bushnaq.abdalla.projecthub.ui.component;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
@@ -45,9 +47,8 @@ import java.util.regex.Pattern;
 public class SmartGlobalFilter<T> extends HorizontalLayout {
 
     private static final Logger                       logger = LoggerFactory.getLogger(SmartGlobalFilter.class);
+    private final        ObjectMapper                 filterMapper;
     private final        Grid<T>                      grid;
-    private final        Button                       helpButton;
-    private final        ObjectMapper                 mapper;
     private final        NaturalLanguageSearchService nlSearchService;
     private final        TextField                    searchField;
     private final        Span                         statusSpan;
@@ -58,7 +59,11 @@ public class SmartGlobalFilter<T> extends HorizontalLayout {
 
         this.grid            = grid;
         this.nlSearchService = nlSearchService;
-        this.mapper          = mapper;
+
+        // Create a separate ObjectMapper for filtering that includes @JsonIgnore fields
+        this.filterMapper = mapper.copy();
+        // Use custom annotation introspector that ignores @JsonIgnore but preserves other annotations
+        this.filterMapper.setAnnotationIntrospector(new FilterAnnotationIntrospector());
 
         setAlignItems(FlexComponent.Alignment.CENTER);
         setSpacing(true);
@@ -71,8 +76,13 @@ public class SmartGlobalFilter<T> extends HorizontalLayout {
         searchField.setValueChangeMode(ValueChangeMode.ON_CHANGE); // Use ON_CHANGE but we'll control when to actually search
         searchField.setWidth("350px");
 
+        // Add magnifying glass icon as prefix
+        Icon searchIcon = new Icon(VaadinIcon.SEARCH);
+        searchIcon.getStyle().set("color", "var(--lumo-secondary-text-color)");
+        searchField.setPrefixComponent(searchIcon);
+
         // Create help button
-        helpButton = new Button(new Icon(VaadinIcon.QUESTION_CIRCLE));
+        Button helpButton = new Button(new Icon(VaadinIcon.QUESTION_CIRCLE));
         helpButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
         helpButton.getElement().setAttribute("title", "Search Help");
         helpButton.addClickListener(e -> showSearchHelp());
@@ -114,8 +124,7 @@ public class SmartGlobalFilter<T> extends HorizontalLayout {
             ListDataProvider<T> dataProvider = (ListDataProvider<T>) grid.getDataProvider();
             dataProvider.setFilter(item -> {
                         try {
-                            String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(item);
-
+                            String json = filterMapper.writerWithDefaultPrettyPrinter().writeValueAsString(item);
                             // Apply the LLM-generated regex pattern
                             return pattern.matcher(json).find();
                         } catch (JsonProcessingException e) {
@@ -231,5 +240,21 @@ public class SmartGlobalFilter<T> extends HorizontalLayout {
         notification.add(content);
 
         notification.open();
+    }
+
+    /**
+     * Custom annotation introspector that ignores @JsonIgnore annotations
+     * but preserves all other Jackson annotations.
+     */
+    private static class FilterAnnotationIntrospector extends JacksonAnnotationIntrospector {
+        @Override
+        public boolean hasIgnoreMarker(com.fasterxml.jackson.databind.introspect.AnnotatedMember m) {
+            // Don't ignore fields marked with @JsonIgnore for filtering purposes
+            // but still process other ignore markers from the parent class
+            if (m.hasAnnotation(JsonIgnore.class)) {
+                return false;
+            }
+            return super.hasIgnoreMarker(m);
+        }
     }
 }
