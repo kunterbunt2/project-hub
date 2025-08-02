@@ -33,6 +33,7 @@ import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import de.bushnaq.abdalla.projecthub.ai.AiFilter;
 import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
 
 import java.time.Clock;
@@ -331,12 +332,9 @@ public abstract class AbstractMainGrid<T> extends Main {
      * @param grid                     Optional grid to count rows from (can be null)
      * @param rowCounterId             Optional ID for row counter (can be null if grid is null)
      * @param globalFilterId           ID for the global filter field
-     * @param globalFilterFunction     Function to apply global filtering to items
-     * @param nameExtractor            Function to extract name from items for column-specific search
-     * @param keyExtractor             Function to extract key from items for column-specific search
-     * @param createdExtractor         Function to extract created date from items for date filtering
-     * @param updatedExtractor         Function to extract updated date from items for date filtering
      * @param nlSearchService          Natural language search service
+     * @param mapper                   ObjectMapper for JSON serialization
+     * @param entityType               The type of entity being searched (e.g., "Product", "Version")
      * @return A configured HorizontalLayout containing the header elements
      */
     private <T> HorizontalLayout createSmartHeader(
@@ -348,12 +346,9 @@ public abstract class AbstractMainGrid<T> extends Main {
             Grid<T> grid,
             String rowCounterId,
             String globalFilterId,
-            java.util.function.Function<T, String> globalFilterFunction,
-            java.util.function.Function<T, String> nameExtractor,
-            java.util.function.Function<T, String> keyExtractor,
-            java.util.function.Function<T, java.time.LocalDate> createdExtractor,
-            java.util.function.Function<T, java.time.LocalDate> updatedExtractor,
-            de.bushnaq.abdalla.projecthub.service.NaturalLanguageSearchService nlSearchService, ObjectMapper mapper) {
+            AiFilter nlSearchService,
+            ObjectMapper mapper,
+            String entityType) {
 
         HorizontalLayout headerLayout = new HorizontalLayout();
         headerLayout.setWidthFull();
@@ -381,17 +376,14 @@ public abstract class AbstractMainGrid<T> extends Main {
         rightLayout.setAlignItems(FlexComponent.Alignment.CENTER);
 
         // Add smart global filter if provided
-        if (globalFilterId != null && globalFilterFunction != null && grid != null) {
+        if (globalFilterId != null && grid != null) {
             de.bushnaq.abdalla.projecthub.ui.component.SmartGlobalFilter<T> smartFilter =
                     new de.bushnaq.abdalla.projecthub.ui.component.SmartGlobalFilter<>(
                             globalFilterId,
                             grid,
-//                            globalFilterFunction,
-//                            nameExtractor,
-//                            keyExtractor,
-//                            createdExtractor,
-//                            updatedExtractor,
-                            nlSearchService, mapper
+                            nlSearchService,
+                            mapper,
+                            entityType
                     );
             smartFilter.getStyle().set("margin-right", "var(--lumo-space-m)");
             rightLayout.add(smartFilter);
@@ -440,13 +432,10 @@ public abstract class AbstractMainGrid<T> extends Main {
             Grid<T> grid,
             String rowCounterId,
             String globalFilterId,
-            java.util.function.Function<T, String> globalFilterFunction,
-            java.util.function.Function<T, String> nameExtractor,
-            java.util.function.Function<T, String> keyExtractor,
-            java.util.function.Function<T, java.time.LocalDate> createdExtractor,
-            java.util.function.Function<T, java.time.LocalDate> updatedExtractor,
-            de.bushnaq.abdalla.projecthub.service.NaturalLanguageSearchService nlSearchService, ObjectMapper mapper) {
-        return createSmartHeader(title, titleId, new Icon(titleIcon), createButtonId, createButtonClickHandler, grid, rowCounterId, globalFilterId, globalFilterFunction, nameExtractor, keyExtractor, createdExtractor, updatedExtractor, nlSearchService, mapper);
+            AiFilter nlSearchService,
+            ObjectMapper mapper,
+            String entityType) {
+        return createSmartHeader(title, titleId, new Icon(titleIcon), createButtonId, createButtonClickHandler, grid, rowCounterId, globalFilterId, nlSearchService, mapper, entityType);
     }
 
     /**
@@ -460,13 +449,10 @@ public abstract class AbstractMainGrid<T> extends Main {
             VaadinUtil.CreateButtonClickHandler createButtonClickHandler,
             String rowCounterId,
             String globalFilterId,
-            java.util.function.Function<T, String> globalFilterFunction,
-            java.util.function.Function<T, String> nameExtractor,
-            java.util.function.Function<T, String> keyExtractor,
-            java.util.function.Function<T, java.time.LocalDate> createdExtractor,
-            java.util.function.Function<T, java.time.LocalDate> updatedExtractor,
-            de.bushnaq.abdalla.projecthub.service.NaturalLanguageSearchService nlSearchService, ObjectMapper mapper) {
-        return createSmartHeader(title, titleId, new Icon(titleIcon), createButtonId, createButtonClickHandler, grid, rowCounterId, globalFilterId, globalFilterFunction, nameExtractor, keyExtractor, createdExtractor, updatedExtractor, nlSearchService, mapper);
+            AiFilter nlSearchService,
+            ObjectMapper mapper,
+            String entityType) {
+        return createSmartHeader(title, titleId, new Icon(titleIcon), createButtonId, createButtonClickHandler, grid, rowCounterId, globalFilterId, nlSearchService, mapper, entityType);
     }
 
     protected abstract void initGrid(Clock clock);

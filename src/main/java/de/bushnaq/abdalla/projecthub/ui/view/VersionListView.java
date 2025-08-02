@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
@@ -24,6 +25,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
+import de.bushnaq.abdalla.projecthub.ai.AiFilter;
 import de.bushnaq.abdalla.projecthub.dto.Product;
 import de.bushnaq.abdalla.projecthub.dto.Version;
 import de.bushnaq.abdalla.projecthub.rest.api.ProductApi;
@@ -50,6 +52,7 @@ import java.util.Map;
 public class VersionListView extends AbstractMainGrid<Version> implements AfterNavigationObserver {
     public static final String     CREATE_VERSION_BUTTON             = "create-version-button";
     public static final String     ROUTE                             = "version-list";
+    public static final String     VERSION_GLOBAL_FILTER             = "version-global-filter";
     public static final String     VERSION_GRID                      = "version-grid";
     public static final String     VERSION_GRID_DELETE_BUTTON_PREFIX = "version-grid-delete-button-prefix-";
     public static final String     VERSION_GRID_EDIT_BUTTON_PREFIX   = "version-grid-edit-button-prefix-";
@@ -60,19 +63,21 @@ public class VersionListView extends AbstractMainGrid<Version> implements AfterN
     private             Long       productId;
     private final       VersionApi versionApi;
 
-    public VersionListView(VersionApi versionApi, ProductApi productApi, Clock clock) {
+    public VersionListView(VersionApi versionApi, ProductApi productApi, Clock clock, AiFilter aiFilter, ObjectMapper mapper) {
         super(clock);
         this.versionApi = versionApi;
         this.productApi = productApi;
 
         add(
-                createHeader(
+                createSmartHeader(
                         "Versions",
                         VERSION_LIST_PAGE_TITLE,
                         VaadinIcon.TAG,
                         CREATE_VERSION_BUTTON,
                         () -> openVersionDialog(null),
-                        VERSION_ROW_COUNTER
+                        VERSION_ROW_COUNTER,
+                        VERSION_GLOBAL_FILTER,
+                        aiFilter, mapper, "Version"
                 ),
                 grid
         );
@@ -117,6 +122,40 @@ public class VersionListView extends AbstractMainGrid<Version> implements AfterN
         dialog.open();
     }
 
+    /**
+     * Creates a searchable text string from a Version for global filtering
+     */
+    private String getSearchableText(Version version) {
+        if (version == null) return "";
+
+        StringBuilder searchText = new StringBuilder();
+
+        // Add key
+        if (version.getKey() != null) {
+            searchText.append(version.getKey()).append(" ");
+        }
+
+        // Add name
+        if (version.getName() != null) {
+            searchText.append(version.getName()).append(" ");
+        }
+
+        // Add formatted dates
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG)
+                .withZone(Clock.systemDefaultZone().getZone())
+                .withLocale(getLocale());
+
+        if (version.getCreated() != null) {
+            searchText.append(dateTimeFormatter.format(version.getCreated())).append(" ");
+        }
+
+        if (version.getUpdated() != null) {
+            searchText.append(dateTimeFormatter.format(version.getUpdated())).append(" ");
+        }
+
+        return searchText.toString().trim();
+    }
+
     protected void initGrid(Clock clock) {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
@@ -138,7 +177,7 @@ public class VersionListView extends AbstractMainGrid<Version> implements AfterN
 
         {
             Grid.Column<Version> keyColumn = grid.addColumn(Version::getKey);
-            VaadinUtil.addFilterableHeader(grid, keyColumn, "Key", VaadinIcon.KEY, Version::getKey);
+            VaadinUtil.addSimpleHeader(keyColumn, "Key", VaadinIcon.KEY);
         }
         {
             // Add name column with filtering and sorting
@@ -150,20 +189,17 @@ public class VersionListView extends AbstractMainGrid<Version> implements AfterN
             }));
 
             // Configure a custom comparator to properly sort by the name property
-            nameColumn.setComparator((version1, version2) ->
-                    version1.getName().compareToIgnoreCase(version2.getName()));
+            nameColumn.setComparator((version1, version2) -> version1.getName().compareToIgnoreCase(version2.getName()));
 
-            VaadinUtil.addFilterableHeader(grid, nameColumn, "Name", VaadinIcon.TAG, Version::getName);
+            VaadinUtil.addSimpleHeader(nameColumn, "Name", VaadinIcon.TAG);
         }
         {
             Grid.Column<Version> createdColumn = grid.addColumn(version -> dateTimeFormatter.format(version.getCreated()));
-            VaadinUtil.addFilterableHeader(grid, createdColumn, "Created", VaadinIcon.CALENDAR,
-                    version -> dateTimeFormatter.format(version.getCreated()));
+            VaadinUtil.addSimpleHeader(createdColumn, "Created", VaadinIcon.CALENDAR);
         }
         {
             Grid.Column<Version> updatedColumn = grid.addColumn(version -> dateTimeFormatter.format(version.getUpdated()));
-            VaadinUtil.addFilterableHeader(grid, updatedColumn, "Updated", VaadinIcon.CALENDAR,
-                    version -> dateTimeFormatter.format(version.getUpdated()));
+            VaadinUtil.addSimpleHeader(updatedColumn, "Updated", VaadinIcon.CALENDAR);
         }
 
         // Add actions column using VaadinUtil

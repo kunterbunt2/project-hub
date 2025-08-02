@@ -34,7 +34,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.value.ValueChangeMode;
-import de.bushnaq.abdalla.projecthub.service.NaturalLanguageSearchService;
+import de.bushnaq.abdalla.projecthub.ai.AiFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,24 +46,28 @@ import java.util.regex.Pattern;
  */
 public class SmartGlobalFilter<T> extends HorizontalLayout {
 
-    private static final Logger                       logger = LoggerFactory.getLogger(SmartGlobalFilter.class);
-    private final        ObjectMapper                 filterMapper;
-    private final        Grid<T>                      grid;
-    private final        NaturalLanguageSearchService nlSearchService;
-    private final        TextField                    searchField;
-    private final        Span                         statusSpan;
+    private static final Logger       logger = LoggerFactory.getLogger(SmartGlobalFilter.class);
+    private final        String       entityType;
+    private final        ObjectMapper filterMapper;
+    private final        Grid<T>      grid;
+    private final        AiFilter     nlSearchService;
+    private final        TextField    searchField;
+    private final        Span         statusSpan;
 
     public SmartGlobalFilter(String fieldId,
                              Grid<T> grid,
-                             NaturalLanguageSearchService nlSearchService, ObjectMapper mapper) {
+                             AiFilter nlSearchService,
+                             ObjectMapper mapper,
+                             String entityType) {
 
         this.grid            = grid;
         this.nlSearchService = nlSearchService;
+        this.entityType      = entityType;
 
         // Create a separate ObjectMapper for filtering that includes @JsonIgnore fields
         this.filterMapper = mapper.copy();
         // Use custom annotation introspector that ignores @JsonIgnore but preserves other annotations
-        this.filterMapper.setAnnotationIntrospector(new FilterAnnotationIntrospector());
+//        this.filterMapper.setAnnotationIntrospector(new FilterAnnotationIntrospector());
 
         setAlignItems(FlexComponent.Alignment.CENTER);
         setSpacing(true);
@@ -145,6 +149,44 @@ public class SmartGlobalFilter<T> extends HorizontalLayout {
         statusSpan.setVisible(false);
     }
 
+    private String getEntitySpecificHelpText() {
+        return switch (entityType) {
+            case "Version" -> """
+                    Smart Search Examples for Versions:
+                    
+                    • Simple: "1.2.3" → searches for exact version
+                    • Version comparisons: "version greater than 1.0.0"
+                    • Version ranges: "versions between 1.0.0 and 2.0.0"
+                    • Beta/Alpha: "name contains beta" or "alpha versions"
+                    • Date ranges: "versions created after January 2024"
+                    • Combined: "beta versions created after 2024"
+                    
+                    Available columns: name, key, created, updated
+                    """;
+            case "Product" -> """
+                    Smart Search Examples for Products:
+                    
+                    • Simple: "Project ABC" → searches everywhere
+                    • Column-specific: "name:Product" or "key:PROJ-123"
+                    • Natural language: "products created after January 2024"
+                    • Date ranges: "items created before 2024-12-01"
+                    • Combined: "name contains project created after january"
+                    
+                    Available columns: name, key, created, updated
+                    """;
+            default -> """
+                    Smart Search Examples:
+                    
+                    • Simple: "search term" → searches everywhere
+                    • Column-specific: "name:value" or "key:identifier"
+                    • Natural language: "items created after January 2024"
+                    • Date ranges: "items created before 2024-12-01"
+                    
+                    Available columns: name, key, created, updated
+                    """;
+        };
+    }
+
     public TextField getSearchField() {
         return searchField;
     }
@@ -182,8 +224,8 @@ public class SmartGlobalFilter<T> extends HorizontalLayout {
         }
 
         try {
-            // Parse the query using natural language service
-            String searchQuery = nlSearchService.parseQuery(searchValue);
+            // Parse the query using natural language service with entity type
+            String searchQuery = nlSearchService.parseQuery(searchValue, entityType);
 
             // Apply the parsed search criteria
             applySearchQuery(searchQuery);
@@ -218,17 +260,7 @@ public class SmartGlobalFilter<T> extends HorizontalLayout {
     }
 
     private void showSearchHelp() {
-        String helpText = """
-                Smart Search Examples:
-                
-                • Simple: "Product ABC" → searches everywhere
-                • Column-specific: "name:Product" or "key:PROJ-123"
-                • Natural language: "products created after January 2024"
-                • Date ranges: "items created before 2024-12-01"
-                • Combined: "name contains project created after january"
-                
-                Available columns: name, key, created, updated
-                """;
+        String helpText = getEntitySpecificHelpText();
 
         Notification notification = new Notification();
         notification.addThemeVariants(NotificationVariant.LUMO_PRIMARY);

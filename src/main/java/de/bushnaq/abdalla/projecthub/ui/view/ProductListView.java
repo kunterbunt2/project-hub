@@ -25,6 +25,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
+import de.bushnaq.abdalla.projecthub.ai.AiFilter;
 import de.bushnaq.abdalla.projecthub.dto.Product;
 import de.bushnaq.abdalla.projecthub.rest.api.ProductApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
@@ -49,22 +50,20 @@ import java.util.Map;
 @PermitAll
 @RolesAllowed({"USER", "ADMIN"})
 public class ProductListView extends AbstractMainGrid<Product> implements AfterNavigationObserver {
-    public static final String                                                             CREATE_PRODUCT_BUTTON             = "create-product-button";
-    public static final String                                                             PRODUCT_GLOBAL_FILTER             = "product-global-filter";
-    public static final String                                                             PRODUCT_GRID                      = "product-grid";
-    public static final String                                                             PRODUCT_GRID_DELETE_BUTTON_PREFIX = "product-grid-delete-button-prefix-";
-    public static final String                                                             PRODUCT_GRID_EDIT_BUTTON_PREFIX   = "product-grid-edit-button-prefix-";
-    public static final String                                                             PRODUCT_GRID_NAME_PREFIX          = "product-grid-name-";
-    public static final String                                                             PRODUCT_LIST_PAGE_TITLE           = "product-list-page-title";
-    public static final String                                                             PRODUCT_ROW_COUNTER               = "product-row-counter";
-    public static final String                                                             ROUTE                             = "product-list";
-    private final       de.bushnaq.abdalla.projecthub.service.NaturalLanguageSearchService nlSearchService;
-    private final       ProductApi                                                         productApi;
+    public static final String     CREATE_PRODUCT_BUTTON             = "create-product-button";
+    public static final String     PRODUCT_GLOBAL_FILTER             = "product-global-filter";
+    public static final String     PRODUCT_GRID                      = "product-grid";
+    public static final String     PRODUCT_GRID_DELETE_BUTTON_PREFIX = "product-grid-delete-button-prefix-";
+    public static final String     PRODUCT_GRID_EDIT_BUTTON_PREFIX   = "product-grid-edit-button-prefix-";
+    public static final String     PRODUCT_GRID_NAME_PREFIX          = "product-grid-name-";
+    public static final String     PRODUCT_LIST_PAGE_TITLE           = "product-list-page-title";
+    public static final String     PRODUCT_ROW_COUNTER               = "product-row-counter";
+    public static final String     ROUTE                             = "product-list";
+    private final       ProductApi productApi;
 
-    public ProductListView(ProductApi productApi, Clock clock, de.bushnaq.abdalla.projecthub.service.NaturalLanguageSearchService nlSearchService, ObjectMapper mapper) {
+    public ProductListView(ProductApi productApi, Clock clock, AiFilter aiFilter, ObjectMapper mapper) {
         super(clock);
-        this.productApi      = productApi;
-        this.nlSearchService = nlSearchService;
+        this.productApi = productApi;
 
         add(
                 createSmartHeader(
@@ -75,12 +74,7 @@ public class ProductListView extends AbstractMainGrid<Product> implements AfterN
                         () -> openProductDialog(null),
                         PRODUCT_ROW_COUNTER,
                         PRODUCT_GLOBAL_FILTER,
-                        this::getSearchableText,
-                        Product::getName,
-                        Product::getKey,
-                        product -> product.getCreated().toLocalDate(),
-                        product -> product.getUpdated().toLocalDate(),
-                        nlSearchService, mapper
+                        aiFilter, mapper, "Product"
                 ),
                 grid
         );
