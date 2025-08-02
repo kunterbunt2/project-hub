@@ -317,6 +317,82 @@ public final class VaadinUtil {
     }
 
     /**
+     * Adds a simple header to a grid column without filtering capability.
+     *
+     * @param <T>        The type of items in the grid
+     * @param column     The column to set the header for
+     * @param headerText The text to display in the column header
+     * @param headerIcon The icon to display in the column header (optional, can be null)
+     * @param sortable   Whether the column should be sortable
+     */
+    public static <T> void addSimpleHeader(
+            Grid.Column<T> column,
+            String headerText,
+            Icon headerIcon,
+            boolean sortable) {
+
+        // Create column header layout
+        HorizontalLayout header = new HorizontalLayout();
+        header.setAlignItems(FlexComponent.Alignment.CENTER);
+        header.setSpacing(true);
+        header.setPadding(false);
+
+        if (headerIcon != null) {
+            header.add(headerIcon);
+        }
+
+        Span headerLabel = new Span(headerText);
+        header.add(headerLabel);
+
+        // Add sort capability if requested
+        if (sortable) {
+            column.setSortable(true);
+        }
+
+        column.setHeader(header);
+    }
+
+    /**
+     * Adds a simple header to a grid column with VaadinIcon.
+     */
+    public static <T> void addSimpleHeader(
+            Grid.Column<T> column,
+            String headerText,
+            VaadinIcon headerIcon,
+            boolean sortable) {
+        addSimpleHeader(column, headerText, new Icon(headerIcon), sortable);
+    }
+
+    /**
+     * Adds a simple header to a grid column with text only.
+     */
+    public static <T> void addSimpleHeader(
+            Grid.Column<T> column,
+            String headerText,
+            boolean sortable) {
+        addSimpleHeader(column, headerText, (Icon) null, sortable);
+    }
+
+    /**
+     * Adds a simple sortable header to a grid column with VaadinIcon.
+     */
+    public static <T> void addSimpleHeader(
+            Grid.Column<T> column,
+            String headerText,
+            VaadinIcon headerIcon) {
+        addSimpleHeader(column, headerText, new Icon(headerIcon), true);
+    }
+
+    /**
+     * Adds a simple sortable header to a grid column with text only.
+     */
+    public static <T> void addSimpleHeader(
+            Grid.Column<T> column,
+            String headerText) {
+        addSimpleHeader(column, headerText, (Icon) null, true);
+    }
+
+    /**
      * Creates a standardized dialog button layout with save and cancel buttons
      *
      * @param saveButtonText   Text for the save button (e.g., "Save", "Create", "Confirm")
@@ -378,7 +454,6 @@ public final class VaadinUtil {
     public static HorizontalLayout createDialogHeader(String title, String icon) {
         return createDialogHeader(title, new Icon(icon));
     }
-
 
     /**
      * Functional interface for create button click handlers

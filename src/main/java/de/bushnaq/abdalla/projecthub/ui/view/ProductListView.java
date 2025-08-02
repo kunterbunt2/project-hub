@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
@@ -48,29 +49,38 @@ import java.util.Map;
 @PermitAll
 @RolesAllowed({"USER", "ADMIN"})
 public class ProductListView extends AbstractMainGrid<Product> implements AfterNavigationObserver {
-    public static final String     CREATE_PRODUCT_BUTTON             = "create-product-button";
-    public static final String     PRODUCT_GRID                      = "product-grid";
-    public static final String     PRODUCT_GRID_DELETE_BUTTON_PREFIX = "product-grid-delete-button-prefix-";
-    public static final String     PRODUCT_GRID_EDIT_BUTTON_PREFIX   = "product-grid-edit-button-prefix-";
-    public static final String     PRODUCT_GRID_NAME_PREFIX          = "product-grid-name-";
-    public static final String     PRODUCT_LIST_PAGE_TITLE           = "product-list-page-title";
-    public static final String     PRODUCT_ROW_COUNTER               = "product-row-counter";
-    public static final String     ROUTE                             = "product-list";
-    private final       ProductApi productApi;
+    public static final String                                                             CREATE_PRODUCT_BUTTON             = "create-product-button";
+    public static final String                                                             PRODUCT_GLOBAL_FILTER             = "product-global-filter";
+    public static final String                                                             PRODUCT_GRID                      = "product-grid";
+    public static final String                                                             PRODUCT_GRID_DELETE_BUTTON_PREFIX = "product-grid-delete-button-prefix-";
+    public static final String                                                             PRODUCT_GRID_EDIT_BUTTON_PREFIX   = "product-grid-edit-button-prefix-";
+    public static final String                                                             PRODUCT_GRID_NAME_PREFIX          = "product-grid-name-";
+    public static final String                                                             PRODUCT_LIST_PAGE_TITLE           = "product-list-page-title";
+    public static final String                                                             PRODUCT_ROW_COUNTER               = "product-row-counter";
+    public static final String                                                             ROUTE                             = "product-list";
+    private final       de.bushnaq.abdalla.projecthub.service.NaturalLanguageSearchService nlSearchService;
+    private final       ProductApi                                                         productApi;
 
-    public ProductListView(ProductApi productApi, Clock clock) {
+    public ProductListView(ProductApi productApi, Clock clock, de.bushnaq.abdalla.projecthub.service.NaturalLanguageSearchService nlSearchService, ObjectMapper mapper) {
         super(clock);
-        this.productApi = productApi;
+        this.productApi      = productApi;
+        this.nlSearchService = nlSearchService;
 
         add(
-                createHeader(
+                createSmartHeader(
                         "Products",
                         PRODUCT_LIST_PAGE_TITLE,
                         VaadinIcon.CUBE,
                         CREATE_PRODUCT_BUTTON,
                         () -> openProductDialog(null),
-                        grid,
-                        PRODUCT_ROW_COUNTER
+                        PRODUCT_ROW_COUNTER,
+                        PRODUCT_GLOBAL_FILTER,
+                        this::getSearchableText,
+                        Product::getName,
+                        Product::getKey,
+                        product -> product.getCreated().toLocalDate(),
+                        product -> product.getUpdated().toLocalDate(),
+                        nlSearchService, mapper
                 ),
                 grid
         );
@@ -103,6 +113,40 @@ public class ProductListView extends AbstractMainGrid<Product> implements AfterN
         dialog.open();
     }
 
+    /**
+     * Creates a searchable text string from a Product for global filtering
+     */
+    private String getSearchableText(Product product) {
+        if (product == null) return "";
+
+        StringBuilder searchText = new StringBuilder();
+
+        // Add key
+        if (product.getKey() != null) {
+            searchText.append(product.getKey()).append(" ");
+        }
+
+        // Add name
+        if (product.getName() != null) {
+            searchText.append(product.getName()).append(" ");
+        }
+
+        // Add formatted dates
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG)
+                .withZone(Clock.systemDefaultZone().getZone())
+                .withLocale(getLocale());
+
+        if (product.getCreated() != null) {
+            searchText.append(dateTimeFormatter.format(product.getCreated())).append(" ");
+        }
+
+        if (product.getUpdated() != null) {
+            searchText.append(dateTimeFormatter.format(product.getUpdated())).append(" ");
+        }
+
+        return searchText.toString().trim();
+    }
+
     protected void initGrid(Clock clock) {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
@@ -118,11 +162,9 @@ public class ProductListView extends AbstractMainGrid<Product> implements AfterN
             UI.getCurrent().navigate(VersionListView.class, QueryParameters.simple(params));
         });
 
-//        refreshGrid();
-
         {
             Grid.Column<Product> keyColumn = grid.addColumn(Product::getKey);
-            VaadinUtil.addFilterableHeader(grid, keyColumn, "Key", VaadinIcon.KEY, Product::getKey);
+            VaadinUtil.addSimpleHeader(keyColumn, "Key", VaadinIcon.KEY);
         }
         {
             Grid.Column<Product> nameColumn = grid.addColumn(new ComponentRenderer<>(product -> {
@@ -136,15 +178,15 @@ public class ProductListView extends AbstractMainGrid<Product> implements AfterN
             nameColumn.setComparator((product1, product2) ->
                     product1.getName().compareToIgnoreCase(product2.getName()));
 
-            VaadinUtil.addFilterableHeader(grid, nameColumn, "Name", VaadinIcon.CUBE, Product::getName);
+            VaadinUtil.addSimpleHeader(nameColumn, "Name", VaadinIcon.CUBE);
         }
         {
             Grid.Column<Product> createdColumn = grid.addColumn(product -> dateTimeFormatter.format(product.getCreated()));
-            VaadinUtil.addFilterableHeader(grid, createdColumn, "Created", VaadinIcon.CALENDAR, product -> dateTimeFormatter.format(product.getCreated()));
+            VaadinUtil.addSimpleHeader(createdColumn, "Created", VaadinIcon.CALENDAR);
         }
         {
             Grid.Column<Product> updatedColumn = grid.addColumn(product -> dateTimeFormatter.format(product.getUpdated()));
-            VaadinUtil.addFilterableHeader(grid, updatedColumn, "Updated", VaadinIcon.CALENDAR, product -> dateTimeFormatter.format(product.getUpdated()));
+            VaadinUtil.addSimpleHeader(updatedColumn, "Updated", VaadinIcon.CALENDAR);
         }
         // Add actions column using VaadinUtil
         VaadinUtil.addActionColumn(
@@ -157,7 +199,6 @@ public class ProductListView extends AbstractMainGrid<Product> implements AfterN
         );
 
     }
-
 
     private void openProductDialog(Product product) {
         // Use the new SaveCallback interface that passes both the product and the dialog

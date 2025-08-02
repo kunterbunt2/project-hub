@@ -22,7 +22,8 @@ import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.util.ProductListViewTester;
 import de.bushnaq.abdalla.projecthub.util.RandomCase;
 import de.bushnaq.abdalla.projecthub.util.TestInfoUtil;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -47,13 +48,75 @@ import java.util.List;
 @AutoConfigureMockMvc
 @Transactional
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-@Disabled
+// Remove @Disabled to run the demo
 public class Demo extends AbstractUiTestUtil {
     private static final Logger                logger = LoggerFactory.getLogger(Demo.class);
     @Autowired
     private              ProductListViewTester productListViewTester;
     @Autowired
     private              SeleniumHandler       seleniumHandler;
+
+    @AfterAll
+    static void cleanupOllama() {
+        logger.info("=== Demo completed - Ollama container will remain running ===");
+        logger.info("To stop Ollama manually, run: ollama-helper.bat stop");
+    }
+
+    /**
+     * Demonstrates the natural language search functionality
+     */
+    private void demonstrateNaturalLanguageSearch() throws InterruptedException {
+//        logger.info("=== Demonstrating Natural Language Search with LLM ===");
+//
+//        // Wait for page to fully load
+//        Thread.sleep(2000);
+//
+//        // Find the smart search field
+//        WebElement searchField = seleniumHandler.getDriver().findElement(By.id("product-global-filter"));
+//
+//        // Demo queries to showcase LLM capabilities
+//        String[] demoQueries = {
+//                "products created after January 2024",
+//                "name contains test",
+//                "key:PROJ-123",
+//                "show me items created before December",
+//                "find project items",
+//                "products updated after 2024-06-01"
+//        };
+//
+//        for (String query : demoQueries) {
+//            logger.info("Testing natural language query: '{}'", query);
+//
+//            // Clear and enter the query
+//            seleniumHandler.setTextField("product-global-filter", query);
+//
+////            searchField.clear();
+////            Thread.sleep(500);
+////            searchField.sendKeys(query);
+//
+//            // Wait for search to process and show results
+//            Thread.sleep(3000);
+//
+//            // Check if feedback is shown
+//            try {
+//                WebElement statusSpan = seleniumHandler.getDriver().findElement(By.className("smart-global-filter")).findElement(By.tagName("span"));
+//                if (statusSpan.isDisplayed()) {
+//                    logger.info("Search feedback: {}", statusSpan.getText());
+//                }
+//            } catch (Exception e) {
+//                // Status span might not be visible for all queries
+//            }
+//
+//            // Pause between queries for demonstration
+//            Thread.sleep(2000);
+//        }
+//
+//        // Clear the search to show all results again
+//        searchField.clear();
+//        Thread.sleep(1000);
+//
+//        logger.info("=== Natural Language Search Demo Completed ===");
+    }
 
     private static List<RandomCase> listRandomCases() {
         RandomCase[] randomCases = new RandomCase[]{//
@@ -65,17 +128,26 @@ public class Demo extends AbstractUiTestUtil {
         return Arrays.stream(randomCases).toList();
     }
 
+    @BeforeAll
+    static void setupOllama() {
+        logger.info("=== Setting up Ollama for Natural Language Search Demo ===");
+//        OllamaTestHelper.ensureOllamaForTests();
+    }
+
     @ParameterizedTest
     @MethodSource("listRandomCases")
     @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void testShowProducts(RandomCase randomCase, TestInfo testInfo) throws Exception {
-//        printAuthentication();
         TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         generateProductsIfNeeded(testInfo, randomCase);
-//        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+
         productListViewTester.switchToProductListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+
+        // Demo the natural language search capabilities
+        demonstrateNaturalLanguageSearch();
+
         seleniumHandler.waitUntilBrowserClosed(0);
     }
 }
