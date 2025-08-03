@@ -17,9 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.ai;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import de.bushnaq.abdalla.projecthub.dto.Product;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,8 +29,9 @@ import org.springframework.test.context.TestConstructor;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -108,98 +107,70 @@ class ProductAiFilterTest extends AbstractAiFilterTest<Product> {
     @Test
     @DisplayName("Should handle case-insensitive searches")
     void testCaseInsensitiveSearchWithLLM() throws Exception {
-        String        question      = "MARS";
-        List<Product> filtered      = performSearch(question, Product.class.getSimpleName());
-        List<String>  filteredNames = filtered.stream().map(Product::getName).collect(Collectors.toList());
-        assertThat(filteredNames).anyMatch(name -> name.toLowerCase().contains("mars"));
+        List<Product> results  = performSearch("MARS", "Product");
+        List<Product> expected = Collections.singletonList(testProducts.get(2)); // Mars Explorer
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should generate working regex for complex search")
     void testComplexSearchWithLLM() throws Exception {
-        String        question = "space products created in 2024";
-        List<Product> filtered = performSearch(question, Product.class.getSimpleName());
-        assertThat(filtered).hasSize(1);
-        for (Product product : filtered) {
-            boolean hasSpace      = product.getName().toLowerCase().contains("space");
-            boolean createdIn2024 = product.getCreated().getYear() == 2024;
-            System.out.println(product.getName() + " - has 'space': " + hasSpace + ", created in 2024: " + createdIn2024 + ", created: " + product.getCreated());
-        }
+        List<Product> results  = performSearch("space products created in 2024", "Product");
+        List<Product> expected = Collections.singletonList(testProducts.get(6)); // Space Station Alpha
 
-        // Should find at least some results
-        assertThat(filtered).isNotEmpty();
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should generate working regex for date-based search")
     void testDateBasedSearchWithLLM() throws Exception {
-        String        question = "products created after July 2024";
-        List<Product> filtered = performSearch(question, Product.class.getSimpleName());
-        assertThat(filtered).hasSize(7);
+        List<Product> results = performSearch("products created after July 2024", "Product");
+        List<Product> expected = Arrays.asList(
+                testProducts.get(4), // Lunar Base (created 2024-07-22)
+                testProducts.get(5), // Deep Space Probe (created 2024-09-05)
+                testProducts.get(6), // Space Station Alpha (created 2024-11-12)
+                testProducts.get(7)  // Rocket Engine X (created 2025-01-05)
+        );
 
-        // Verify the dates make sense
-        for (Product product : filtered) {
-            OffsetDateTime created         = product.getCreated();
-            boolean        isAfterJuly2024 = created.isAfter(OffsetDateTime.of(2024, 7, 1, 0, 0, 0, 0, ZoneOffset.UTC));
-            System.out.println(product.getName() + " created: " + created + " (after July 2024: " + isAfterJuly2024 + ")");
-        }
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should generate working regex for name-specific search")
     void testNameSpecificSearchWithLLM() throws Exception {
-        String        question = "name contains project";
-        List<Product> filtered = performSearch(question, Product.class.getSimpleName());
-        assertThat(regexString).isNotEmpty();
-        // Should find products with "project" in the name field
-        List<String> filteredNames = filtered.stream().map(Product::getName).collect(Collectors.toList());
-        assertThat(filteredNames).anyMatch(name -> name.toLowerCase().contains("project"));
+        List<Product> results  = performSearch("name contains project", "Product");
+        List<Product> expected = Collections.singletonList(testProducts.get(1)); // Project Apollo
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should generate working regex for simple text search")
     void testSimpleTextSearchWithLLM() throws Exception {
-        String        question = "Orion";
-        List<Product> filtered = performSearch(question, Product.class.getSimpleName());
-        assertThat(regexString).containsIgnoringCase("orion");
-        assertThat(filtered).hasSize(1);
-        List<String> filteredNames = filtered.stream().map(Product::getName).collect(Collectors.toList());
-        assertThat(filteredNames).anyMatch(name -> name.toLowerCase().contains("orion"));
+        List<Product> results  = performSearch("Orion", "Product");
+        List<Product> expected = Collections.singletonList(testProducts.get(0)); // Orion Space System
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should generate working regex for updated date search")
     void testUpdatedDateSearchWithLLM() throws Exception {
-        String        question = "products updated in 2025";
-        List<Product> filtered = performSearch(question, Product.class.getSimpleName());
-        System.out.println("\n=== Expected products updated in 2025 ===");
-        for (Product product : testProducts) {
-            if (product.getUpdated().getYear() == 2025) {
-                String json = filterMapper.writeValueAsString(product);
-                System.out.println(json);
-            }
-        }
-        assertThat(filtered).hasSize(3);
-        for (Product product : filtered) {
-            OffsetDateTime updated  = product.getUpdated();
-            boolean        isIn2025 = updated.getYear() == 2025;
-            assertThat(isIn2025).isTrue(); // All matched products should actually be from 2025
-        }
+        List<Product> results = performSearch("products updated in 2025", "Product");
+        List<Product> expected = Arrays.asList(
+                testProducts.get(5), // Deep Space Probe (updated 2025-01-15)
+                testProducts.get(6), // Space Station Alpha (updated 2025-02-08)
+                testProducts.get(7)  // Rocket Engine X (updated 2025-01-20)
+        );
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
-    /**
-     * Custom annotation introspector that ignores @JsonIgnore annotations
-     * but preserves all other Jackson annotations.
-     */
-    private static class FilterAnnotationIntrospector extends JacksonAnnotationIntrospector {
-        @Override
-        public boolean hasIgnoreMarker(com.fasterxml.jackson.databind.introspect.AnnotatedMember m) {
-            // Don't ignore fields marked with @JsonIgnore for filtering purposes
-            // but still process other ignore markers from the parent class
-            if (m.hasAnnotation(JsonIgnore.class)) {
-                return false;
-            }
-            return super.hasIgnoreMarker(m);
-        }
-    }
 }

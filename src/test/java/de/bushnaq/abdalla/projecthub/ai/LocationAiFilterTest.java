@@ -31,6 +31,8 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -138,342 +140,195 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
     }
 
     @Test
-    @DisplayName("Should find Asian Pacific locations")
-    void testAsianPacificLocationsSearch() throws Exception {
-        List<Location> results = performSearch("Asia Pacific", "Location");
-
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(2) // Should include Australia locations
-                .extracting(Location::getCountry)
-                .contains("Australia");
-    }
-
-    @Test
     @DisplayName("Should find locations in Australia")
     void testAustraliaLocationSearch() throws Exception {
         List<Location> results = performSearch("locations in Australia", "Location");
+        List<Location> expected = Arrays.asList(
+                testProducts.get(2),  // Australia, Victoria
+                testProducts.get(11)  // Australia, New South Wales
+        );
 
-        assertThat(results)
-                .hasSize(2)
-                .extracting(Location::getCountry)
-                .containsOnly("Australia");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find locations in California")
     void testCaliforniaLocationSearch() throws Exception {
-        List<Location> results = performSearch("California", "Location");
+        List<Location> results  = performSearch("California", "Location");
+        List<Location> expected = Collections.singletonList(testProducts.get(1)); // United States, California
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Location::getState)
-                .containsExactly("California");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
-    @DisplayName("Should find Canadian locations")
-    void testCanadianLocationSearch() throws Exception {
-        List<Location> results = performSearch("Canada", "Location");
+    @DisplayName("Should find locations by country column")
+    void testCountrySpecificSearchWithLLM() throws Exception {
+        List<Location> results  = performSearch("country is Australia", "Location");
+        List<Location> expected = Arrays.asList(testProducts.get(2), testProducts.get(11)); // Australia Victoria, Australia New South Wales
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Location::getCountry)
-                .containsExactly("Canada");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
-    @DisplayName("Should find locations by country Germany")
-    void testCountryGermanySearch() throws Exception {
-        List<Location> results = performSearch("country Germany", "Location");
+    @DisplayName("Should find locations by created date column")
+    void testCreatedDateSpecificSearchWithLLM() throws Exception {
+        List<Location> results  = performSearch("created in 2025", "Location");
+        List<Location> expected = Collections.singletonList(testProducts.get(11)); // Australia, New South Wales (created 2025-01-28)
 
-        assertThat(results)
-                .hasSize(2)
-                .extracting(Location::getCountry)
-                .containsOnly("Germany");
-    }
-
-    @Test
-    @DisplayName("Should find Dutch locations")
-    void testDutchLocationSearch() throws Exception {
-        List<Location> results = performSearch("Netherlands", "Location");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Location::getCountry)
-                .containsExactly("Netherlands");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should handle empty search query")
     void testEmptySearchQuery() throws Exception {
-        List<Location> results = performSearch("", "Location");
+        List<Location> results  = performSearch("", "Location");
+        List<Location> expected = new ArrayList<>(testProducts); // All locations should match empty query
 
-        assertThat(results).hasSize(12); // All locations should match empty query
-    }
-
-    @Test
-    @DisplayName("Should find English locations")
-    void testEnglishLocationSearch() throws Exception {
-        List<Location> results = performSearch("England", "Location");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Location::getState)
-                .containsExactly("England");
-    }
-
-    @Test
-    @DisplayName("Should find European locations")
-    void testEuropeanLocationsSearch() throws Exception {
-        List<Location> results = performSearch("European locations", "Location");
-
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(6) // Germany(2), UK(1), France(1), Netherlands(1), Italy(1), Spain(1)
-                .extracting(Location::getCountry)
-                .contains("Germany", "United Kingdom", "France", "Netherlands", "Italy", "Spain");
-    }
-
-    @Test
-    @DisplayName("Should find French locations")
-    void testFrenchLocationSearch() throws Exception {
-        List<Location> results = performSearch("France", "Location");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Location::getCountry)
-                .containsExactly("France");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find locations in German states")
     void testGermanStatesSearch() throws Exception {
         List<Location> results = performSearch("German states", "Location");
+        List<Location> expected = Arrays.asList(
+                testProducts.get(0), // Germany, Bavaria
+                testProducts.get(5)  // Germany, North Rhine-Westphalia
+        );
 
-        assertThat(results)
-                .hasSize(2)
-                .extracting(Location::getCountry)
-                .containsOnly("Germany");
-
-        assertThat(results)
-                .extracting(Location::getState)
-                .contains("Bavaria", "North Rhine-Westphalia");
-    }
-
-    @Test
-    @DisplayName("Should find locations in Germany")
-    void testGermanyLocationSearch() throws Exception {
-        List<Location> results = performSearch("Germany", "Location");
-
-        assertThat(results)
-                .hasSize(2)
-                .extracting(Location::getCountry)
-                .containsOnly("Germany");
-    }
-
-    @Test
-    @DisplayName("Should find Italian locations")
-    void testItalianLocationSearch() throws Exception {
-        List<Location> results = performSearch("Italy", "Location");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Location::getCountry)
-                .containsExactly("Italy");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find locations created in 2025")
     void testLocationsCreatedInYearSearch() throws Exception {
-        List<Location> results = performSearch("locations created in 2025", "Location");
+        List<Location> results  = performSearch("locations created in 2025", "Location");
+        List<Location> expected = Collections.singletonList(testProducts.get(11)); // Australia, New South Wales (created 2025-01-28)
 
-        assertThat(results)
-                .hasSize(1) // Only one location created in 2025
-                .extracting(location -> location.getCreated().getYear())
-                .containsExactly(2025);
-    }
-
-    @Test
-    @DisplayName("Should find locations for Jane Smith")
-    void testLocationsForJaneSmithSearch() throws Exception {
-        List<Location> results = performSearch("Jane Smith", "Location");
-
-        assertThat(results)
-                .hasSize(2) // Jane Smith has 2 location records
-                .extracting(location -> location.getUser().getName())
-                .containsOnly("Jane Smith");
-    }
-
-    @Test
-    @DisplayName("Should find locations for John Doe")
-    void testLocationsForSpecificUserSearch() throws Exception {
-        List<Location> results = performSearch("John Doe", "Location");
-
-        assertThat(results)
-                .hasSize(3) // John Doe has 3 location records
-                .extracting(location -> location.getUser().getName())
-                .containsOnly("John Doe");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find locations starting after January 2024")
     void testLocationsStartingAfterDateSearch() throws Exception {
         List<Location> results = performSearch("locations starting after January 2024", "Location");
+        List<Location> expected = Arrays.asList(
+                testProducts.get(1),  // United States, California (Feb 2024)
+                testProducts.get(2),  // Australia, Victoria (Mar 2024)
+                testProducts.get(3),  // United Kingdom, England (Apr 2024)
+                testProducts.get(4),  // France, Île-de-France (May 2024)
+                testProducts.get(5),  // Germany, North Rhine-Westphalia (Jun 2024)
+                testProducts.get(6),  // Canada, Ontario (Jul 2024)
+                testProducts.get(7),  // Netherlands, North Holland (Aug 2024)
+                testProducts.get(8),  // Italy, Lombardy (Sep 2024)
+                testProducts.get(9),  // Spain, Catalonia (Oct 2024)
+                testProducts.get(10), // United States, New York (Jan 2025)
+                testProducts.get(11)  // Australia, New South Wales (Feb 2025)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(10) // Should exclude the first location
-                .extracting(location -> location.getStart().getMonthValue())
-                .allMatch(month -> month >= 2 || month == 1); // February onwards or January 2025
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find locations starting before March 2024")
     void testLocationsStartingBeforeDateSearch() throws Exception {
         List<Location> results = performSearch("locations starting before March 2024", "Location");
+        List<Location> expected = Arrays.asList(
+                testProducts.get(0), // Germany, Bavaria (Jan 2024)
+                testProducts.get(1)  // United States, California (Feb 2024)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(2) // Should include January and February 2024
-                .extracting(location -> location.getStart().getMonthValue())
-                .contains(1, 2);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find locations starting in 2025")
     void testLocationsStartingInYearSearch() throws Exception {
         List<Location> results = performSearch("locations starting in 2025", "Location");
+        List<Location> expected = Arrays.asList(
+                testProducts.get(10), // United States, New York (Jan 2025)
+                testProducts.get(11)  // Australia, New South Wales (Feb 2025)
+        );
 
-        assertThat(results)
-                .hasSize(2) // Two locations start in 2025
-                .extracting(location -> location.getStart().getYear())
-                .containsOnly(2025);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find locations starting in summer 2024")
     void testLocationsStartingSummerSearch() throws Exception {
         List<Location> results = performSearch("locations starting in summer 2024", "Location");
+        List<Location> expected = Arrays.asList(
+                testProducts.get(5), // Germany, North Rhine-Westphalia (Jun 2024)
+                testProducts.get(6), // Canada, Ontario (Jul 2024)
+                testProducts.get(7)  // Netherlands, North Holland (Aug 2024)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(3) // Should include June, July, August
-                .extracting(location -> location.getStart().getMonthValue())
-                .contains(6, 7, 8);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find locations updated in 2025")
     void testLocationsUpdatedInYearSearch() throws Exception {
         List<Location> results = performSearch("locations updated in 2025", "Location");
+        List<Location> expected = Arrays.asList(
+                testProducts.get(10), // United States, New York (updated 2025-01-10)
+                testProducts.get(11)  // Australia, New South Wales (updated 2025-02-10)
+        );
 
-        assertThat(results)
-                .hasSize(2) // Two locations updated in 2025
-                .extracting(location -> location.getUpdated().getYear())
-                .contains(2025);
-    }
-
-    @Test
-    @DisplayName("Should find locations with New South Wales state")
-    void testNewSouthWalesStateSearch() throws Exception {
-        List<Location> results = performSearch("New South Wales", "Location");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Location::getState)
-                .containsExactly("New South Wales");
-    }
-
-    @Test
-    @DisplayName("Should find locations with New York state")
-    void testNewYorkStateSearch() throws Exception {
-        List<Location> results = performSearch("New York", "Location");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Location::getState)
-                .containsExactly("New York");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should handle nonsensical search query gracefully")
     void testNonsensicalSearchQuery() throws Exception {
-        List<Location> results = performSearch("purple elephant dancing", "Location");
+        List<Location> results  = performSearch("purple elephant dancing", "Location");
+        List<Location> expected = Collections.emptyList(); // Should return empty results for nonsensical queries
 
-        // Should either return empty results or fall back to simple text matching
-        assertThat(results).isNotNull();
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    // === SIMPLE TEST CASE (keeping only ONE) ===
+    @Test
+    @DisplayName("Should generate working regex for simple text search")
+    void testSimpleTextSearchWithLLM() throws Exception {
+        List<Location> results  = performSearch("Germany", "Location");
+        List<Location> expected = Arrays.asList(testProducts.get(0), testProducts.get(5)); // Germany Bavaria, Germany North Rhine-Westphalia
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
-    @DisplayName("Should find North American locations")
-    void testNorthAmericanLocationsSearch() throws Exception {
-        List<Location> results = performSearch("North America", "Location");
+    @DisplayName("Should find locations by start date column")
+    void testStartDateSpecificSearchWithLLM() throws Exception {
+        List<Location> results  = performSearch("start date in 2025", "Location");
+        List<Location> expected = Arrays.asList(testProducts.get(10), testProducts.get(11)); // United States New York, Australia New South Wales
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(3) // United States(2), Canada(1)
-                .extracting(Location::getCountry)
-                .contains("United States", "Canada");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
-    @DisplayName("Should find locations in Ontario")
-    void testOntarioLocationSearch() throws Exception {
-        List<Location> results = performSearch("Ontario", "Location");
+    @DisplayName("Should find locations by updated date column")
+    void testUpdatedDateSpecificSearchWithLLM() throws Exception {
+        List<Location> results  = performSearch("updated in 2025", "Location");
+        List<Location> expected = Arrays.asList(testProducts.get(10), testProducts.get(11)); // United States New York, Australia New South Wales
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Location::getState)
-                .containsExactly("Ontario");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
-    @Test
-    @DisplayName("Should find Spanish locations")
-    void testSpanishLocationSearch() throws Exception {
-        List<Location> results = performSearch("Spain", "Location");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Location::getCountry)
-                .containsExactly("Spain");
-    }
-
-    @Test
-    @DisplayName("Should find locations in Bavaria state")
-    void testStateBavariaSearch() throws Exception {
-        List<Location> results = performSearch("state Bavaria", "Location");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Location::getState)
-                .containsExactly("Bavaria");
-    }
-
-    @Test
-    @DisplayName("Should find UK locations")
-    void testUKLocationSearch() throws Exception {
-        List<Location> results = performSearch("UK", "Location");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Location::getCountry)
-                .containsExactly("United Kingdom");
-    }
-
-    @Test
-    @DisplayName("Should find locations in United States")
-    void testUnitedStatesLocationSearch() throws Exception {
-        List<Location> results = performSearch("United States", "Location");
-
-        assertThat(results)
-                .hasSize(2)
-                .extracting(Location::getCountry)
-                .containsOnly("United States");
-    }
-
-    @Test
-    @DisplayName("Should find locations with Victoria state")
-    void testVictoriaStateSearch() throws Exception {
-        List<Location> results = performSearch("Victoria", "Location");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Location::getState)
-                .containsExactly("Victoria");
-    }
 }

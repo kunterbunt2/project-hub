@@ -31,6 +31,8 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -140,269 +142,360 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     @DisplayName("Should find availability between 60% and 80%")
     void testAvailabilityBetweenSixtyAndEightyPercentSearch() throws Exception {
         List<Availability> results = performSearch("availability between 60% and 80%", "Availability");
+        List<Availability> expected = Arrays.asList(
+                testProducts.get(1),  // 0.8f - Jane Smith
+                testProducts.get(3),  // 0.75f - Alice Wilson
+                testProducts.get(5),  // 0.6f - John Doe
+                testProducts.get(10)  // 0.7f - John Doe
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(3) // Should include 0.6, 0.7, 0.75, 0.8
-                .extracting(Availability::getAvailability)
-                .contains(0.6f, 0.7f, 0.75f, 0.8f);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find availability created in 2025")
     void testAvailabilityCreatedInYearSearch() throws Exception {
-        List<Availability> results = performSearch("availability created in 2025", "Availability");
+        List<Availability> results  = performSearch("availability created in 2025", "Availability");
+        List<Availability> expected = Collections.singletonList(testProducts.get(11)); // February 2025 availability
 
-        assertThat(results)
-                .hasSize(1) // Only one availability created in 2025
-                .extracting(availability -> availability.getCreated().getYear())
-                .containsExactly(2025);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find availability for Jane Smith")
     void testAvailabilityForJaneSmithSearch() throws Exception {
         List<Availability> results = performSearch("Jane Smith", "Availability");
+        List<Availability> expected = Arrays.asList(
+                testProducts.get(1),  // 0.8f availability
+                testProducts.get(6),  // 0.25f availability
+                testProducts.get(11)  // 0.4f availability
+        );
 
-        assertThat(results)
-                .hasSize(2) // Jane Smith has 2 availability records
-                .extracting(availability -> availability.getUser().getName())
-                .containsOnly("Jane Smith");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find availability for John Doe")
     void testAvailabilityForSpecificUserSearch() throws Exception {
         List<Availability> results = performSearch("John Doe", "Availability");
+        List<Availability> expected = Arrays.asList(
+                testProducts.get(0),  // 1.0f availability
+                testProducts.get(5),  // 0.6f availability
+                testProducts.get(10)  // 0.7f availability
+        );
 
-        assertThat(results)
-                .hasSize(3) // John Doe has 3 availability records
-                .extracting(availability -> availability.getUser().getName())
-                .containsOnly("John Doe");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find availability greater than 50%")
     void testAvailabilityGreaterThanFiftyPercentSearch() throws Exception {
         List<Availability> results = performSearch("availability greater than 50%", "Availability");
+        List<Availability> expected = Arrays.asList(
+                testProducts.get(0),  // 1.0f
+                testProducts.get(1),  // 0.8f
+                testProducts.get(3),  // 0.75f
+                testProducts.get(4),  // 0.9f
+                testProducts.get(5),  // 0.6f
+                testProducts.get(7),  // 0.85f
+                testProducts.get(9),  // 0.95f
+                testProducts.get(10)  // 0.7f
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(7) // Should include 0.6, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0
-                .extracting(Availability::getAvailability)
-                .contains(0.6f, 0.75f, 0.8f, 0.85f, 0.9f, 0.95f, 1.0f);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find availability greater than or equal to 70%")
     void testAvailabilityGreaterThanOrEqualSeventyPercentSearch() throws Exception {
         List<Availability> results = performSearch("availability greater than or equal to 70%", "Availability");
+        List<Availability> expected = Arrays.asList(
+                testProducts.get(0),  // 1.0f
+                testProducts.get(1),  // 0.8f
+                testProducts.get(3),  // 0.75f
+                testProducts.get(4),  // 0.9f
+                testProducts.get(7),  // 0.85f
+                testProducts.get(9),  // 0.95f
+                testProducts.get(10)  // 0.7f
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(6) // Should include 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0
-                .extracting(Availability::getAvailability)
-                .contains(0.7f, 0.75f, 0.8f, 0.85f, 0.9f, 0.95f, 1.0f);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find availability less than 90%")
     void testAvailabilityLessThanNinetyPercentSearch() throws Exception {
         List<Availability> results = performSearch("availability less than 90%", "Availability");
+        List<Availability> expected = Arrays.asList(
+                testProducts.get(1),  // 0.8f
+                testProducts.get(2),  // 0.5f
+                testProducts.get(3),  // 0.75f
+                testProducts.get(5),  // 0.6f
+                testProducts.get(6),  // 0.25f
+                testProducts.get(7),  // 0.85f
+                testProducts.get(8),  // 0.0f
+                testProducts.get(10), // 0.7f
+                testProducts.get(11)  // 0.4f
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(9) // Should exclude 0.9, 0.95, 1.0
-                .extracting(Availability::getAvailability)
-                .contains(0.0f, 0.25f, 0.4f, 0.5f, 0.6f, 0.7f, 0.75f, 0.8f, 0.85f);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find availability less than or equal to 40%")
     void testAvailabilityLessThanOrEqualFortyPercentSearch() throws Exception {
         List<Availability> results = performSearch("availability less than or equal to 40%", "Availability");
+        List<Availability> expected = Arrays.asList(
+                testProducts.get(6),  // 0.25f
+                testProducts.get(8),  // 0.0f
+                testProducts.get(11)  // 0.4f
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(3) // Should include 0.0, 0.25, 0.4
-                .extracting(Availability::getAvailability)
-                .contains(0.0f, 0.25f, 0.4f);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    // === COLUMN-SPECIFIC TESTS (one per column) ===
+    @Test
+    @DisplayName("Should find availabilities by availability column")
+    void testAvailabilitySpecificSearchWithLLM() throws Exception {
+        List<Availability> results  = performSearch("availability is 0.5", "Availability");
+        List<Availability> expected = Collections.singletonList(testProducts.get(2)); // 50% availability
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find availability starting after January 2024")
     void testAvailabilityStartingAfterDateSearch() throws Exception {
         List<Availability> results = performSearch("availability starting after January 2024", "Availability");
+        List<Availability> expected = Arrays.asList(
+                testProducts.get(1),  // February 2024
+                testProducts.get(2),  // March 2024
+                testProducts.get(3),  // April 2024
+                testProducts.get(4),  // May 2024
+                testProducts.get(5),  // June 2024
+                testProducts.get(6),  // July 2024
+                testProducts.get(7),  // August 2024
+                testProducts.get(8),  // September 2024
+                testProducts.get(9),  // October 2024
+                testProducts.get(10), // January 2025
+                testProducts.get(11)  // February 2025
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(10) // Should exclude the first availability
-                .extracting(availability -> availability.getStart().getMonthValue())
-                .allMatch(month -> month >= 2 || month == 1); // February onwards or January 2025
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find availability starting before March 2024")
     void testAvailabilityStartingBeforeDateSearch() throws Exception {
         List<Availability> results = performSearch("availability starting before March 2024", "Availability");
+        List<Availability> expected = Arrays.asList(
+                testProducts.get(0),  // January 2024
+                testProducts.get(1)   // February 2024
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(2) // Should include January and February 2024
-                .extracting(availability -> availability.getStart().getMonthValue())
-                .contains(1, 2);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find availability starting in January 2025")
     void testAvailabilityStartingInSpecificMonthSearch() throws Exception {
-        List<Availability> results = performSearch("availability starting in January 2025", "Availability");
+        List<Availability> results  = performSearch("availability starting in January 2025", "Availability");
+        List<Availability> expected = Collections.singletonList(testProducts.get(10)); // January 2025
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(availability -> availability.getStart())
-                .containsExactly(LocalDate.of(2025, 1, 1));
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find availability starting in summer 2024")
     void testAvailabilityStartingSummerSearch() throws Exception {
         List<Availability> results = performSearch("availability starting in summer 2024", "Availability");
+        List<Availability> expected = Arrays.asList(
+                testProducts.get(5),  // June 2024
+                testProducts.get(6),  // July 2024
+                testProducts.get(7)   // August 2024
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(3) // Should include June, July, August
-                .extracting(availability -> availability.getStart().getMonthValue())
-                .contains(6, 7, 8);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find availability updated in 2025")
     void testAvailabilityUpdatedInYearSearch() throws Exception {
         List<Availability> results = performSearch("availability updated in 2025", "Availability");
+        List<Availability> expected = Arrays.asList(
+                testProducts.get(10), // January 2025
+                testProducts.get(11)  // February 2025
+        );
 
-        assertThat(results)
-                .hasSize(2) // Two availabilities updated in 2025
-                .extracting(availability -> availability.getUpdated().getYear())
-                .contains(2025);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find 80% availability")
     void testEightyPercentAvailabilitySearch() throws Exception {
-        List<Availability> results = performSearch("80% availability", "Availability");
+        List<Availability> results  = performSearch("80% availability", "Availability");
+        List<Availability> expected = Collections.singletonList(testProducts.get(1)); // 0.8f
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Availability::getAvailability)
-                .containsExactly(0.8f);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should handle empty search query")
     void testEmptySearchQuery() throws Exception {
-        List<Availability> results = performSearch("", "Availability");
+        List<Availability> results  = performSearch("", "Availability");
+        List<Availability> expected = new ArrayList<>(testProducts); // All availabilities
 
-        assertThat(results).hasSize(12); // All availabilities should match empty query
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find 50% availability")
     void testFiftyPercentAvailabilitySearch() throws Exception {
-        List<Availability> results = performSearch("50% availability", "Availability");
+        List<Availability> results  = performSearch("50% availability", "Availability");
+        List<Availability> expected = Collections.singletonList(testProducts.get(2)); // 0.5f
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Availability::getAvailability)
-                .containsExactly(0.5f);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find 100% availability")
     void testFullAvailabilitySearch() throws Exception {
-        List<Availability> results = performSearch("full availability", "Availability");
+        List<Availability> results  = performSearch("full availability", "Availability");
+        List<Availability> expected = Collections.singletonList(testProducts.get(0)); // 1.0f
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Availability::getAvailability)
-                .containsExactly(1.0f);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find high availability (over 85%)")
     void testHighAvailabilitySearch() throws Exception {
         List<Availability> results = performSearch("high availability", "Availability");
+        List<Availability> expected = Arrays.asList(
+                testProducts.get(0),  // 1.0f
+                testProducts.get(4),  // 0.9f
+                testProducts.get(9)   // 0.95f
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(3) // Should include 0.9, 0.95, 1.0
-                .extracting(Availability::getAvailability)
-                .contains(0.9f, 0.95f, 1.0f);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find low availability (under 30%)")
     void testLowAvailabilitySearch() throws Exception {
         List<Availability> results = performSearch("low availability", "Availability");
+        List<Availability> expected = Arrays.asList(
+                testProducts.get(6),  // 0.25f
+                testProducts.get(8)   // 0.0f
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(2) // Should include 0.0, 0.25
-                .extracting(Availability::getAvailability)
-                .contains(0.0f, 0.25f);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find 95% availability")
     void testNinetyFivePercentAvailabilitySearch() throws Exception {
-        List<Availability> results = performSearch("95% availability", "Availability");
+        List<Availability> results  = performSearch("95% availability", "Availability");
+        List<Availability> expected = Collections.singletonList(testProducts.get(9)); // 0.95f
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Availability::getAvailability)
-                .containsExactly(0.95f);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find 90% availability")
     void testNinetyPercentAvailabilitySearch() throws Exception {
-        List<Availability> results = performSearch("90% availability", "Availability");
+        List<Availability> results  = performSearch("90% availability", "Availability");
+        List<Availability> expected = Collections.singletonList(testProducts.get(4)); // 0.9f
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Availability::getAvailability)
-                .containsExactly(0.9f);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should handle nonsensical search query gracefully")
     void testNonsensicalSearchQuery() throws Exception {
-        List<Availability> results = performSearch("purple elephant dancing", "Availability");
+        List<Availability> results  = performSearch("purple elephant dancing", "Availability");
+        List<Availability> expected = Collections.emptyList(); // Should return empty results for nonsensical queries
 
-        // Should either return empty results or fall back to simple text matching
-        assertThat(results).isNotNull();
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find partial availability")
     void testPartialAvailabilitySearch() throws Exception {
         List<Availability> results = performSearch("partial availability", "Availability");
+        List<Availability> expected = Arrays.asList(
+                testProducts.get(1),  // 0.8f
+                testProducts.get(2),  // 0.5f
+                testProducts.get(3),  // 0.75f
+                testProducts.get(4),  // 0.9f
+                testProducts.get(5),  // 0.6f
+                testProducts.get(6),  // 0.25f
+                testProducts.get(7),  // 0.85f
+                testProducts.get(8),  // 0.0f
+                testProducts.get(9),  // 0.95f
+                testProducts.get(10), // 0.7f
+                testProducts.get(11)  // 0.4f
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(10) // Should exclude full availability (1.0)
-                .extracting(Availability::getAvailability)
-                .contains(0.25f, 0.4f, 0.5f, 0.6f, 0.7f, 0.75f, 0.8f, 0.85f, 0.9f, 0.95f);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find 75% availability")
     void testSeventyFivePercentAvailabilitySearch() throws Exception {
-        List<Availability> results = performSearch("75% availability", "Availability");
+        List<Availability> results  = performSearch("75% availability", "Availability");
+        List<Availability> expected = Collections.singletonList(testProducts.get(3)); // 0.75f
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Availability::getAvailability)
-                .containsExactly(0.75f);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    // === SIMPLE TEST CASE (keeping only ONE) ===
+    @Test
+    @DisplayName("Should find availabilities by user name")
+    void testSimpleUserNameSearch() throws Exception {
+        List<Availability> results = performSearch("John Doe", "Availability");
+        List<Availability> expected = Arrays.asList(
+                testProducts.get(0),  // 1.0f availability - John Doe
+                testProducts.get(5),  // 0.6f availability - John Doe
+                testProducts.get(10)  // 0.7f availability - John Doe
+        );
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find zero availability")
     void testZeroAvailabilitySearch() throws Exception {
-        List<Availability> results = performSearch("zero availability", "Availability");
+        List<Availability> results  = performSearch("zero availability", "Availability");
+        List<Availability> expected = Collections.singletonList(testProducts.get(8)); // 0.0f
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Availability::getAvailability)
-                .containsExactly(0.0f);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 }

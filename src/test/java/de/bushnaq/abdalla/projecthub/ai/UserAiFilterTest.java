@@ -31,6 +31,8 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -136,350 +138,279 @@ class UserAiFilterTest extends AbstractAiFilterTest<User> {
                 OffsetDateTime.of(2025, 3, 10, 12, 20, 0, 0, ZoneOffset.UTC)));
     }
 
+    // === OTHER VALUABLE TEST CASES (preserved from original) ===
     @Test
     @DisplayName("Should find active users")
     void testActiveUsersSearch() throws Exception {
         List<User> results = performSearch("active users", "User");
+        List<User> expected = Arrays.asList(
+                testProducts.get(0), // John Doe (no lastWorkingDay)
+                testProducts.get(1), // Jane Smith (no lastWorkingDay)
+                testProducts.get(3), // Alice Wilson (no lastWorkingDay)
+                testProducts.get(4), // Mike Brown (no lastWorkingDay)
+                testProducts.get(5), // Sarah Davis (no lastWorkingDay)
+                testProducts.get(7), // Lisa Anderson (no lastWorkingDay)
+                testProducts.get(8), // Robert Taylor (no lastWorkingDay)
+                testProducts.get(9), // Emily Clark (no lastWorkingDay)
+                testProducts.get(10), // James White (no lastWorkingDay)
+                testProducts.get(11)  // Maria Garcia (no lastWorkingDay)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(10) // Users without lastWorkingDay are active
-                .extracting(User::getLastWorkingDay)
-                .containsOnlyNulls();
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
-    @DisplayName("Should find users by name containing 'Anderson'")
-    void testAndersonNameSearch() throws Exception {
-        List<User> results = performSearch("Anderson", "User");
+    @DisplayName("Should find users by created date column")
+    void testCreatedDateSpecificSearchWithLLM() throws Exception {
+        List<User> results  = performSearch("created in 2025", "User");
+        List<User> expected = Collections.singletonList(testProducts.get(11)); // Maria Garcia
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(User::getName)
-                .containsExactly("Lisa Anderson");
-    }
-
-    @Test
-    @DisplayName("Should find users containing 'David'")
-    void testDavidNameSearch() throws Exception {
-        List<User> results = performSearch("David", "User");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(User::getName)
-                .containsExactly("David Martinez");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find users by department email pattern")
     void testDepartmentEmailSearch() throws Exception {
-        List<User> results = performSearch("company.com employees", "User");
+        List<User> results  = performSearch("company.com employees", "User");
+        List<User> expected = new ArrayList<>(testProducts); // All users work at company.com
 
-        assertThat(results)
-                .hasSize(12) // All users work at company.com
-                .extracting(User::getEmail)
-                .allMatch(email -> email.endsWith("@company.com"));
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find users by email domain")
     void testEmailDomainSearch() throws Exception {
-        List<User> results = performSearch("@company.com", "User");
+        List<User> results  = performSearch("@company.com", "User");
+        List<User> expected = new ArrayList<>(testProducts); // All users have company.com email
 
-        assertThat(results)
-                .hasSize(12) // All users have company.com email
-                .extracting(User::getEmail)
-                .allMatch(email -> email.contains("@company.com"));
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
-    @DisplayName("Should find users by email")
-    void testEmailSearch() throws Exception {
-        List<User> results = performSearch("alice.wilson@company.com", "User");
+    @DisplayName("Should find users by email column")
+    void testEmailSpecificSearchWithLLM() throws Exception {
+        List<User> results  = performSearch("email contains alice", "User");
+        List<User> expected = Collections.singletonList(testProducts.get(3)); // Alice Wilson
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(User::getEmail)
-                .containsExactly("alice.wilson@company.com");
-    }
-
-    @Test
-    @DisplayName("Should find users with 'Emily' in name")
-    void testEmilyNameSearch() throws Exception {
-        List<User> results = performSearch("Emily", "User");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(User::getName)
-                .containsExactly("Emily Clark");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should handle empty search query")
     void testEmptySearchQuery() throws Exception {
-        List<User> results = performSearch("", "User");
+        List<User> results  = performSearch("", "User");
+        List<User> expected = new ArrayList<>(testProducts); // All users should match empty query
 
-        assertThat(results).hasSize(12); // All users should match empty query
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
-    @DisplayName("Should find users by exact email match")
-    void testExactEmailSearch() throws Exception {
-        List<User> results = performSearch("jane.smith@company.com", "User");
+    @DisplayName("Should find users by firstWorkingDay column")
+    void testFirstWorkingDaySpecificSearchWithLLM() throws Exception {
+        List<User> results  = performSearch("firstWorkingDay in 2018", "User");
+        List<User> expected = Collections.singletonList(testProducts.get(4)); // Mike Brown
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(User::getEmail)
-                .containsExactly("jane.smith@company.com");
-    }
-
-    @Test
-    @DisplayName("Should find users by exact name")
-    void testExactUserNameSearch() throws Exception {
-        List<User> results = performSearch("John Doe", "User");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(User::getName)
-                .containsExactly("John Doe");
-    }
-
-    @Test
-    @DisplayName("Should find users by first name")
-    void testFirstNameSearch() throws Exception {
-        List<User> results = performSearch("John", "User");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(User::getName)
-                .containsExactly("John Doe");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find former employees")
     void testFormerEmployeesSearch() throws Exception {
         List<User> results = performSearch("former employees", "User");
+        List<User> expected = Arrays.asList(
+                testProducts.get(2), // Bob Johnson (lastWorkingDay: 2024-06-30)
+                testProducts.get(6)  // David Martinez (lastWorkingDay: 2023-12-15)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(2) // Users with lastWorkingDay are former employees
-                .extracting(User::getLastWorkingDay)
-                .doesNotContainNull();
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
-    @DisplayName("Should find users by name containing 'Garcia'")
-    void testGarciaNameSearch() throws Exception {
-        List<User> results = performSearch("Garcia", "User");
+    @DisplayName("Should find users by lastWorkingDay column")
+    void testLastWorkingDaySpecificSearchWithLLM() throws Exception {
+        List<User> results  = performSearch("lastWorkingDay is not null", "User");
+        List<User> expected = Arrays.asList(testProducts.get(2), testProducts.get(6)); // Bob Johnson, David Martinez
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(User::getName)
-                .containsExactly("Maria Garcia");
-    }
-
-    @Test
-    @DisplayName("Should find users by 'James' name")
-    void testJamesNameSearch() throws Exception {
-        List<User> results = performSearch("James", "User");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(User::getName)
-                .containsExactly("James White");
-    }
-
-    @Test
-    @DisplayName("Should find users by last name")
-    void testLastNameSearch() throws Exception {
-        List<User> results = performSearch("Smith", "User");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(User::getName)
-                .containsExactly("Jane Smith");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find long-term employees")
     void testLongTermEmployeesSearch() throws Exception {
         List<User> results = performSearch("long-term employees", "User");
+        List<User> expected = Arrays.asList(
+                testProducts.get(0), // John Doe (started 2020-03-15)
+                testProducts.get(1), // Jane Smith (started 2019-06-01)
+                testProducts.get(4), // Mike Brown (started 2018-11-20)
+                testProducts.get(6), // David Martinez (started 2017-04-03)
+                testProducts.get(9), // Emily Clark (started 2020-10-12)
+                testProducts.get(10) // James White (started 2019-12-02)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(4) // Users who started before 2020 or in early 2020
-                .extracting(user -> user.getFirstWorkingDay().getYear())
-                .allMatch(year -> year <= 2020);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
+    // === COLUMN-SPECIFIC TESTS (one per column) ===
     @Test
-    @DisplayName("Should find users with 'martinez' in email")
-    void testMartinezEmailSearch() throws Exception {
-        List<User> results = performSearch("martinez", "User");
+    @DisplayName("Should find users by name column")
+    void testNameSpecificSearchWithLLM() throws Exception {
+        List<User> results  = performSearch("name contains Smith", "User");
+        List<User> expected = Collections.singletonList(testProducts.get(1)); // Jane Smith
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(User::getName)
-                .containsExactly("David Martinez");
-    }
-
-    @Test
-    @DisplayName("Should find users by name pattern 'Mike'")
-    void testMikeNameSearch() throws Exception {
-        List<User> results = performSearch("Mike", "User");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(User::getName)
-                .containsExactly("Mike Brown");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find new employees")
     void testNewEmployeesSearch() throws Exception {
         List<User> results = performSearch("new employees", "User");
+        List<User> expected = Arrays.asList(
+                testProducts.get(5), // Sarah Davis (started 2023-02-14)
+                testProducts.get(8), // Robert Taylor (started 2024-01-08)
+                testProducts.get(11) // Maria Garcia (started 2025-03-01)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(3) // Users who started recently (2023 onwards)
-                .extracting(user -> user.getFirstWorkingDay().getYear())
-                .allMatch(year -> year >= 2023);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should handle nonsensical search query gracefully")
     void testNonsensicalSearchQuery() throws Exception {
-        List<User> results = performSearch("purple elephant dancing", "User");
+        List<User> results  = performSearch("purple elephant dancing", "User");
+        List<User> expected = Collections.emptyList(); // Should return empty results for nonsensical queries
 
-        // Should either return empty results or fall back to simple text matching
-        assertThat(results).isNotNull();
-    }
-
-    @Test
-    @DisplayName("Should find users by partial name")
-    void testPartialNameSearch() throws Exception {
-        List<User> results = performSearch("Johnson", "User");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(User::getName)
-                .containsExactly("Bob Johnson");
-    }
-
-    @Test
-    @DisplayName("Should find users with 'Robert' in name")
-    void testRobertNameSearch() throws Exception {
-        List<User> results = performSearch("Robert", "User");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(User::getName)
-                .containsExactly("Robert Taylor");
-    }
-
-    @Test
-    @DisplayName("Should find users by name pattern 'Sarah'")
-    void testSarahNameSearch() throws Exception {
-        List<User> results = performSearch("Sarah", "User");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(User::getName)
-                .containsExactly("Sarah Davis");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find senior employees")
     void testSeniorEmployeesSearch() throws Exception {
         List<User> results = performSearch("senior employees", "User");
+        List<User> expected = Arrays.asList(
+                testProducts.get(0), // John Doe (started 2020-03-15)
+                testProducts.get(1), // Jane Smith (started 2019-06-01)
+                testProducts.get(4), // Mike Brown (started 2018-11-20)
+                testProducts.get(6), // David Martinez (started 2017-04-03)
+                testProducts.get(9), // Emily Clark (started 2020-10-12)
+                testProducts.get(10) // James White (started 2019-12-02)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(5) // Users with 5+ years of service
-                .extracting(user -> user.getFirstWorkingDay().getYear())
-                .allMatch(year -> year <= 2020);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    // === SIMPLE TEST CASE (keeping only ONE) ===
+    @Test
+    @DisplayName("Should generate working regex for simple text search")
+    void testSimpleTextSearchWithLLM() throws Exception {
+        List<User> results  = performSearch("John", "User");
+        List<User> expected = Collections.singletonList(testProducts.get(0)); // John Doe
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
-    @DisplayName("Should find users created in 2025")
-    void testUsersCreatedInYearSearch() throws Exception {
-        List<User> results = performSearch("users created in 2025", "User");
+    @DisplayName("Should find users by updated date column")
+    void testUpdatedDateSpecificSearchWithLLM() throws Exception {
+        List<User> results  = performSearch("updated in 2025", "User");
+        List<User> expected = Arrays.asList(testProducts.get(10), testProducts.get(11)); // James White, Maria Garcia
 
-        assertThat(results)
-                .hasSize(1) // Only Maria Garcia was created in 2025
-                .extracting(user -> user.getCreated().getYear())
-                .containsExactly(2025);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find users starting work after 2020")
     void testUsersStartingAfterDateSearch() throws Exception {
         List<User> results = performSearch("users starting after 2020", "User");
+        List<User> expected = Arrays.asList(
+                testProducts.get(2), // Bob Johnson (started 2021-01-10)
+                testProducts.get(3), // Alice Wilson (started 2022-09-05)
+                testProducts.get(5), // Sarah Davis (started 2023-02-14)
+                testProducts.get(7), // Lisa Anderson (started 2021-08-16)
+                testProducts.get(8), // Robert Taylor (started 2024-01-08)
+                testProducts.get(11) // Maria Garcia (started 2025-03-01)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(6) // Should exclude users who started in 2020 or earlier
-                .extracting(user -> user.getFirstWorkingDay().getYear())
-                .allMatch(year -> year > 2020);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find users starting work before 2020")
     void testUsersStartingBeforeDateSearch() throws Exception {
         List<User> results = performSearch("users starting before 2020", "User");
+        List<User> expected = Arrays.asList(
+                testProducts.get(1), // Jane Smith (started 2019-06-01)
+                testProducts.get(4), // Mike Brown (started 2018-11-20)
+                testProducts.get(6), // David Martinez (started 2017-04-03)
+                testProducts.get(10) // James White (started 2019-12-02)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(2) // Should include users who started before 2020
-                .extracting(user -> user.getFirstWorkingDay().getYear())
-                .allMatch(year -> year < 2020);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find users starting work in 2021")
     void testUsersStartingIn2021Search() throws Exception {
         List<User> results = performSearch("started in 2021", "User");
+        List<User> expected = Arrays.asList(
+                testProducts.get(2), // Bob Johnson (started 2021-01-10)
+                testProducts.get(7)  // Lisa Anderson (started 2021-08-16)
+        );
 
-        assertThat(results)
-                .hasSize(2) // Bob Johnson and Lisa Anderson started in 2021
-                .extracting(user -> user.getFirstWorkingDay().getYear())
-                .containsOnly(2021);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find users starting work in summer")
     void testUsersStartingInSummerSearch() throws Exception {
         List<User> results = performSearch("users starting in summer", "User");
+        List<User> expected = Arrays.asList(
+                testProducts.get(1), // Jane Smith (started June 1)
+                testProducts.get(7)  // Lisa Anderson (started August 16)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(3) // Users starting in June, July, August
-                .extracting(user -> user.getFirstWorkingDay().getMonthValue())
-                .contains(6, 7, 8);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find users starting work in 2024")
     void testUsersStartingInYearSearch() throws Exception {
-        List<User> results = performSearch("users starting in 2024", "User");
+        List<User> results  = performSearch("users starting in 2024", "User");
+        List<User> expected = Collections.singletonList(testProducts.get(8)); // Robert Taylor (started 2024-01-08)
 
-        assertThat(results)
-                .hasSize(1) // Only Robert Taylor started in 2024
-                .extracting(User::getName)
-                .containsExactly("Robert Taylor");
-    }
-
-    @Test
-    @DisplayName("Should find users updated in 2025")
-    void testUsersUpdatedInYearSearch() throws Exception {
-        List<User> results = performSearch("users updated in 2025", "User");
-
-        assertThat(results)
-                .hasSize(2) // James White and Maria Garcia were updated in 2025
-                .extracting(user -> user.getUpdated().getYear())
-                .containsOnly(2025);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find users who left the company")
     void testUsersWhoLeftSearch() throws Exception {
         List<User> results = performSearch("users who left", "User");
+        List<User> expected = Arrays.asList(
+                testProducts.get(2), // Bob Johnson (lastWorkingDay: 2024-06-30)
+                testProducts.get(6)  // David Martinez (lastWorkingDay: 2023-12-15)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(2) // Bob Johnson and David Martinez have lastWorkingDay
-                .extracting(User::getLastWorkingDay)
-                .doesNotContainNull();
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 }

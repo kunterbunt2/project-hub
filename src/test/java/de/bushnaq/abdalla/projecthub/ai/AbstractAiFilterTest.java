@@ -17,7 +17,9 @@
 
 package de.bushnaq.abdalla.projecthub.ai;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,5 +76,21 @@ public class AbstractAiFilterTest<T> {
             }
         } while (--tryCount > 0);
         return null;
+    }
+
+    /**
+     * Custom annotation introspector that ignores @JsonIgnore annotations
+     * but preserves all other Jackson annotations.
+     */
+    private static class FilterAnnotationIntrospector extends JacksonAnnotationIntrospector {
+        @Override
+        public boolean hasIgnoreMarker(com.fasterxml.jackson.databind.introspect.AnnotatedMember m) {
+            // Don't ignore fields marked with @JsonIgnore for filtering purposes
+            // but still process other ignore markers from the parent class
+            if (m.hasAnnotation(JsonIgnore.class)) {
+                return false;
+            }
+            return super.hasIgnoreMarker(m);
+        }
     }
 }

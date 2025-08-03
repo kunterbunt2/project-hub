@@ -32,6 +32,8 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -147,311 +149,488 @@ class OffDayAiFilterTest extends AbstractAiFilterTest<OffDay> {
     }
 
     @Test
+    @DisplayName("Should find off days by created date column")
+    void testCreatedDateSpecificSearchWithLLM() throws Exception {
+        List<OffDay> results  = performSearch("created in 2025", "OffDay");
+        List<OffDay> expected = Arrays.asList(testProducts.get(12), testProducts.get(13)); // Off days created in 2025
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
     @DisplayName("Should find emergency sick days")
     void testEmergencySickDaySearch() throws Exception {
         List<OffDay> results = performSearch("emergency sick", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(1),  // Sick leave - Jane Smith
+                testProducts.get(5),  // Sick leave - John Doe
+                testProducts.get(9),  // Sick leave - Mike Brown
+                testProducts.get(12)  // Sick leave - Bob Johnson
+        );
 
-        assertThat(results)
-                .extracting(OffDay::getType)
-                .containsOnly(OffDayType.SICK);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should handle empty search query")
     void testEmptySearchQuery() throws Exception {
-        List<OffDay> results = performSearch("", "OffDay");
+        List<OffDay> results  = performSearch("", "OffDay");
+        List<OffDay> expected = new ArrayList<>(testProducts); // All off days
 
-        assertThat(results).hasSize(14); // All off days should match empty query
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("Should find off days by firstDay column")
+    void testFirstDaySpecificSearchWithLLM() throws Exception {
+        List<OffDay> results  = performSearch("firstDay in 2025", "OffDay");
+        List<OffDay> expected = Arrays.asList(testProducts.get(10), testProducts.get(11), testProducts.get(12), testProducts.get(13)); // Off days starting in 2025
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find holidays")
     void testHolidaySearch() throws Exception {
         List<OffDay> results = performSearch("holidays", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(2),  // Holiday - Bob Johnson
+                testProducts.get(6),  // Holiday - Jane Smith
+                testProducts.get(10)  // Holiday - John Doe
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(3)
-                .extracting(OffDay::getType)
-                .containsOnly(OffDayType.HOLIDAY);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find off days by type HOLIDAY")
     void testHolidayTypeSearch() throws Exception {
         List<OffDay> results = performSearch("type HOLIDAY", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(2),  // Holiday - Bob Johnson
+                testProducts.get(6),  // Holiday - Jane Smith
+                testProducts.get(10)  // Holiday - John Doe
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(3)
-                .extracting(OffDay::getType)
-                .containsOnly(OffDayType.HOLIDAY);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("Should find off days by lastDay column")
+    void testLastDaySpecificSearchWithLLM() throws Exception {
+        List<OffDay> results  = performSearch("lastDay is 2024-03-01", "OffDay");
+        List<OffDay> expected = Collections.singletonList(testProducts.get(2)); // Holiday on March 1st
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find off days lasting more than 5 days")
     void testLongDurationOffDaySearch() throws Exception {
         List<OffDay> results = performSearch("off days lasting more than 5 days", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(4),  // Vacation - Mike Brown (17 days)
+                testProducts.get(7),  // Vacation - Bob Johnson (11 days)
+                testProducts.get(11), // Vacation - Jane Smith (12 days)
+                testProducts.get(13)  // Trip - Alice Wilson (12 days)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(3) // Should include longer vacations and trips
-                .allMatch(offDay -> {
-                    long days = offDay.getFirstDay().until(offDay.getLastDay()).getDays() + 1;
-                    return days > 5;
-                });
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find long vacations")
     void testLongVacationSearch() throws Exception {
         List<OffDay> results = performSearch("long vacations", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(0),  // Vacation - John Doe
+                testProducts.get(4),  // Vacation - Mike Brown
+                testProducts.get(7),  // Vacation - Bob Johnson
+                testProducts.get(11)  // Vacation - Jane Smith
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(4) // All vacation type off days
-                .extracting(OffDay::getType)
-                .containsOnly(OffDayType.VACATION);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find multi-day off days")
     void testMultiDayOffDaySearch() throws Exception {
         List<OffDay> results = performSearch("multi day", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(0),  // Vacation - John Doe (5 days)
+                testProducts.get(1),  // Sick - Jane Smith (3 days)
+                testProducts.get(3),  // Trip - Alice Wilson (6 days)
+                testProducts.get(4),  // Vacation - Mike Brown (17 days)
+                testProducts.get(5),  // Sick - John Doe (3 days)
+                testProducts.get(7),  // Vacation - Bob Johnson (11 days)
+                testProducts.get(8),  // Trip - Alice Wilson (5 days)
+                testProducts.get(9),  // Sick - Mike Brown (3 days)
+                testProducts.get(11), // Vacation - Jane Smith (12 days)
+                testProducts.get(12), // Sick - Bob Johnson (5 days)
+                testProducts.get(13)  // Trip - Alice Wilson (12 days)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(8) // Should include vacations, trips, and some sick days
-                .allMatch(offDay -> offDay.getFirstDay().isBefore(offDay.getLastDay()));
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should handle nonsensical search query gracefully")
     void testNonsensicalSearchQuery() throws Exception {
-        List<OffDay> results = performSearch("purple elephant dancing", "OffDay");
+        List<OffDay> results  = performSearch("purple elephant dancing", "OffDay");
+        List<OffDay> expected = Collections.emptyList(); // Should return empty results for nonsensical queries
 
-        // Should either return empty results or fall back to simple text matching
-        assertThat(results).isNotNull();
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find off days created in 2025")
     void testOffDaysCreatedInYearSearch() throws Exception {
         List<OffDay> results = performSearch("off days created in 2025", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(12), // Sick - Bob Johnson
+                testProducts.get(13)  // Trip - Alice Wilson
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(3) // Three off days created in 2025
-                .extracting(offDay -> offDay.getCreated().getYear())
-                .containsOnly(2025);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find off days ending before March 2024")
     void testOffDaysEndingBeforeDateSearch() throws Exception {
         List<OffDay> results = performSearch("off days ending before March 2024", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(0),  // Vacation ending Jan 19, 2024
+                testProducts.get(1)   // Sick ending Feb 7, 2024
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(2) // Should include January and February 2024
-                .extracting(offDay -> offDay.getLastDay())
-                .allMatch(date -> date.isBefore(LocalDate.of(2024, 3, 1)));
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find off days for Jane Smith")
     void testOffDaysForJaneSmithSearch() throws Exception {
         List<OffDay> results = performSearch("Jane Smith", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(1),  // Sick leave
+                testProducts.get(6),  // Holiday
+                testProducts.get(11)  // Vacation
+        );
 
-        assertThat(results)
-                .hasSize(3) // Jane Smith has 3 off day records
-                .extracting(offDay -> offDay.getUser().getName())
-                .containsOnly("Jane Smith");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find off days for John Doe")
     void testOffDaysForSpecificUserSearch() throws Exception {
         List<OffDay> results = performSearch("John Doe", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(0),  // Vacation
+                testProducts.get(5),  // Sick leave
+                testProducts.get(10)  // Holiday
+        );
 
-        assertThat(results)
-                .hasSize(3) // John Doe has 3 off day records
-                .extracting(offDay -> offDay.getUser().getName())
-                .containsOnly("John Doe");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find off days in 2025")
     void testOffDaysIn2025Search() throws Exception {
         List<OffDay> results = performSearch("off days in 2025", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(10), // Holiday - John Doe
+                testProducts.get(11), // Vacation - Jane Smith
+                testProducts.get(12), // Sick - Bob Johnson
+                testProducts.get(13)  // Trip - Alice Wilson
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(4) // Four off days in 2025
-                .extracting(offDay -> offDay.getFirstDay().getYear())
-                .containsOnly(2025);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find off days in January 2024")
     void testOffDaysInJanuarySearch() throws Exception {
-        List<OffDay> results = performSearch("off days in January 2024", "OffDay");
+        List<OffDay> results  = performSearch("off days in January 2024", "OffDay");
+        List<OffDay> expected = Collections.singletonList(testProducts.get(0)); // Vacation - John Doe
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(offDay -> offDay.getFirstDay().getMonthValue())
-                .containsExactly(1);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find off days in summer 2024")
     void testOffDaysInSummerSearch() throws Exception {
         List<OffDay> results = performSearch("off days in summer 2024", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(4),  // Vacation - Mike Brown (May-June)
+                testProducts.get(5),  // Sick - John Doe (June)
+                testProducts.get(6),  // Holiday - Jane Smith (July)
+                testProducts.get(7),  // Vacation - Bob Johnson (August)
+                testProducts.get(8)   // Trip - Alice Wilson (September)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(4) // Should include June, July, August off days
-                .extracting(offDay -> offDay.getFirstDay().getMonthValue())
-                .contains(6, 7, 8);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find off days in 2024")
     void testOffDaysInYearSearch() throws Exception {
         List<OffDay> results = performSearch("off days in 2024", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(0),  // Vacation - John Doe
+                testProducts.get(1),  // Sick - Jane Smith
+                testProducts.get(2),  // Holiday - Bob Johnson
+                testProducts.get(3),  // Trip - Alice Wilson
+                testProducts.get(4),  // Vacation - Mike Brown
+                testProducts.get(5),  // Sick - John Doe
+                testProducts.get(6),  // Holiday - Jane Smith
+                testProducts.get(7),  // Vacation - Bob Johnson
+                testProducts.get(8),  // Trip - Alice Wilson
+                testProducts.get(9)   // Sick - Mike Brown
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(10) // Most off days are in 2024
-                .extracting(offDay -> offDay.getFirstDay().getYear())
-                .containsOnly(2024);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find off days overlapping with specific date")
     void testOffDaysOverlappingDateSearch() throws Exception {
         List<OffDay> results = performSearch("off days in June 2024", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(4),  // Vacation - Mike Brown (May 20 - June 5)
+                testProducts.get(5)   // Sick - John Doe (June 10-12)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(2) // Should include off days that overlap with June
-                .anyMatch(offDay -> offDay.getFirstDay().getMonthValue() <= 6 && offDay.getLastDay().getMonthValue() >= 6);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find off days starting after February 2024")
     void testOffDaysStartingAfterDateSearch() throws Exception {
         List<OffDay> results = performSearch("off days starting after February 2024", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(2),  // Holiday - Bob Johnson (March)
+                testProducts.get(3),  // Trip - Alice Wilson (April)
+                testProducts.get(4),  // Vacation - Mike Brown (May)
+                testProducts.get(5),  // Sick - John Doe (June)
+                testProducts.get(6),  // Holiday - Jane Smith (July)
+                testProducts.get(7),  // Vacation - Bob Johnson (August)
+                testProducts.get(8),  // Trip - Alice Wilson (September)
+                testProducts.get(9),  // Sick - Mike Brown (October)
+                testProducts.get(10), // Holiday - John Doe (January 2025)
+                testProducts.get(11), // Vacation - Jane Smith (February 2025)
+                testProducts.get(12), // Sick - Bob Johnson (March 2025)
+                testProducts.get(13)  // Trip - Alice Wilson (April 2025)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(11) // Should exclude first 2 off days
-                .extracting(offDay -> offDay.getFirstDay().getMonthValue())
-                .allMatch(month -> month >= 3 || month == 1 || month == 2); // March onwards or 2025 dates
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find off days starting in specific month")
     void testOffDaysStartingInMonthSearch() throws Exception {
         List<OffDay> results = performSearch("off days starting in March", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(2),  // Holiday - Bob Johnson (March 2024)
+                testProducts.get(12)  // Sick - Bob Johnson (March 2025)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(2) // Should include off days starting in March (any year)
-                .extracting(offDay -> offDay.getFirstDay().getMonthValue())
-                .containsOnly(3);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find off days updated in 2025")
     void testOffDaysUpdatedInYearSearch() throws Exception {
         List<OffDay> results = performSearch("off days updated in 2025", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(10), // Holiday - John Doe
+                testProducts.get(11), // Vacation - Jane Smith
+                testProducts.get(12), // Sick - Bob Johnson
+                testProducts.get(13)  // Trip - Alice Wilson
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(4) // Four off days updated in 2025
-                .extracting(offDay -> offDay.getUpdated().getYear())
-                .containsOnly(2025);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find recent off days")
     void testRecentOffDaySearch() throws Exception {
         List<OffDay> results = performSearch("recent off days", "OffDay");
+        // Recent is interpreted as 2025 off days
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(10), // Holiday - John Doe
+                testProducts.get(11), // Vacation - Jane Smith
+                testProducts.get(12), // Sick - Bob Johnson
+                testProducts.get(13)  // Trip - Alice Wilson
+        );
 
-        // This test depends on AI interpretation of "recent"
-        assertThat(results).isNotNull();
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find sick days")
     void testSickDaySearch() throws Exception {
         List<OffDay> results = performSearch("sick days", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(1),  // Sick - Jane Smith
+                testProducts.get(5),  // Sick - John Doe
+                testProducts.get(9),  // Sick - Mike Brown
+                testProducts.get(12)  // Sick - Bob Johnson
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(4)
-                .extracting(OffDay::getType)
-                .containsOnly(OffDayType.SICK);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find off days by type SICK")
     void testSickTypeSearch() throws Exception {
         List<OffDay> results = performSearch("type SICK", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(1),  // Sick - Jane Smith
+                testProducts.get(5),  // Sick - John Doe
+                testProducts.get(9),  // Sick - Mike Brown
+                testProducts.get(12)  // Sick - Bob Johnson
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(4)
-                .extracting(OffDay::getType)
-                .containsOnly(OffDayType.SICK);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("Should generate working regex for simple text search")
+    void testSimpleTextSearchWithLLM() throws Exception {
+        List<OffDay> results  = performSearch("vacation", "OffDay");
+        List<OffDay> expected = Arrays.asList(testProducts.get(0), testProducts.get(4), testProducts.get(7), testProducts.get(11)); // All vacation off days
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find single day off days")
     void testSingleDayOffDaySearch() throws Exception {
         List<OffDay> results = performSearch("single day", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(2),  // Holiday - Bob Johnson (single day)
+                testProducts.get(6),  // Holiday - Jane Smith (single day)
+                testProducts.get(10)  // Holiday - John Doe (single day)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(3) // Should include holidays and other single-day entries
-                .allMatch(offDay -> offDay.getFirstDay().equals(offDay.getLastDay()));
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find trips")
     void testTripSearch() throws Exception {
         List<OffDay> results = performSearch("trips", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(3),  // Trip - Alice Wilson
+                testProducts.get(8),  // Trip - Alice Wilson
+                testProducts.get(13)  // Trip - Alice Wilson
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(3)
-                .extracting(OffDay::getType)
-                .containsOnly(OffDayType.TRIP);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find off days by type TRIP")
     void testTripTypeSearch() throws Exception {
         List<OffDay> results = performSearch("type TRIP", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(3),  // Trip - Alice Wilson
+                testProducts.get(8),  // Trip - Alice Wilson
+                testProducts.get(13)  // Trip - Alice Wilson
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(3)
-                .extracting(OffDay::getType)
-                .containsOnly(OffDayType.TRIP);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    // === COLUMN-SPECIFIC TESTS (one per column) ===
+    @Test
+    @DisplayName("Should find off days by type column")
+    void testTypeSpecificSearchWithLLM() throws Exception {
+        List<OffDay> results  = performSearch("type is SICK", "OffDay");
+        List<OffDay> expected = Arrays.asList(testProducts.get(1), testProducts.get(5), testProducts.get(9), testProducts.get(12)); // All sick off days
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("Should find off days by updated date column")
+    void testUpdatedDateSpecificSearchWithLLM() throws Exception {
+        List<OffDay> results  = performSearch("updated in 2025", "OffDay");
+        List<OffDay> expected = Arrays.asList(testProducts.get(10), testProducts.get(11), testProducts.get(12), testProducts.get(13)); // Off days updated in 2025
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find vacation off days")
     void testVacationOffDaySearch() throws Exception {
         List<OffDay> results = performSearch("vacation", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(0),  // Vacation - John Doe
+                testProducts.get(4),  // Vacation - Mike Brown
+                testProducts.get(7),  // Vacation - Bob Johnson
+                testProducts.get(11)  // Vacation - Jane Smith
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(4)
-                .extracting(OffDay::getType)
-                .containsOnly(OffDayType.VACATION);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find off days by type VACATION")
     void testVacationTypeSearch() throws Exception {
         List<OffDay> results = performSearch("type VACATION", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(0),  // Vacation - John Doe
+                testProducts.get(4),  // Vacation - Mike Brown
+                testProducts.get(7),  // Vacation - Bob Johnson
+                testProducts.get(11)  // Vacation - Jane Smith
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(4)
-                .extracting(OffDay::getType)
-                .containsOnly(OffDayType.VACATION);
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find weekend off days")
     void testWeekendOffDaySearch() throws Exception {
-        List<OffDay> results = performSearch("weekend", "OffDay");
+        List<OffDay> results  = performSearch("weekend", "OffDay");
+        List<OffDay> expected = Collections.emptyList(); // Should return empty results for weekend queries as no specific weekend matches
 
-        // This test checks if any off days fall on weekends
-        assertThat(results).isNotNull();
-        // The actual matching depends on the AI's interpretation and the specific dates
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
+
+
 }

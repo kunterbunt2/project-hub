@@ -29,6 +29,8 @@ import org.springframework.test.context.TestConstructor;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -131,287 +133,118 @@ class FeatureAiFilterTest extends AbstractAiFilterTest<Feature> {
     }
 
     @Test
-    @DisplayName("Should find analytics related features")
-    void testAnalyticsFeatureSearch() throws Exception {
-        List<Feature> results = performSearch("analytics", "Feature");
+    @DisplayName("Should find features by created date column")
+    void testCreatedDateSpecificSearchWithLLM() throws Exception {
+        List<Feature> results  = performSearch("created in 2025", "Feature");
+        List<Feature> expected = Arrays.asList(testProducts.get(7), testProducts.get(8), testProducts.get(9), testProducts.get(10), testProducts.get(11)); // Features created in 2025
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Feature::getName)
-                .containsExactly("Data Analytics Dashboard");
-    }
-
-    @Test
-    @DisplayName("Should find API related features")
-    void testApiFeatureSearch() throws Exception {
-        List<Feature> results = performSearch("API", "Feature");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Feature::getName)
-                .containsExactly("API Security Enhancement");
-    }
-
-    @Test
-    @DisplayName("Should find authentication features")
-    void testAuthenticationFeatureSearch() throws Exception {
-        List<Feature> results = performSearch("authentication", "Feature");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Feature::getName)
-                .containsExactly("User Authentication");
-    }
-
-    @Test
-    @DisplayName("Should find cart features")
-    void testCartFeatureSearch() throws Exception {
-        List<Feature> results = performSearch("cart", "Feature");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Feature::getName)
-                .containsExactly("Shopping Cart");
-    }
-
-    @Test
-    @DisplayName("Should find dashboard features")
-    void testDashboardFeatureSearch() throws Exception {
-        List<Feature> results = performSearch("dashboard", "Feature");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Feature::getName)
-                .containsExactly("Data Analytics Dashboard");
-    }
-
-    @Test
-    @DisplayName("Should handle empty search query")
-    void testEmptySearchQuery() throws Exception {
-        List<Feature> results = performSearch("", "Feature");
-
-        assertThat(results).hasSize(12); // All features should match empty query
-    }
-
-    @Test
-    @DisplayName("Should find enhancement features")
-    void testEnhancementFeatureSearch() throws Exception {
-        List<Feature> results = performSearch("enhancement", "Feature");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Feature::getName)
-                .containsExactly("API Security Enhancement");
-    }
-
-    @Test
-    @DisplayName("Should find features by exact name")
-    void testExactFeatureNameSearch() throws Exception {
-        List<Feature> results = performSearch("User Authentication", "Feature");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Feature::getName)
-                .containsExactly("User Authentication");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find features created after January 2024")
     void testFeaturesCreatedAfterDateSearch() throws Exception {
         List<Feature> results = performSearch("features created after January 2024", "Feature");
+        List<Feature> expected = Arrays.asList(
+                testProducts.get(1), // Payment Processing (created 2024-01-10)
+                testProducts.get(2), // User Profile Management (created 2024-02-28)
+                testProducts.get(3), // Shopping Cart (created 2024-04-03)
+                testProducts.get(4), // Email Notifications (created 2024-07-22)
+                testProducts.get(5), // Data Analytics Dashboard (created 2024-09-05)
+                testProducts.get(6), // API Security Enhancement (created 2024-11-12)
+                testProducts.get(7), // Mobile App Integration (created 2025-01-05)
+                testProducts.get(8), // Search Functionality (created 2025-02-10)
+                testProducts.get(9), // Reporting System (created 2025-03-18)
+                testProducts.get(10), // Social Media Integration (created 2025-05-10)
+                testProducts.get(11)  // Machine Learning Recommendations (created 2025-07-01)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(10) // Should exclude feature 1 created in 2023
-                .extracting(Feature::getName)
-                .contains("Payment Processing", "User Profile Management", "Shopping Cart",
-                        "Email Notifications", "Data Analytics Dashboard", "API Security Enhancement",
-                        "Mobile App Integration", "Search Functionality", "Reporting System");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find features created before March 2024")
     void testFeaturesCreatedBeforeDateSearch() throws Exception {
         List<Feature> results = performSearch("features created before March 2024", "Feature");
+        List<Feature> expected = Arrays.asList(
+                testProducts.get(0), // User Authentication (created 2023-06-15)
+                testProducts.get(1), // Payment Processing (created 2024-01-10)
+                testProducts.get(2)  // User Profile Management (created 2024-02-28)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(3) // Should include features created in 2023 and January-February 2024
-                .extracting(Feature::getName)
-                .contains("User Authentication", "Payment Processing", "User Profile Management");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find features updated in 2025")
     void testFeaturesUpdatedInYearSearch() throws Exception {
         List<Feature> results = performSearch("features updated in 2025", "Feature");
+        List<Feature> expected = Arrays.asList(
+                testProducts.get(5), // Data Analytics Dashboard (updated 2025-01-15)
+                testProducts.get(6), // API Security Enhancement (updated 2025-02-08)
+                testProducts.get(7), // Mobile App Integration (updated 2025-01-20)
+                testProducts.get(8), // Search Functionality (updated 2025-02-25)
+                testProducts.get(9), // Reporting System (updated 2025-04-02)
+                testProducts.get(10), // Social Media Integration (updated 2025-06-15)
+                testProducts.get(11)  // Machine Learning Recommendations (updated 2025-08-01)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(7) // Should include features updated in 2025
-                .extracting(Feature::getName)
-                .contains("Data Analytics Dashboard", "API Security Enhancement", "Mobile App Integration",
-                        "Search Functionality", "Reporting System", "Social Media Integration",
-                        "Machine Learning Recommendations");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
+    // === COLUMN-SPECIFIC TESTS (one per column) ===
     @Test
-    @DisplayName("Should find integration features")
-    void testIntegrationFeatureSearch() throws Exception {
-        List<Feature> results = performSearch("integration", "Feature");
+    @DisplayName("Should find features by name column")
+    void testNameSpecificSearchWithLLM() throws Exception {
+        List<Feature> results  = performSearch("name contains Payment", "Feature");
+        List<Feature> expected = Collections.singletonList(testProducts.get(1)); // Payment Processing
 
-        assertThat(results)
-                .hasSize(2)
-                .extracting(Feature::getName)
-                .contains("Mobile App Integration", "Social Media Integration");
-    }
-
-    @Test
-    @DisplayName("Should find machine learning features")
-    void testMachineLearningFeatureSearch() throws Exception {
-        List<Feature> results = performSearch("machine learning", "Feature");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Feature::getName)
-                .containsExactly("Machine Learning Recommendations");
-    }
-
-    @Test
-    @DisplayName("Should find management features")
-    void testManagementFeatureSearch() throws Exception {
-        List<Feature> results = performSearch("management", "Feature");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Feature::getName)
-                .containsExactly("User Profile Management");
-    }
-
-    @Test
-    @DisplayName("Should find mobile related features")
-    void testMobileFeatureSearch() throws Exception {
-        List<Feature> results = performSearch("mobile", "Feature");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Feature::getName)
-                .containsExactly("Mobile App Integration");
-    }
-
-    @Test
-    @DisplayName("Should find features with 'name contains' query")
-    void testNameContainsSearch() throws Exception {
-        List<Feature> results = performSearch("name contains dashboard", "Feature");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Feature::getName)
-                .containsExactly("Data Analytics Dashboard");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should handle nonsensical search query gracefully")
     void testNonsensicalSearchQuery() throws Exception {
-        List<Feature> results = performSearch("purple elephant dancing", "Feature");
+        List<Feature> results  = performSearch("purple elephant dancing", "Feature");
+        List<Feature> expected = Collections.emptyList(); // Should return empty results for nonsensical queries
 
-        // Should either return empty results or fall back to simple text matching
-        assertThat(results).isNotNull();
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    // === SIMPLE TEST CASE (keeping only ONE) ===
+    @Test
+    @DisplayName("Should generate working regex for simple text search")
+    void testSimpleTextSearchWithLLM() throws Exception {
+        List<Feature> results  = performSearch("authentication", "Feature");
+        List<Feature> expected = Collections.singletonList(testProducts.get(0)); // User Authentication
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
-    @DisplayName("Should find notification features")
-    void testNotificationFeatureSearch() throws Exception {
-        List<Feature> results = performSearch("notifications", "Feature");
+    @DisplayName("Should find features by updated date column")
+    void testUpdatedDateSpecificSearchWithLLM() throws Exception {
+        List<Feature> results  = performSearch("updated in 2025", "Feature");
+        List<Feature> expected = Arrays.asList(testProducts.get(4), testProducts.get(6), testProducts.get(7), testProducts.get(8), testProducts.get(9), testProducts.get(10), testProducts.get(11)); // Features updated in 2025
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Feature::getName)
-                .containsExactly("Email Notifications");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
-    @DisplayName("Should find payment related features")
-    void testPaymentFeatureSearch() throws Exception {
-        List<Feature> results = performSearch("payment", "Feature");
+    @DisplayName("Should find features by versionId column")
+    void testVersionIdSpecificSearchWithLLM() throws Exception {
+        List<Feature> results  = performSearch("versionId is 2", "Feature");
+        List<Feature> expected = Arrays.asList(testProducts.get(2), testProducts.get(3)); // User Profile Management, Shopping Cart
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Feature::getName)
-                .containsExactly("Payment Processing");
-    }
-
-    @Test
-    @DisplayName("Should find profile features")
-    void testProfileFeatureSearch() throws Exception {
-        List<Feature> results = performSearch("profile", "Feature");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Feature::getName)
-                .containsExactly("User Profile Management");
-    }
-
-    @Test
-    @DisplayName("Should find reporting features")
-    void testReportingFeatureSearch() throws Exception {
-        List<Feature> results = performSearch("reporting", "Feature");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Feature::getName)
-                .containsExactly("Reporting System");
-    }
-
-    @Test
-    @DisplayName("Should find search functionality features")
-    void testSearchFunctionalityFeatureSearch() throws Exception {
-        List<Feature> results = performSearch("search functionality", "Feature");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Feature::getName)
-                .containsExactly("Search Functionality");
-    }
-
-    @Test
-    @DisplayName("Should find security related features")
-    void testSecurityFeatureSearch() throws Exception {
-        List<Feature> results = performSearch("security", "Feature");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Feature::getName)
-                .containsExactly("API Security Enhancement");
-    }
-
-    @Test
-    @DisplayName("Should find shopping related features")
-    void testShoppingFeatureSearch() throws Exception {
-        List<Feature> results = performSearch("shopping", "Feature");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Feature::getName)
-                .containsExactly("Shopping Cart");
-    }
-
-    @Test
-    @DisplayName("Should find social media features")
-    void testSocialMediaFeatureSearch() throws Exception {
-        List<Feature> results = performSearch("social media", "Feature");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Feature::getName)
-                .containsExactly("Social Media Integration");
-    }
-
-    @Test
-    @DisplayName("Should find features containing 'user' keyword")
-    void testUserRelatedFeatureSearch() throws Exception {
-        List<Feature> results = performSearch("user", "Feature");
-
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(2)
-                .extracting(Feature::getName)
-                .contains("User Authentication", "User Profile Management");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 }

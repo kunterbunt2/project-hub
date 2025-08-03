@@ -32,6 +32,8 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -184,318 +186,334 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     @DisplayName("Should find active sprints")
     void testActiveSprintSearch() throws Exception {
         List<Sprint> results = performSearch("active sprints", "Sprint");
+        List<Sprint> expected = Arrays.asList(
+                testProducts.get(1), // Sprint 1.2.3-Beta (STARTED)
+                testProducts.get(3), // Authentication Sprint (STARTED)
+                testProducts.get(5), // Dashboard Development (STARTED)
+                testProducts.get(7), // Security Enhancement (STARTED)
+                testProducts.get(11) // Bug Fix Sprint (STARTED)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(4) // STARTED sprints
-                .extracting(Sprint::getName)
-                .contains("Sprint 1.2.3-Beta", "Authentication Sprint", "Dashboard Development", "Security Enhancement", "Bug Fix Sprint");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find alpha sprints")
     void testAlphaSprintSearch() throws Exception {
-        List<Sprint> results = performSearch("alpha", "Sprint");
+        List<Sprint> results  = performSearch("alpha", "Sprint");
+        List<Sprint> expected = Collections.singletonList(testProducts.get(0)); // Sprint 1.0.0-Alpha
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Sprint::getName)
-                .containsExactly("Sprint 1.0.0-Alpha");
-    }
-
-    @Test
-    @DisplayName("Should find API sprints")
-    void testApiSprintSearch() throws Exception {
-        List<Sprint> results = performSearch("API", "Sprint");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Sprint::getName)
-                .containsExactly("API Documentation Sprint");
-    }
-
-    @Test
-    @DisplayName("Should find authentication sprints")
-    void testAuthenticationSprintSearch() throws Exception {
-        List<Sprint> results = performSearch("authentication", "Sprint");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Sprint::getName)
-                .containsExactly("Authentication Sprint");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find beta sprints")
     void testBetaSprintSearch() throws Exception {
-        List<Sprint> results = performSearch("beta", "Sprint");
+        List<Sprint> results  = performSearch("beta", "Sprint");
+        List<Sprint> expected = Collections.singletonList(testProducts.get(1)); // Sprint 1.2.3-Beta
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Sprint::getName)
-                .containsExactly("Sprint 1.2.3-Beta");
-    }
-
-    @Test
-    @DisplayName("Should find bug fix sprints")
-    void testBugFixSprintSearch() throws Exception {
-        List<Sprint> results = performSearch("bug fix", "Sprint");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Sprint::getName)
-                .containsExactly("Bug Fix Sprint");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find completed sprints")
     void testCompletedSprintSearch() throws Exception {
         List<Sprint> results = performSearch("completed sprints", "Sprint");
+        List<Sprint> expected = Arrays.asList(
+                testProducts.get(2), // Sprint 2.0.0-RC1 (CLOSED)
+                testProducts.get(6), // Mobile App Sprint (CLOSED)
+                testProducts.get(9)  // Performance Optimization (CLOSED)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(3) // CLOSED sprints
-                .extracting(Sprint::getName)
-                .contains("Sprint 2.0.0-RC1", "Mobile App Sprint", "Performance Optimization");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
-    @DisplayName("Should find created sprints")
-    void testCreatedSprintSearch() throws Exception {
-        List<Sprint> results = performSearch("created sprints", "Sprint");
+    @DisplayName("Should find sprints by created date column")
+    void testCreatedDateSpecificSearchWithLLM() throws Exception {
+        List<Sprint> results  = performSearch("created in 2025", "Sprint");
+        List<Sprint> expected = Collections.singletonList(testProducts.get(11)); // Bug Fix Sprint
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(4) // CREATED status sprints
-                .extracting(Sprint::getName)
-                .contains("Sprint 1.0.0-Alpha", "Payment Integration Sprint", "API Documentation Sprint", "Sprint 3.0.0-SNAPSHOT");
-    }
-
-    @Test
-    @DisplayName("Should find dashboard sprints")
-    void testDashboardSprintSearch() throws Exception {
-        List<Sprint> results = performSearch("dashboard", "Sprint");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Sprint::getName)
-                .containsExactly("Dashboard Development");
-    }
-
-    @Test
-    @DisplayName("Should find documentation sprints")
-    void testDocumentationSprintSearch() throws Exception {
-        List<Sprint> results = performSearch("documentation", "Sprint");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Sprint::getName)
-                .containsExactly("API Documentation Sprint");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should handle empty search query")
     void testEmptySearchQuery() throws Exception {
-        List<Sprint> results = performSearch("", "Sprint");
+        List<Sprint> results  = performSearch("", "Sprint");
+        List<Sprint> expected = new ArrayList<>(testProducts); // All sprints should match empty query
 
-        assertThat(results).hasSize(12); // All sprints should match empty query
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
-    @DisplayName("Should find sprints by exact name")
-    void testExactSprintNameSearch() throws Exception {
-        List<Sprint> results = performSearch("Authentication Sprint", "Sprint");
+    @DisplayName("Should find sprints by end date column")
+    void testEndDateSpecificSearchWithLLM() throws Exception {
+        List<Sprint> results  = performSearch("end date in January 2024", "Sprint");
+        List<Sprint> expected = Collections.singletonList(testProducts.get(0)); // Sprint 1.0.0-Alpha
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Sprint::getName)
-                .containsExactly("Authentication Sprint");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("Should find sprints by featureId column")
+    void testFeatureIdSpecificSearchWithLLM() throws Exception {
+        List<Sprint> results  = performSearch("featureId is 1", "Sprint");
+        List<Sprint> expected = Arrays.asList(testProducts.get(0), testProducts.get(1)); // Sprint 1.0.0-Alpha, Sprint 1.2.3-Beta
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find integration sprints")
     void testIntegrationSprintSearch() throws Exception {
-        List<Sprint> results = performSearch("integration", "Sprint");
+        List<Sprint> results  = performSearch("integration", "Sprint");
+        List<Sprint> expected = Collections.singletonList(testProducts.get(4)); // Payment Integration Sprint
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Sprint::getName)
-                .containsExactly("Payment Integration Sprint");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
+    // === COLUMN-SPECIFIC TESTS (one per column) ===
     @Test
-    @DisplayName("Should find mobile sprints")
-    void testMobileSprintSearch() throws Exception {
-        List<Sprint> results = performSearch("mobile", "Sprint");
+    @DisplayName("Should find sprints by name column")
+    void testNameSpecificSearchWithLLM() throws Exception {
+        List<Sprint> results  = performSearch("name contains Payment", "Sprint");
+        List<Sprint> expected = Collections.singletonList(testProducts.get(4)); // Payment Integration Sprint
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Sprint::getName)
-                .containsExactly("Mobile App Sprint");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should handle nonsensical search query gracefully")
     void testNonsensicalSearchQuery() throws Exception {
-        List<Sprint> results = performSearch("purple elephant dancing", "Sprint");
+        List<Sprint> results  = performSearch("purple elephant dancing", "Sprint");
+        List<Sprint> expected = Collections.emptyList(); // Should return empty results for nonsensical queries
 
-        // Should either return empty results or fall back to simple text matching
-        assertThat(results).isNotNull();
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
-    @DisplayName("Should find optimization sprints")
-    void testOptimizationSprintSearch() throws Exception {
-        List<Sprint> results = performSearch("optimization", "Sprint");
+    @DisplayName("Should find sprints by originalEstimation column")
+    void testOriginalEstimationSpecificSearchWithLLM() throws Exception {
+        List<Sprint> results  = performSearch("originalEstimation over 180 hours", "Sprint");
+        List<Sprint> expected = Collections.singletonList(testProducts.get(6)); // Mobile App Sprint (200 hours)
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Sprint::getName)
-                .containsExactly("Performance Optimization");
-    }
-
-    @Test
-    @DisplayName("Should find payment sprints")
-    void testPaymentSprintSearch() throws Exception {
-        List<Sprint> results = performSearch("payment", "Sprint");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Sprint::getName)
-                .containsExactly("Payment Integration Sprint");
-    }
-
-    @Test
-    @DisplayName("Should find performance sprints")
-    void testPerformanceSprintSearch() throws Exception {
-        List<Sprint> results = performSearch("performance", "Sprint");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Sprint::getName)
-                .containsExactly("Performance Optimization");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find release candidate sprints")
     void testReleaseCandidateSprintSearch() throws Exception {
-        List<Sprint> results = performSearch("rc", "Sprint");
+        List<Sprint> results  = performSearch("rc", "Sprint");
+        List<Sprint> expected = Collections.singletonList(testProducts.get(2)); // Sprint 2.0.0-RC1
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Sprint::getName)
-                .containsExactly("Sprint 2.0.0-RC1");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
-    @DisplayName("Should find security sprints")
-    void testSecuritySprintSearch() throws Exception {
-        List<Sprint> results = performSearch("security", "Sprint");
+    @DisplayName("Should find sprints by remaining column")
+    void testRemainingSpecificSearchWithLLM() throws Exception {
+        List<Sprint> results  = performSearch("remaining is 0 hours", "Sprint");
+        List<Sprint> expected = Arrays.asList(testProducts.get(2), testProducts.get(6), testProducts.get(9)); // Completed sprints
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Sprint::getName)
-                .containsExactly("Security Enhancement");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find snapshot sprints")
     void testSnapshotSprintSearch() throws Exception {
-        List<Sprint> results = performSearch("snapshot", "Sprint");
+        List<Sprint> results  = performSearch("snapshot", "Sprint");
+        List<Sprint> expected = Collections.singletonList(testProducts.get(10)); // Sprint 3.0.0-SNAPSHOT
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Sprint::getName)
-                .containsExactly("Sprint 3.0.0-SNAPSHOT");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find sprints by name containing specific text")
     void testSprintNameContainsSearch() throws Exception {
-        List<Sprint> results = performSearch("name contains development", "Sprint");
+        List<Sprint> results  = performSearch("name contains development", "Sprint");
+        List<Sprint> expected = Collections.singletonList(testProducts.get(5)); // Dashboard Development
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Sprint::getName)
-                .containsExactly("Dashboard Development");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find sprints between 80 and 150 hours")
     void testSprintsBetweenHoursSearch() throws Exception {
         List<Sprint> results = performSearch("sprints between 80 and 150 hours", "Sprint");
+        List<Sprint> expected = Arrays.asList(
+                testProducts.get(0), // Sprint 1.0.0-Alpha (80h)
+                testProducts.get(1), // Sprint 1.2.3-Beta (120h)
+                testProducts.get(2), // Sprint 2.0.0-RC1 (100h)
+                testProducts.get(4), // Payment Integration Sprint (140h)
+                testProducts.get(7), // Security Enhancement (150h)
+                testProducts.get(8), // API Documentation Sprint (80h)
+                testProducts.get(9)  // Performance Optimization (120h)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(4) // Sprints with estimation between 80-150h
-                .extracting(Sprint::getName)
-                .contains("Sprint 1.0.0-Alpha", "Payment Integration Sprint", "Performance Optimization",
-                        "Security Enhancement", "API Documentation Sprint");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find sprints created in 2025")
     void testSprintsCreatedInYearSearch() throws Exception {
-        List<Sprint> results = performSearch("sprints created in 2025", "Sprint");
+        List<Sprint> results  = performSearch("sprints created in 2025", "Sprint");
+        List<Sprint> expected = Collections.singletonList(testProducts.get(11)); // Bug Fix Sprint (created 2025-01-28)
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(2) // Should include sprints created in 2025
-                .extracting(Sprint::getName)
-                .contains("Sprint 3.0.0-SNAPSHOT", "Bug Fix Sprint");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find sprints ending before March 2024")
     void testSprintsEndingBeforeDateSearch() throws Exception {
         List<Sprint> results = performSearch("sprints ending before March 2024", "Sprint");
+        List<Sprint> expected = Arrays.asList(
+                testProducts.get(0), // Sprint 1.0.0-Alpha (ends 2024-01-29)
+                testProducts.get(1)  // Sprint 1.2.3-Beta (ends 2024-02-14)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(2) // Should include first 2 sprints
-                .extracting(Sprint::getName)
-                .contains("Sprint 1.0.0-Alpha", "Sprint 1.2.3-Beta");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find sprints over 100 hours estimation")
     void testSprintsOverHundredHoursSearch() throws Exception {
         List<Sprint> results = performSearch("sprints over 100 hours estimation", "Sprint");
+        List<Sprint> expected = Arrays.asList(
+                testProducts.get(1), // Sprint 1.2.3-Beta (120h)
+                testProducts.get(3), // Authentication Sprint (160h)
+                testProducts.get(4), // Payment Integration Sprint (140h)
+                testProducts.get(5), // Dashboard Development (180h)
+                testProducts.get(6), // Mobile App Sprint (200h)
+                testProducts.get(7), // Security Enhancement (150h)
+                testProducts.get(9), // Performance Optimization (120h)
+                testProducts.get(10) // Sprint 3.0.0-SNAPSHOT (160h)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(6) // Sprints with originalEstimation > 100h
-                .extracting(Sprint::getName)
-                .contains("Sprint 1.2.3-Beta", "Authentication Sprint", "Payment Integration Sprint",
-                        "Dashboard Development", "Mobile App Sprint", "Security Enhancement", "Sprint 3.0.0-SNAPSHOT");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find sprints starting after February 2024")
     void testSprintsStartingAfterDateSearch() throws Exception {
         List<Sprint> results = performSearch("sprints starting after February 2024", "Sprint");
+        List<Sprint> expected = Arrays.asList(
+                testProducts.get(2), // Sprint 2.0.0-RC1 (starts 2024-03-01)
+                testProducts.get(3), // Authentication Sprint (starts 2024-04-01)
+                testProducts.get(4), // Payment Integration Sprint (starts 2024-05-01)
+                testProducts.get(5), // Dashboard Development (starts 2024-06-03)
+                testProducts.get(6), // Mobile App Sprint (starts 2024-07-01)
+                testProducts.get(7), // Security Enhancement (starts 2024-08-05)
+                testProducts.get(8), // API Documentation Sprint (starts 2024-09-02)
+                testProducts.get(9), // Performance Optimization (starts 2024-10-01)
+                testProducts.get(10), // Sprint 3.0.0-SNAPSHOT (starts 2025-01-06)
+                testProducts.get(11)  // Bug Fix Sprint (starts 2025-02-03)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(9) // Should exclude first 2 sprints
-                .extracting(Sprint::getName)
-                .contains("Sprint 2.0.0-RC1", "Authentication Sprint", "Payment Integration Sprint",
-                        "Dashboard Development", "Mobile App Sprint", "Security Enhancement");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find sprints updated in 2025")
     void testSprintsUpdatedInYearSearch() throws Exception {
         List<Sprint> results = performSearch("sprints updated in 2025", "Sprint");
+        List<Sprint> expected = Arrays.asList(
+                testProducts.get(10), // Sprint 3.0.0-SNAPSHOT (updated 2025-01-10)
+                testProducts.get(11)  // Bug Fix Sprint (updated 2025-02-10)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(2) // Should include sprints updated in 2025
-                .extracting(Sprint::getName)
-                .contains("Sprint 3.0.0-SNAPSHOT", "Bug Fix Sprint");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find sprints with remaining work")
     void testSprintsWithRemainingWorkSearch() throws Exception {
         List<Sprint> results = performSearch("sprints with remaining work", "Sprint");
+        List<Sprint> expected = Arrays.asList(
+                testProducts.get(0), // Sprint 1.0.0-Alpha (80h remaining)
+                testProducts.get(1), // Sprint 1.2.3-Beta (60h remaining)
+                testProducts.get(3), // Authentication Sprint (80h remaining)
+                testProducts.get(4), // Payment Integration Sprint (140h remaining)
+                testProducts.get(5), // Dashboard Development (90h remaining)
+                testProducts.get(7), // Security Enhancement (100h remaining)
+                testProducts.get(8), // API Documentation Sprint (80h remaining)
+                testProducts.get(10), // Sprint 3.0.0-SNAPSHOT (160h remaining)
+                testProducts.get(11)  // Bug Fix Sprint (30h remaining)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(7) // Sprints with remaining > 0
-                .extracting(Sprint::getName)
-                .contains("Sprint 1.0.0-Alpha", "Sprint 1.2.3-Beta", "Authentication Sprint",
-                        "Payment Integration Sprint", "Dashboard Development", "Security Enhancement",
-                        "API Documentation Sprint", "Sprint 3.0.0-SNAPSHOT", "Bug Fix Sprint");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("Should find sprints by start date column")
+    void testStartDateSpecificSearchWithLLM() throws Exception {
+        List<Sprint> results  = performSearch("start date in 2025", "Sprint");
+        List<Sprint> expected = Arrays.asList(testProducts.get(10), testProducts.get(11)); // Sprint 3.0.0-SNAPSHOT, Bug Fix Sprint
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("Should find sprints by status column")
+    void testStatusSpecificSearchWithLLM() throws Exception {
+        List<Sprint> results  = performSearch("status is CLOSED", "Sprint");
+        List<Sprint> expected = Arrays.asList(testProducts.get(2), testProducts.get(6), testProducts.get(9)); // Sprint 2.0.0-RC1, Mobile App Sprint, Performance Optimization
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("Should find sprints by updated date column")
+    void testUpdatedDateSpecificSearchWithLLM() throws Exception {
+        List<Sprint> results  = performSearch("updated in 2025", "Sprint");
+        List<Sprint> expected = Arrays.asList(testProducts.get(10), testProducts.get(11)); // Sprint 3.0.0-SNAPSHOT, Bug Fix Sprint
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("Should find sprints by userId column")
+    void testUserIdSpecificSearchWithLLM() throws Exception {
+        List<Sprint> results  = performSearch("userId is 1", "Sprint");
+        List<Sprint> expected = Arrays.asList(testProducts.get(0), testProducts.get(2), testProducts.get(6), testProducts.get(10)); // Sprint 1.0.0-Alpha, Sprint 2.0.0-RC1, Mobile App Sprint, Sprint 3.0.0-SNAPSHOT
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("Should find sprints by worked column")
+    void testWorkedSpecificSearchWithLLM() throws Exception {
+        List<Sprint> results  = performSearch("worked is 0 hours", "Sprint");
+        List<Sprint> expected = Arrays.asList(testProducts.get(0), testProducts.get(4), testProducts.get(8), testProducts.get(10)); // Sprints with no work done yet
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 }

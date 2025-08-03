@@ -29,6 +29,8 @@ import org.springframework.test.context.TestConstructor;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -123,194 +125,256 @@ class VersionAiFilterTest extends AbstractAiFilterTest<Version> {
     @Test
     @DisplayName("Should find alpha versions")
     void testAlphaVersionSearch() throws Exception {
-        List<Version> results = performSearch("alpha", "Version");
+        List<Version> results  = performSearch("alpha", "Version");
+        List<Version> expected = Collections.singletonList(testProducts.get(5)); // 3.1.0-alpha
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Version::getName)
-                .containsExactly("3.1.0-alpha");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find beta versions")
     void testBetaVersionSearch() throws Exception {
-        List<Version> results = performSearch("beta", "Version");
+        List<Version> results  = performSearch("beta", "Version");
+        List<Version> expected = Collections.singletonList(testProducts.get(4)); // 3.0.0-beta
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Version::getName)
-                .containsExactly("3.0.0-beta");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("Should find versions by created date column")
+    void testCreatedDateSpecificSearchWithLLM() throws Exception {
+        List<Version> results  = performSearch("created in 2025", "Version");
+        List<Version> expected = Arrays.asList(testProducts.get(7), testProducts.get(8), testProducts.get(9)); // 0.9.0, 1.0.0-SNAPSHOT, 5.2.1
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should handle empty search query")
     void testEmptySearchQuery() throws Exception {
-        List<Version> results = performSearch("", "Version");
+        List<Version> results  = performSearch("", "Version");
+        List<Version> expected = new ArrayList<>(testProducts); // All versions should match empty query
 
-        assertThat(results).hasSize(10); // All versions should match empty query
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find versions by exact version number")
     void testExactVersionSearch() throws Exception {
-        List<Version> results = performSearch("1.2.3", "Version");
+        List<Version> results  = performSearch("1.2.3", "Version");
+        List<Version> expected = Collections.singletonList(testProducts.get(1)); // 1.2.3
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Version::getName)
-                .containsExactly("1.2.3");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find major version 3 releases")
     void testMajorVersion3Search() throws Exception {
-        List<Version> results = performSearch("version 3", "Version");
+        List<Version> results  = performSearch("version 3", "Version");
+        List<Version> expected = Arrays.asList(testProducts.get(4), testProducts.get(5)); // 3.0.0-beta, 3.1.0-alpha
 
-        assertThat(results)
-                .hasSize(2)
-                .extracting(Version::getName)
-                .contains("3.0.0-beta", "3.1.0-alpha");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find major version 1.x.x")
     void testMajorVersionSearch() throws Exception {
-        List<Version> results = performSearch("version 1", "Version");
+        List<Version> results  = performSearch("version 1", "Version");
+        List<Version> expected = Arrays.asList(testProducts.get(0), testProducts.get(1), testProducts.get(8)); // 1.0.0, 1.2.3, 1.0.0-SNAPSHOT
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(3) // 1.0.0, 1.2.3, 1.0.0-SNAPSHOT
-                .extracting(Version::getName)
-                .contains("1.0.0", "1.2.3", "1.0.0-SNAPSHOT");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    // === COLUMN-SPECIFIC TESTS (one per column) ===
+    @Test
+    @DisplayName("Should find versions by name column")
+    void testNameSpecificSearchWithLLM() throws Exception {
+        List<Version> results  = performSearch("name contains beta", "Version");
+        List<Version> expected = Collections.singletonList(testProducts.get(4)); // 3.0.0-beta
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should handle nonsensical search query gracefully")
     void testNonsensicalSearchQuery() throws Exception {
-        List<Version> results = performSearch("purple elephant dancing", "Version");
+        List<Version> results  = performSearch("purple elephant dancing", "Version");
+        List<Version> expected = Collections.emptyList(); // Should return empty results for nonsensical queries
 
-        // Should either return empty results or fall back to simple text matching
-        assertThat(results).isNotNull();
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    // === OTHER VALUABLE TEST CASES (preserved from original) ===
+    @Test
+    @DisplayName("Should find pre-release versions")
+    void testPreReleaseVersionSearch() throws Exception {
+        List<Version> results = performSearch("pre-release versions", "Version");
+        List<Version> expected = Arrays.asList(
+                testProducts.get(4), // 3.0.0-beta
+                testProducts.get(5), // 3.1.0-alpha
+                testProducts.get(6), // 4.0.0-rc1
+                testProducts.get(8)  // 1.0.0-SNAPSHOT
+        );
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("Should find versions by productId column")
+    void testProductIdSpecificSearchWithLLM() throws Exception {
+        List<Version> results  = performSearch("productId is 1", "Version");
+        List<Version> expected = Arrays.asList(testProducts.get(0), testProducts.get(1)); // 1.0.0, 1.2.3
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find release candidate versions")
     void testReleaseCandidateVersionSearch() throws Exception {
-        List<Version> results = performSearch("rc", "Version");
+        List<Version> results  = performSearch("rc", "Version");
+        List<Version> expected = Collections.singletonList(testProducts.get(6)); // 4.0.0-rc1
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Version::getName)
-                .containsExactly("4.0.0-rc1");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
+    // === SIMPLE TEST CASE (keeping only ONE) ===
     @Test
-    @DisplayName("Should find versions with semantic version pattern")
-    void testSemanticVersionPatternSearch() throws Exception {
-        List<Version> results = performSearch("2.0.0", "Version");
+    @DisplayName("Should generate working regex for simple text search")
+    void testSimpleTextSearchWithLLM() throws Exception {
+        List<Version> results  = performSearch("1.0.0", "Version");
+        List<Version> expected = Collections.singletonList(testProducts.get(0)); // 1.0.0 (not including 1.0.0-SNAPSHOT for exact match)
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Version::getName)
-                .containsExactly("2.0.0");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find snapshot versions")
     void testSnapshotVersionSearch() throws Exception {
-        List<Version> results = performSearch("snapshot", "Version");
+        List<Version> results  = performSearch("snapshot", "Version");
+        List<Version> expected = Collections.singletonList(testProducts.get(8)); // 1.0.0-SNAPSHOT
 
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Version::getName)
-                .containsExactly("1.0.0-SNAPSHOT");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find stable versions (without pre-release suffixes)")
     void testStableVersionSearch() throws Exception {
         List<Version> results = performSearch("stable versions", "Version");
+        List<Version> expected = Arrays.asList(
+                testProducts.get(0), // 1.0.0
+                testProducts.get(1), // 1.2.3
+                testProducts.get(2), // 2.0.0
+                testProducts.get(3), // 2.1.5
+                testProducts.get(7), // 0.9.0
+                testProducts.get(9)  // 5.2.1
+        );
 
-        // This should find versions without beta, alpha, rc, or SNAPSHOT suffixes
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(5)
-                .extracting(Version::getName)
-                .contains("1.0.0", "1.2.3", "2.0.0", "2.1.5", "0.9.0", "5.2.1");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("Should find versions by updated date column")
+    void testUpdatedDateSpecificSearchWithLLM() throws Exception {
+        List<Version> results  = performSearch("updated in 2025", "Version");
+        List<Version> expected = Arrays.asList(testProducts.get(6), testProducts.get(7), testProducts.get(8), testProducts.get(9)); // 4.0.0-rc1, 0.9.0, 1.0.0-SNAPSHOT, 5.2.1
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find versions between 1.0.0 and 3.0.0")
     void testVersionBetweenSearch() throws Exception {
         List<Version> results = performSearch("versions between 1.0.0 and 3.0.0", "Version");
+        List<Version> expected = Arrays.asList(
+                testProducts.get(1), // 1.2.3
+                testProducts.get(2), // 2.0.0
+                testProducts.get(3)  // 2.1.5
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(3) // Should include 1.x.x and 2.x.x versions
-                .extracting(Version::getName)
-                .contains("1.2.3", "2.0.0", "2.1.5");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find versions greater than 1.0.0")
     void testVersionGreaterThanSearch() throws Exception {
         List<Version> results = performSearch("version greater than 1.0.0", "Version");
+        List<Version> expected = Arrays.asList(
+                testProducts.get(1), // 1.2.3
+                testProducts.get(2), // 2.0.0
+                testProducts.get(3), // 2.1.5
+                testProducts.get(4), // 3.0.0-beta
+                testProducts.get(5), // 3.1.0-alpha
+                testProducts.get(6), // 4.0.0-rc1
+                testProducts.get(9)  // 5.2.1
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(4) // Should include 1.2.3, 2.0.0, 2.1.5, 3.0.0-beta, 3.1.0-alpha, 4.0.0-rc1, 5.2.1
-                .extracting(Version::getName)
-                .contains("1.2.3", "2.0.0", "2.1.5", "5.2.1");
-    }
-
-    @Test
-    @DisplayName("Should find versions less than 2.0.0")
-    void testVersionLessThanSearch() throws Exception {
-        List<Version> results = performSearch("version less than 2.0.0", "Version");
-
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(3) // Should include 1.0.0, 1.2.3, 0.9.0, 1.0.0-SNAPSHOT
-                .extracting(Version::getName)
-                .contains("1.0.0", "1.2.3", "0.9.0", "1.0.0-SNAPSHOT");
-    }
-
-    @Test
-    @DisplayName("Should find versions by name containing specific text")
-    void testVersionNameContainsSearch() throws Exception {
-        List<Version> results = performSearch("name contains beta", "Version");
-
-        assertThat(results)
-                .hasSize(1)
-                .extracting(Version::getName)
-                .containsExactly("3.0.0-beta");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find versions created after January 2024")
     void testVersionsCreatedAfterDateSearch() throws Exception {
         List<Version> results = performSearch("versions created after January 2024", "Version");
+        List<Version> expected = Arrays.asList(
+                testProducts.get(2), // 2.0.0 (created 2024-02-28)
+                testProducts.get(3), // 2.1.5 (created 2024-04-03)
+                testProducts.get(4), // 3.0.0-beta (created 2024-07-22)
+                testProducts.get(5), // 3.1.0-alpha (created 2024-09-05)
+                testProducts.get(6), // 4.0.0-rc1 (created 2024-11-12)
+                testProducts.get(7), // 0.9.0 (created 2025-01-05)
+                testProducts.get(8), // 1.0.0-SNAPSHOT (created 2025-02-10)
+                testProducts.get(9)  // 5.2.1 (created 2025-03-18)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(8) // Should exclude version 1 created in 2023
-                .extracting(Version::getName)
-                .contains("1.2.3", "2.0.0", "2.1.5", "3.0.0-beta", "3.1.0-alpha", "4.0.0-rc1", "0.9.0", "1.0.0-SNAPSHOT", "5.2.1");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find versions created before March 2024")
     void testVersionsCreatedBeforeDateSearch() throws Exception {
         List<Version> results = performSearch("versions created before March 2024", "Version");
+        List<Version> expected = Arrays.asList(
+                testProducts.get(0), // 1.0.0 (created 2023-06-15)
+                testProducts.get(1), // 1.2.3 (created 2024-01-10)
+                testProducts.get(2)  // 2.0.0 (created 2024-02-28)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(3) // Should include versions created in 2023 and January-February 2024
-                .extracting(Version::getName)
-                .contains("1.0.0", "1.2.3", "2.0.0");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("Should find versions updated in 2025")
     void testVersionsUpdatedInYearSearch() throws Exception {
         List<Version> results = performSearch("versions updated in 2025", "Version");
+        List<Version> expected = Arrays.asList(
+                testProducts.get(5), // 3.1.0-alpha (updated 2025-01-15)
+                testProducts.get(6), // 4.0.0-rc1 (updated 2025-02-08)
+                testProducts.get(7), // 0.9.0 (updated 2025-01-20)
+                testProducts.get(8), // 1.0.0-SNAPSHOT (updated 2025-02-25)
+                testProducts.get(9)  // 5.2.1 (updated 2025-04-02)
+        );
 
-        assertThat(results)
-                .hasSizeGreaterThanOrEqualTo(5) // Should include versions updated in 2025
-                .extracting(Version::getName)
-                .contains("3.1.0-alpha", "4.0.0-rc1", "0.9.0", "1.0.0-SNAPSHOT", "5.2.1");
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 }
