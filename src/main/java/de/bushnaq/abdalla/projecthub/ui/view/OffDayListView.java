@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -25,6 +26,7 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
+import de.bushnaq.abdalla.projecthub.ai.AiFilter;
 import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.dto.Location;
 import de.bushnaq.abdalla.projecthub.rest.api.OffDayApi;
@@ -52,6 +54,7 @@ import java.util.stream.Collectors;
 @PermitAll
 public class OffDayListView extends AbstractMainGrid<OffDay> implements BeforeEnterObserver, AfterNavigationObserver {
     public static final String                CREATE_OFFDAY_BUTTON             = "create-offday-button";
+    public static final String                OFFDAY_GLOBAL_FILTER             = "offday-global-filter";
     public static final String                OFFDAY_GRID                      = "offday-grid";
     public static final String                OFFDAY_GRID_DELETE_BUTTON_PREFIX = "offday-delete-button-";
     public static final String                OFFDAY_GRID_EDIT_BUTTON_PREFIX   = "offday-edit-button-";
@@ -67,19 +70,21 @@ public class OffDayListView extends AbstractMainGrid<OffDay> implements BeforeEn
     private             YearCalendarComponent yearCalendar;
 
 
-    public OffDayListView(OffDayApi offDayApi, UserApi userApi, Clock clock) {
+    public OffDayListView(OffDayApi offDayApi, UserApi userApi, Clock clock, AiFilter aiFilter, ObjectMapper mapper) {
         super(clock);
         this.offDayApi = offDayApi;
         this.userApi   = userApi;
 
         add(
-                createHeader(
+                createSmartHeader(
                         "User Off-Days",
                         OFFDAY_LIST_PAGE_TITLE,
                         VaadinIcon.CALENDAR,
                         CREATE_OFFDAY_BUTTON,
                         () -> openOffDayDialog(null),
-                        OFFDAY_ROW_COUNTER
+                        OFFDAY_ROW_COUNTER,
+                        OFFDAY_GLOBAL_FILTER,
+                        aiFilter, mapper, "OffDay"
                 ),
                 new HorizontalLayout(grid, createCalendar())
         );
@@ -210,13 +215,14 @@ public class OffDayListView extends AbstractMainGrid<OffDay> implements BeforeEn
                 return span;
             }));
 
-            VaadinUtil.addFilterableHeader(
-                    grid,
-                    firstDayColumn,
-                    "First Day",
-                    VaadinIcon.CALENDAR,
-                    offDay -> offDay.getFirstDay().format(dateFormatter)
-            );
+//            VaadinUtil.addFilterableHeader(
+//                    grid,
+//                    firstDayColumn,
+//                    "First Day",
+//                    VaadinIcon.CALENDAR,
+//                    offDay -> offDay.getFirstDay().format(dateFormatter)
+//            );
+            VaadinUtil.addSimpleHeader(firstDayColumn, "First Day", VaadinIcon.CALENDAR);
         }
 
         // Last Day Column
@@ -228,13 +234,14 @@ public class OffDayListView extends AbstractMainGrid<OffDay> implements BeforeEn
                 return span;
             }));
 
-            VaadinUtil.addFilterableHeader(
-                    grid,
-                    lastDayColumn,
-                    "Last Day",
-                    VaadinIcon.CALENDAR,
-                    offDay -> offDay.getLastDay().format(dateFormatter)
-            );
+//            VaadinUtil.addFilterableHeader(
+//                    grid,
+//                    lastDayColumn,
+//                    "Last Day",
+//                    VaadinIcon.CALENDAR,
+//                    offDay -> offDay.getLastDay().format(dateFormatter)
+//            );
+            VaadinUtil.addSimpleHeader(lastDayColumn, "Last Day", VaadinIcon.CALENDAR);
         }
 
         // Type Column
@@ -246,13 +253,14 @@ public class OffDayListView extends AbstractMainGrid<OffDay> implements BeforeEn
                 return span;
             }));
 
-            VaadinUtil.addFilterableHeader(
-                    grid,
-                    typeColumn,
-                    "Type",
-                    VaadinIcon.TAGS,
-                    offDay -> offDay.getType().name()
-            );
+//            VaadinUtil.addFilterableHeader(
+//                    grid,
+//                    typeColumn,
+//                    "Type",
+//                    VaadinIcon.TAGS,
+//                    offDay -> offDay.getType().name()
+//            );
+            VaadinUtil.addSimpleHeader(typeColumn, "Type", VaadinIcon.TAGS);
         }
 
         // Add action column using VaadinUtil

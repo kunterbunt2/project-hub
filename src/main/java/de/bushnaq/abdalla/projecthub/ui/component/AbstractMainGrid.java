@@ -377,8 +377,8 @@ public abstract class AbstractMainGrid<T> extends Main {
 
         // Add smart global filter if provided
         if (globalFilterId != null && grid != null) {
-            de.bushnaq.abdalla.projecthub.ui.component.SmartGlobalFilter<T> smartFilter =
-                    new de.bushnaq.abdalla.projecthub.ui.component.SmartGlobalFilter<>(
+            GlobalAiFilter<T> smartFilter =
+                    new GlobalAiFilter<>(
                             globalFilterId,
                             grid,
                             nlSearchService,

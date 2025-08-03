@@ -34,7 +34,7 @@ public class TestAi {
 
         ChatClient chatClient = builder.build();
 
-        String prompt = "Tell me a joke about AI";
+        String prompt = "Who are you?";
 
         Prompt                           promt    = new Prompt(prompt);
         ChatClient.ChatClientRequestSpec response = chatClient.prompt(promt);

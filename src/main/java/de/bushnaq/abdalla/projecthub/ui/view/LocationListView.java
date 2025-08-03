@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -24,6 +25,7 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
+import de.bushnaq.abdalla.projecthub.ai.AiFilter;
 import de.bushnaq.abdalla.projecthub.dto.Availability;
 import de.bushnaq.abdalla.projecthub.dto.Location;
 import de.bushnaq.abdalla.projecthub.dto.User;
@@ -54,6 +56,7 @@ import java.util.stream.Collectors;
 @PermitAll
 public class LocationListView extends AbstractMainGrid<Location> implements BeforeEnterObserver, AfterNavigationObserver {
     public static final String      CREATE_LOCATION_BUTTON             = "create-location-button";
+    public static final String      LOCATION_GLOBAL_FILTER             = "location-global-filter";
     public static final String      LOCATION_GRID                      = "location-grid";
     public static final String      LOCATION_GRID_COUNTRY_PREFIX       = "location-country-";
     public static final String      LOCATION_GRID_DELETE_BUTTON_PREFIX = "location-delete-button-";
@@ -67,19 +70,21 @@ public class LocationListView extends AbstractMainGrid<Location> implements Befo
     private final       LocationApi locationApi;
     private final       UserApi     userApi;
 
-    public LocationListView(LocationApi locationApi, UserApi userApi, Clock clock) {
+    public LocationListView(LocationApi locationApi, UserApi userApi, Clock clock, AiFilter aiFilter, ObjectMapper mapper) {
         super(clock);
         this.locationApi = locationApi;
         this.userApi     = userApi;
 
         add(
-                createHeader(
+                createSmartHeader(
                         "User Location",
                         LOCATION_LIST_PAGE_TITLE,
                         VaadinIcon.MAP_MARKER,
                         CREATE_LOCATION_BUTTON,
                         () -> openLocationDialog(null),
-                        LOCATION_ROW_COUNTER
+                        LOCATION_ROW_COUNTER,
+                        LOCATION_GLOBAL_FILTER,
+                        aiFilter, mapper, "Location"
                 ),
                 grid
         );
@@ -213,13 +218,14 @@ public class LocationListView extends AbstractMainGrid<Location> implements Befo
             }));
 
             // Add filterable header with sorting
-            VaadinUtil.addFilterableHeader(
-                    grid,
-                    startColumn,
-                    "Start Date",
-                    VaadinIcon.CALENDAR,
-                    location -> location.getStart().format(dateFormatter)
-            );
+//            VaadinUtil.addFilterableHeader(
+//                    grid,
+//                    startColumn,
+//                    "Start Date",
+//                    VaadinIcon.CALENDAR,
+//                    location -> location.getStart().format(dateFormatter)
+//            );
+            VaadinUtil.addSimpleHeader(startColumn, "Start Date", VaadinIcon.CALENDAR);
         }
 
         // Country column with descriptive name
@@ -234,17 +240,18 @@ public class LocationListView extends AbstractMainGrid<Location> implements Befo
             }));
 
             // Add filterable header with sorting
-            VaadinUtil.addFilterableHeader(
-                    grid,
-                    countryColumn,
-                    "Country",
-                    VaadinIcon.GLOBE,
-                    location -> {
-                        String countryCode = location.getCountry();
-                        Locale locale      = new Locale("", countryCode);
-                        return locale.getDisplayCountry() + " (" + countryCode + ")";
-                    }
-            );
+//            VaadinUtil.addFilterableHeader(
+//                    grid,
+//                    countryColumn,
+//                    "Country",
+//                    VaadinIcon.GLOBE,
+//                    location -> {
+//                        String countryCode = location.getCountry();
+//                        Locale locale      = new Locale("", countryCode);
+//                        return locale.getDisplayCountry() + " (" + countryCode + ")";
+//                    }
+//            );
+            VaadinUtil.addSimpleHeader(countryColumn, "Country", VaadinIcon.GLOBE);
         }
 
         // State column with descriptive name
@@ -259,13 +266,14 @@ public class LocationListView extends AbstractMainGrid<Location> implements Befo
             }));
 
             // Add filterable header with sorting
-            VaadinUtil.addFilterableHeader(
-                    grid,
-                    stateColumn,
-                    "State/Region",
-                    VaadinIcon.MAP_MARKER,
-                    location -> getStateDescription(location.getCountry(), location.getState())
-            );
+//            VaadinUtil.addFilterableHeader(
+//                    grid,
+//                    stateColumn,
+//                    "State/Region",
+//                    VaadinIcon.MAP_MARKER,
+//                    location -> getStateDescription(location.getCountry(), location.getState())
+//            );
+            VaadinUtil.addSimpleHeader(stateColumn, "State/Region", VaadinIcon.MAP_MARKER);
         }
 
         // Add actions column with delete validation

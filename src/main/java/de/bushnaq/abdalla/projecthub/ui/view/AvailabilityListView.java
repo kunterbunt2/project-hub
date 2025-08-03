@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -25,6 +26,7 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.NumberRenderer;
 import com.vaadin.flow.router.*;
+import de.bushnaq.abdalla.projecthub.ai.AiFilter;
 import de.bushnaq.abdalla.projecthub.dto.Availability;
 import de.bushnaq.abdalla.projecthub.dto.Location;
 import de.bushnaq.abdalla.projecthub.dto.User;
@@ -53,6 +55,7 @@ import java.util.stream.Collectors;
 @PageTitle("User Availability")
 @PermitAll
 public class AvailabilityListView extends AbstractMainGrid<Availability> implements BeforeEnterObserver, AfterNavigationObserver {
+    public static final String          AVAILABILITY_GLOBAL_FILTER             = "availability-global-filter";
     public static final String          AVAILABILITY_GRID                      = "availability-grid";
     public static final String          AVAILABILITY_GRID_AVAILABILITY_PREFIX  = "availability-value-";
     public static final String          AVAILABILITY_GRID_DELETE_BUTTON_PREFIX = "availability-delete-button-";
@@ -66,19 +69,21 @@ public class AvailabilityListView extends AbstractMainGrid<Availability> impleme
     private             User            currentUser;
     private final       UserApi         userApi;
 
-    public AvailabilityListView(AvailabilityApi availabilityApi, UserApi userApi, Clock clock) {
+    public AvailabilityListView(AvailabilityApi availabilityApi, UserApi userApi, Clock clock, AiFilter aiFilter, ObjectMapper mapper) {
         super(clock);
         this.availabilityApi = availabilityApi;
         this.userApi         = userApi;
 
         add(
-                createHeader(
+                createSmartHeader(
                         "User Availability",
                         AVAILABILITY_LIST_PAGE_TITLE,
                         VaadinIcon.CHART,
                         CREATE_AVAILABILITY_BUTTON,
                         () -> openAvailabilityDialog(null),
-                        AVAILABILITY_ROW_COUNTER
+                        AVAILABILITY_ROW_COUNTER,
+                        AVAILABILITY_GLOBAL_FILTER,
+                        aiFilter, mapper, "Availability"
                 ),
                 grid
         );
@@ -179,13 +184,14 @@ public class AvailabilityListView extends AbstractMainGrid<Availability> impleme
                 return span;
             }));
 
-            VaadinUtil.addFilterableHeader(
-                    grid,
-                    startColumn,
-                    "Start Date",
-                    VaadinIcon.CHART,
-                    availability -> availability.getStart().format(dateFormatter)
-            );
+//            VaadinUtil.addFilterableHeader(
+//                    grid,
+//                    startColumn,
+//                    "Start Date",
+//                    VaadinIcon.CHART,
+//                    availability -> availability.getStart().format(dateFormatter)
+//            );
+            VaadinUtil.addSimpleHeader(startColumn, "Start Date", VaadinIcon.CALENDAR);
         }
 
         // Availability Column with percentage formatting
@@ -196,13 +202,14 @@ public class AvailabilityListView extends AbstractMainGrid<Availability> impleme
                     percentageFormat
             ));
 
-            VaadinUtil.addFilterableHeader(
-                    grid,
-                    availabilityColumn,
-                    "Availability",
-                    VaadinIcon.CHART,
-                    availability -> percentageFormat.format(availability.getAvailability())
-            );
+//            VaadinUtil.addFilterableHeader(
+//                    grid,
+//                    availabilityColumn,
+//                    "Availability",
+//                    VaadinIcon.CHART,
+//                    availability -> percentageFormat.format(availability.getAvailability())
+//            );
+            VaadinUtil.addSimpleHeader(availabilityColumn, "Start Date", VaadinIcon.CHART);
         }
 
         // Add actions column with delete validation
@@ -237,12 +244,9 @@ public class AvailabilityListView extends AbstractMainGrid<Availability> impleme
     private void refreshGrid() {
         if (currentUser != null) {
             // Get a fresh copy of the user to ensure we have the latest data
-            User refreshedUser = userApi.getById(currentUser.getId());
-            currentUser = refreshedUser;
-
+            currentUser = userApi.getById(currentUser.getId());
             // Sort availabilities by start date in descending order (latest first)
             List<Availability> sortedAvailabilities = currentUser.getAvailabilities().stream().sorted(Comparator.comparing(Availability::getStart).reversed()).collect(Collectors.toList());
-
             dataProvider.getItems().clear();
             dataProvider.getItems().addAll(sortedAvailabilities);
             dataProvider.refreshAll();

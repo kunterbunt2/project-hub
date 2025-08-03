@@ -239,6 +239,155 @@ public class AiFilter {
                         Output: (?i).*"name"\\s*:\\s*"[^"]*beta[^"]*".*"""
         ));
 
+        // Availability configuration
+        configs.put("Availability", new PromptConfig(
+                """
+                        {
+                          "id" : 1,
+                          "created" : "2025-01-01T08:00:00+01:00",
+                          "updated" : "2025-01-01T08:00:00+01:00",
+                          "availability" : 0.8,
+                          "start" : "2025-01-01",
+                          "user" : {
+                            "id" : 1,
+                            "name" : "John Doe"
+                          }
+                        }""",
+                """
+                        Special considerations for Availability:
+                        - Availability values are floats between 0.0 and 1.0 (e.g., 0.8 = 80% availability)
+                        - Start dates are in LocalDate format (YYYY-MM-DD)
+                        - Availability keys follow pattern A-1, A-123
+                        - Support percentage-based queries and date range filtering
+                        - Consider user associations for availability periods""",
+                """
+                        Examples:
+                        Input: "80% availability"
+                        Output: (?i).*"availability"\\s*:\\s*0\\.8.*
+                        
+                        Input: "availability greater than 50%"
+                        Output: (?i).*"availability"\\s*:\\s*(0\\.[5-9][0-9]*|1\\.0).*
+                        
+                        Input: "availability less than 90%"
+                        Output: (?i).*"availability"\\s*:\\s*(0\\.[0-8][0-9]*|0\\.0).*
+                        
+                        Input: "availability starting after January 2025"
+                        Output: (?i).*"start"\\s*:\\s*"2025-(0[2-9]|1[0-2])-.*
+                        
+                        Input: "availability starting before March 2025"
+                        Output: (?i).*"start"\\s*:\\s*"2025-(0[1-2])-.*
+                        
+                        Input: "full availability"
+                        Output: (?i).*"availability"\\s*:\\s*1\\.0.*
+                        
+                        Input: "partial availability"
+                        Output: (?i).*"availability"\\s*:\\s*(0\\.[1-9][0-9]*|0\\.[0-9][1-9]).*
+                        
+                        Input: "availability created in 2025"
+                        Output: (?i).*"created"\\s*:\\s*"2025-(0[1-9]|1[0-2])-.*"""
+        ));
+
+        // Location configuration
+        configs.put("Location", new PromptConfig(
+                """
+                        {
+                          "id" : 1,
+                          "created" : "2025-01-01T08:00:00+01:00",
+                          "updated" : "2025-01-01T08:00:00+01:00",
+                          "country" : "Germany",
+                          "state" : "Bavaria",
+                          "start" : "2025-01-01",
+                          "user" : {
+                            "id" : 1,
+                            "name" : "John Doe"
+                          }
+                        }""",
+                """
+                        Special considerations for Locations:
+                        - Country and state fields contain location information for determining public holidays
+                        - Start dates indicate when the user began working at this location
+                        - Location keys follow pattern L-1, L-123
+                        - Support geographical searches and date-based filtering
+                        - Consider legal/contract location contexts""",
+                """
+                        Examples:
+                        Input: "Germany"
+                        Output: (?i).*germany.*
+                        
+                        Input: "country Germany"
+                        Output: (?i).*"country"\\s*:\\s*"[^"]*Germany[^"]*".*
+                        
+                        Input: "state Bavaria"
+                        Output: (?i).*"state"\\s*:\\s*"[^"]*Bavaria[^"]*".*
+                        
+                        Input: "locations in Australia"
+                        Output: (?i).*"country"\\s*:\\s*"[^"]*Australia[^"]*".*
+                        
+                        Input: "locations starting after January 2025"
+                        Output: (?i).*"start"\\s*:\\s*"2025-(0[2-9]|1[0-2])-.*
+                        
+                        Input: "locations starting before March 2025"
+                        Output: (?i).*"start"\\s*:\\s*"2025-(0[1-2])-.*
+                        
+                        Input: "European locations"
+                        Output: (?i).*(Germany|France|Italy|Spain|Netherlands|Belgium|Austria|Switzerland|United Kingdom|Ireland|Portugal|Greece|Denmark|Sweden|Norway|Finland|Poland|Czech Republic|Hungary|Slovakia|Slovenia|Croatia|Romania|Bulgaria|Lithuania|Latvia|Estonia|Luxembourg|Malta|Cyprus).*
+                        
+                        Input: "locations created in 2025"
+                        Output: (?i).*"created"\\s*:\\s*"2025-(0[1-9]|1[0-2])-.*"""
+        ));
+
+        // OffDay configuration
+        configs.put("OffDay", new PromptConfig(
+                """
+                        {
+                          "id" : 1,
+                          "created" : "2025-01-01T08:00:00+01:00",
+                          "updated" : "2025-01-01T08:00:00+01:00",
+                          "firstDay" : "2025-01-15",
+                          "lastDay" : "2025-01-17",
+                          "type" : "VACATION",
+                          "user" : {
+                            "id" : 1,
+                            "name" : "John Doe"
+                          }
+                        }""",
+                """
+                        Special considerations for OffDays:
+                        - Type values: VACATION, SICK, TRIP, HOLIDAY
+                        - Date ranges with firstDay and lastDay in LocalDate format
+                        - OffDay keys follow pattern D-1, D-123
+                        - Support type-based filtering and date range queries
+                        - Consider duration calculations and overlap queries""",
+                """
+                        Examples:
+                        Input: "vacation"
+                        Output: (?i).*"type"\\s*:\\s*"VACATION".*
+                        
+                        Input: "sick days"
+                        Output: (?i).*"type"\\s*:\\s*"SICK".*
+                        
+                        Input: "holidays"
+                        Output: (?i).*"type"\\s*:\\s*"HOLIDAY".*
+                        
+                        Input: "trips"
+                        Output: (?i).*"type"\\s*:\\s*"TRIP".*
+                        
+                        Input: "off days in January 2025"
+                        Output: (?i).*"firstDay"\\s*:\\s*"2025-01-.*
+                        
+                        Input: "off days starting after February 2025"
+                        Output: (?i).*"firstDay"\\s*:\\s*"2025-(0[3-9]|1[0-2])-.*
+                        
+                        Input: "off days ending before March 2025"
+                        Output: (?i).*"lastDay"\\s*:\\s*"2025-(0[1-2])-.*
+                        
+                        Input: "long vacations"
+                        Output: (?i).*"type"\\s*:\\s*"VACATION".*
+                        
+                        Input: "off days created in 2025"
+                        Output: (?i).*"created"\\s*:\\s*"2025-(0[1-9]|1[0-2])-.*"""
+        ));
+
         return configs;
     }
 
@@ -256,29 +405,25 @@ public class AiFilter {
 
         System.out.println("Parsing natural language query: '" + query + "' for entity type: " + entityType);
 
-        // Try LLM parsing
-        int tryCount = 10;
-        do {
-            try {
-                String llmResult = parseWithLLM(query, entityType);
-                if (llmResult != null && !llmResult.trim().isEmpty()) {
-                    return llmResult;
-                }
-            } catch (Exception e) {
-                logger.warn("LLM parsing failed, falling back to simple search: {}", e.getMessage());
+        try {
+            String llmResult = parseWithLLM(query, entityType);
+            if (llmResult != null && !llmResult.trim().isEmpty()) {
+                return llmResult;
             }
-        } while (--tryCount > 0);
-
-        // Fallback to simple case-insensitive search pattern
-        return String.format("(?i).*%s.*", query.replaceAll("([\\\\\\[\\]{}()*+?.^$|])", "\\\\$1"));
+            logger.warn("LLM parsing failed, result is empty");
+            throw new RuntimeException("LLM parsing failed, result is empty");
+        } catch (Exception e) {
+            logger.warn("LLM parsing failed {}", e.getMessage(), e);
+            throw new RuntimeException("LLM parsing failed", e);
+        }
     }
 
     /**
      * Backward compatibility method - defaults to Product entity type
      */
-    public String parseQuery(String query) {
-        return parseQuery(query, "Product");
-    }
+//    public String parseQuery(String query) {
+//        return parseQuery(query, "Product");
+//    }
 
     /**
      * Parse query using offline LLM via Spring AI with entity-specific prompts

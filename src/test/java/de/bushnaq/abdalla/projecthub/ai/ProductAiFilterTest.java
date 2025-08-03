@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import de.bushnaq.abdalla.projecthub.dto.Product;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,7 +32,6 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,18 +46,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("test")
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
-class AiProductFilterTest {
-    private final ObjectMapper  filterMapper;
-    private       String        regexPattern;
-    private final AiFilter      searchService;
-    private       List<Product> testProducts;
+class ProductAiFilterTest extends AbstractAiFilterTest<Product> {
 
-    public AiProductFilterTest(ObjectMapper mapper, AiFilter searchService) {
-        // Create a separate ObjectMapper for filtering that includes @JsonIgnore fields
-        this.filterMapper = mapper.copy();
-        // Use custom annotation introspector that ignores @JsonIgnore but preserves other annotations
-        this.filterMapper.setAnnotationIntrospector(new FilterAnnotationIntrospector());
-        this.searchService = searchService;
+    public ProductAiFilterTest(ObjectMapper mapper, AiFilter aiFilter) {
+        super(mapper, aiFilter);
     }
 
     private Product createProduct(Long id, String name, OffsetDateTime created, OffsetDateTime updated) {
@@ -71,50 +61,6 @@ class AiProductFilterTest {
         return product;
     }
 
-    private @NotNull List<Product> execute(String question) throws Exception {
-        String answer = searchService.parseQuery(question);
-        regexPattern = answer;
-
-        assertThat(answer).isNotEmpty();
-
-
-        // Test filtering
-        List<Product> filtered = filterProducts(answer);
-
-        System.out.println("\n=== Products matched by regex ===");
-        for (Product product : filtered) {
-            String json = filterMapper.writeValueAsString(product);
-            System.out.println(json);
-        }
-        return filtered;
-    }
-
-    /**
-     * Helper method to simulate filtering products using regex patterns
-     * (mimics what SmartGlobalFilter does)
-     */
-    private List<Product> filterProducts(String regexPattern) throws Exception {
-        if (regexPattern == null || regexPattern.trim().isEmpty()) {
-            return testProducts;
-        }
-
-        try {
-            Pattern pattern = Pattern.compile(regexPattern);
-            return testProducts.stream()
-                    .filter(product -> {
-                        try {
-                            String json = filterMapper.writerWithDefaultPrettyPrinter().writeValueAsString(product);
-                            // Use find() instead of matches() - matches() requires the entire string to match
-                            return pattern.matcher(json).find();
-                        } catch (Exception e) {
-                            return false;
-                        }
-                    })
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid regex pattern: " + regexPattern, e);
-        }
-    }
 
     @BeforeEach
     void setUp() {
@@ -163,7 +109,7 @@ class AiProductFilterTest {
     @DisplayName("Should handle case-insensitive searches")
     void testCaseInsensitiveSearchWithLLM() throws Exception {
         String        question      = "MARS";
-        List<Product> filtered      = execute(question);
+        List<Product> filtered      = performSearch(question, Product.class.getSimpleName());
         List<String>  filteredNames = filtered.stream().map(Product::getName).collect(Collectors.toList());
         assertThat(filteredNames).anyMatch(name -> name.toLowerCase().contains("mars"));
     }
@@ -172,7 +118,7 @@ class AiProductFilterTest {
     @DisplayName("Should generate working regex for complex search")
     void testComplexSearchWithLLM() throws Exception {
         String        question = "space products created in 2024";
-        List<Product> filtered = execute(question);
+        List<Product> filtered = performSearch(question, Product.class.getSimpleName());
         assertThat(filtered).hasSize(1);
         for (Product product : filtered) {
             boolean hasSpace      = product.getName().toLowerCase().contains("space");
@@ -188,7 +134,7 @@ class AiProductFilterTest {
     @DisplayName("Should generate working regex for date-based search")
     void testDateBasedSearchWithLLM() throws Exception {
         String        question = "products created after July 2024";
-        List<Product> filtered = execute(question);
+        List<Product> filtered = performSearch(question, Product.class.getSimpleName());
         assertThat(filtered).hasSize(7);
 
         // Verify the dates make sense
@@ -203,8 +149,8 @@ class AiProductFilterTest {
     @DisplayName("Should generate working regex for name-specific search")
     void testNameSpecificSearchWithLLM() throws Exception {
         String        question = "name contains project";
-        List<Product> filtered = execute(question);
-        assertThat(regexPattern).isNotEmpty();
+        List<Product> filtered = performSearch(question, Product.class.getSimpleName());
+        assertThat(regexString).isNotEmpty();
         // Should find products with "project" in the name field
         List<String> filteredNames = filtered.stream().map(Product::getName).collect(Collectors.toList());
         assertThat(filteredNames).anyMatch(name -> name.toLowerCase().contains("project"));
@@ -214,8 +160,8 @@ class AiProductFilterTest {
     @DisplayName("Should generate working regex for simple text search")
     void testSimpleTextSearchWithLLM() throws Exception {
         String        question = "Orion";
-        List<Product> filtered = execute(question);
-        assertThat(regexPattern).containsIgnoringCase("orion");
+        List<Product> filtered = performSearch(question, Product.class.getSimpleName());
+        assertThat(regexString).containsIgnoringCase("orion");
         assertThat(filtered).hasSize(1);
         List<String> filteredNames = filtered.stream().map(Product::getName).collect(Collectors.toList());
         assertThat(filteredNames).anyMatch(name -> name.toLowerCase().contains("orion"));
@@ -225,7 +171,7 @@ class AiProductFilterTest {
     @DisplayName("Should generate working regex for updated date search")
     void testUpdatedDateSearchWithLLM() throws Exception {
         String        question = "products updated in 2025";
-        List<Product> filtered = execute(question);
+        List<Product> filtered = performSearch(question, Product.class.getSimpleName());
         System.out.println("\n=== Expected products updated in 2025 ===");
         for (Product product : testProducts) {
             if (product.getUpdated().getYear() == 2025) {

@@ -39,30 +39,31 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * Enhanced global filter component that supports both simple text search and natural language queries.
  * This component integrates with NaturalLanguageSearchService to parse complex search queries.
  */
-public class SmartGlobalFilter<T> extends HorizontalLayout {
+public class GlobalAiFilter<T> extends HorizontalLayout {
 
-    private static final Logger       logger = LoggerFactory.getLogger(SmartGlobalFilter.class);
+    private static final Logger       logger = LoggerFactory.getLogger(GlobalAiFilter.class);
+    private final        AiFilter     aiFilter;
     private final        String       entityType;
     private final        ObjectMapper filterMapper;
     private final        Grid<T>      grid;
-    private final        AiFilter     nlSearchService;
     private final        TextField    searchField;
     private final        Span         statusSpan;
 
-    public SmartGlobalFilter(String fieldId,
-                             Grid<T> grid,
-                             AiFilter nlSearchService,
-                             ObjectMapper mapper,
-                             String entityType) {
+    public GlobalAiFilter(String fieldId,
+                          Grid<T> grid,
+                          AiFilter aiFilter,
+                          ObjectMapper mapper,
+                          String entityType) {
 
-        this.grid            = grid;
-        this.nlSearchService = nlSearchService;
-        this.entityType      = entityType;
+        this.grid       = grid;
+        this.aiFilter   = aiFilter;
+        this.entityType = entityType;
 
         // Create a separate ObjectMapper for filtering that includes @JsonIgnore fields
         this.filterMapper = mapper.copy();
@@ -122,24 +123,19 @@ public class SmartGlobalFilter<T> extends HorizontalLayout {
         add(searchField, helpButton, statusSpan);
     }
 
-    private void applySearchQuery(String regexPattern) {
-        try {
-            Pattern             pattern      = Pattern.compile(regexPattern);
-            ListDataProvider<T> dataProvider = (ListDataProvider<T>) grid.getDataProvider();
-            dataProvider.setFilter(item -> {
-                        try {
-                            String json = filterMapper.writerWithDefaultPrettyPrinter().writeValueAsString(item);
-                            // Apply the LLM-generated regex pattern
-                            return pattern.matcher(json).find();
-                        } catch (JsonProcessingException e) {
-                            logger.error("Error serializing item to JSON for filtering", e);
-                            return false;
-                        }
+    private void applySearchQuery(Pattern regexPattern) {
+        ListDataProvider<T> dataProvider = (ListDataProvider<T>) grid.getDataProvider();
+        dataProvider.setFilter(item -> {
+                    try {
+                        String json = filterMapper.writerWithDefaultPrettyPrinter().writeValueAsString(item);
+                        // Apply the LLM-generated regex pattern
+                        return regexPattern.matcher(json).find();
+                    } catch (JsonProcessingException e) {
+                        logger.error("Error serializing item to JSON for filtering", e);
+                        return false;
                     }
-            );
-        } catch (Exception e) {
-            logger.error("Invalid regex pattern '{}', falling back to simple text search: {}", regexPattern, e.getMessage());
-        }
+                }
+        );
 
     }
 
@@ -191,29 +187,29 @@ public class SmartGlobalFilter<T> extends HorizontalLayout {
         return searchField;
     }
 
-    private void onSearchValueChange(com.vaadin.flow.component.AbstractField.ComponentValueChangeEvent<TextField, String> event) {
-        String searchValue = event.getValue();
-
-        if (searchValue == null || searchValue.trim().isEmpty()) {
-            clearFilters();
-            return;
-        }
-
-        try {
-            // Parse the query using natural language service
-            String searchQuery = nlSearchService.parseQuery(searchValue);
-
-            // Apply the parsed search criteria
-            applySearchQuery(searchQuery);
-
-            // Show feedback to user about what was understood
-            showSearchFeedback(searchQuery, searchValue);
-
-        } catch (Exception e) {
-            logger.error("Error processing search query: {}", searchValue, e);
-            showErrorFeedback();
-        }
-    }
+//    private void onSearchValueChange(com.vaadin.flow.component.AbstractField.ComponentValueChangeEvent<TextField, String> event) {
+//        String searchValue = event.getValue();
+//
+//        if (searchValue == null || searchValue.trim().isEmpty()) {
+//            clearFilters();
+//            return;
+//        }
+//
+//        try {
+//            // Parse the query using natural language service
+//            String searchQuery = aiFilter.parseQuery(searchValue);
+//
+//            // Apply the parsed search criteria
+//            applySearchQuery(searchQuery);
+//
+//            // Show feedback to user about what was understood
+//            showSearchFeedback(searchQuery, searchValue);
+//
+//        } catch (Exception e) {
+//            logger.error("Error processing search query: {}", searchValue, e);
+//            showErrorFeedback();
+//        }
+//    }
 
     private void performSearch() {
         String searchValue = searchField.getValue();
@@ -222,21 +218,21 @@ public class SmartGlobalFilter<T> extends HorizontalLayout {
             clearFilters();
             return;
         }
-
-        try {
+        int    tryCount    = 10;
+        String regexString = "";
+        do {
             // Parse the query using natural language service with entity type
-            String searchQuery = nlSearchService.parseQuery(searchValue, entityType);
+            try {
+                regexString = aiFilter.parseQuery(searchValue, entityType);
+                Pattern regexPattern = Pattern.compile(regexString);
+                applySearchQuery(regexPattern);
+            } catch (PatternSyntaxException e) {
+                logger.error("Invalid regex pattern '{}', falling back to simple text search: {}", regexString, e.getMessage());
+            }
+        } while (--tryCount > 0);
 
-            // Apply the parsed search criteria
-            applySearchQuery(searchQuery);
-
-            // Show feedback to user about what was understood
-            showSearchFeedback(searchQuery, searchValue);
-
-        } catch (Exception e) {
-            logger.error("Error processing search query: {}", searchValue, e);
-            showErrorFeedback();
-        }
+        // Show feedback to user about what was understood
+        showSearchFeedback(regexString, searchValue);
     }
 
     private void showErrorFeedback() {
