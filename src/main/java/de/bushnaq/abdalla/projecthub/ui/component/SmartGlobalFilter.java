@@ -75,7 +75,7 @@ public class SmartGlobalFilter<T> extends HorizontalLayout {
         // Create search field
         searchField = new TextField();
         searchField.setId(fieldId);
-        searchField.setPlaceholder("Search... (try: 'products created after January 2024', press Enter to search)");
+        searchField.setPlaceholder("AI powered filter");
         searchField.setClearButtonVisible(true);
         searchField.setValueChangeMode(ValueChangeMode.ON_CHANGE); // Use ON_CHANGE but we'll control when to actually search
         searchField.setWidth("350px");

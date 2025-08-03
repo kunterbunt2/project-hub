@@ -257,14 +257,17 @@ public class AiFilter {
         System.out.println("Parsing natural language query: '" + query + "' for entity type: " + entityType);
 
         // Try LLM parsing
-        try {
-            String llmResult = parseWithLLM(query, entityType);
-            if (llmResult != null && !llmResult.trim().isEmpty()) {
-                return llmResult;
+        int tryCount = 10;
+        do {
+            try {
+                String llmResult = parseWithLLM(query, entityType);
+                if (llmResult != null && !llmResult.trim().isEmpty()) {
+                    return llmResult;
+                }
+            } catch (Exception e) {
+                logger.warn("LLM parsing failed, falling back to simple search: {}", e.getMessage());
             }
-        } catch (Exception e) {
-            logger.warn("LLM parsing failed, falling back to simple search: {}", e.getMessage());
-        }
+        } while (--tryCount > 0);
 
         // Fallback to simple case-insensitive search pattern
         return String.format("(?i).*%s.*", query.replaceAll("([\\\\\\[\\]{}()*+?.^$|])", "\\\\$1"));
