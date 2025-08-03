@@ -388,6 +388,76 @@ public class AiFilter {
                         Output: (?i).*"created"\\s*:\\s*"2025-(0[1-9]|1[0-2])-.*"""
         ));
 
+        // User configuration
+        configs.put("User", new PromptConfig(
+                """
+                        {
+                          "id" : 1,
+                          "created" : "2025-01-01T08:00:00+01:00",
+                          "updated" : "2025-01-01T08:00:00+01:00",
+                          "name" : "John Doe",
+                          "email" : "john.doe@company.com",
+                          "firstWorkingDay" : "2020-03-15",
+                          "lastWorkingDay" : null,
+                          "color" : {
+                            "value" : -16776961,
+                            "falpha" : 0.0
+                          },
+                          "availabilities" : [ ],
+                          "locations" : [ ],
+                          "offDays" : [ ]
+                        }""",
+                """
+                        Special considerations for Users:
+                        - User names contain first and last names (e.g., "John Doe", "Jane Smith")
+                        - Email addresses follow standard patterns (firstname.lastname@domain.com)
+                        - Employment status: active users have lastWorkingDay as null, former employees have a date
+                        - User keys follow pattern U-1, U-123
+                        - firstWorkingDay indicates hire date, lastWorkingDay indicates termination date
+                        - Users have associated availabilities, locations, and off days
+                        - Support tenure-based queries and employment status filtering""",
+                """
+                        Examples:
+                        Input: "John Doe"
+                        Output: (?i).*"name"\\s*:\\s*"[^"]*John Doe[^"]*".*
+                        
+                        Input: "first name John"
+                        Output: (?i).*"name"\\s*:\\s*"[^"]*John[^"]*".*
+                        
+                        Input: "last name Smith"
+                        Output: (?i).*"name"\\s*:\\s*"[^"]*Smith[^"]*".*
+                        
+                        Input: "email john.doe@company.com"
+                        Output: (?i).*"email"\\s*:\\s*"[^"]*john\\.doe@company\\.com[^"]*".*
+                        
+                        Input: "@company.com"
+                        Output: (?i).*"email"\\s*:\\s*"[^"]*@company\\.com[^"]*".*
+                        
+                        Input: "active users"
+                        Output: (?i).*"lastWorkingDay"\\s*:\\s*null.*
+                        
+                        Input: "former employees"
+                        Output: (?i).*"lastWorkingDay"\\s*:\\s*"[0-9]{4}-[0-9]{2}-[0-9]{2}".*
+                        
+                        Input: "users starting after 2020"
+                        Output: (?i).*"firstWorkingDay"\\s*:\\s*"(202[1-9]|20[3-9][0-9])-.*
+                        
+                        Input: "users starting before 2020"
+                        Output: (?i).*"firstWorkingDay"\\s*:\\s*"(19[0-9]{2}|201[0-9])-.*
+                        
+                        Input: "users starting in 2024"
+                        Output: (?i).*"firstWorkingDay"\\s*:\\s*"2024-.*
+                        
+                        Input: "long-term employees"
+                        Output: (?i).*"firstWorkingDay"\\s*:\\s*"(19[0-9]{2}|20[01][0-9]|2020)-.*
+                        
+                        Input: "new employees"
+                        Output: (?i).*"firstWorkingDay"\\s*:\\s*"(202[3-9]|20[3-9][0-9])-.*
+                        
+                        Input: "users created in 2025"
+                        Output: (?i).*"created"\\s*:\\s*"2025-(0[1-9]|1[0-2])-.*"""
+        ));
+
         return configs;
     }
 

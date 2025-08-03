@@ -17,12 +17,14 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
+import de.bushnaq.abdalla.projecthub.ai.AiFilter;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.rest.api.UserApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
@@ -43,6 +45,7 @@ import java.time.format.FormatStyle;
 public class UserListView extends AbstractMainGrid<User> implements AfterNavigationObserver {
     public static final String  CREATE_USER_BUTTON             = "create-user-button";
     public static final String  ROUTE                          = "user-list";
+    public static final String  USER_GLOBAL_FILTER             = "user-global-filter";
     public static final String  USER_GRID                      = "user-grid";
     public static final String  USER_GRID_DELETE_BUTTON_PREFIX = "user-grid-delete-button-prefix-";
     public static final String  USER_GRID_EDIT_BUTTON_PREFIX   = "user-grid-edit-button-prefix-";
@@ -52,19 +55,21 @@ public class UserListView extends AbstractMainGrid<User> implements AfterNavigat
     private final       Clock   clock;
     private final       UserApi userApi;
 
-    public UserListView(UserApi userApi, Clock clock) {
+    public UserListView(UserApi userApi, Clock clock, AiFilter aiFilter, ObjectMapper mapper) {
         super(clock);
         this.userApi = userApi;
         this.clock   = clock;
 
         add(
-                createHeader(
+                createSmartHeader(
                         "Users",
                         USER_LIST_PAGE_TITLE,
                         VaadinIcon.USERS,
                         CREATE_USER_BUTTON,
                         () -> openUserDialog(null),
-                        USER_ROW_COUNTER
+                        USER_ROW_COUNTER,
+                        USER_GLOBAL_FILTER,
+                        aiFilter, mapper, "User"
                 ),
                 grid
         );
@@ -130,41 +135,40 @@ public class UserListView extends AbstractMainGrid<User> implements AfterNavigat
             }));
 
             // Configure a custom comparator to properly sort by the name property
-            nameColumn.setComparator((user1, user2) ->
-                    user1.getName().compareToIgnoreCase(user2.getName()));
+            nameColumn.setComparator((user1, user2) -> user1.getName().compareToIgnoreCase(user2.getName()));
 
-            VaadinUtil.addFilterableHeader(grid, nameColumn, "Name", VaadinIcon.USER, User::getName);
+//            VaadinUtil.addFilterableHeader(grid, nameColumn, "Name", VaadinIcon.USER, User::getName);
+            VaadinUtil.addSimpleHeader(nameColumn, "Name", VaadinIcon.USER);
         }
 
         {
             Grid.Column<User> emailColumn = grid.addColumn(User::getEmail);
-            VaadinUtil.addFilterableHeader(grid, emailColumn, "Email", VaadinIcon.ENVELOPE, User::getEmail);
+//            VaadinUtil.addFilterableHeader(grid, emailColumn, "Email", VaadinIcon.ENVELOPE, User::getEmail);
+            VaadinUtil.addSimpleHeader(emailColumn, "Email", VaadinIcon.ENVELOPE);
         }
 
         {
-            Grid.Column<User> firstWorkingDayColumn = grid.addColumn(
-                    user -> user.getFirstWorkingDay() != null ? user.getFirstWorkingDay().toString() : "");
-            VaadinUtil.addFilterableHeader(grid, firstWorkingDayColumn, "First Working Day", VaadinIcon.CALENDAR_USER,
-                    user -> user.getFirstWorkingDay() != null ? user.getFirstWorkingDay().toString() : "");
+            Grid.Column<User> firstWorkingDayColumn = grid.addColumn(user -> user.getFirstWorkingDay() != null ? user.getFirstWorkingDay().toString() : "");
+//            VaadinUtil.addFilterableHeader(grid, firstWorkingDayColumn, "First Working Day", VaadinIcon.CALENDAR_USER, user -> user.getFirstWorkingDay() != null ? user.getFirstWorkingDay().toString() : "");
+            VaadinUtil.addSimpleHeader(firstWorkingDayColumn, "First Working Day", VaadinIcon.CALENDAR_USER);
         }
 
         {
-            Grid.Column<User> lastWorkingDayColumn = grid.addColumn(
-                    user -> user.getLastWorkingDay() != null ? user.getLastWorkingDay().toString() : "");
-            VaadinUtil.addFilterableHeader(grid, lastWorkingDayColumn, "Last Working Day", VaadinIcon.CALENDAR_USER,
-                    user -> user.getLastWorkingDay() != null ? user.getLastWorkingDay().toString() : "");
+            Grid.Column<User> lastWorkingDayColumn = grid.addColumn(user -> user.getLastWorkingDay() != null ? user.getLastWorkingDay().toString() : "");
+//            VaadinUtil.addFilterableHeader(grid, lastWorkingDayColumn, "Last Working Day", VaadinIcon.CALENDAR_USER, user -> user.getLastWorkingDay() != null ? user.getLastWorkingDay().toString() : "");
+            VaadinUtil.addSimpleHeader(lastWorkingDayColumn, "Last Working Day", VaadinIcon.CALENDAR_USER);
         }
 
         {
             Grid.Column<User> createdColumn = grid.addColumn(user -> dateTimeFormatter.format(user.getCreated()));
-            VaadinUtil.addFilterableHeader(grid, createdColumn, "Created", VaadinIcon.CALENDAR,
-                    user -> dateTimeFormatter.format(user.getCreated()));
+//            VaadinUtil.addFilterableHeader(grid, createdColumn, "Created", VaadinIcon.CALENDAR, user -> dateTimeFormatter.format(user.getCreated()));
+            VaadinUtil.addSimpleHeader(createdColumn, "Created", VaadinIcon.CALENDAR);
         }
 
         {
             Grid.Column<User> updatedColumn = grid.addColumn(user -> dateTimeFormatter.format(user.getUpdated()));
-            VaadinUtil.addFilterableHeader(grid, updatedColumn, "Updated", VaadinIcon.CALENDAR,
-                    user -> dateTimeFormatter.format(user.getUpdated()));
+//            VaadinUtil.addFilterableHeader(grid, updatedColumn, "Updated", VaadinIcon.CALENDAR, user -> dateTimeFormatter.format(user.getUpdated()));
+            VaadinUtil.addSimpleHeader(updatedColumn, "Updated", VaadinIcon.CALENDAR);
         }
 
         // Add actions column using VaadinUtil

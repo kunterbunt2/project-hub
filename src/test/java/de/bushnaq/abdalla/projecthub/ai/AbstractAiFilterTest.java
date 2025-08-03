@@ -70,7 +70,7 @@ public class AbstractAiFilterTest<T> {
                 }
                 return filtered;
             } catch (PatternSyntaxException e) {
-                logger.error("Invalid regex pattern '{}', falling back to simple text search: {}", regexString, e.getMessage());
+                logger.error("Invalid regex pattern '{}', retrying {}/{}", regexString, tryCount, 10, e);
             }
         } while (--tryCount > 0);
         return null;
