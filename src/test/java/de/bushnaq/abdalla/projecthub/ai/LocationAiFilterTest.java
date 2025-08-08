@@ -20,9 +20,7 @@ package de.bushnaq.abdalla.projecthub.ai;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.dto.Location;
 import de.bushnaq.abdalla.projecthub.dto.User;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestConstructor;
@@ -47,10 +45,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("test")
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@TestMethodOrder(MethodOrderer.DisplayName.class)
 class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
 
-    public LocationAiFilterTest(ObjectMapper mapper, AiFilter aiFilter) {
-        super(mapper, aiFilter);
+    public LocationAiFilterTest(ObjectMapper mapper, AiFilterService aiFilterService) {
+        super(mapper, aiFilterService);
     }
 
     private Location createLocation(Long id, String country, String state, LocalDate start,
@@ -140,7 +139,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
     }
 
     @Test
-    @DisplayName("Should find locations in Australia")
+    @DisplayName("locations in Australia")
     void testAustraliaLocationSearch() throws Exception {
         List<Location> results = performSearch("locations in Australia", "Location");
         List<Location> expected = Arrays.asList(
@@ -153,7 +152,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
     }
 
     @Test
-    @DisplayName("Should find locations in California")
+    @DisplayName("California")
     void testCaliforniaLocationSearch() throws Exception {
         List<Location> results  = performSearch("California", "Location");
         List<Location> expected = Collections.singletonList(testProducts.get(1)); // United States, California
@@ -163,7 +162,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
     }
 
     @Test
-    @DisplayName("Should find locations by country column")
+    @DisplayName("country is Australia")
     void testCountrySpecificSearchWithLLM() throws Exception {
         List<Location> results  = performSearch("country is Australia", "Location");
         List<Location> expected = Arrays.asList(testProducts.get(2), testProducts.get(11)); // Australia Victoria, Australia New South Wales
@@ -173,7 +172,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
     }
 
     @Test
-    @DisplayName("Should find locations by created date column")
+    @DisplayName("created in 2025")
     void testCreatedDateSpecificSearchWithLLM() throws Exception {
         List<Location> results  = performSearch("created in 2025", "Location");
         List<Location> expected = Collections.singletonList(testProducts.get(11)); // Australia, New South Wales (created 2025-01-28)
@@ -183,7 +182,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
     }
 
     @Test
-    @DisplayName("Should handle empty search query")
+    @DisplayName("empty search query")
     void testEmptySearchQuery() throws Exception {
         List<Location> results  = performSearch("", "Location");
         List<Location> expected = new ArrayList<>(testProducts); // All locations should match empty query
@@ -193,7 +192,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
     }
 
     @Test
-    @DisplayName("Should find locations in German states")
+    @DisplayName("German states")
     void testGermanStatesSearch() throws Exception {
         List<Location> results = performSearch("German states", "Location");
         List<Location> expected = Arrays.asList(
@@ -206,7 +205,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
     }
 
     @Test
-    @DisplayName("Should find locations created in 2025")
+    @DisplayName("locations created in 2025")
     void testLocationsCreatedInYearSearch() throws Exception {
         List<Location> results  = performSearch("locations created in 2025", "Location");
         List<Location> expected = Collections.singletonList(testProducts.get(11)); // Australia, New South Wales (created 2025-01-28)
@@ -216,7 +215,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
     }
 
     @Test
-    @DisplayName("Should find locations starting after January 2024")
+    @DisplayName("locations starting after January 2024")
     void testLocationsStartingAfterDateSearch() throws Exception {
         List<Location> results = performSearch("locations starting after January 2024", "Location");
         List<Location> expected = Arrays.asList(
@@ -238,7 +237,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
     }
 
     @Test
-    @DisplayName("Should find locations starting before March 2024")
+    @DisplayName("locations starting before March 2024")
     void testLocationsStartingBeforeDateSearch() throws Exception {
         List<Location> results = performSearch("locations starting before March 2024", "Location");
         List<Location> expected = Arrays.asList(
@@ -251,7 +250,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
     }
 
     @Test
-    @DisplayName("Should find locations starting in 2025")
+    @DisplayName("locations starting in 2025")
     void testLocationsStartingInYearSearch() throws Exception {
         List<Location> results = performSearch("locations starting in 2025", "Location");
         List<Location> expected = Arrays.asList(
@@ -264,7 +263,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
     }
 
     @Test
-    @DisplayName("Should find locations starting in summer 2024")
+    @DisplayName("locations starting in summer 2024")
     void testLocationsStartingSummerSearch() throws Exception {
         List<Location> results = performSearch("locations starting in summer 2024", "Location");
         List<Location> expected = Arrays.asList(
@@ -278,7 +277,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
     }
 
     @Test
-    @DisplayName("Should find locations updated in 2025")
+    @DisplayName("locations updated in 2025")
     void testLocationsUpdatedInYearSearch() throws Exception {
         List<Location> results = performSearch("locations updated in 2025", "Location");
         List<Location> expected = Arrays.asList(
@@ -291,7 +290,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
     }
 
     @Test
-    @DisplayName("Should handle nonsensical search query gracefully")
+    @DisplayName("purple elephant dancing")
     void testNonsensicalSearchQuery() throws Exception {
         List<Location> results  = performSearch("purple elephant dancing", "Location");
         List<Location> expected = Collections.emptyList(); // Should return empty results for nonsensical queries
@@ -302,7 +301,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
 
     // === SIMPLE TEST CASE (keeping only ONE) ===
     @Test
-    @DisplayName("Should generate working regex for simple text search")
+    @DisplayName("Germany")
     void testSimpleTextSearchWithLLM() throws Exception {
         List<Location> results  = performSearch("Germany", "Location");
         List<Location> expected = Arrays.asList(testProducts.get(0), testProducts.get(5)); // Germany Bavaria, Germany North Rhine-Westphalia
@@ -312,7 +311,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
     }
 
     @Test
-    @DisplayName("Should find locations by start date column")
+    @DisplayName("start date in 2025")
     void testStartDateSpecificSearchWithLLM() throws Exception {
         List<Location> results  = performSearch("start date in 2025", "Location");
         List<Location> expected = Arrays.asList(testProducts.get(10), testProducts.get(11)); // United States New York, Australia New South Wales
@@ -322,7 +321,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
     }
 
     @Test
-    @DisplayName("Should find locations by updated date column")
+    @DisplayName("updated in 2025")
     void testUpdatedDateSpecificSearchWithLLM() throws Exception {
         List<Location> results  = performSearch("updated in 2025", "Location");
         List<Location> expected = Arrays.asList(testProducts.get(10), testProducts.get(11)); // United States New York, Australia New South Wales

@@ -19,9 +19,7 @@ package de.bushnaq.abdalla.projecthub.ai;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.dto.Product;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestConstructor;
@@ -32,8 +30,32 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * add generated ai code to test against one of the tests.
+ */
+class ExampleProductFilter implements Predicate<Product> {
+
+    @Override
+    public boolean test(Product entity) {
+        if (entity == null) {
+            return false;
+        }
+
+        try {
+            // Execute the generated filter code
+            return entity.getCreated() != null && entity.getCreated().isAfter(OffsetDateTime.of(2024, 7, 31, 23, 59, 59, 0, OffsetDateTime.now().getOffset()));
+        } catch (Exception e) {
+            // Log the error but don't fail the entire filter
+            System.err.println("Error in filter execution: " + e.getMessage());
+            return false;
+        }
+    }
+
+}
 
 /**
  * Integration test for NaturalLanguageSearchService testing real LLM regex pattern generation
@@ -45,10 +67,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("test")
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@TestMethodOrder(MethodOrderer.DisplayName.class)
 class ProductAiFilterTest extends AbstractAiFilterTest<Product> {
 
-    public ProductAiFilterTest(ObjectMapper mapper, AiFilter aiFilter) {
-        super(mapper, aiFilter);
+    public ProductAiFilterTest(ObjectMapper mapper, AiFilterService aiFilterService) {
+        super(mapper, aiFilterService);
     }
 
     private Product createProduct(Long id, String name, OffsetDateTime created, OffsetDateTime updated) {
@@ -105,9 +128,9 @@ class ProductAiFilterTest extends AbstractAiFilterTest<Product> {
     }
 
     @Test
-    @DisplayName("Should handle case-insensitive searches")
+    @DisplayName("MARS")
     void testCaseInsensitiveSearchWithLLM() throws Exception {
-        List<Product> results  = performSearch("MARS", "Product");
+        List<Product> results  = performSearch("MARS", "Product", AiFilterGenerator.FilterType.JAVA);
         List<Product> expected = Collections.singletonList(testProducts.get(2)); // Mars Explorer
 
         assertThat(results).hasSize(expected.size());
@@ -115,21 +138,24 @@ class ProductAiFilterTest extends AbstractAiFilterTest<Product> {
     }
 
     @Test
-    @DisplayName("Should generate working regex for complex search")
+    @DisplayName("space products created in 2024")
     void testComplexSearchWithLLM() throws Exception {
-        List<Product> results  = performSearch("space products created in 2024", "Product");
-        List<Product> expected = Collections.singletonList(testProducts.get(6)); // Space Station Alpha
+        List<Product> results = performSearch("space products created in 2024", "Product", AiFilterGenerator.FilterType.JAVA);
+        List<Product> expected = Arrays.asList(
+                testProducts.get(5),//
+                testProducts.get(6)//
+        ); // Space Station Alpha
 
         assertThat(results).hasSize(expected.size());
         assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
-    @DisplayName("Should generate working regex for date-based search")
+    @DisplayName("products created after July 2024")
     void testDateBasedSearchWithLLM() throws Exception {
-        List<Product> results = performSearch("products created after July 2024", "Product");
+        List<Product> results = performSearch("products created after July 2024", "Product", AiFilterGenerator.FilterType.JAVA);
+//        List<Product> results = performSearch(new ExampleProductFilter());
         List<Product> expected = Arrays.asList(
-                testProducts.get(4), // Lunar Base (created 2024-07-22)
                 testProducts.get(5), // Deep Space Probe (created 2024-09-05)
                 testProducts.get(6), // Space Station Alpha (created 2024-11-12)
                 testProducts.get(7)  // Rocket Engine X (created 2025-01-05)
@@ -140,9 +166,25 @@ class ProductAiFilterTest extends AbstractAiFilterTest<Product> {
     }
 
     @Test
-    @DisplayName("Should generate working regex for name-specific search")
+    @DisplayName("products created in 2024")
+    void testJavaScriptFiltering() throws Exception {
+        List<Product> results = performSearch("products created in 2024", "Product", AiFilterGenerator.FilterType.JAVA);
+        List<Product> expected = Arrays.asList(
+                testProducts.get(1),
+                testProducts.get(2),
+                testProducts.get(3),
+                testProducts.get(4),
+                testProducts.get(5),
+                testProducts.get(6)
+        );
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("name contains project")
     void testNameSpecificSearchWithLLM() throws Exception {
-        List<Product> results  = performSearch("name contains project", "Product");
+        List<Product> results  = performSearch("name contains project", "Product", AiFilterGenerator.FilterType.JAVA);
         List<Product> expected = Collections.singletonList(testProducts.get(1)); // Project Apollo
 
         assertThat(results).hasSize(expected.size());
@@ -150,7 +192,7 @@ class ProductAiFilterTest extends AbstractAiFilterTest<Product> {
     }
 
     @Test
-    @DisplayName("Should generate working regex for simple text search")
+    @DisplayName("Orion")
     void testSimpleTextSearchWithLLM() throws Exception {
         List<Product> results  = performSearch("Orion", "Product");
         List<Product> expected = Collections.singletonList(testProducts.get(0)); // Orion Space System
@@ -160,9 +202,9 @@ class ProductAiFilterTest extends AbstractAiFilterTest<Product> {
     }
 
     @Test
-    @DisplayName("Should generate working regex for updated date search")
+    @DisplayName("products updated in 2025")
     void testUpdatedDateSearchWithLLM() throws Exception {
-        List<Product> results = performSearch("products updated in 2025", "Product");
+        List<Product> results = performSearch("products updated in 2025", "Product", AiFilterGenerator.FilterType.JAVA);
         List<Product> expected = Arrays.asList(
                 testProducts.get(5), // Deep Space Probe (updated 2025-01-15)
                 testProducts.get(6), // Space Station Alpha (updated 2025-02-08)

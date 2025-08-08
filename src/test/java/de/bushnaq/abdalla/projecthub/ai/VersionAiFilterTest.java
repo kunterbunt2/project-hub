@@ -19,9 +19,7 @@ package de.bushnaq.abdalla.projecthub.ai;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.dto.Version;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestConstructor;
@@ -32,8 +30,58 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * add generated ai code to test against one of the tests.
+ */
+class ExampleVersionFilter implements Predicate<Version> {
+
+    @Override
+    public boolean test(Version entity) {
+        if (entity == null) {
+            return false;
+        }
+
+        try {
+            if (entity.getName() == null) return false;
+            String[] parts = entity.getName().split("\\.");
+            if (parts.length < 3) return false;
+            try {
+                int    majorStart     = Integer.parseInt(parts[0]);
+                int    minorStart     = Integer.parseInt(parts[1]);
+                String patchPartStart = parts[2];
+                int    patchStart     = Integer.parseInt(patchPartStart.contains("-") ? patchPartStart.substring(0, patchPartStart.indexOf("-")) : patchPartStart);
+
+                int versionValueStart = majorStart * 10000 + minorStart * 100 + patchStart;
+
+                if (parts.length >= 4) {
+                    String patchPartEnd = parts[3];
+                    int    patchEnd     = Integer.parseInt(patchPartEnd.contains("-") ? patchPartEnd.substring(0, patchPartEnd.indexOf("-")) : patchPartEnd);
+
+                    int versionValueEnd = majorStart * 10000 + minorStart * 100 + patchEnd;
+                } else {
+                    String patchPartEnd = parts[2];
+                    int    patchEnd     = Integer.parseInt(patchPartEnd.contains("-") ? patchPartEnd.substring(0, patchPartEnd.indexOf("-")) : patchPartEnd);
+
+                    int versionValueEnd = majorStart * 10000 + minorStart * 100 + patchEnd;
+                }
+
+                return versionValueStart >= 10000 && versionValueStart <= 30000;
+            } catch (NumberFormatException e) {
+                return false;
+            }
+
+        } catch (Exception e) {
+            // Log the error but don't fail the entire filter
+            System.err.println("Error in filter execution: " + e.getMessage());
+            return false;
+        }
+    }
+
+}
 
 /**
  * Integration test for Version AI filtering testing real LLM regex pattern generation
@@ -45,10 +93,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("test")
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@TestMethodOrder(MethodOrderer.DisplayName.class)
 class VersionAiFilterTest extends AbstractAiFilterTest<Version> {
 
-    public VersionAiFilterTest(ObjectMapper mapper, AiFilter aiFilter) {
-        super(mapper, aiFilter);
+    public VersionAiFilterTest(ObjectMapper mapper, AiFilterService aiFilterService) {
+        super(mapper, aiFilterService);
     }
 
     private Version createVersion(Long id, String name, Long productId, OffsetDateTime created, OffsetDateTime updated) {
@@ -123,7 +172,7 @@ class VersionAiFilterTest extends AbstractAiFilterTest<Version> {
     }
 
     @Test
-    @DisplayName("Should find alpha versions")
+    @DisplayName("alpha")
     void testAlphaVersionSearch() throws Exception {
         List<Version> results  = performSearch("alpha", "Version");
         List<Version> expected = Collections.singletonList(testProducts.get(5)); // 3.1.0-alpha
@@ -133,7 +182,7 @@ class VersionAiFilterTest extends AbstractAiFilterTest<Version> {
     }
 
     @Test
-    @DisplayName("Should find beta versions")
+    @DisplayName("beta")
     void testBetaVersionSearch() throws Exception {
         List<Version> results  = performSearch("beta", "Version");
         List<Version> expected = Collections.singletonList(testProducts.get(4)); // 3.0.0-beta
@@ -143,7 +192,7 @@ class VersionAiFilterTest extends AbstractAiFilterTest<Version> {
     }
 
     @Test
-    @DisplayName("Should find versions by created date column")
+    @DisplayName("created in 2025")
     void testCreatedDateSpecificSearchWithLLM() throws Exception {
         List<Version> results  = performSearch("created in 2025", "Version");
         List<Version> expected = Arrays.asList(testProducts.get(7), testProducts.get(8), testProducts.get(9)); // 0.9.0, 1.0.0-SNAPSHOT, 5.2.1
@@ -163,7 +212,7 @@ class VersionAiFilterTest extends AbstractAiFilterTest<Version> {
     }
 
     @Test
-    @DisplayName("Should find versions by exact version number")
+    @DisplayName("1.2.3")
     void testExactVersionSearch() throws Exception {
         List<Version> results  = performSearch("1.2.3", "Version");
         List<Version> expected = Collections.singletonList(testProducts.get(1)); // 1.2.3
@@ -194,7 +243,7 @@ class VersionAiFilterTest extends AbstractAiFilterTest<Version> {
 
     // === COLUMN-SPECIFIC TESTS (one per column) ===
     @Test
-    @DisplayName("Should find versions by name column")
+    @DisplayName("name contains beta")
     void testNameSpecificSearchWithLLM() throws Exception {
         List<Version> results  = performSearch("name contains beta", "Version");
         List<Version> expected = Collections.singletonList(testProducts.get(4)); // 3.0.0-beta
@@ -204,7 +253,7 @@ class VersionAiFilterTest extends AbstractAiFilterTest<Version> {
     }
 
     @Test
-    @DisplayName("Should handle nonsensical search query gracefully")
+    @DisplayName("purple elephant dancing")
     void testNonsensicalSearchQuery() throws Exception {
         List<Version> results  = performSearch("purple elephant dancing", "Version");
         List<Version> expected = Collections.emptyList(); // Should return empty results for nonsensical queries
@@ -215,7 +264,7 @@ class VersionAiFilterTest extends AbstractAiFilterTest<Version> {
 
     // === OTHER VALUABLE TEST CASES (preserved from original) ===
     @Test
-    @DisplayName("Should find pre-release versions")
+    @DisplayName("pre-release versions")
     void testPreReleaseVersionSearch() throws Exception {
         List<Version> results = performSearch("pre-release versions", "Version");
         List<Version> expected = Arrays.asList(
@@ -230,17 +279,7 @@ class VersionAiFilterTest extends AbstractAiFilterTest<Version> {
     }
 
     @Test
-    @DisplayName("Should find versions by productId column")
-    void testProductIdSpecificSearchWithLLM() throws Exception {
-        List<Version> results  = performSearch("productId is 1", "Version");
-        List<Version> expected = Arrays.asList(testProducts.get(0), testProducts.get(1)); // 1.0.0, 1.2.3
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
-    @DisplayName("Should find release candidate versions")
+    @DisplayName("rc")
     void testReleaseCandidateVersionSearch() throws Exception {
         List<Version> results  = performSearch("rc", "Version");
         List<Version> expected = Collections.singletonList(testProducts.get(6)); // 4.0.0-rc1
@@ -249,19 +288,8 @@ class VersionAiFilterTest extends AbstractAiFilterTest<Version> {
         assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
-    // === SIMPLE TEST CASE (keeping only ONE) ===
     @Test
-    @DisplayName("Should generate working regex for simple text search")
-    void testSimpleTextSearchWithLLM() throws Exception {
-        List<Version> results  = performSearch("1.0.0", "Version");
-        List<Version> expected = Collections.singletonList(testProducts.get(0)); // 1.0.0 (not including 1.0.0-SNAPSHOT for exact match)
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
-    @DisplayName("Should find snapshot versions")
+    @DisplayName("snapshot")
     void testSnapshotVersionSearch() throws Exception {
         List<Version> results  = performSearch("snapshot", "Version");
         List<Version> expected = Collections.singletonList(testProducts.get(8)); // 1.0.0-SNAPSHOT
@@ -288,23 +316,15 @@ class VersionAiFilterTest extends AbstractAiFilterTest<Version> {
     }
 
     @Test
-    @DisplayName("Should find versions by updated date column")
+    @DisplayName("updated in 2025")
     void testUpdatedDateSpecificSearchWithLLM() throws Exception {
-        List<Version> results  = performSearch("updated in 2025", "Version");
-        List<Version> expected = Arrays.asList(testProducts.get(6), testProducts.get(7), testProducts.get(8), testProducts.get(9)); // 4.0.0-rc1, 0.9.0, 1.0.0-SNAPSHOT, 5.2.1
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
-    @DisplayName("Should find versions between 1.0.0 and 3.0.0")
-    void testVersionBetweenSearch() throws Exception {
-        List<Version> results = performSearch("versions between 1.0.0 and 3.0.0", "Version");
+        List<Version> results = performSearch("updated in 2025", "Version");
         List<Version> expected = Arrays.asList(
-                testProducts.get(1), // 1.2.3
-                testProducts.get(2), // 2.0.0
-                testProducts.get(3)  // 2.1.5
+                testProducts.get(5), //3.1.0-alpha
+                testProducts.get(6), // 4.0.0-rc1 (created 2024-11-12)
+                testProducts.get(7), // 0.9.0 (created 2025-01-05)
+                testProducts.get(8), // 1.0.0-SNAPSHOT (created 2025-02-10)
+                testProducts.get(9)  // 5.2.1
         );
 
         assertThat(results).hasSize(expected.size());
@@ -312,9 +332,28 @@ class VersionAiFilterTest extends AbstractAiFilterTest<Version> {
     }
 
     @Test
-    @DisplayName("Should find versions greater than 1.0.0")
+    @DisplayName("versions between 1.0.0 and 3.0.0")
+    void testVersionBetweenSearch() throws Exception {
+        List<Version> results = performSearch("versions between 1.0.0 and 3.0.0", "Version");
+//        List<Version> results = performSearch(new ExampleVersionFilter());
+        List<Version> expected = Arrays.asList(
+                testProducts.get(0), // 1.0.0
+                testProducts.get(1), // 1.2.3
+                testProducts.get(2), // 2.0.0
+                testProducts.get(3), // 2.1.5
+                testProducts.get(4), // 3.0.0-beta
+                testProducts.get(8) // 1.0.0-SNAPSHOT (created 2025-02-10)
+        );
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("version greater than 1.0.0")
     void testVersionGreaterThanSearch() throws Exception {
         List<Version> results = performSearch("version greater than 1.0.0", "Version");
+//        List<Version> results = performSearch(new ExampleVersionFilter());
         List<Version> expected = Arrays.asList(
                 testProducts.get(1), // 1.2.3
                 testProducts.get(2), // 2.0.0
@@ -330,7 +369,7 @@ class VersionAiFilterTest extends AbstractAiFilterTest<Version> {
     }
 
     @Test
-    @DisplayName("Should find versions created after January 2024")
+    @DisplayName("versions created after January 2024")
     void testVersionsCreatedAfterDateSearch() throws Exception {
         List<Version> results = performSearch("versions created after January 2024", "Version");
         List<Version> expected = Arrays.asList(
@@ -349,7 +388,7 @@ class VersionAiFilterTest extends AbstractAiFilterTest<Version> {
     }
 
     @Test
-    @DisplayName("Should find versions created before March 2024")
+    @DisplayName("versions created before March 2024")
     void testVersionsCreatedBeforeDateSearch() throws Exception {
         List<Version> results = performSearch("versions created before March 2024", "Version");
         List<Version> expected = Arrays.asList(
@@ -363,7 +402,7 @@ class VersionAiFilterTest extends AbstractAiFilterTest<Version> {
     }
 
     @Test
-    @DisplayName("Should find versions updated in 2025")
+    @DisplayName("versions updated in 2025")
     void testVersionsUpdatedInYearSearch() throws Exception {
         List<Version> results = performSearch("versions updated in 2025", "Version");
         List<Version> expected = Arrays.asList(

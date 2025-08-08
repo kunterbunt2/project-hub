@@ -187,30 +187,6 @@ public class GlobalAiFilter<T> extends HorizontalLayout {
         return searchField;
     }
 
-//    private void onSearchValueChange(com.vaadin.flow.component.AbstractField.ComponentValueChangeEvent<TextField, String> event) {
-//        String searchValue = event.getValue();
-//
-//        if (searchValue == null || searchValue.trim().isEmpty()) {
-//            clearFilters();
-//            return;
-//        }
-//
-//        try {
-//            // Parse the query using natural language service
-//            String searchQuery = aiFilter.parseQuery(searchValue);
-//
-//            // Apply the parsed search criteria
-//            applySearchQuery(searchQuery);
-//
-//            // Show feedback to user about what was understood
-//            showSearchFeedback(searchQuery, searchValue);
-//
-//        } catch (Exception e) {
-//            logger.error("Error processing search query: {}", searchValue, e);
-//            showErrorFeedback();
-//        }
-//    }
-
     private void performSearch() {
         String searchValue = searchField.getValue();
 

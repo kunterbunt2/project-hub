@@ -19,9 +19,7 @@ package de.bushnaq.abdalla.projecthub.ai;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.dto.User;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestConstructor;
@@ -47,10 +45,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("test")
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@TestMethodOrder(MethodOrderer.DisplayName.class)
 class UserAiFilterTest extends AbstractAiFilterTest<User> {
 
-    public UserAiFilterTest(ObjectMapper mapper, AiFilter aiFilter) {
-        super(mapper, aiFilter);
+    public UserAiFilterTest(ObjectMapper mapper, AiFilterService aiFilterService) {
+        super(mapper, aiFilterService);
     }
 
     private User createUser(Long id, String name, String email, LocalDate firstWorkingDay, LocalDate lastWorkingDay,

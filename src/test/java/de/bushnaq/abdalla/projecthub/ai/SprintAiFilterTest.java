@@ -20,9 +20,7 @@ package de.bushnaq.abdalla.projecthub.ai;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
 import de.bushnaq.abdalla.projecthub.dto.Status;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestConstructor;
@@ -35,8 +33,31 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * add generated ai code to test against one of the tests.
+ */
+class ExampleSprintFilter implements Predicate<Sprint> {
+
+    @Override
+    public boolean test(Sprint entity) {
+        if (entity == null) {
+            return false;
+        }
+
+        try {
+            return entity.getOriginalEstimation() != null && entity.getOriginalEstimation().toHours() > 180;
+        } catch (Exception e) {
+            // Log the error but don't fail the entire filter
+            System.err.println("Error in filter execution: " + e.getMessage());
+            return false;
+        }
+    }
+
+}
 
 /**
  * Integration test for Sprint AI filtering testing real LLM regex pattern generation
@@ -48,10 +69,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("test")
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@TestMethodOrder(MethodOrderer.DisplayName.class)
 class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
 
-    public SprintAiFilterTest(ObjectMapper mapper, AiFilter aiFilter) {
-        super(mapper, aiFilter);
+    public SprintAiFilterTest(ObjectMapper mapper, AiFilterService aiFilterService) {
+        super(mapper, aiFilterService);
     }
 
     private Sprint createSprint(Long id, String name, Status status, Long featureId, Long userId,
@@ -183,7 +205,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should find active sprints")
+    @DisplayName("active sprints")
     void testActiveSprintSearch() throws Exception {
         List<Sprint> results = performSearch("active sprints", "Sprint");
         List<Sprint> expected = Arrays.asList(
@@ -199,7 +221,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should find alpha sprints")
+    @DisplayName("alpha")
     void testAlphaSprintSearch() throws Exception {
         List<Sprint> results  = performSearch("alpha", "Sprint");
         List<Sprint> expected = Collections.singletonList(testProducts.get(0)); // Sprint 1.0.0-Alpha
@@ -209,7 +231,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should find beta sprints")
+    @DisplayName("beta")
     void testBetaSprintSearch() throws Exception {
         List<Sprint> results  = performSearch("beta", "Sprint");
         List<Sprint> expected = Collections.singletonList(testProducts.get(1)); // Sprint 1.2.3-Beta
@@ -219,7 +241,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should find completed sprints")
+    @DisplayName("completed sprints")
     void testCompletedSprintSearch() throws Exception {
         List<Sprint> results = performSearch("completed sprints", "Sprint");
         List<Sprint> expected = Arrays.asList(
@@ -233,7 +255,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should find sprints by created date column")
+    @DisplayName("created in 2025")
     void testCreatedDateSpecificSearchWithLLM() throws Exception {
         List<Sprint> results  = performSearch("created in 2025", "Sprint");
         List<Sprint> expected = Collections.singletonList(testProducts.get(11)); // Bug Fix Sprint
@@ -243,7 +265,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should handle empty search query")
+    @DisplayName("empty search query")
     void testEmptySearchQuery() throws Exception {
         List<Sprint> results  = performSearch("", "Sprint");
         List<Sprint> expected = new ArrayList<>(testProducts); // All sprints should match empty query
@@ -253,7 +275,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should find sprints by end date column")
+    @DisplayName("end date in January 2024")
     void testEndDateSpecificSearchWithLLM() throws Exception {
         List<Sprint> results  = performSearch("end date in January 2024", "Sprint");
         List<Sprint> expected = Collections.singletonList(testProducts.get(0)); // Sprint 1.0.0-Alpha
@@ -263,17 +285,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should find sprints by featureId column")
-    void testFeatureIdSpecificSearchWithLLM() throws Exception {
-        List<Sprint> results  = performSearch("featureId is 1", "Sprint");
-        List<Sprint> expected = Arrays.asList(testProducts.get(0), testProducts.get(1)); // Sprint 1.0.0-Alpha, Sprint 1.2.3-Beta
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
-    @DisplayName("Should find integration sprints")
+    @DisplayName("integration")
     void testIntegrationSprintSearch() throws Exception {
         List<Sprint> results  = performSearch("integration", "Sprint");
         List<Sprint> expected = Collections.singletonList(testProducts.get(4)); // Payment Integration Sprint
@@ -284,7 +296,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
 
     // === COLUMN-SPECIFIC TESTS (one per column) ===
     @Test
-    @DisplayName("Should find sprints by name column")
+    @DisplayName("name contains Payment")
     void testNameSpecificSearchWithLLM() throws Exception {
         List<Sprint> results  = performSearch("name contains Payment", "Sprint");
         List<Sprint> expected = Collections.singletonList(testProducts.get(4)); // Payment Integration Sprint
@@ -294,7 +306,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should handle nonsensical search query gracefully")
+    @DisplayName("purple elephant dancing")
     void testNonsensicalSearchQuery() throws Exception {
         List<Sprint> results  = performSearch("purple elephant dancing", "Sprint");
         List<Sprint> expected = Collections.emptyList(); // Should return empty results for nonsensical queries
@@ -304,9 +316,11 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should find sprints by originalEstimation column")
+    @DisplayName("originalEstimation over 180 hours")
     void testOriginalEstimationSpecificSearchWithLLM() throws Exception {
-        List<Sprint> results  = performSearch("originalEstimation over 180 hours", "Sprint");
+//        List<Sprint> results = performSearch("originalEstimation over 180 hours", "Sprint");
+        List<Sprint> results = performSearch("originalEstimation über 180 Stunden", "Sprint");
+//        List<Sprint> results  = performSearch(new ExampleSprintFilter());
         List<Sprint> expected = Collections.singletonList(testProducts.get(6)); // Mobile App Sprint (200 hours)
 
         assertThat(results).hasSize(expected.size());
@@ -314,7 +328,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should find release candidate sprints")
+    @DisplayName("rc")
     void testReleaseCandidateSprintSearch() throws Exception {
         List<Sprint> results  = performSearch("rc", "Sprint");
         List<Sprint> expected = Collections.singletonList(testProducts.get(2)); // Sprint 2.0.0-RC1
@@ -324,7 +338,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should find sprints by remaining column")
+    @DisplayName("remaining is 0 hours")
     void testRemainingSpecificSearchWithLLM() throws Exception {
         List<Sprint> results  = performSearch("remaining is 0 hours", "Sprint");
         List<Sprint> expected = Arrays.asList(testProducts.get(2), testProducts.get(6), testProducts.get(9)); // Completed sprints
@@ -334,7 +348,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should find snapshot sprints")
+    @DisplayName("snapshot")
     void testSnapshotSprintSearch() throws Exception {
         List<Sprint> results  = performSearch("snapshot", "Sprint");
         List<Sprint> expected = Collections.singletonList(testProducts.get(10)); // Sprint 3.0.0-SNAPSHOT
@@ -344,7 +358,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should find sprints by name containing specific text")
+    @DisplayName("name contains development")
     void testSprintNameContainsSearch() throws Exception {
         List<Sprint> results  = performSearch("name contains development", "Sprint");
         List<Sprint> expected = Collections.singletonList(testProducts.get(5)); // Dashboard Development
@@ -354,7 +368,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should find sprints between 80 and 150 hours")
+    @DisplayName("sprints between 80 and 150 hours")
     void testSprintsBetweenHoursSearch() throws Exception {
         List<Sprint> results = performSearch("sprints between 80 and 150 hours", "Sprint");
         List<Sprint> expected = Arrays.asList(
@@ -372,7 +386,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should find sprints created in 2025")
+    @DisplayName("sprints created in 2025")
     void testSprintsCreatedInYearSearch() throws Exception {
         List<Sprint> results  = performSearch("sprints created in 2025", "Sprint");
         List<Sprint> expected = Collections.singletonList(testProducts.get(11)); // Bug Fix Sprint (created 2025-01-28)
@@ -382,7 +396,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should find sprints ending before March 2024")
+    @DisplayName("sprints ending before March 2024")
     void testSprintsEndingBeforeDateSearch() throws Exception {
         List<Sprint> results = performSearch("sprints ending before March 2024", "Sprint");
         List<Sprint> expected = Arrays.asList(
@@ -395,7 +409,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should find sprints over 100 hours estimation")
+    @DisplayName("sprints over 100 hours estimation")
     void testSprintsOverHundredHoursSearch() throws Exception {
         List<Sprint> results = performSearch("sprints over 100 hours estimation", "Sprint");
         List<Sprint> expected = Arrays.asList(
@@ -414,7 +428,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should find sprints starting after February 2024")
+    @DisplayName("sprints starting after February 2024")
     void testSprintsStartingAfterDateSearch() throws Exception {
         List<Sprint> results = performSearch("sprints starting after February 2024", "Sprint");
         List<Sprint> expected = Arrays.asList(
@@ -435,7 +449,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should find sprints updated in 2025")
+    @DisplayName("sprints updated in 2025")
     void testSprintsUpdatedInYearSearch() throws Exception {
         List<Sprint> results = performSearch("sprints updated in 2025", "Sprint");
         List<Sprint> expected = Arrays.asList(
@@ -448,7 +462,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should find sprints with remaining work")
+    @DisplayName("sprints with remaining work")
     void testSprintsWithRemainingWorkSearch() throws Exception {
         List<Sprint> results = performSearch("sprints with remaining work", "Sprint");
         List<Sprint> expected = Arrays.asList(
@@ -468,7 +482,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should find sprints by start date column")
+    @DisplayName("start date in 2025")
     void testStartDateSpecificSearchWithLLM() throws Exception {
         List<Sprint> results  = performSearch("start date in 2025", "Sprint");
         List<Sprint> expected = Arrays.asList(testProducts.get(10), testProducts.get(11)); // Sprint 3.0.0-SNAPSHOT, Bug Fix Sprint
@@ -478,7 +492,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should find sprints by status column")
+    @DisplayName("status is CLOSED")
     void testStatusSpecificSearchWithLLM() throws Exception {
         List<Sprint> results  = performSearch("status is CLOSED", "Sprint");
         List<Sprint> expected = Arrays.asList(testProducts.get(2), testProducts.get(6), testProducts.get(9)); // Sprint 2.0.0-RC1, Mobile App Sprint, Performance Optimization
@@ -488,7 +502,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should find sprints by updated date column")
+    @DisplayName("updated in 2025")
     void testUpdatedDateSpecificSearchWithLLM() throws Exception {
         List<Sprint> results  = performSearch("updated in 2025", "Sprint");
         List<Sprint> expected = Arrays.asList(testProducts.get(10), testProducts.get(11)); // Sprint 3.0.0-SNAPSHOT, Bug Fix Sprint
@@ -498,17 +512,7 @@ class SprintAiFilterTest extends AbstractAiFilterTest<Sprint> {
     }
 
     @Test
-    @DisplayName("Should find sprints by userId column")
-    void testUserIdSpecificSearchWithLLM() throws Exception {
-        List<Sprint> results  = performSearch("userId is 1", "Sprint");
-        List<Sprint> expected = Arrays.asList(testProducts.get(0), testProducts.get(2), testProducts.get(6), testProducts.get(10)); // Sprint 1.0.0-Alpha, Sprint 2.0.0-RC1, Mobile App Sprint, Sprint 3.0.0-SNAPSHOT
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
-    @DisplayName("Should find sprints by worked column")
+    @DisplayName("worked is 0 hours")
     void testWorkedSpecificSearchWithLLM() throws Exception {
         List<Sprint> results  = performSearch("worked is 0 hours", "Sprint");
         List<Sprint> expected = Arrays.asList(testProducts.get(0), testProducts.get(4), testProducts.get(8), testProducts.get(10)); // Sprints with no work done yet

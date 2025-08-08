@@ -21,12 +21,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 
 /**
  * Enhanced service for parsing natural language search queries using both offline LLM and fallback regex patterns.
@@ -34,11 +34,16 @@ import java.util.Map;
  * a regex-based fallback for reliability and performance.
  */
 @Service
-@ConditionalOnProperty(name = "projecthub.search.llm.enabled", havingValue = "true", matchIfMissing = true)
+//@ConditionalOnProperty(name = "projecthub.search.llm.enabled", havingValue = "true", matchIfMissing = true)
 public class AiFilter {
-
-    // Base template for LLM prompts
-    private static final String BASE_PROMPT_TEMPLATE = """
+    private static final String                    ANSI_BLUE                  = "\u001B[36m";
+    private static final String                    ANSI_GRAY                  = "\u001B[37m";
+    private static final String                    ANSI_GREEN                 = "\u001B[32m";
+    private static final String                    ANSI_RED                   = "\u001B[31m";
+    private static final String                    ANSI_RESET                 = "\u001B[0m";    // Declaring ANSI_RESET so that we can reset the color
+    private static final String                    ANSI_YELLOW                = "\u001B[33m";
+    // Base template for LLM prompts for regex generation
+    private static final String                    BASE_PROMPT_TEMPLATE       = """
             You are a regex pattern generator for filtering JSON objects. Convert natural language search queries into Java regex patterns that will be applied to JSON strings.
             
             The JSON objects have this structure:
@@ -62,14 +67,143 @@ public class AiFilter {
             Now generate a regex pattern for this query:
             "%s"
             """;
-
-    private static final Logger                    logger = LoggerFactory.getLogger(AiFilter.class);
+    // Template for JavaScript filter generation
+    private static final String                    JAVASCRIPT_PROMPT_TEMPLATE = """
+            You are a JavaScript function generator for filtering JavaScript objects. Convert natural language search queries into JavaScript filter functions.
+            
+            IMPORTANT CONTEXT: You are filtering %s entities. Each 'entity' parameter passed to your function is already a %s object.
+            
+            The JavaScript objects you'll be filtering have properties matching this JSON structure:
+            %s
+            
+            %s
+            
+            IMPORTANT RULES:
+            1. Generate a JavaScript function that takes a JavaScript object parameter called 'entity'
+            2. The function should return true if the entity matches the search criteria, false otherwise
+            3. Use case-insensitive string comparisons when appropriate (use toLowerCase())
+            4. For date comparisons, parse dates using new Date() constructor
+            5. Access object properties directly (e.g., entity.name, entity.created)
+            6. Return ONLY the JavaScript function body, no function declaration, no explanations. The returned answer must be a valid JavaScript code. Any explanation can be added as comments, but the code must be executable.
+            7. Handle null/undefined values gracefully
+            8. Current year is %d if year context is needed
+            9. Use proper JavaScript syntax and operators
+            10. For date fields, they are in ISO format strings that can be parsed by new Date()
+            
+            %s
+            
+            Now generate a JavaScript function body for this EXACT query:
+            "%s"
+            """;
+    // Template for Java filter generation
+    private static final String                    JAVA_PROMPT_TEMPLATE       = """
+            You are a Java method body generator for filtering Java objects. Convert natural language search queries into Java code that can be compiled and executed.
+            
+            IMPORTANT CONTEXT: You are filtering %s entities. The 'entity' parameter passed to your method is already a %s object.
+            
+            The Java objects you'll be filtering have properties matching this JSON structure:
+            %s
+            
+            %s
+            
+            IMPORTANT RULES:
+            1. Generate ONLY the method body code that goes inside a boolean test(Object entity) method
+            2. The method should return true if the entity matches the search criteria, false otherwise
+            3. Use proper Java syntax and safe null checking
+            4. Cast the entity parameter to the appropriate type or use reflection via helper methods
+            5. For date comparisons, use LocalDateTime/LocalDate classes
+            6. Use the provided helper methods: getStringField(), getIntegerField(), getDoubleField(), getDateTimeField(), getDateField(), containsIgnoreCase(), matchesPattern()
+            7. Handle exceptions gracefully - return false if any operation fails
+            8. Current year is %d if year context is needed
+            9. Use proper Java operators and control structures
+            10. For string searches, use containsIgnoreCase() helper method
+            11. Access fields using getStringField(entity, "fieldName") helper method
+            12. Return ONLY the method body code, no method signature, no class declaration, no explanations
+            
+            %s
+            
+            Now generate a Java method body for this EXACT query:
+            "%s"
+            """;
+    private static final Logger                    logger                     = LoggerFactory.getLogger(AiFilter.class);
     private final        ChatClient                chatModel;
+    private final        JavaFilterCompiler        javaFilterCompiler;
     private final        Map<String, PromptConfig> promptConfigs;
 
-    public AiFilter(ChatClient.Builder builder) {
-        this.chatModel     = builder.build();
-        this.promptConfigs = initializePromptConfigs();
+    public AiFilter(ChatClient.Builder builder, JavaFilterCompiler javaFilterCompiler) {
+        this.chatModel          = builder.build();
+        this.promptConfigs      = initializePromptConfigs();
+        this.javaFilterCompiler = javaFilterCompiler;
+    }
+
+    /**
+     * Extract the actual answer from DeepSeek response by removing thinking process.
+     * DeepSeek models often include reasoning in <think> tags or similar patterns.
+     */
+    private String extractAnswerFromDeepSeekResponse(String rawResponse) {
+        if (rawResponse == null || rawResponse.trim().isEmpty()) {
+            return rawResponse;
+        }
+
+        String response = rawResponse.trim();
+
+        // Pattern 1: Remove content between <think> and </think> tags
+        response = response.replaceAll("(?s)<think>.*?</think>", "").trim();
+
+        // Pattern 2: Remove content between <thinking> and </thinking> tags
+        response = response.replaceAll("(?s)<thinking>.*?</thinking>", "").trim();
+
+        // Pattern 3: Remove content between <!-- thinking and --> comments
+        response = response.replaceAll("(?s)<!--\\s*thinking.*?-->", "").trim();
+
+        // Pattern 4: Remove lines that start with "Thinking:" or "Let me think:"
+        response = response.replaceAll("(?m)^(Thinking:|Let me think:).*$", "").trim();
+
+        // Pattern 5: If response starts with reasoning text followed by "Answer:" or "Result:", extract only the part after
+        if (response.matches("(?s).*\\b(Answer|Result|Output):\\s*(.*)")) {
+            String[] parts = response.split("\\b(?:Answer|Result|Output):\\s*", 2);
+            if (parts.length > 1) {
+                response = parts[1].trim();
+            }
+        }
+
+        // Pattern 6: Remove common reasoning prefixes
+//        response = response.replaceAll("(?m)^(Let me analyze this|First, I need to|I need to create|Looking at this query).*?\\n", "").trim();
+
+        // Pattern 7: If the response contains multiple lines and looks like reasoning followed by code/regex,
+        // try to extract just the final code/regex pattern
+//        String[] lines = response.split("\n");
+//        if (lines.length > 1) {
+//            // Look for the last line that looks like a regex pattern or JavaScript code
+//            for (int i = lines.length - 1; i >= 0; i--) {
+//                String line = lines[i].trim();
+//
+//                // Check if this line looks like a regex pattern
+//                if (line.startsWith("(?i)") || line.matches(".*\\(\\?[imsux]*\\).*")) {
+//                    return line;
+//                }
+//
+//                // Check if this line looks like JavaScript code (return statement or function body)
+//                if (line.startsWith("return ") || line.contains("entity.") || line.contains("new Date(")) {
+//                    // If it's a single line JavaScript, return it
+//                    // If it's part of multi-line JavaScript, collect all relevant lines
+//                    StringBuilder jsCode = new StringBuilder();
+//                    for (int j = i; j < lines.length; j++) {
+//                        String jsLine = lines[j].trim();
+//                        if (!jsLine.isEmpty() && !jsLine.startsWith("//") && !jsLine.startsWith("/*")) {
+//                            if (jsCode.length() > 0) jsCode.append(" ");
+//                            jsCode.append(jsLine);
+//                        }
+//                    }
+//                    return jsCode.toString();
+//                }
+//            }
+//        }
+//
+//        // Pattern 8: Remove any remaining explanatory text at the beginning
+//        response = response.replaceAll("(?s)^.*?(?=(?:\\(\\?i\\)|return |if \\(|const |let |var ))", "").trim();
+
+        return response.isEmpty() ? rawResponse : response;
     }
 
     /**
@@ -78,7 +212,7 @@ public class AiFilter {
     private Map<String, PromptConfig> initializePromptConfigs() {
         Map<String, PromptConfig> configs = new HashMap<>();
 
-        // Product configuration
+        // Product configuration with both regex and JavaScript examples
         configs.put("Product", new PromptConfig(
                 """
                         {
@@ -89,7 +223,13 @@ public class AiFilter {
                           "versions" : [ ],
                           "key" : "P-1"
                         }""",
-                "Special considerations for Products: Focus on product names, keys (like P-1, PROJ-123), and creation/update dates.",
+                """
+                        Special considerations for Products: 
+                        - Focus on product names, keys (like P-1, PROJ-123), and creation/update dates
+                        - Remember: you are filtering Product entities, so each 'entity' is already a Product
+                        - When queries mention "products created in 2024" - this means filter by creation year, NOT by checking if entity.name contains "products"
+                        - Product keys follow patterns like P-1, P-123. Keys are basically just unique database IDs of the Version entity.
+                        - Terms like "products", "items", or similar generic terms refer to the entity type, not name content""",
                 """
                         Examples:
                         Input: "Orion"
@@ -105,7 +245,75 @@ public class AiFilter {
                         Output: (?i).*"created"\\s*:\\s*"2024-(0[1-9]|1[01])-.*
                         
                         Input: "products updated in 2025"
-                        Output: (?i).*"updated"\\s*:\\s*"2025-(0[1-9]|1[0-2])-.*"""
+                        Output: (?i).*"updated"\\s*:\\s*"2025-(0[1-9]|1[0-2])-.*""",
+                """
+                        Examples:
+                        Input: "Orion"
+                        Output: return entity && entity.name && entity.name.toLowerCase().includes('orion');
+                        
+                        Input: "name contains project"
+                        Output: return entity && entity.name && entity.name.toLowerCase().includes('project');
+                        
+                        Input: "created in 2024"
+                        Output: return entity && entity.created && new Date(entity.created).getFullYear() === 2024;
+                        
+                        Input: "products created in 2024"
+                        Output: return entity && entity.created && new Date(entity.created).getFullYear() === 2024;
+                        
+                        Input: "items created in 2024"
+                        Output: return entity && entity.created && new Date(entity.created).getFullYear() === 2024;
+                        
+                        Input: "products created after January 2024"
+                        Output: if (!entity || !entity.created) return false; const created = new Date(entity.created); return created > new Date('2024-01-31');
+                        
+                        Input: "items created before December 2024"
+                        Output: if (!entity || !entity.created) return false; const created = new Date(entity.created); return created < new Date('2024-12-01');
+                        
+                        Input: "products updated in 2025"
+                        Output: if (!entity || !entity.updated) return false; const updated = new Date(entity.updated); return updated.getFullYear() === 2025;
+                        
+                        Input: "MARS"
+                        Output: return entity && entity.name && entity.name.toLowerCase().includes('mars');
+                        
+                        Input: "space products created in 2024"
+                        Output: if (!entity || !entity.name || !entity.created) return false; const hasSpace = entity.name.toLowerCase().includes('space'); const created = new Date(entity.created); const isCreated2024 = created.getFullYear() === 2024; return hasSpace && isCreated2024;""",
+                """
+                        Examples:
+                        Input: "Orion"
+                        Output: String name = getStringField(entity, "name"); return name != null && containsIgnoreCase(name, "orion");
+                        
+                        Input: "name contains project"
+                        Output: String name = getStringField(entity, "name"); return name != null && containsIgnoreCase(name, "project");
+                        
+                        Input: "created in 2024"
+                        Output: LocalDateTime created = getDateTimeField(entity, "created"); return created != null && created.getYear() == 2024;
+                        
+                        Input: "products created in 2024"
+                        Output: LocalDateTime created = getDateTimeField(entity, "created"); return created != null && created.getYear() == 2024;
+                        
+                        Input: "items created in 2024"
+                        Output: LocalDateTime created = getDateTimeField(entity, "created"); return created != null && created.getYear() == 2024;
+                        
+                        Input: "products created after January 2024"
+                        Output: LocalDateTime created = getDateTimeField(entity, "created"); return created != null && created.isAfter(LocalDateTime.of(2024, 1, 31, 23, 59, 59));
+                        
+                        Input: "items created before December 2024"
+                        Output: LocalDateTime created = getDateTimeField(entity, "created"); return created != null && created.isBefore(LocalDateTime.of(2024, 12, 1, 0, 0, 0));
+                        
+                        Input: "products updated in 2025"
+                        Output: LocalDateTime updated = getDateTimeField(entity, "updated"); return updated != null && updated.getYear() == 2025;
+                        
+                        Input: "MARS"
+                        Output: String name = getStringField(entity, "name"); return name != null && containsIgnoreCase(name, "mars");
+                        
+                        Input: "space products created in 2024"
+                        Output: String name = getStringField(entity, "name"); LocalDateTime created = getDateTimeField(entity, "created"); return name != null && containsIgnoreCase(name, "space") && created != null && created.getYear() == 2024;
+                        
+                        Input: "key starts with P-"
+                        Output: String key = getStringField(entity, "key"); return key != null && key.startsWith("P-");
+                        
+                        Input: "products with empty versions"
+                        Output: try { java.lang.reflect.Field field = entity.getClass().getDeclaredField("versions"); field.setAccessible(true); java.util.List<?> versions = (java.util.List<?>) field.get(entity); return versions == null || versions.isEmpty(); } catch (Exception e) { return false; }"""
         ));
 
         // Version configuration
@@ -123,8 +331,9 @@ public class AiFilter {
                 """
                         Special considerations for Versions:
                         - Version names often follow semantic versioning (1.0.0, 2.1.3, etc.)
-                        - Support version comparisons (greater than, less than, between)
-                        - Version keys follow patterns like V-1, V-123
+                        - Version names are the actual version and can have attributes attached like alpha, beta or SNAPSHOT to signal prerelease versions, e.g. 1.0.0-alpha.
+                        - Support version comparisons (greater than, less than, between), where we compare the versions line numbers, so 3.1.4 is bigger than 1.5.6. Basically you just multiply every number with 10 of its position. So 3*100+1*10+4 > 1*100+5*10+6.
+                        - Version keys follow patterns like V-1, V-123. Keys are basically just unique database IDs of the Version entity.
                         - Consider major.minor.patch patterns""",
                 """
                         Examples:
@@ -162,7 +371,7 @@ public class AiFilter {
                 """
                         Special considerations for Features:
                         - Feature names describe functionality (e.g., "User Authentication", "Payment Processing")
-                        - Feature keys follow patterns like F-1, FEAT-123
+                        - Feature keys follow patterns like F-1, F-123. Keys are basically just unique database IDs of the Version entity.
                         - Features are grouped under versions and contain sprints
                         - Focus on feature purpose and functionality descriptions""",
                 """
@@ -469,14 +678,34 @@ public class AiFilter {
      * @return Regex pattern string for filtering JSON objects
      */
     public String parseQuery(String query, String entityType) {
+        return parseQuery(query, entityType, FilterType.REGEX);
+    }
+
+    /**
+     * Parses a natural language search query using LLM with the specified filter type.
+     *
+     * @param query      The natural language query from the user
+     * @param entityType The type of entity being searched (e.g., "Product", "Version")
+     * @param filterType The type of filter to generate (REGEX or JAVASCRIPT)
+     * @return Filter string for filtering objects (regex pattern or JavaScript function body)
+     */
+    public String parseQuery(String query, String entityType, FilterType filterType) {
         if (query == null || query.trim().isEmpty()) {
             return "";
         }
 
-        System.out.println("Parsing natural language query: '" + query + "' for entity type: " + entityType);
+        System.out.printf("\nParsing natural language query: '%s%s%s' for entity type: '%s%s%s' with filter type: '%s%s%s'%n\n", ANSI_GREEN, query, ANSI_RESET, ANSI_BLUE, entityType, ANSI_RESET, ANSI_BLUE, filterType, ANSI_RESET);
 
         try {
-            String llmResult = parseWithLLM(query, entityType);
+            String llmResult;
+            if (filterType == FilterType.JAVASCRIPT) {
+                llmResult = parseWithJavaScriptLLM(query, entityType);
+            } else if (filterType == FilterType.JAVA) {
+                llmResult = parseWithJavaLLM(query, entityType);
+            } else {
+                llmResult = parseWithLLM(query, entityType);
+            }
+
             if (llmResult != null && !llmResult.trim().isEmpty()) {
                 return llmResult;
             }
@@ -489,11 +718,129 @@ public class AiFilter {
     }
 
     /**
-     * Backward compatibility method - defaults to Product entity type
+     * Parses a natural language search query and returns a compiled Java Predicate.
+     *
+     * @param query      The natural language query from the user
+     * @param entityType The type of entity being searched (e.g., "Product", "Version")
+     * @param <T>        The entity type
+     * @return A compiled Predicate that can be used to filter entities
+     * @throws RuntimeException if compilation fails
      */
-//    public String parseQuery(String query) {
-//        return parseQuery(query, "Product");
-//    }
+    public <T> Predicate<T> parseQueryToPredicate(String query, String entityType) {
+        if (query == null || query.trim().isEmpty()) {
+            return entity -> true; // Return a predicate that matches everything
+        }
+
+        System.out.printf("\nParsing natural language query to Java Predicate: '%s%s%s' for entity type: '%s%s%s'%n\n",
+                ANSI_GREEN, query, ANSI_RESET, ANSI_BLUE, entityType, ANSI_RESET);
+
+        try {
+            // Generate Java code using LLM
+            String javaCode = parseWithJavaLLM(query, entityType);
+
+            if (javaCode == null || javaCode.trim().isEmpty()) {
+                logger.warn("Java code generation failed, result is empty");
+                throw new RuntimeException("Java code generation failed, result is empty");
+            }
+
+            System.out.printf("Generated Java code:\n%s%s%s\n\n", ANSI_BLUE, javaCode, ANSI_RESET);
+
+            // Compile the Java code and return the Predicate
+            return javaFilterCompiler.compileFilter(javaCode, entityType);
+
+        } catch (Exception e) {
+            logger.error("Failed to parse query to Java Predicate: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to parse query to Java Predicate: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Parse query using offline LLM via Spring AI with Java code generation
+     */
+    private String parseWithJavaLLM(String query, String entityType) {
+        try {
+            PromptConfig config = promptConfigs.getOrDefault(entityType, promptConfigs.get("Product"));
+
+            // Create prompt with current year context and entity-specific configuration
+            int currentYear = LocalDate.now().getYear();
+            String formattedPrompt = String.format(JAVA_PROMPT_TEMPLATE,
+                    entityType,           // You are filtering %s entities
+                    entityType,           // The 'entity' parameter passed to your method is already a %s object
+                    config.jsonStructure, // The Java objects you'll be filtering have properties matching this JSON structure:
+                    config.specialConsiderations,
+                    currentYear,          // Current year is %d if year context is needed
+                    config.javaExamples != null ? config.javaExamples : "",
+                    query);
+
+            // Create prompt and get response using Spring AI 1.0.1 API
+            Prompt prompt = new Prompt(formattedPrompt);
+
+            System.out.printf("Java LLM prompt for '%s%s%s'\n%s%s%s\n\n", ANSI_BLUE, entityType, ANSI_RESET, ANSI_GREEN, formattedPrompt, ANSI_RESET);
+
+            ChatClient.ChatClientRequestSpec request  = chatModel.prompt(prompt);
+            ChatClient.CallResponseSpec      response = request.call();
+
+            // Get the content directly from the response
+            String content = response.content();
+
+            System.out.printf("Java LLM raw response\n\n%s%s%s\n\n", ANSI_YELLOW, content, ANSI_RESET);
+
+            // Extract actual answer from DeepSeek response (remove thinking process)
+            String extractedAnswer = extractAnswerFromDeepSeekResponse(content);
+
+            System.out.printf("Java LLM extracted answer\n\n%s%s%s\n\n", ANSI_YELLOW, extractedAnswer, ANSI_RESET);
+
+            return extractedAnswer != null ? extractedAnswer.trim() : "";
+
+        } catch (Exception e) {
+            logger.error("Error calling LLM for Java query parsing: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * Parse query using offline LLM via Spring AI with JavaScript generation
+     */
+    private String parseWithJavaScriptLLM(String query, String entityType) {
+        try {
+            PromptConfig config = promptConfigs.getOrDefault(entityType, promptConfigs.get("Product"));
+
+            // Create prompt with current year context and entity-specific configuration
+            int currentYear = LocalDate.now().getYear();
+            String formattedPrompt = String.format(JAVASCRIPT_PROMPT_TEMPLATE,
+                    entityType,           // You are filtering %s entities
+                    entityType,           // Each 'entity' parameter passed to your function is already a %s object
+                    config.jsonStructure, // The JavaScript objects you'll be filtering have properties matching this JSON structure:
+                    config.specialConsiderations,
+                    currentYear,          // Current year is %d if year context is needed
+                    config.javascriptExamples,
+                    query);
+
+            // Create prompt and get response using Spring AI 1.0.1 API
+            Prompt prompt = new Prompt(formattedPrompt);
+
+            System.out.printf("JavaScript LLM prompt for '%s%s%s'\n%s%s%s\n\n", ANSI_BLUE, entityType, ANSI_RESET, ANSI_GREEN, formattedPrompt, ANSI_RESET);
+
+            ChatClient.ChatClientRequestSpec request  = chatModel.prompt(prompt);
+            ChatClient.CallResponseSpec      response = request.call();
+
+            // Get the content directly from the response
+            String content = response.content();
+
+            System.out.printf("JavaScript LLM raw response\n\n%s%s%s\n\n", ANSI_YELLOW, content, ANSI_RESET);
+
+            // Extract actual answer from DeepSeek response (remove thinking process)
+            String extractedAnswer = extractAnswerFromDeepSeekResponse(content);
+
+            System.out.printf("JavaScript LLM extracted answer\n\n%s%s%s\n\n", ANSI_YELLOW, extractedAnswer, ANSI_RESET);
+
+            return extractedAnswer != null ? extractedAnswer.trim() : "";
+
+        } catch (Exception e) {
+            logger.error("Error calling LLM for JavaScript query parsing: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
 
     /**
      * Parse query using offline LLM via Spring AI with entity-specific prompts
@@ -519,9 +866,14 @@ public class AiFilter {
             ChatClient.CallResponseSpec      response = request.call();
             String                           content  = response.content();
 
-            System.out.println("LLM response: '" + content + "'");
+            System.out.println("LLM raw response: '" + content + "'");
 
-            return content != null ? content.trim() : "";
+            // Extract actual answer from DeepSeek response (remove thinking process)
+            String extractedAnswer = extractAnswerFromDeepSeekResponse(content);
+
+            System.out.println("LLM extracted answer: '" + extractedAnswer + "'");
+
+            return extractedAnswer != null ? extractedAnswer.trim() : "";
 
         } catch (Exception e) {
             logger.error("Error calling LLM for query parsing: {}", e.getMessage(), e);
@@ -530,10 +882,21 @@ public class AiFilter {
     }
 
     /**
+     * Enum for different filter types
+     */
+    public enum FilterType {
+        REGEX,
+        JAVASCRIPT,
+        JAVA
+    }
+
+    /**
      * Configuration class for entity-specific prompts
      */
     private static class PromptConfig {
         final String examples;
+        final String javaExamples;
+        final String javascriptExamples;
         final String jsonStructure;
         final String specialConsiderations;
 
@@ -541,6 +904,24 @@ public class AiFilter {
             this.jsonStructure         = jsonStructure;
             this.specialConsiderations = specialConsiderations;
             this.examples              = examples;
+            this.javascriptExamples    = ""; // Default empty for entities without JavaScript examples
+            this.javaExamples          = ""; // Default empty for entities without Java examples
+        }
+
+        PromptConfig(String jsonStructure, String specialConsiderations, String examples, String javascriptExamples) {
+            this.jsonStructure         = jsonStructure;
+            this.specialConsiderations = specialConsiderations;
+            this.examples              = examples;
+            this.javascriptExamples    = javascriptExamples;
+            this.javaExamples          = ""; // Default empty for entities without Java examples
+        }
+
+        PromptConfig(String jsonStructure, String specialConsiderations, String examples, String javascriptExamples, String javaExamples) {
+            this.jsonStructure         = jsonStructure;
+            this.specialConsiderations = specialConsiderations;
+            this.examples              = examples;
+            this.javascriptExamples    = javascriptExamples;
+            this.javaExamples          = javaExamples;
         }
     }
 }

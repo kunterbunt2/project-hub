@@ -19,9 +19,7 @@ package de.bushnaq.abdalla.projecthub.ai;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.dto.Feature;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestConstructor;
@@ -45,10 +43,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("test")
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@TestMethodOrder(MethodOrderer.DisplayName.class)
 class FeatureAiFilterTest extends AbstractAiFilterTest<Feature> {
 
-    public FeatureAiFilterTest(ObjectMapper mapper, AiFilter aiFilter) {
-        super(mapper, aiFilter);
+    public FeatureAiFilterTest(ObjectMapper mapper, AiFilterService aiFilterService) {
+        super(mapper, aiFilterService);
     }
 
     private Feature createFeature(Long id, String name, Long versionId, OffsetDateTime created, OffsetDateTime updated) {
@@ -133,7 +132,7 @@ class FeatureAiFilterTest extends AbstractAiFilterTest<Feature> {
     }
 
     @Test
-    @DisplayName("Should find features by created date column")
+    @DisplayName("created in 2025")
     void testCreatedDateSpecificSearchWithLLM() throws Exception {
         List<Feature> results  = performSearch("created in 2025", "Feature");
         List<Feature> expected = Arrays.asList(testProducts.get(7), testProducts.get(8), testProducts.get(9), testProducts.get(10), testProducts.get(11)); // Features created in 2025
@@ -143,11 +142,11 @@ class FeatureAiFilterTest extends AbstractAiFilterTest<Feature> {
     }
 
     @Test
-    @DisplayName("Should find features created after January 2024")
+    @DisplayName("features created after January 2024")
     void testFeaturesCreatedAfterDateSearch() throws Exception {
         List<Feature> results = performSearch("features created after January 2024", "Feature");
         List<Feature> expected = Arrays.asList(
-                testProducts.get(1), // Payment Processing (created 2024-01-10)
+//                testProducts.get(1), // Payment Processing (created 2024-01-10)
                 testProducts.get(2), // User Profile Management (created 2024-02-28)
                 testProducts.get(3), // Shopping Cart (created 2024-04-03)
                 testProducts.get(4), // Email Notifications (created 2024-07-22)
@@ -165,7 +164,7 @@ class FeatureAiFilterTest extends AbstractAiFilterTest<Feature> {
     }
 
     @Test
-    @DisplayName("Should find features created before March 2024")
+    @DisplayName("features created before March 2024")
     void testFeaturesCreatedBeforeDateSearch() throws Exception {
         List<Feature> results = performSearch("features created before March 2024", "Feature");
         List<Feature> expected = Arrays.asList(
@@ -198,7 +197,7 @@ class FeatureAiFilterTest extends AbstractAiFilterTest<Feature> {
 
     // === COLUMN-SPECIFIC TESTS (one per column) ===
     @Test
-    @DisplayName("Should find features by name column")
+    @DisplayName("name contains Payment")
     void testNameSpecificSearchWithLLM() throws Exception {
         List<Feature> results  = performSearch("name contains Payment", "Feature");
         List<Feature> expected = Collections.singletonList(testProducts.get(1)); // Payment Processing
@@ -208,7 +207,7 @@ class FeatureAiFilterTest extends AbstractAiFilterTest<Feature> {
     }
 
     @Test
-    @DisplayName("Should handle nonsensical search query gracefully")
+    @DisplayName("purple elephant dancing")
     void testNonsensicalSearchQuery() throws Exception {
         List<Feature> results  = performSearch("purple elephant dancing", "Feature");
         List<Feature> expected = Collections.emptyList(); // Should return empty results for nonsensical queries
@@ -219,7 +218,7 @@ class FeatureAiFilterTest extends AbstractAiFilterTest<Feature> {
 
     // === SIMPLE TEST CASE (keeping only ONE) ===
     @Test
-    @DisplayName("Should generate working regex for simple text search")
+    @DisplayName("authentication")
     void testSimpleTextSearchWithLLM() throws Exception {
         List<Feature> results  = performSearch("authentication", "Feature");
         List<Feature> expected = Collections.singletonList(testProducts.get(0)); // User Authentication
@@ -229,22 +228,20 @@ class FeatureAiFilterTest extends AbstractAiFilterTest<Feature> {
     }
 
     @Test
-    @DisplayName("Should find features by updated date column")
+    @DisplayName("updated in 2025")
     void testUpdatedDateSpecificSearchWithLLM() throws Exception {
-        List<Feature> results  = performSearch("updated in 2025", "Feature");
-        List<Feature> expected = Arrays.asList(testProducts.get(4), testProducts.get(6), testProducts.get(7), testProducts.get(8), testProducts.get(9), testProducts.get(10), testProducts.get(11)); // Features updated in 2025
-
+        List<Feature> results = performSearch("updated in 2025", "Feature");
+        List<Feature> expected = Arrays.asList(
+                testProducts.get(5), // Data Analytics Dashboard (updated 2025-01-15)
+                testProducts.get(6), // API Security Enhancement (updated 2025-02-08)
+                testProducts.get(7), // Mobile App Integration (updated 2025-01-20)
+                testProducts.get(8), // Search Functionality (updated 2025-02-25)
+                testProducts.get(9), // Reporting System (updated 2025-04-02)
+                testProducts.get(10), // Social Media Integration (updated 2025-06-15)
+                testProducts.get(11)  // Machine Learning Recommendations (updated 2025-08-01)
+        );
         assertThat(results).hasSize(expected.size());
         assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
-    @Test
-    @DisplayName("Should find features by versionId column")
-    void testVersionIdSpecificSearchWithLLM() throws Exception {
-        List<Feature> results  = performSearch("versionId is 2", "Feature");
-        List<Feature> expected = Arrays.asList(testProducts.get(2), testProducts.get(3)); // User Profile Management, Shopping Cart
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
 }

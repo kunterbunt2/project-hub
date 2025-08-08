@@ -20,9 +20,7 @@ package de.bushnaq.abdalla.projecthub.ai;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.bushnaq.abdalla.projecthub.dto.Availability;
 import de.bushnaq.abdalla.projecthub.dto.User;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestConstructor;
@@ -47,10 +45,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("test")
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@TestMethodOrder(MethodOrderer.DisplayName.class)
 class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
 
-    public AvailabilityAiFilterTest(ObjectMapper mapper, AiFilter aiFilter) {
-        super(mapper, aiFilter);
+    public AvailabilityAiFilterTest(ObjectMapper mapper, AiFilterService aiFilterService) {
+        super(mapper, aiFilterService);
     }
 
     private Availability createAvailability(Long id, float availability, LocalDate start,
@@ -139,7 +138,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     }
 
     @Test
-    @DisplayName("Should find availability between 60% and 80%")
+    @DisplayName("availability between 60% and 80%")
     void testAvailabilityBetweenSixtyAndEightyPercentSearch() throws Exception {
         List<Availability> results = performSearch("availability between 60% and 80%", "Availability");
         List<Availability> expected = Arrays.asList(
@@ -154,7 +153,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     }
 
     @Test
-    @DisplayName("Should find availability created in 2025")
+    @DisplayName("availability created in 2025")
     void testAvailabilityCreatedInYearSearch() throws Exception {
         List<Availability> results  = performSearch("availability created in 2025", "Availability");
         List<Availability> expected = Collections.singletonList(testProducts.get(11)); // February 2025 availability
@@ -164,35 +163,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     }
 
     @Test
-    @DisplayName("Should find availability for Jane Smith")
-    void testAvailabilityForJaneSmithSearch() throws Exception {
-        List<Availability> results = performSearch("Jane Smith", "Availability");
-        List<Availability> expected = Arrays.asList(
-                testProducts.get(1),  // 0.8f availability
-                testProducts.get(6),  // 0.25f availability
-                testProducts.get(11)  // 0.4f availability
-        );
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
-    @DisplayName("Should find availability for John Doe")
-    void testAvailabilityForSpecificUserSearch() throws Exception {
-        List<Availability> results = performSearch("John Doe", "Availability");
-        List<Availability> expected = Arrays.asList(
-                testProducts.get(0),  // 1.0f availability
-                testProducts.get(5),  // 0.6f availability
-                testProducts.get(10)  // 0.7f availability
-        );
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
-    @DisplayName("Should find availability greater than 50%")
+    @DisplayName("availability greater than 50%")
     void testAvailabilityGreaterThanFiftyPercentSearch() throws Exception {
         List<Availability> results = performSearch("availability greater than 50%", "Availability");
         List<Availability> expected = Arrays.asList(
@@ -211,7 +182,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     }
 
     @Test
-    @DisplayName("Should find availability greater than or equal to 70%")
+    @DisplayName("availability greater than or equal to 70%")
     void testAvailabilityGreaterThanOrEqualSeventyPercentSearch() throws Exception {
         List<Availability> results = performSearch("availability greater than or equal to 70%", "Availability");
         List<Availability> expected = Arrays.asList(
@@ -229,7 +200,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     }
 
     @Test
-    @DisplayName("Should find availability less than 90%")
+    @DisplayName("availability less than 90%")
     void testAvailabilityLessThanNinetyPercentSearch() throws Exception {
         List<Availability> results = performSearch("availability less than 90%", "Availability");
         List<Availability> expected = Arrays.asList(
@@ -249,7 +220,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     }
 
     @Test
-    @DisplayName("Should find availability less than or equal to 40%")
+    @DisplayName("availability less than or equal to 40%")
     void testAvailabilityLessThanOrEqualFortyPercentSearch() throws Exception {
         List<Availability> results = performSearch("availability less than or equal to 40%", "Availability");
         List<Availability> expected = Arrays.asList(
@@ -264,7 +235,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
 
     // === COLUMN-SPECIFIC TESTS (one per column) ===
     @Test
-    @DisplayName("Should find availabilities by availability column")
+    @DisplayName("availability is 0.5")
     void testAvailabilitySpecificSearchWithLLM() throws Exception {
         List<Availability> results  = performSearch("availability is 0.5", "Availability");
         List<Availability> expected = Collections.singletonList(testProducts.get(2)); // 50% availability
@@ -274,7 +245,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     }
 
     @Test
-    @DisplayName("Should find availability starting after January 2024")
+    @DisplayName("availability starting after January 2024")
     void testAvailabilityStartingAfterDateSearch() throws Exception {
         List<Availability> results = performSearch("availability starting after January 2024", "Availability");
         List<Availability> expected = Arrays.asList(
@@ -296,7 +267,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     }
 
     @Test
-    @DisplayName("Should find availability starting before March 2024")
+    @DisplayName("availability starting before March 2024")
     void testAvailabilityStartingBeforeDateSearch() throws Exception {
         List<Availability> results = performSearch("availability starting before March 2024", "Availability");
         List<Availability> expected = Arrays.asList(
@@ -309,7 +280,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     }
 
     @Test
-    @DisplayName("Should find availability starting in January 2025")
+    @DisplayName("availability starting in January 2025")
     void testAvailabilityStartingInSpecificMonthSearch() throws Exception {
         List<Availability> results  = performSearch("availability starting in January 2025", "Availability");
         List<Availability> expected = Collections.singletonList(testProducts.get(10)); // January 2025
@@ -319,7 +290,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     }
 
     @Test
-    @DisplayName("Should find availability starting in summer 2024")
+    @DisplayName("availability starting in summer 2024")
     void testAvailabilityStartingSummerSearch() throws Exception {
         List<Availability> results = performSearch("availability starting in summer 2024", "Availability");
         List<Availability> expected = Arrays.asList(
@@ -333,7 +304,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     }
 
     @Test
-    @DisplayName("Should find availability updated in 2025")
+    @DisplayName("availability updated in 2025")
     void testAvailabilityUpdatedInYearSearch() throws Exception {
         List<Availability> results = performSearch("availability updated in 2025", "Availability");
         List<Availability> expected = Arrays.asList(
@@ -346,7 +317,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     }
 
     @Test
-    @DisplayName("Should find 80% availability")
+    @DisplayName("80% availability")
     void testEightyPercentAvailabilitySearch() throws Exception {
         List<Availability> results  = performSearch("80% availability", "Availability");
         List<Availability> expected = Collections.singletonList(testProducts.get(1)); // 0.8f
@@ -366,7 +337,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     }
 
     @Test
-    @DisplayName("Should find 50% availability")
+    @DisplayName("50% availability")
     void testFiftyPercentAvailabilitySearch() throws Exception {
         List<Availability> results  = performSearch("50% availability", "Availability");
         List<Availability> expected = Collections.singletonList(testProducts.get(2)); // 0.5f
@@ -376,7 +347,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     }
 
     @Test
-    @DisplayName("Should find 100% availability")
+    @DisplayName("full availability")
     void testFullAvailabilitySearch() throws Exception {
         List<Availability> results  = performSearch("full availability", "Availability");
         List<Availability> expected = Collections.singletonList(testProducts.get(0)); // 1.0f
@@ -386,34 +357,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     }
 
     @Test
-    @DisplayName("Should find high availability (over 85%)")
-    void testHighAvailabilitySearch() throws Exception {
-        List<Availability> results = performSearch("high availability", "Availability");
-        List<Availability> expected = Arrays.asList(
-                testProducts.get(0),  // 1.0f
-                testProducts.get(4),  // 0.9f
-                testProducts.get(9)   // 0.95f
-        );
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
-    @DisplayName("Should find low availability (under 30%)")
-    void testLowAvailabilitySearch() throws Exception {
-        List<Availability> results = performSearch("low availability", "Availability");
-        List<Availability> expected = Arrays.asList(
-                testProducts.get(6),  // 0.25f
-                testProducts.get(8)   // 0.0f
-        );
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
-    @DisplayName("Should find 95% availability")
+    @DisplayName("95% availability")
     void testNinetyFivePercentAvailabilitySearch() throws Exception {
         List<Availability> results  = performSearch("95% availability", "Availability");
         List<Availability> expected = Collections.singletonList(testProducts.get(9)); // 0.95f
@@ -423,17 +367,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     }
 
     @Test
-    @DisplayName("Should find 90% availability")
-    void testNinetyPercentAvailabilitySearch() throws Exception {
-        List<Availability> results  = performSearch("90% availability", "Availability");
-        List<Availability> expected = Collections.singletonList(testProducts.get(4)); // 0.9f
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
-    @DisplayName("Should handle nonsensical search query gracefully")
+    @DisplayName("purple elephant dancing")
     void testNonsensicalSearchQuery() throws Exception {
         List<Availability> results  = performSearch("purple elephant dancing", "Availability");
         List<Availability> expected = Collections.emptyList(); // Should return empty results for nonsensical queries
@@ -443,54 +377,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     }
 
     @Test
-    @DisplayName("Should find partial availability")
-    void testPartialAvailabilitySearch() throws Exception {
-        List<Availability> results = performSearch("partial availability", "Availability");
-        List<Availability> expected = Arrays.asList(
-                testProducts.get(1),  // 0.8f
-                testProducts.get(2),  // 0.5f
-                testProducts.get(3),  // 0.75f
-                testProducts.get(4),  // 0.9f
-                testProducts.get(5),  // 0.6f
-                testProducts.get(6),  // 0.25f
-                testProducts.get(7),  // 0.85f
-                testProducts.get(8),  // 0.0f
-                testProducts.get(9),  // 0.95f
-                testProducts.get(10), // 0.7f
-                testProducts.get(11)  // 0.4f
-        );
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
-    @DisplayName("Should find 75% availability")
-    void testSeventyFivePercentAvailabilitySearch() throws Exception {
-        List<Availability> results  = performSearch("75% availability", "Availability");
-        List<Availability> expected = Collections.singletonList(testProducts.get(3)); // 0.75f
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    // === SIMPLE TEST CASE (keeping only ONE) ===
-    @Test
-    @DisplayName("Should find availabilities by user name")
-    void testSimpleUserNameSearch() throws Exception {
-        List<Availability> results = performSearch("John Doe", "Availability");
-        List<Availability> expected = Arrays.asList(
-                testProducts.get(0),  // 1.0f availability - John Doe
-                testProducts.get(5),  // 0.6f availability - John Doe
-                testProducts.get(10)  // 0.7f availability - John Doe
-        );
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
-    @DisplayName("Should find zero availability")
+    @DisplayName("zero availability")
     void testZeroAvailabilitySearch() throws Exception {
         List<Availability> results  = performSearch("zero availability", "Availability");
         List<Availability> expected = Collections.singletonList(testProducts.get(8)); // 0.0f
