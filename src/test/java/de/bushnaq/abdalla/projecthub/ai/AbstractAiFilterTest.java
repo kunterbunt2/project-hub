@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -38,13 +39,15 @@ public class AbstractAiFilterTest<T> {
     protected final ObjectMapper    filterMapper;
     protected       String          javascriptFunction;
     protected final Logger          logger = LoggerFactory.getLogger(this.getClass());
+    protected final LocalDate       now;
     protected       String          regexString;
     protected       List<T>         testProducts;
 
-    public AbstractAiFilterTest(ObjectMapper mapper, AiFilterService aiFilterService) {
+    public AbstractAiFilterTest(ObjectMapper mapper, AiFilterService aiFilterService, LocalDate now) {
         System.setProperty("polyglot.engine.WarnInterpreterOnly", "false");
         this.filterMapper    = mapper.copy();
         this.aiFilterService = aiFilterService;
+        this.now             = now;
         // Use GraalVM JavaScript engine specifically
         ScriptEngine engineByName = new ScriptEngineManager().getEngineByName("graal.js");
         if (engineByName != null) {
@@ -167,7 +170,7 @@ public class AbstractAiFilterTest<T> {
                     }
                     case JAVA: {
                         // Parse the query using Java generation and get compiled predicate
-                        var     javaPredicate = aiFilterService.parseQueryToPredicate(searchValue, entityType);
+                        var     javaPredicate = aiFilterService.parseQueryToPredicate(searchValue, entityType, now);
                         List<T> filtered      = testProducts.stream().filter(javaPredicate).collect(Collectors.toList());
 
                         System.out.println("\n=== Products matched by Java filter ===");

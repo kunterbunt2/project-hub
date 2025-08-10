@@ -24,6 +24,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestConstructor;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class FeatureAiFilterTest extends AbstractAiFilterTest<Feature> {
 
     public FeatureAiFilterTest(ObjectMapper mapper, AiFilterService aiFilterService) {
-        super(mapper, aiFilterService);
+        super(mapper, aiFilterService, LocalDate.of(2025, 8, 10));
     }
 
     private Feature createFeature(Long id, String name, Long versionId, OffsetDateTime created, OffsetDateTime updated) {
@@ -131,9 +132,20 @@ class FeatureAiFilterTest extends AbstractAiFilterTest<Feature> {
                 OffsetDateTime.of(2025, 8, 1, 16, 30, 0, 0, ZoneOffset.UTC)));
     }
 
+    // === SIMPLE TEST CASE (keeping only ONE) ===
+    @Test
+    @DisplayName("authentication")
+    void testAuthentication() throws Exception {
+        List<Feature> results  = performSearch("authentication", "Feature");
+        List<Feature> expected = Collections.singletonList(testProducts.get(0)); // User Authentication
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
     @Test
     @DisplayName("created in 2025")
-    void testCreatedDateSpecificSearchWithLLM() throws Exception {
+    void testCreatedIn2025() throws Exception {
         List<Feature> results  = performSearch("created in 2025", "Feature");
         List<Feature> expected = Arrays.asList(testProducts.get(7), testProducts.get(8), testProducts.get(9), testProducts.get(10), testProducts.get(11)); // Features created in 2025
 
@@ -143,7 +155,7 @@ class FeatureAiFilterTest extends AbstractAiFilterTest<Feature> {
 
     @Test
     @DisplayName("features created after January 2024")
-    void testFeaturesCreatedAfterDateSearch() throws Exception {
+    void testFeaturesCreatedAfterJanuary2024() throws Exception {
         List<Feature> results = performSearch("features created after January 2024", "Feature");
         List<Feature> expected = Arrays.asList(
 //                testProducts.get(1), // Payment Processing (created 2024-01-10)
@@ -165,7 +177,7 @@ class FeatureAiFilterTest extends AbstractAiFilterTest<Feature> {
 
     @Test
     @DisplayName("features created before March 2024")
-    void testFeaturesCreatedBeforeDateSearch() throws Exception {
+    void testFeaturesCreatedBeforeMarch2024() throws Exception {
         List<Feature> results = performSearch("features created before March 2024", "Feature");
         List<Feature> expected = Arrays.asList(
                 testProducts.get(0), // User Authentication (created 2023-06-15)
@@ -178,8 +190,8 @@ class FeatureAiFilterTest extends AbstractAiFilterTest<Feature> {
     }
 
     @Test
-    @DisplayName("Should find features updated in 2025")
-    void testFeaturesUpdatedInYearSearch() throws Exception {
+    @DisplayName("features updated in 2025")
+    void testFeaturesUpdatedIn2025() throws Exception {
         List<Feature> results = performSearch("features updated in 2025", "Feature");
         List<Feature> expected = Arrays.asList(
                 testProducts.get(5), // Data Analytics Dashboard (updated 2025-01-15)
@@ -198,7 +210,7 @@ class FeatureAiFilterTest extends AbstractAiFilterTest<Feature> {
     // === COLUMN-SPECIFIC TESTS (one per column) ===
     @Test
     @DisplayName("name contains Payment")
-    void testNameSpecificSearchWithLLM() throws Exception {
+    void testNameContainsPayment() throws Exception {
         List<Feature> results  = performSearch("name contains Payment", "Feature");
         List<Feature> expected = Collections.singletonList(testProducts.get(1)); // Payment Processing
 
@@ -208,7 +220,7 @@ class FeatureAiFilterTest extends AbstractAiFilterTest<Feature> {
 
     @Test
     @DisplayName("purple elephant dancing")
-    void testNonsensicalSearchQuery() throws Exception {
+    void testPurpleElephantDancing() throws Exception {
         List<Feature> results  = performSearch("purple elephant dancing", "Feature");
         List<Feature> expected = Collections.emptyList(); // Should return empty results for nonsensical queries
 
@@ -216,20 +228,9 @@ class FeatureAiFilterTest extends AbstractAiFilterTest<Feature> {
         assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
-    // === SIMPLE TEST CASE (keeping only ONE) ===
-    @Test
-    @DisplayName("authentication")
-    void testSimpleTextSearchWithLLM() throws Exception {
-        List<Feature> results  = performSearch("authentication", "Feature");
-        List<Feature> expected = Collections.singletonList(testProducts.get(0)); // User Authentication
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
     @Test
     @DisplayName("updated in 2025")
-    void testUpdatedDateSpecificSearchWithLLM() throws Exception {
+    void testUpdatedIn2025() throws Exception {
         List<Feature> results = performSearch("updated in 2025", "Feature");
         List<Feature> expected = Arrays.asList(
                 testProducts.get(5), // Data Analytics Dashboard (updated 2025-01-15)

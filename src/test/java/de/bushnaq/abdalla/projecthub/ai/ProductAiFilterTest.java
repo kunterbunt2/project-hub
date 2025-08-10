@@ -24,6 +24,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestConstructor;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -34,28 +35,6 @@ import java.util.function.Predicate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * add generated ai code to test against one of the tests.
- */
-class ExampleProductFilter implements Predicate<Product> {
-
-    @Override
-    public boolean test(Product entity) {
-        if (entity == null) {
-            return false;
-        }
-
-        try {
-            // Execute the generated filter code
-            return entity.getCreated() != null && entity.getCreated().isAfter(OffsetDateTime.of(2024, 7, 31, 23, 59, 59, 0, OffsetDateTime.now().getOffset()));
-        } catch (Exception e) {
-            // Log the error but don't fail the entire filter
-            System.err.println("Error in filter execution: " + e.getMessage());
-            return false;
-        }
-    }
-
-}
 
 /**
  * Integration test for NaturalLanguageSearchService testing real LLM regex pattern generation
@@ -71,7 +50,7 @@ class ExampleProductFilter implements Predicate<Product> {
 class ProductAiFilterTest extends AbstractAiFilterTest<Product> {
 
     public ProductAiFilterTest(ObjectMapper mapper, AiFilterService aiFilterService) {
-        super(mapper, aiFilterService);
+        super(mapper, aiFilterService, LocalDate.of(2025, 8, 10));
     }
 
     private Product createProduct(Long id, String name, OffsetDateTime created, OffsetDateTime updated) {
@@ -82,7 +61,6 @@ class ProductAiFilterTest extends AbstractAiFilterTest<Product> {
         product.setUpdated(updated);
         return product;
     }
-
 
     @BeforeEach
     void setUp() {
@@ -129,7 +107,7 @@ class ProductAiFilterTest extends AbstractAiFilterTest<Product> {
 
     @Test
     @DisplayName("MARS")
-    void testCaseInsensitiveSearchWithLLM() throws Exception {
+    void testMARS() throws Exception {
         List<Product> results  = performSearch("MARS", "Product", AiFilterGenerator.FilterType.JAVA);
         List<Product> expected = Collections.singletonList(testProducts.get(2)); // Mars Explorer
 
@@ -138,13 +116,20 @@ class ProductAiFilterTest extends AbstractAiFilterTest<Product> {
     }
 
     @Test
-    @DisplayName("space products created in 2024")
-    void testComplexSearchWithLLM() throws Exception {
-        List<Product> results = performSearch("space products created in 2024", "Product", AiFilterGenerator.FilterType.JAVA);
-        List<Product> expected = Arrays.asList(
-                testProducts.get(5),//
-                testProducts.get(6)//
-        ); // Space Station Alpha
+    @DisplayName("name contains project")
+    void testNameContainsProject() throws Exception {
+        List<Product> results  = performSearch("name contains project", "Product", AiFilterGenerator.FilterType.JAVA);
+        List<Product> expected = Collections.singletonList(testProducts.get(1)); // Project Apollo
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("Orion")
+    void testOrion() throws Exception {
+        List<Product> results  = performSearch("Orion", "Product");
+        List<Product> expected = Collections.singletonList(testProducts.get(0)); // Orion Space System
 
         assertThat(results).hasSize(expected.size());
         assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
@@ -152,7 +137,7 @@ class ProductAiFilterTest extends AbstractAiFilterTest<Product> {
 
     @Test
     @DisplayName("products created after July 2024")
-    void testDateBasedSearchWithLLM() throws Exception {
+    void testProductsCreatedAfterJuly2024() throws Exception {
         List<Product> results = performSearch("products created after July 2024", "Product", AiFilterGenerator.FilterType.JAVA);
 //        List<Product> results = performSearch(new ExampleProductFilter());
         List<Product> expected = Arrays.asList(
@@ -167,7 +152,7 @@ class ProductAiFilterTest extends AbstractAiFilterTest<Product> {
 
     @Test
     @DisplayName("products created in 2024")
-    void testJavaScriptFiltering() throws Exception {
+    void testProductsCreatedIn2024() throws Exception {
         List<Product> results = performSearch("products created in 2024", "Product", AiFilterGenerator.FilterType.JAVA);
         List<Product> expected = Arrays.asList(
                 testProducts.get(1),
@@ -182,28 +167,8 @@ class ProductAiFilterTest extends AbstractAiFilterTest<Product> {
     }
 
     @Test
-    @DisplayName("name contains project")
-    void testNameSpecificSearchWithLLM() throws Exception {
-        List<Product> results  = performSearch("name contains project", "Product", AiFilterGenerator.FilterType.JAVA);
-        List<Product> expected = Collections.singletonList(testProducts.get(1)); // Project Apollo
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
-    @DisplayName("Orion")
-    void testSimpleTextSearchWithLLM() throws Exception {
-        List<Product> results  = performSearch("Orion", "Product");
-        List<Product> expected = Collections.singletonList(testProducts.get(0)); // Orion Space System
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
     @DisplayName("products updated in 2025")
-    void testUpdatedDateSearchWithLLM() throws Exception {
+    void testProductsUpdatedIn2025() throws Exception {
         List<Product> results = performSearch("products updated in 2025", "Product", AiFilterGenerator.FilterType.JAVA);
         List<Product> expected = Arrays.asList(
                 testProducts.get(5), // Deep Space Probe (updated 2025-01-15)
@@ -213,6 +178,42 @@ class ProductAiFilterTest extends AbstractAiFilterTest<Product> {
 
         assertThat(results).hasSize(expected.size());
         assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("space products created in 2024")
+    void testSpaceProductsCreatedIn2024() throws Exception {
+        List<Product> results = performSearch("space products created in 2024", "Product", AiFilterGenerator.FilterType.JAVA);
+        List<Product> expected = Arrays.asList(
+                testProducts.get(5),//
+                testProducts.get(6)//
+        ); // Space Station Alpha
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    /**
+     * add generated ai code to test against one of the tests.
+     */
+    class ExampleProductFilter implements Predicate<Product> {
+
+        @Override
+        public boolean test(Product entity) {
+            if (entity == null) {
+                return false;
+            }
+
+            try {
+                // Execute the generated filter code
+                return entity.getCreated() != null && entity.getCreated().isAfter(OffsetDateTime.of(2024, 7, 31, 23, 59, 59, 0, OffsetDateTime.now().getOffset()));
+            } catch (Exception e) {
+                // Log the error but don't fail the entire filter
+                System.err.println("Error in filter execution: " + e.getMessage());
+                return false;
+            }
+        }
+
     }
 
 }

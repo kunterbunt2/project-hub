@@ -329,7 +329,10 @@
                         -Xshare:off
                     </argLine>
                     <excludes>
+                        <!-- we are missing the references for these tests online, we cannot run these tests in a github action -->
                         <exclude>**/LegacyGanttTest.java</exclude>
+                        <!-- we cannot use local GPU in a github action -->
+                        <exclude>**/ai/*Test.java</exclude>
                     </excludes>
                 </configuration>
             </plugin>

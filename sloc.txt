@@ -5,7 +5,7 @@
 | profiler                    | LogLevel.java                             | src      |        2 |        0 |       16 |        8 |       26 |
 | profiler                    | NestedCallsTest.java                      | src      |        9 |       21 |       17 |       42 |       89 |
 | profiler                    | NestedLoggingTest.java                    | src      |       10 |       21 |       17 |       59 |      107 |
-| profiler                    | Profiler.java                             | src      |       24 |       14 |       26 |      137 |      201 |
+| profiler                    | Profiler.java                             | src      |       25 |       14 |       26 |      143 |      208 |
 | profiler                    | ProfilerResult.java                       | src      |        5 |        0 |       16 |       16 |       37 |
 | profiler                    | Sample.java                               | src      |       12 |        7 |       16 |       37 |       72 |
 | profiler                    | SampleSet.java                            | src      |       20 |        0 |       19 |       87 |      126 |
@@ -14,17 +14,25 @@
 | profiler                    | TestResult.java                           | src      |        4 |        0 |       16 |        9 |       29 |
 | profiler                    | TimeKeeping.java                          | src      |       14 |        0 |       16 |       65 |       95 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
-| projecthub.ai               | AbstractAiFilterTest.java                 | src      |       13 |       18 |       33 |      124 |      188 |
-| projecthub.ai               | AiFilter.java                             | src      |      113 |       35 |       31 |      485 |      664 |
-| projecthub.ai               | AvailabilityAiFilterTest.java             | src      |       77 |        7 |       21 |      396 |      501 |
-| projecthub.ai               | FeatureAiFilterTest.java                  | src      |       39 |        7 |       20 |      184 |      250 |
-| projecthub.ai               | LocationAiFilterTest.java                 | src      |       56 |        7 |       20 |      251 |      334 |
-| projecthub.ai               | OffDayAiFilterTest.java                   | src      |       97 |        7 |       21 |      511 |      636 |
-| projecthub.ai               | ProductAiFilterTest.java                  | src      |       32 |        7 |       18 |      138 |      195 |
-| projecthub.ai               | SprintAiFilterTest.java                   | src      |       77 |        7 |       19 |      416 |      519 |
-| projecthub.ai               | TestAi.java                               | src      |       10 |        0 |       16 |       19 |       45 |
-| projecthub.ai               | UserAiFilterTest.java                     | src      |       65 |        7 |       21 |      323 |      416 |
-| projecthub.ai               | VersionAiFilterTest.java                  | src      |       61 |        7 |       21 |      291 |      380 |
+| projecthub.ai               | AbstractAiFilterTest.java                 | src      |       17 |       18 |       37 |      146 |      218 |
+| projecthub.ai               | AiFilter.java                             | src      |      165 |       51 |       80 |      631 |      927 |
+| projecthub.ai               | AiFilterConfig.java                       | src      |      136 |       15 |       24 |      506 |      681 |
+| projecthub.ai               | AiFilterGenerator.java                    | src      |        5 |       20 |       16 |       10 |       51 |
+| projecthub.ai               | AiFilterService.java                      | src      |       10 |       31 |       16 |       35 |       92 |
+| projecthub.ai               | AvailabilityAiFilterTest.java             | src      |       61 |        7 |       20 |      300 |      388 |
+| projecthub.ai               | FeatureAiFilterTest.java                  | src      |       37 |        7 |       21 |      182 |      247 |
+| projecthub.ai               | JavaAiFilterGenerator.java                | src      |       44 |       23 |       56 |      154 |      277 |
+| projecthub.ai               | JavaCompilationException.java             | src      |       12 |       10 |       16 |       46 |       84 |
+| projecthub.ai               | JavaFilterCompiler.java                   | src      |       47 |       32 |       55 |      178 |      312 |
+| projecthub.ai               | JavaScriptAiFilterGenerator.java          | src      |       32 |        7 |       25 |       98 |      162 |
+| projecthub.ai               | LocationAiFilterTest.java                 | src      |       56 |        7 |       20 |      250 |      333 |
+| projecthub.ai               | OffDayAiFilterTest.java                   | src      |       88 |        7 |       21 |      473 |      589 |
+| projecthub.ai               | ProductAiFilterTest.java                  | src      |       36 |       10 |       21 |      151 |      218 |
+| projecthub.ai               | RegexAiFilterGenerator.java               | src      |       31 |        8 |       22 |       88 |      149 |
+| projecthub.ai               | SprintAiFilterTest.java                   | src      |       78 |       10 |       22 |      414 |      524 |
+| projecthub.ai               | TestAi.java                               | src      |       10 |        0 |       16 |       21 |       47 |
+| projecthub.ai               | UserAiFilterTest.java                     | src      |       65 |        7 |       21 |      322 |      415 |
+| projecthub.ai               | VersionAiFilterTest.java                  | src      |       68 |       10 |       23 |      319 |      420 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.dao              | AbstractDateRangeDAO.java                 | src      |        7 |        0 |       16 |       17 |       40 |
 | projecthub.dao              | AbstractTimeAwareDAO.java                 | src      |        9 |        0 |       16 |       30 |       55 |
@@ -310,5 +318,5 @@
 | util                        | TaskUtil.java                             | src      |        8 |        0 |       31 |       15 |       54 |
 | util                        | Util.java                                 | src      |       21 |        0 |       30 |      162 |      213 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
-| 30 package(s)               | 279 file(s)                               | java     |     5152 |     3185 |     7503 |    27783 |    43623 |
+| 30 package(s)               | 287 file(s)                               | java     |     5511 |     3356 |     7794 |    28975 |    45636 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+

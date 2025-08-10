@@ -49,7 +49,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
 
     public LocationAiFilterTest(ObjectMapper mapper, AiFilterService aiFilterService) {
-        super(mapper, aiFilterService);
+        super(mapper, aiFilterService, LocalDate.of(2025, 8, 10));
     }
 
     private Location createLocation(Long id, String country, String state, LocalDate start,
@@ -139,21 +139,8 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
     }
 
     @Test
-    @DisplayName("locations in Australia")
-    void testAustraliaLocationSearch() throws Exception {
-        List<Location> results = performSearch("locations in Australia", "Location");
-        List<Location> expected = Arrays.asList(
-                testProducts.get(2),  // Australia, Victoria
-                testProducts.get(11)  // Australia, New South Wales
-        );
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
     @DisplayName("California")
-    void testCaliforniaLocationSearch() throws Exception {
+    void testCalifornia() throws Exception {
         List<Location> results  = performSearch("California", "Location");
         List<Location> expected = Collections.singletonList(testProducts.get(1)); // United States, California
 
@@ -163,7 +150,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
 
     @Test
     @DisplayName("country is Australia")
-    void testCountrySpecificSearchWithLLM() throws Exception {
+    void testCountryIsAustralia() throws Exception {
         List<Location> results  = performSearch("country is Australia", "Location");
         List<Location> expected = Arrays.asList(testProducts.get(2), testProducts.get(11)); // Australia Victoria, Australia New South Wales
 
@@ -173,7 +160,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
 
     @Test
     @DisplayName("created in 2025")
-    void testCreatedDateSpecificSearchWithLLM() throws Exception {
+    void testCreatedIn2025() throws Exception {
         List<Location> results  = performSearch("created in 2025", "Location");
         List<Location> expected = Collections.singletonList(testProducts.get(11)); // Australia, New South Wales (created 2025-01-28)
 
@@ -193,7 +180,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
 
     @Test
     @DisplayName("German states")
-    void testGermanStatesSearch() throws Exception {
+    void testGermanStates() throws Exception {
         List<Location> results = performSearch("German states", "Location");
         List<Location> expected = Arrays.asList(
                 testProducts.get(0), // Germany, Bavaria
@@ -204,9 +191,20 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
         assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
+    // === SIMPLE TEST CASE (keeping only ONE) ===
+    @Test
+    @DisplayName("Germany")
+    void testGermany() throws Exception {
+        List<Location> results  = performSearch("Germany", "Location");
+        List<Location> expected = Arrays.asList(testProducts.get(0), testProducts.get(5)); // Germany Bavaria, Germany North Rhine-Westphalia
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
     @Test
     @DisplayName("locations created in 2025")
-    void testLocationsCreatedInYearSearch() throws Exception {
+    void testLocationsCreatedIn2025() throws Exception {
         List<Location> results  = performSearch("locations created in 2025", "Location");
         List<Location> expected = Collections.singletonList(testProducts.get(11)); // Australia, New South Wales (created 2025-01-28)
 
@@ -215,8 +213,21 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
     }
 
     @Test
+    @DisplayName("locations in Australia")
+    void testLocationsInAustralia() throws Exception {
+        List<Location> results = performSearch("locations in Australia", "Location");
+        List<Location> expected = Arrays.asList(
+                testProducts.get(2),  // Australia, Victoria
+                testProducts.get(11)  // Australia, New South Wales
+        );
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
     @DisplayName("locations starting after January 2024")
-    void testLocationsStartingAfterDateSearch() throws Exception {
+    void testLocationsStartingAfterJanuary2024() throws Exception {
         List<Location> results = performSearch("locations starting after January 2024", "Location");
         List<Location> expected = Arrays.asList(
                 testProducts.get(1),  // United States, California (Feb 2024)
@@ -238,7 +249,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
 
     @Test
     @DisplayName("locations starting before March 2024")
-    void testLocationsStartingBeforeDateSearch() throws Exception {
+    void testLocationsStartingBeforeMarch2024() throws Exception {
         List<Location> results = performSearch("locations starting before March 2024", "Location");
         List<Location> expected = Arrays.asList(
                 testProducts.get(0), // Germany, Bavaria (Jan 2024)
@@ -251,7 +262,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
 
     @Test
     @DisplayName("locations starting in 2025")
-    void testLocationsStartingInYearSearch() throws Exception {
+    void testLocationsStartingIn2025() throws Exception {
         List<Location> results = performSearch("locations starting in 2025", "Location");
         List<Location> expected = Arrays.asList(
                 testProducts.get(10), // United States, New York (Jan 2025)
@@ -264,7 +275,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
 
     @Test
     @DisplayName("locations starting in summer 2024")
-    void testLocationsStartingSummerSearch() throws Exception {
+    void testLocationsStartingInSummer2024() throws Exception {
         List<Location> results = performSearch("locations starting in summer 2024", "Location");
         List<Location> expected = Arrays.asList(
                 testProducts.get(5), // Germany, North Rhine-Westphalia (Jun 2024)
@@ -278,7 +289,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
 
     @Test
     @DisplayName("locations updated in 2025")
-    void testLocationsUpdatedInYearSearch() throws Exception {
+    void testLocationsUpdatedIn2025() throws Exception {
         List<Location> results = performSearch("locations updated in 2025", "Location");
         List<Location> expected = Arrays.asList(
                 testProducts.get(10), // United States, New York (updated 2025-01-10)
@@ -291,7 +302,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
 
     @Test
     @DisplayName("purple elephant dancing")
-    void testNonsensicalSearchQuery() throws Exception {
+    void testPurpleElephantDancing() throws Exception {
         List<Location> results  = performSearch("purple elephant dancing", "Location");
         List<Location> expected = Collections.emptyList(); // Should return empty results for nonsensical queries
 
@@ -299,20 +310,9 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
         assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
-    // === SIMPLE TEST CASE (keeping only ONE) ===
-    @Test
-    @DisplayName("Germany")
-    void testSimpleTextSearchWithLLM() throws Exception {
-        List<Location> results  = performSearch("Germany", "Location");
-        List<Location> expected = Arrays.asList(testProducts.get(0), testProducts.get(5)); // Germany Bavaria, Germany North Rhine-Westphalia
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
     @Test
     @DisplayName("start date in 2025")
-    void testStartDateSpecificSearchWithLLM() throws Exception {
+    void testStartDateIn2025() throws Exception {
         List<Location> results  = performSearch("start date in 2025", "Location");
         List<Location> expected = Arrays.asList(testProducts.get(10), testProducts.get(11)); // United States New York, Australia New South Wales
 
@@ -322,7 +322,7 @@ class LocationAiFilterTest extends AbstractAiFilterTest<Location> {
 
     @Test
     @DisplayName("updated in 2025")
-    void testUpdatedDateSpecificSearchWithLLM() throws Exception {
+    void testUpdatedIn2025() throws Exception {
         List<Location> results  = performSearch("updated in 2025", "Location");
         List<Location> expected = Arrays.asList(testProducts.get(10), testProducts.get(11)); // United States New York, Australia New South Wales
 

@@ -50,7 +50,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class OffDayAiFilterTest extends AbstractAiFilterTest<OffDay> {
 
     public OffDayAiFilterTest(ObjectMapper mapper, AiFilterService aiFilterService) {
-        super(mapper, aiFilterService);
+        super(mapper, aiFilterService, LocalDate.of(2025, 8, 10));
     }
 
     private OffDay createOffDay(Long id, LocalDate firstDay, LocalDate lastDay, OffDayType type,
@@ -149,7 +149,7 @@ class OffDayAiFilterTest extends AbstractAiFilterTest<OffDay> {
 
     @Test
     @DisplayName("created in 2025")
-    void testCreatedDateSpecificSearchWithLLM() throws Exception {
+    void testCreatedIn2025() throws Exception {
         List<OffDay> results = performSearch("created in 2025", "OffDay");
         List<OffDay> expected = Arrays.asList(
                 testProducts.get(11),
@@ -162,7 +162,7 @@ class OffDayAiFilterTest extends AbstractAiFilterTest<OffDay> {
 
     @Test
     @DisplayName("emergency sick")
-    void testEmergencySickDaySearch() throws Exception {
+    void testEmergencySick() throws Exception {
         List<OffDay> results = performSearch("emergency sick", "OffDay");
         List<OffDay> expected = Arrays.asList(
                 testProducts.get(1),  // Sick leave - Jane Smith
@@ -187,7 +187,7 @@ class OffDayAiFilterTest extends AbstractAiFilterTest<OffDay> {
 
     @Test
     @DisplayName("firstDay in 2025")
-    void testFirstDaySpecificSearchWithLLM() throws Exception {
+    void testFirstDayIn2025() throws Exception {
         List<OffDay> results  = performSearch("firstDay in 2025", "OffDay");
         List<OffDay> expected = Arrays.asList(testProducts.get(10), testProducts.get(11), testProducts.get(12), testProducts.get(13)); // Off days starting in 2025
 
@@ -197,7 +197,7 @@ class OffDayAiFilterTest extends AbstractAiFilterTest<OffDay> {
 
     @Test
     @DisplayName("holidays")
-    void testHolidaySearch() throws Exception {
+    void testHolidays() throws Exception {
         List<OffDay> results = performSearch("holidays", "OffDay");
         List<OffDay> expected = Arrays.asList(
                 testProducts.get(2),  // Holiday - Bob Johnson
@@ -210,22 +210,8 @@ class OffDayAiFilterTest extends AbstractAiFilterTest<OffDay> {
     }
 
     @Test
-    @DisplayName("type HOLIDAY")
-    void testHolidayTypeSearch() throws Exception {
-        List<OffDay> results = performSearch("type HOLIDAY", "OffDay");
-        List<OffDay> expected = Arrays.asList(
-                testProducts.get(2),  // Holiday - Bob Johnson
-                testProducts.get(6),  // Holiday - Jane Smith
-                testProducts.get(10)  // Holiday - John Doe
-        );
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
     @DisplayName("lastDay is 2024-03-01")
-    void testLastDaySpecificSearchWithLLM() throws Exception {
+    void testLastDayIs2024_03_01() throws Exception {
         List<OffDay> results  = performSearch("lastDay is 2024-03-01", "OffDay");
         List<OffDay> expected = Collections.singletonList(testProducts.get(2)); // Holiday on March 1st
 
@@ -234,23 +220,8 @@ class OffDayAiFilterTest extends AbstractAiFilterTest<OffDay> {
     }
 
     @Test
-    @DisplayName("off days lasting more than 5 days")
-    void testLongDurationOffDaySearch() throws Exception {
-        List<OffDay> results = performSearch("off days lasting more than 5 days", "OffDay");
-        List<OffDay> expected = Arrays.asList(
-                testProducts.get(4),  // Vacation - Mike Brown (17 days)
-                testProducts.get(7),  // Vacation - Bob Johnson (11 days)
-                testProducts.get(11), // Vacation - Jane Smith (12 days)
-                testProducts.get(13)  // Trip - Alice Wilson (12 days)
-        );
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
     @DisplayName("long vacations")
-    void testLongVacationSearch() throws Exception {
+    void testLongVacations() throws Exception {
         List<OffDay> results = performSearch("long vacations", "OffDay");
         List<OffDay> expected = Arrays.asList(
                 testProducts.get(0),  // Vacation - John Doe
@@ -265,7 +236,7 @@ class OffDayAiFilterTest extends AbstractAiFilterTest<OffDay> {
 
     @Test
     @DisplayName("multi day")
-    void testMultiDayOffDaySearch() throws Exception {
+    void testMultiDay() throws Exception {
         List<OffDay> results = performSearch("multi day", "OffDay");
         List<OffDay> expected = Arrays.asList(
                 testProducts.get(0),  // Vacation - John Doe (5 days)
@@ -286,18 +257,8 @@ class OffDayAiFilterTest extends AbstractAiFilterTest<OffDay> {
     }
 
     @Test
-    @DisplayName("purple elephant dancing")
-    void testNonsensicalSearchQuery() throws Exception {
-        List<OffDay> results  = performSearch("purple elephant dancing", "OffDay");
-        List<OffDay> expected = Collections.emptyList(); // Should return empty results for nonsensical queries
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
     @DisplayName("off days created in 2025")
-    void testOffDaysCreatedInYearSearch() throws Exception {
+    void testOffDaysCreatedIn2025() throws Exception {
         List<OffDay> results = performSearch("off days created in 2025", "OffDay");
         List<OffDay> expected = Arrays.asList(
                 testProducts.get(12), // Sick - Bob Johnson
@@ -310,7 +271,7 @@ class OffDayAiFilterTest extends AbstractAiFilterTest<OffDay> {
 
     @Test
     @DisplayName("off days ending before March 2024")
-    void testOffDaysEndingBeforeDateSearch() throws Exception {
+    void testOffDaysEndingBeforeMarch2024() throws Exception {
         List<OffDay> results = performSearch("off days ending before March 2024", "OffDay");
         List<OffDay> expected = Arrays.asList(
                 testProducts.get(0),  // Vacation ending Jan 19, 2024
@@ -322,49 +283,8 @@ class OffDayAiFilterTest extends AbstractAiFilterTest<OffDay> {
     }
 
     @Test
-    @DisplayName("off days in 2025")
-    void testOffDaysIn2025Search() throws Exception {
-        List<OffDay> results = performSearch("off days in 2025", "OffDay");
-        List<OffDay> expected = Arrays.asList(
-                testProducts.get(10), // Holiday - John Doe
-                testProducts.get(11), // Vacation - Jane Smith
-                testProducts.get(12), // Sick - Bob Johnson
-                testProducts.get(13)  // Trip - Alice Wilson
-        );
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
-    @DisplayName("off days in January 2024")
-    void testOffDaysInJanuarySearch() throws Exception {
-        List<OffDay> results  = performSearch("off days in January 2024", "OffDay");
-        List<OffDay> expected = Collections.singletonList(testProducts.get(0)); // Vacation - John Doe
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
-    @DisplayName("off days in summer 2024")
-    void testOffDaysInSummerSearch() throws Exception {
-        List<OffDay> results = performSearch("off days in summer 2024", "OffDay");
-        List<OffDay> expected = Arrays.asList(
-                testProducts.get(4),  // Vacation - Mike Brown (May-June)
-                testProducts.get(5),  // Sick - John Doe (June)
-                testProducts.get(6),  // Holiday - Jane Smith (July)
-                testProducts.get(7),  // Vacation - Bob Johnson (August)
-                testProducts.get(8)   // Trip - Alice Wilson (September)
-        );
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
     @DisplayName("off days in 2024")
-    void testOffDaysInYearSearch() throws Exception {
+    void testOffDaysIn2024() throws Exception {
         List<OffDay> results = performSearch("off days in 2024", "OffDay");
         List<OffDay> expected = Arrays.asList(
                 testProducts.get(0),  // Vacation - John Doe
@@ -384,8 +304,33 @@ class OffDayAiFilterTest extends AbstractAiFilterTest<OffDay> {
     }
 
     @Test
+    @DisplayName("off days in 2025")
+    void testOffDaysIn2025() throws Exception {
+        List<OffDay> results = performSearch("off days in 2025", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(10), // Holiday - John Doe
+                testProducts.get(11), // Vacation - Jane Smith
+                testProducts.get(12), // Sick - Bob Johnson
+                testProducts.get(13)  // Trip - Alice Wilson
+        );
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("off days in January 2024")
+    void testOffDaysInJanuary2024() throws Exception {
+        List<OffDay> results  = performSearch("off days in January 2024", "OffDay");
+        List<OffDay> expected = Collections.singletonList(testProducts.get(0)); // Vacation - John Doe
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
     @DisplayName("off days in June 2024")
-    void testOffDaysOverlappingDateSearch() throws Exception {
+    void testOffDaysInJune2024() throws Exception {
         List<OffDay> results = performSearch("off days in June 2024", "OffDay");
         List<OffDay> expected = Arrays.asList(
                 testProducts.get(4),  // Vacation - Mike Brown (May 20 - June 5)
@@ -397,8 +342,39 @@ class OffDayAiFilterTest extends AbstractAiFilterTest<OffDay> {
     }
 
     @Test
+    @DisplayName("off days in summer 2024")
+    void testOffDaysInSummer2024() throws Exception {
+        List<OffDay> results = performSearch("off days in summer 2024", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(4),  // Vacation - Mike Brown (May-June)
+                testProducts.get(5),  // Sick - John Doe (June)
+                testProducts.get(6),  // Holiday - Jane Smith (July)
+                testProducts.get(7),  // Vacation - Bob Johnson (August)
+                testProducts.get(8)   // Trip - Alice Wilson (September)
+        );
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("off days lasting more than 5 days")
+    void testOffDaysLastingMoreThan5Days() throws Exception {
+        List<OffDay> results = performSearch("off days lasting more than 5 days", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(4),  // Vacation - Mike Brown (17 days)
+                testProducts.get(7),  // Vacation - Bob Johnson (11 days)
+                testProducts.get(11), // Vacation - Jane Smith (12 days)
+                testProducts.get(13)  // Trip - Alice Wilson (12 days)
+        );
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
     @DisplayName("off days starting after February 2024")
-    void testOffDaysStartingAfterDateSearch() throws Exception {
+    void testOffDaysStartingAfterFebruary2024() throws Exception {
         List<OffDay> results = performSearch("off days starting after February 2024", "OffDay");
         List<OffDay> expected = Arrays.asList(
                 testProducts.get(2),  // Holiday - Bob Johnson (March)
@@ -421,7 +397,7 @@ class OffDayAiFilterTest extends AbstractAiFilterTest<OffDay> {
 
     @Test
     @DisplayName("off days starting in March")
-    void testOffDaysStartingInMonthSearch() throws Exception {
+    void testOffDaysStartingInMarch() throws Exception {
         List<OffDay> results = performSearch("off days starting in March", "OffDay");
         List<OffDay> expected = Arrays.asList(
                 testProducts.get(2),  // Holiday - Bob Johnson (March 2024)
@@ -434,7 +410,7 @@ class OffDayAiFilterTest extends AbstractAiFilterTest<OffDay> {
 
     @Test
     @DisplayName("off days updated in 2025")
-    void testOffDaysUpdatedInYearSearch() throws Exception {
+    void testOffDaysUpdatedIn2025() throws Exception {
         List<OffDay> results = performSearch("off days updated in 2025", "OffDay");
         List<OffDay> expected = Arrays.asList(
                 testProducts.get(10), // Holiday - John Doe
@@ -448,8 +424,18 @@ class OffDayAiFilterTest extends AbstractAiFilterTest<OffDay> {
     }
 
     @Test
+    @DisplayName("purple elephant dancing")
+    void testPurpleElephantDancing() throws Exception {
+        List<OffDay> results  = performSearch("purple elephant dancing", "OffDay");
+        List<OffDay> expected = Collections.emptyList(); // Should return empty results for nonsensical queries
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
     @DisplayName("recent off days")
-    void testRecentOffDaySearch() throws Exception {
+    void testRecentOffDays() throws Exception {
         List<OffDay> results = performSearch("recent off days", "OffDay");
         // Recent is interpreted as 2025 off days
         List<OffDay> expected = Arrays.asList(
@@ -465,7 +451,7 @@ class OffDayAiFilterTest extends AbstractAiFilterTest<OffDay> {
 
     @Test
     @DisplayName("sick days")
-    void testSickDaySearch() throws Exception {
+    void testSickDays() throws Exception {
         List<OffDay> results = performSearch("sick days", "OffDay");
         List<OffDay> expected = Arrays.asList(
                 testProducts.get(1),  // Sick - Jane Smith
@@ -479,23 +465,8 @@ class OffDayAiFilterTest extends AbstractAiFilterTest<OffDay> {
     }
 
     @Test
-    @DisplayName("type SICK")
-    void testSickTypeSearch() throws Exception {
-        List<OffDay> results = performSearch("type SICK", "OffDay");
-        List<OffDay> expected = Arrays.asList(
-                testProducts.get(1),  // Sick - Jane Smith
-                testProducts.get(5),  // Sick - John Doe
-                testProducts.get(9),  // Sick - Mike Brown
-                testProducts.get(12)  // Sick - Bob Johnson
-        );
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
     @DisplayName("single day")
-    void testSingleDayOffDaySearch() throws Exception {
+    void testSingleDay() throws Exception {
         List<OffDay> results = performSearch("single day", "OffDay");
         List<OffDay> expected = Arrays.asList(
                 testProducts.get(2),  // Holiday - Bob Johnson (single day)
@@ -509,7 +480,7 @@ class OffDayAiFilterTest extends AbstractAiFilterTest<OffDay> {
 
     @Test
     @DisplayName("trips")
-    void testTripSearch() throws Exception {
+    void testTrips() throws Exception {
         List<OffDay> results = performSearch("trips", "OffDay");
         List<OffDay> expected = Arrays.asList(
                 testProducts.get(3),  // Trip - Alice Wilson
@@ -522,8 +493,48 @@ class OffDayAiFilterTest extends AbstractAiFilterTest<OffDay> {
     }
 
     @Test
+    @DisplayName("type HOLIDAY")
+    void testTypeHOLIDAY() throws Exception {
+        List<OffDay> results = performSearch("type HOLIDAY", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(2),  // Holiday - Bob Johnson
+                testProducts.get(6),  // Holiday - Jane Smith
+                testProducts.get(10)  // Holiday - John Doe
+        );
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    // === COLUMN-SPECIFIC TESTS (one per column) ===
+    @Test
+    @DisplayName("type is SICK")
+    void testTypeIsSICK() throws Exception {
+        List<OffDay> results  = performSearch("type is SICK", "OffDay");
+        List<OffDay> expected = Arrays.asList(testProducts.get(1), testProducts.get(5), testProducts.get(9), testProducts.get(12)); // All sick off days
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("type SICK")
+    void testTypeSICK() throws Exception {
+        List<OffDay> results = performSearch("type SICK", "OffDay");
+        List<OffDay> expected = Arrays.asList(
+                testProducts.get(1),  // Sick - Jane Smith
+                testProducts.get(5),  // Sick - John Doe
+                testProducts.get(9),  // Sick - Mike Brown
+                testProducts.get(12)  // Sick - Bob Johnson
+        );
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
     @DisplayName("type TRIP")
-    void testTripTypeSearch() throws Exception {
+    void testTypeTRIP() throws Exception {
         List<OffDay> results = performSearch("type TRIP", "OffDay");
         List<OffDay> expected = Arrays.asList(
                 testProducts.get(3),  // Trip - Alice Wilson
@@ -535,31 +546,10 @@ class OffDayAiFilterTest extends AbstractAiFilterTest<OffDay> {
         assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
-    // === COLUMN-SPECIFIC TESTS (one per column) ===
     @Test
-    @DisplayName("type is SICK")
-    void testTypeSpecificSearchWithLLM() throws Exception {
-        List<OffDay> results  = performSearch("type is SICK", "OffDay");
-        List<OffDay> expected = Arrays.asList(testProducts.get(1), testProducts.get(5), testProducts.get(9), testProducts.get(12)); // All sick off days
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
-    @DisplayName("updated in 2025")
-    void testUpdatedDateSpecificSearchWithLLM() throws Exception {
-        List<OffDay> results  = performSearch("updated in 2025", "OffDay");
-        List<OffDay> expected = Arrays.asList(testProducts.get(10), testProducts.get(11), testProducts.get(12), testProducts.get(13)); // Off days updated in 2025
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
-    @DisplayName("vacation")
-    void testVacationOffDaySearch() throws Exception {
-        List<OffDay> results = performSearch("vacation", "OffDay");
+    @DisplayName("type VACATION")
+    void testTypeVACATION() throws Exception {
+        List<OffDay> results = performSearch("type VACATION", "OffDay");
         List<OffDay> expected = Arrays.asList(
                 testProducts.get(0),  // Vacation - John Doe
                 testProducts.get(4),  // Vacation - Mike Brown
@@ -572,9 +562,19 @@ class OffDayAiFilterTest extends AbstractAiFilterTest<OffDay> {
     }
 
     @Test
-    @DisplayName("type VACATION")
-    void testVacationTypeSearch() throws Exception {
-        List<OffDay> results = performSearch("type VACATION", "OffDay");
+    @DisplayName("updated in 2025")
+    void testUpdatedIn2025() throws Exception {
+        List<OffDay> results  = performSearch("updated in 2025", "OffDay");
+        List<OffDay> expected = Arrays.asList(testProducts.get(10), testProducts.get(11), testProducts.get(12), testProducts.get(13)); // Off days updated in 2025
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("vacation")
+    void testVacation() throws Exception {
+        List<OffDay> results = performSearch("vacation", "OffDay");
         List<OffDay> expected = Arrays.asList(
                 testProducts.get(0),  // Vacation - John Doe
                 testProducts.get(4),  // Vacation - Mike Brown

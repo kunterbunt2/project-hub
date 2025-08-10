@@ -269,7 +269,7 @@ public class AiFilterConfig {
                         - Remember: you are filtering Sprint entities, so each 'entity' is already a Sprint
                         - When queries mention "sprints created in 2024" - this means filter by creation year, NOT by checking if entity.name contains "sprints"
                         - Terms like "sprints", "items", or similar generic terms refer to the entity type, not name content
-                        - Use only getter methods like entity.getName(), entity.getCreated(), entity.getUpdated(), entity.getId(), entity.getFeatureId(), entity.getUserId(), entity.getStatus(), entity.getStart(), entity.getEnd(), entity.getOriginalEstimation(), entity.getWorked(), entity.getRemaining(), entity.getKey()
+                        - Use only getter methods like entity.getName(), entity.getCreated(), entity.getUpdated(), entity.getFeatureId(), entity.getStatus(), entity.getStart(), entity.getEnd(), entity.getOriginalEstimation(), entity.getWorked(), entity.getRemaining()
                         - Never use reflection or field access, always use public getter methods
                         """,
                 """
@@ -329,13 +329,14 @@ public class AiFilterConfig {
                         @Getter
                         @Setter
                         public class User {
+                            LocalDate now;//never null, injected with current date
                             private String name;//never null
                             private String email;//never null
                             private LocalDate firstWorkingDay;//never null
                             private LocalDate lastWorkingDay; // null for active users
                             private Color color;//never null
-                            private OffsetDateTime created;//never null
-                            private OffsetDateTime updated;//never null
+                            private OffsetDateTime created;//never null, indicates only when this entity was created
+                            private OffsetDateTime updated;//never null, indicates only when this entity was updated
                         }
                         """,
                 """
@@ -343,14 +344,13 @@ public class AiFilterConfig {
                         - User names contain first and last names (e.g., "John Doe", "Jane Smith")
                         - Email addresses follow standard patterns (firstname.lastname@domain.com)
                         - Employment status: active users have lastWorkingDay as null, former employees have a date
-                        - User keys follow pattern U-1, U-123. Keys are basically just unique database IDs of the User entity.
-                        - firstWorkingDay indicates hire date, lastWorkingDay indicates termination date
+                        - firstWorkingDay indicates hire date, the date an employee starts his contract, lastWorkingDay indicates termination date
                         - Users have associated availabilities, locations, and off days
                         - Support tenure-based queries and employment status filtering
                         - Remember: you are filtering User entities, so each 'entity' is already a User
                         - When queries mention "users created in 2024" - this means filter by creation year, NOT by checking if entity.name contains "users"
                         - Terms like "users", "employees", or similar generic terms refer to the entity type, not name content
-                        - Use only getter methods like entity.getName(), entity.getEmail(), entity.getFirstWorkingDay(), entity.getLastWorkingDay(), entity.getCreated(), entity.getUpdated(), entity.getId(), entity.getKey()
+                        - Use only getter methods like entity.getName(), entity.getEmail(), entity.getFirstWorkingDay(), entity.getLastWorkingDay(), entity.getCreated(), entity.getUpdated()
                         - Never use reflection or field access, always use public getter methods
                         """,
                 """
@@ -413,7 +413,14 @@ public class AiFilterConfig {
                         Output: return entity.getLastWorkingDay() != null && entity.getLastWorkingDay().getYear() == 2024;
                         
                         Input: "users ending employment after June 2024"
-                        Output: return entity.getLastWorkingDay() != null && entity.getLastWorkingDay().isAfter(LocalDate.of(2024, 6, 30));"""
+                        Output: return entity.getLastWorkingDay() != null && entity.getLastWorkingDay().isAfter(LocalDate.of(2024, 6, 30));
+                        
+                        Input: "employees since over 4 years"
+                        Output: return entity.getFirstWorkingDay() != null && entity.getFirstWorkingDay().isBefore(now.minusYears(4));
+                        
+                        Input: "employees started within last 6 months"
+                        Output: return entity.getFirstWorkingDay() != null && entity.getFirstWorkingDay().isAfter(now.minusMonths(6));
+                        """
         ));
 
         // Availability configuration
@@ -430,14 +437,12 @@ public class AiFilterConfig {
                         """,
                 """
                         Special considerations for Availability:
+                        - Availability represents a users availability to work on projects.
                         - Availability values are floats between 0.0 and 1.0 (e.g., 0.8 = 80% availability)
                         - Start dates indicate when this availability period begins
-                        - Availability keys follow pattern A-1, A-123. Keys are basically just unique database IDs of the Availability entity.
                         - Support percentage-based queries and date range filtering
-                        - Users have associated availability periods for capacity planning
                         - Remember: you are filtering Availability entities, so each 'entity' is already an Availability
                         - When queries mention "availability created in 2024" - this means filter by creation year, NOT by checking if entity content contains "availability"
-                        - Use only getter methods like entity.getAvailability(), entity.getStart(), entity.getUser(), entity.getCreated(), entity.getUpdated(), entity.getId(), entity.getKey()
                         - Never use reflection or field access, always use public getter methods
                         """,
                 """
@@ -586,7 +591,7 @@ public class AiFilterConfig {
                         - Consider duration calculations and overlap queries for scheduling
                         - Remember: you are filtering OffDay entities, so each 'entity' is already an OffDay
                         - When queries mention "off days created in 2024" - this means filter by creation year, NOT by checking if entity content contains "off days"
-                        - Use only getter methods like entity.getType(), entity.getFirstDay(), entity.getLastDay(), entity.getUser(), entity.getCreated(), entity.getUpdated(), entity.getId(), entity.getKey()
+                        - Use only getter methods like entity.getType(), entity.getFirstDay(), entity.getLastDay(), entity.getCreated(), entity.getUpdated()
                         - Never use reflection or field access, always use public getter methods
                         """,
                 """

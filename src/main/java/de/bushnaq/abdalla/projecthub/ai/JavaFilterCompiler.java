@@ -28,6 +28,7 @@ import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.security.SecureClassLoader;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -56,12 +57,12 @@ public class JavaFilterCompiler {
      *
      * @param javaCode   The Java code for the filter method body
      * @param entityType The type of entity being filtered
+     * @param now        The current date to use for date-based filtering (for testing purposes)
      * @param <T>        The entity type
      * @return A Predicate that can be used to filter entities
      * @throws RuntimeException if compilation or instantiation fails
      */
-    @SuppressWarnings("unchecked")
-    public <T> Predicate<T> compileFilter(String javaCode, String entityType) {
+    public <T> Predicate<T> compileFilter(String javaCode, String entityType, LocalDate now) {
         try {
             String className     = CLASS_NAME_PREFIX + (++classCounter);
             String fullClassName = PACKAGE_NAME + "." + className;
@@ -69,13 +70,11 @@ public class JavaFilterCompiler {
             // Generate the complete Java class
             String completeJavaCode = generateCompleteJavaClass(className, javaCode, entityType);
 
-//            logger.debug("Generated Java class:\n{}", completeJavaCode);
-
             // Compile the Java code
             Class<?> compiledClass = compileJavaCode(fullClassName, completeJavaCode);
 
             // Create an instance of the compiled class
-            Object instance = compiledClass.getDeclaredConstructor().newInstance();
+            Object instance = compiledClass.getDeclaredConstructor(LocalDate.class).newInstance(now);
 
             // Get the filter method
             Method filterMethod = compiledClass.getMethod("test", Object.class);
@@ -97,6 +96,21 @@ public class JavaFilterCompiler {
     }
 
     /**
+     * Compiles and creates a Predicate from the given Java code using current date.
+     *
+     * @param javaCode   The Java code for the filter method body
+     * @param entityType The type of entity being filtered
+     * @param <T>        The entity type
+     * @return A Predicate that can be used to filter entities
+     * @throws RuntimeException if compilation or instantiation fails
+     * @deprecated Use compileFilter(String, String, LocalDate) instead for better testability
+     */
+    @Deprecated
+    public <T> Predicate<T> compileFilter(String javaCode, String entityType) {
+        return compileFilter(javaCode, entityType, LocalDate.now());
+    }
+
+    /**
      * Compiles the Java source code and returns the compiled class.
      */
     private Class<?> compileJavaCode(String className, String sourceCode) throws Exception {
@@ -115,16 +129,24 @@ public class JavaFilterCompiler {
         // Create a custom file manager that stores compiled classes in memory
         InMemoryFileManager inMemoryFileManager = new InMemoryFileManager(fileManager, classLoader);
 
+        // Create a diagnostic collector to capture compilation errors
+        DiagnosticCollector<JavaFileObject> diagnosticCollector = new DiagnosticCollector<>();
+
         try {
             // Compile the source code
             JavaCompiler.CompilationTask task = compiler.getTask(
-                    null, inMemoryFileManager, null, options, null, List.of(sourceFile)
+                    null, inMemoryFileManager, diagnosticCollector, options, null, List.of(sourceFile)
             );
 
             boolean success = task.call();
 
             if (!success) {
-                throw new RuntimeException("Compilation failed");
+                // Throw custom exception with detailed compilation error information
+                throw new JavaCompilationException(
+                        "Java compilation failed",
+                        sourceCode,
+                        diagnosticCollector.getDiagnostics()
+                );
             }
 
         } finally {
@@ -154,6 +176,12 @@ public class JavaFilterCompiler {
                 
                 public class %s implements Predicate<%s> {
                 
+                    private final LocalDate now;
+                
+                    public %s(LocalDate now) {
+                        this.now = now;
+                    }
+                
                     @Override
                     public boolean test(%s entity) {
                         if (entity == null) {
@@ -170,8 +198,22 @@ public class JavaFilterCompiler {
                         }
                     }
                 
+                    public LocalDate getNow() {
+                        return now;
+                    }
+                
                 }
-                """, PACKAGE_NAME, entityType, className, entityType, entityType, filterCode);
+                """, PACKAGE_NAME, entityType, className, entityType, className, entityType, filterCode);
+    }
+
+    /**
+     * Generates a complete Java class with the provided filter code using current date.
+     *
+     * @deprecated Use generateCompleteJavaClass(String, String, String) instead
+     */
+    @Deprecated
+    private String generateCompleteJavaClass(String className, String filterCode, String entityType, @SuppressWarnings("unused") LocalDate now) {
+        return generateCompleteJavaClass(className, filterCode, entityType);
     }
 
     /**

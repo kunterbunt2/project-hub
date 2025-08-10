@@ -30,5 +30,5 @@ public enum SampleType {
     REST,//rest api calls or serving
     SMB,//access files using smb protocol
     JPA,//accessign a db using sql
-    TCP
+    AI, TCP
 }

@@ -36,6 +36,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
+ * Reviewed by: Abdalla Bushnaq
  * Integration test for Availability AI filtering testing real LLM regex pattern generation
  * and filtering capabilities with various search scenarios.
  * <p>
@@ -49,7 +50,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
 
     public AvailabilityAiFilterTest(ObjectMapper mapper, AiFilterService aiFilterService) {
-        super(mapper, aiFilterService);
+        super(mapper, aiFilterService, LocalDate.of(2025, 8, 10));
     }
 
     private Availability createAvailability(Long id, float availability, LocalDate start,
@@ -138,8 +139,38 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     }
 
     @Test
+    @DisplayName("50% availability")
+    void test50PercentAvailability() throws Exception {
+        List<Availability> results  = performSearch("50% availability", "Availability");
+        List<Availability> expected = Collections.singletonList(testProducts.get(2)); // 0.5f
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("80% availability")
+    void test80PercentAvailability() throws Exception {
+        List<Availability> results  = performSearch("80% availability", "Availability");
+        List<Availability> expected = Collections.singletonList(testProducts.get(1)); // 0.8f
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("95% availability")
+    void test95PercentAvailability() throws Exception {
+        List<Availability> results  = performSearch("95% availability", "Availability");
+        List<Availability> expected = Collections.singletonList(testProducts.get(9)); // 0.95f
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
     @DisplayName("availability between 60% and 80%")
-    void testAvailabilityBetweenSixtyAndEightyPercentSearch() throws Exception {
+    void testAvailabilityBetween60AndAnd80Percent() throws Exception {
         List<Availability> results = performSearch("availability between 60% and 80%", "Availability");
         List<Availability> expected = Arrays.asList(
                 testProducts.get(1),  // 0.8f - Jane Smith
@@ -154,7 +185,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
 
     @Test
     @DisplayName("availability created in 2025")
-    void testAvailabilityCreatedInYearSearch() throws Exception {
+    void testAvailabilityCreatedIn2025() throws Exception {
         List<Availability> results  = performSearch("availability created in 2025", "Availability");
         List<Availability> expected = Collections.singletonList(testProducts.get(11)); // February 2025 availability
 
@@ -164,7 +195,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
 
     @Test
     @DisplayName("availability greater than 50%")
-    void testAvailabilityGreaterThanFiftyPercentSearch() throws Exception {
+    void testAvailabilityGreaterThan50Percent() throws Exception {
         List<Availability> results = performSearch("availability greater than 50%", "Availability");
         List<Availability> expected = Arrays.asList(
                 testProducts.get(0),  // 1.0f
@@ -183,7 +214,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
 
     @Test
     @DisplayName("availability greater than or equal to 70%")
-    void testAvailabilityGreaterThanOrEqualSeventyPercentSearch() throws Exception {
+    void testAvailabilityGreaterThanOrEqual70Percent() throws Exception {
         List<Availability> results = performSearch("availability greater than or equal to 70%", "Availability");
         List<Availability> expected = Arrays.asList(
                 testProducts.get(0),  // 1.0f
@@ -199,9 +230,20 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
         assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
+    // === COLUMN-SPECIFIC TESTS (one per column) ===
+    @Test
+    @DisplayName("availability is 0.5")
+    void testAvailabilityIs0_5() throws Exception {
+        List<Availability> results  = performSearch("availability is 0.5", "Availability");
+        List<Availability> expected = Collections.singletonList(testProducts.get(2)); // 50% availability
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
     @Test
     @DisplayName("availability less than 90%")
-    void testAvailabilityLessThanNinetyPercentSearch() throws Exception {
+    void testAvailabilityLessThan90Percent() throws Exception {
         List<Availability> results = performSearch("availability less than 90%", "Availability");
         List<Availability> expected = Arrays.asList(
                 testProducts.get(1),  // 0.8f
@@ -221,7 +263,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
 
     @Test
     @DisplayName("availability less than or equal to 40%")
-    void testAvailabilityLessThanOrEqualFortyPercentSearch() throws Exception {
+    void testAvailabilityLessThanOrEqual40Percent() throws Exception {
         List<Availability> results = performSearch("availability less than or equal to 40%", "Availability");
         List<Availability> expected = Arrays.asList(
                 testProducts.get(6),  // 0.25f
@@ -233,20 +275,9 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
         assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
-    // === COLUMN-SPECIFIC TESTS (one per column) ===
-    @Test
-    @DisplayName("availability is 0.5")
-    void testAvailabilitySpecificSearchWithLLM() throws Exception {
-        List<Availability> results  = performSearch("availability is 0.5", "Availability");
-        List<Availability> expected = Collections.singletonList(testProducts.get(2)); // 50% availability
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
     @Test
     @DisplayName("availability starting after January 2024")
-    void testAvailabilityStartingAfterDateSearch() throws Exception {
+    void testAvailabilityStartingAfterJanuary2024() throws Exception {
         List<Availability> results = performSearch("availability starting after January 2024", "Availability");
         List<Availability> expected = Arrays.asList(
                 testProducts.get(1),  // February 2024
@@ -268,7 +299,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
 
     @Test
     @DisplayName("availability starting before March 2024")
-    void testAvailabilityStartingBeforeDateSearch() throws Exception {
+    void testAvailabilityStartingBeforeMarch2024() throws Exception {
         List<Availability> results = performSearch("availability starting before March 2024", "Availability");
         List<Availability> expected = Arrays.asList(
                 testProducts.get(0),  // January 2024
@@ -281,7 +312,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
 
     @Test
     @DisplayName("availability starting in January 2025")
-    void testAvailabilityStartingInSpecificMonthSearch() throws Exception {
+    void testAvailabilityStartingInJanuary2025() throws Exception {
         List<Availability> results  = performSearch("availability starting in January 2025", "Availability");
         List<Availability> expected = Collections.singletonList(testProducts.get(10)); // January 2025
 
@@ -291,7 +322,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
 
     @Test
     @DisplayName("availability starting in summer 2024")
-    void testAvailabilityStartingSummerSearch() throws Exception {
+    void testAvailabilityStartingSummer2024() throws Exception {
         List<Availability> results = performSearch("availability starting in summer 2024", "Availability");
         List<Availability> expected = Arrays.asList(
                 testProducts.get(5),  // June 2024
@@ -305,7 +336,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
 
     @Test
     @DisplayName("availability updated in 2025")
-    void testAvailabilityUpdatedInYearSearch() throws Exception {
+    void testAvailabilityUpdatedIn2025() throws Exception {
         List<Availability> results = performSearch("availability updated in 2025", "Availability");
         List<Availability> expected = Arrays.asList(
                 testProducts.get(10), // January 2025
@@ -317,17 +348,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     }
 
     @Test
-    @DisplayName("80% availability")
-    void testEightyPercentAvailabilitySearch() throws Exception {
-        List<Availability> results  = performSearch("80% availability", "Availability");
-        List<Availability> expected = Collections.singletonList(testProducts.get(1)); // 0.8f
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
-    @DisplayName("Should handle empty search query")
+    @DisplayName("empty search query")
     void testEmptySearchQuery() throws Exception {
         List<Availability> results  = performSearch("", "Availability");
         List<Availability> expected = new ArrayList<>(testProducts); // All availabilities
@@ -337,18 +358,8 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     }
 
     @Test
-    @DisplayName("50% availability")
-    void testFiftyPercentAvailabilitySearch() throws Exception {
-        List<Availability> results  = performSearch("50% availability", "Availability");
-        List<Availability> expected = Collections.singletonList(testProducts.get(2)); // 0.5f
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
     @DisplayName("full availability")
-    void testFullAvailabilitySearch() throws Exception {
+    void testFullAvailability() throws Exception {
         List<Availability> results  = performSearch("full availability", "Availability");
         List<Availability> expected = Collections.singletonList(testProducts.get(0)); // 1.0f
 
@@ -357,18 +368,8 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     }
 
     @Test
-    @DisplayName("95% availability")
-    void testNinetyFivePercentAvailabilitySearch() throws Exception {
-        List<Availability> results  = performSearch("95% availability", "Availability");
-        List<Availability> expected = Collections.singletonList(testProducts.get(9)); // 0.95f
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
     @DisplayName("purple elephant dancing")
-    void testNonsensicalSearchQuery() throws Exception {
+    void testPurpleElephantDancing() throws Exception {
         List<Availability> results  = performSearch("purple elephant dancing", "Availability");
         List<Availability> expected = Collections.emptyList(); // Should return empty results for nonsensical queries
 
@@ -378,7 +379,7 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
 
     @Test
     @DisplayName("zero availability")
-    void testZeroAvailabilitySearch() throws Exception {
+    void testZeroAvailability() throws Exception {
         List<Availability> results  = performSearch("zero availability", "Availability");
         List<Availability> expected = Collections.singletonList(testProducts.get(8)); // 0.0f
 

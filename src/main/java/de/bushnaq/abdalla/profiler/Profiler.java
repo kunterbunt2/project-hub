@@ -18,6 +18,8 @@
 package de.bushnaq.abdalla.profiler;
 
 import de.bushnaq.abdalla.util.date.DateUtil;
+import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,15 +33,19 @@ import java.util.Deque;
  * @author abdalla
  */
 public class Profiler implements AutoCloseable {
-    static final String           BLACK_LEFT_POINTING_TRIANGLE  = "<";
-    static final String           BLACK_RIGHT_POINTING_TRIANGLE = ">";
-    static       boolean          enableTraceLogger             = false;
-    static       ProfilerResult   intermediateResult;
-    static       SampleSet        intermediateSampleSet;
-    static       Logger           logger                        = LoggerFactory.getLogger(Profiler.class);
-    static       SampleSet        sampleSet                     = new SampleSet();
-    static       Deque<SampleSet> stack                         = new ArrayDeque<>();
-    static       long             start;
+    static final String BLACK_LEFT_POINTING_TRIANGLE  = "<";
+    static final String BLACK_RIGHT_POINTING_TRIANGLE = ">";
+
+    @Getter
+    @Setter
+    static boolean          abbreviatedReport = false;
+    static boolean          enableTraceLogger = false;
+    static ProfilerResult   intermediateResult;
+    static SampleSet        intermediateSampleSet;
+    static Logger           logger            = LoggerFactory.getLogger(Profiler.class);
+    static SampleSet        sampleSet         = new SampleSet();
+    static Deque<SampleSet> stack             = new ArrayDeque<>();
+    static long             start;
 
     static {
         for (SampleType type : SampleType.values()) {
@@ -139,7 +145,8 @@ public class Profiler implements AutoCloseable {
 
         for (SampleType type : intermediateSampleSet.sampleKeySet()) {
             Sample sample = intermediateSampleSet.getSample(type);
-            logger.info(String.format("[%4s] %s", sample.getType().name(), nanoToString(sample.getTimeNanoSec())));
+            if (sample.getTimeNanoSec() > 0 || !abbreviatedReport)
+                logger.info(String.format("[%4s] %s", sample.getType().name(), nanoToString(sample.getTimeNanoSec())));
         }
         logger.info(String.format("[%4s] %s (%d%%)", "?", nanoToString(intermediateResult.delta),
                 (intermediateResult.delta * 100) / intermediateResult.totalDelta));

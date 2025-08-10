@@ -19,6 +19,7 @@ package de.bushnaq.abdalla.projecthub.ai;
 
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.function.Predicate;
 
 /**
@@ -72,12 +73,28 @@ public class AiFilterService {
      *
      * @param query      The natural language query from the user
      * @param entityType The type of entity being searched (e.g., "Product", "Version")
+     * @param now        The current date to use for date-based filtering (for testing purposes)
      * @param <T>        The entity type
      * @return A compiled Predicate that can be used to filter entities
      * @throws RuntimeException if compilation fails
      */
+    public <T> Predicate<T> parseQueryToPredicate(String query, String entityType, LocalDate now) {
+        return javaGenerator.generatePredicate(query, entityType, now);
+    }
+
+    /**
+     * Parses a natural language search query and returns a compiled Java Predicate using current date.
+     *
+     * @param query      The natural language query from the user
+     * @param entityType The type of entity being searched (e.g., "Product", "Version")
+     * @param <T>        The entity type
+     * @return A compiled Predicate that can be used to filter entities
+     * @throws RuntimeException if compilation fails
+     * @deprecated Use parseQueryToPredicate(String, String, LocalDate) instead for better testability
+     */
+    @Deprecated
     public <T> Predicate<T> parseQueryToPredicate(String query, String entityType) {
-        return javaGenerator.generatePredicate(query, entityType);
+        return parseQueryToPredicate(query, entityType, LocalDate.now());
     }
 
     /**

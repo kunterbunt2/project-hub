@@ -32,10 +32,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
+ * Reviewed by: Abdalla Bushnaq
  * Integration test for User AI filtering testing real LLM regex pattern generation
  * and filtering capabilities with various search scenarios.
  * <p>
@@ -49,7 +51,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class UserAiFilterTest extends AbstractAiFilterTest<User> {
 
     public UserAiFilterTest(ObjectMapper mapper, AiFilterService aiFilterService) {
-        super(mapper, aiFilterService);
+        super(mapper, aiFilterService, LocalDate.of(2025, 8, 10));
     }
 
     private User createUser(Long id, String name, String email, LocalDate firstWorkingDay, LocalDate lastWorkingDay,
@@ -139,8 +141,8 @@ class UserAiFilterTest extends AbstractAiFilterTest<User> {
 
     // === OTHER VALUABLE TEST CASES (preserved from original) ===
     @Test
-    @DisplayName("Should find active users")
-    void testActiveUsersSearch() throws Exception {
+    @DisplayName("active users")
+    void testActiveUsers() throws Exception {
         List<User> results = performSearch("active users", "User");
         List<User> expected = Arrays.asList(
                 testProducts.get(0), // John Doe (no lastWorkingDay)
@@ -160,28 +162,8 @@ class UserAiFilterTest extends AbstractAiFilterTest<User> {
     }
 
     @Test
-    @DisplayName("Should find users by created date column")
-    void testCreatedDateSpecificSearchWithLLM() throws Exception {
-        List<User> results  = performSearch("created in 2025", "User");
-        List<User> expected = Collections.singletonList(testProducts.get(11)); // Maria Garcia
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
-    @DisplayName("Should find users by department email pattern")
-    void testDepartmentEmailSearch() throws Exception {
-        List<User> results  = performSearch("company.com employees", "User");
-        List<User> expected = new ArrayList<>(testProducts); // All users work at company.com
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
-    @DisplayName("Should find users by email domain")
-    void testEmailDomainSearch() throws Exception {
+    @DisplayName("@company.com")
+    void testAtCompanyCom() throws Exception {
         List<User> results  = performSearch("@company.com", "User");
         List<User> expected = new ArrayList<>(testProducts); // All users have company.com email
 
@@ -190,8 +172,28 @@ class UserAiFilterTest extends AbstractAiFilterTest<User> {
     }
 
     @Test
-    @DisplayName("Should find users by email column")
-    void testEmailSpecificSearchWithLLM() throws Exception {
+    @DisplayName("company.com employees")
+    void testCompanyComEmployees() throws Exception {
+        List<User> results  = performSearch("company.com employees", "User");
+        List<User> expected = new ArrayList<>(testProducts); // All users work at company.com
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("created in 2025")
+    void testCreatedIn2025() throws Exception {
+        List<User> results  = performSearch("created in 2025", "User");
+        List<User> expected = Collections.singletonList(testProducts.get(11)); // Maria Garcia
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("email contains alice")
+    void testEmailContainsAlice() throws Exception {
         List<User> results  = performSearch("email contains alice", "User");
         List<User> expected = Collections.singletonList(testProducts.get(3)); // Alice Wilson
 
@@ -200,7 +202,39 @@ class UserAiFilterTest extends AbstractAiFilterTest<User> {
     }
 
     @Test
-    @DisplayName("Should handle empty search query")
+    @DisplayName("employees since over 3 years")
+    void testEmployeesSinceOver3Years() throws Exception {
+        List<User> results = performSearch("employees since over 3 years", "User");
+//        List<User> results = performSearch(new ExampleUserFilter(now));
+        List<User> expected = Arrays.asList(
+                testProducts.get(0), // John Doe (started 2020-03-15) - 5+ years
+                testProducts.get(1), // Jane Smith (started 2019-06-01) - 6+ years
+                testProducts.get(2), // Bob Johnson (started 2021-01-10) - 4+ years
+                testProducts.get(4), // Mike Brown (started 2018-11-20) - 6+ years
+                testProducts.get(6), // David Martinez (started 2017-04-03) - 8+ years
+                testProducts.get(7), // Lisa Anderson (started 2021-08-16) - 3+ years (just barely over 3 years)
+                testProducts.get(9), // Emily Clark (started 2020-10-12) - 4+ years
+                testProducts.get(10) // James White (started 2019-12-02) - 5+ years
+        );
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("employees started within last 6 months")
+    void testEmployeesStartedWithinLast6Months() throws Exception {
+        List<User> results = performSearch("employees started within last 6 months", "User");
+        List<User> expected = Collections.singletonList(
+                testProducts.get(11) // Maria Garcia (started 2025-03-01) - 5 months ago
+        );
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("empty search query")
     void testEmptySearchQuery() throws Exception {
         List<User> results  = performSearch("", "User");
         List<User> expected = new ArrayList<>(testProducts); // All users should match empty query
@@ -210,8 +244,8 @@ class UserAiFilterTest extends AbstractAiFilterTest<User> {
     }
 
     @Test
-    @DisplayName("Should find users by firstWorkingDay column")
-    void testFirstWorkingDaySpecificSearchWithLLM() throws Exception {
+    @DisplayName("firstWorkingDay in 2018")
+    void testFirstWorkingDayIn2018() throws Exception {
         List<User> results  = performSearch("firstWorkingDay in 2018", "User");
         List<User> expected = Collections.singletonList(testProducts.get(4)); // Mike Brown
 
@@ -220,8 +254,8 @@ class UserAiFilterTest extends AbstractAiFilterTest<User> {
     }
 
     @Test
-    @DisplayName("Should find former employees")
-    void testFormerEmployeesSearch() throws Exception {
+    @DisplayName("former employees")
+    void testFormerEmployees() throws Exception {
         List<User> results = performSearch("former employees", "User");
         List<User> expected = Arrays.asList(
                 testProducts.get(2), // Bob Johnson (lastWorkingDay: 2024-06-30)
@@ -233,8 +267,21 @@ class UserAiFilterTest extends AbstractAiFilterTest<User> {
     }
 
     @Test
-    @DisplayName("Should find users by lastWorkingDay column")
-    void testLastWorkingDaySpecificSearchWithLLM() throws Exception {
+    @DisplayName("John")
+    void testJohn() throws Exception {
+        List<User> results = performSearch("John", "User");
+        List<User> expected = Arrays.asList(
+                testProducts.get(0),// John Doe
+                testProducts.get(2) // Bob Johnson
+        ); // John Doe
+
+        assertThat(results).hasSize(expected.size());
+        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    @DisplayName("lastWorkingDay is not null")
+    void testLastWorkingDayIsNotNull() throws Exception {
         List<User> results  = performSearch("lastWorkingDay is not null", "User");
         List<User> expected = Arrays.asList(testProducts.get(2), testProducts.get(6)); // Bob Johnson, David Martinez
 
@@ -242,27 +289,10 @@ class UserAiFilterTest extends AbstractAiFilterTest<User> {
         assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
-    @Test
-    @DisplayName("Should find long-term employees")
-    void testLongTermEmployeesSearch() throws Exception {
-        List<User> results = performSearch("long-term employees", "User");
-        List<User> expected = Arrays.asList(
-                testProducts.get(0), // John Doe (started 2020-03-15)
-                testProducts.get(1), // Jane Smith (started 2019-06-01)
-                testProducts.get(4), // Mike Brown (started 2018-11-20)
-                testProducts.get(6), // David Martinez (started 2017-04-03)
-                testProducts.get(9), // Emily Clark (started 2020-10-12)
-                testProducts.get(10) // James White (started 2019-12-02)
-        );
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
     // === COLUMN-SPECIFIC TESTS (one per column) ===
     @Test
-    @DisplayName("Should find users by name column")
-    void testNameSpecificSearchWithLLM() throws Exception {
+    @DisplayName("name contains Smith")
+    void testNameContainsSmith() throws Exception {
         List<User> results  = performSearch("name contains Smith", "User");
         List<User> expected = Collections.singletonList(testProducts.get(1)); // Jane Smith
 
@@ -271,22 +301,8 @@ class UserAiFilterTest extends AbstractAiFilterTest<User> {
     }
 
     @Test
-    @DisplayName("Should find new employees")
-    void testNewEmployeesSearch() throws Exception {
-        List<User> results = performSearch("new employees", "User");
-        List<User> expected = Arrays.asList(
-                testProducts.get(5), // Sarah Davis (started 2023-02-14)
-                testProducts.get(8), // Robert Taylor (started 2024-01-08)
-                testProducts.get(11) // Maria Garcia (started 2025-03-01)
-        );
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
-    @DisplayName("Should handle nonsensical search query gracefully")
-    void testNonsensicalSearchQuery() throws Exception {
+    @DisplayName("purple elephant dancing")
+    void testPurpleElephantDancing() throws Exception {
         List<User> results  = performSearch("purple elephant dancing", "User");
         List<User> expected = Collections.emptyList(); // Should return empty results for nonsensical queries
 
@@ -295,46 +311,33 @@ class UserAiFilterTest extends AbstractAiFilterTest<User> {
     }
 
     @Test
-    @DisplayName("Should find senior employees")
-    void testSeniorEmployeesSearch() throws Exception {
-        List<User> results = performSearch("senior employees", "User");
+    @DisplayName("started in 2021")
+    void testStartedIn2021() throws Exception {
+        List<User> results = performSearch("started in 2021", "User");
         List<User> expected = Arrays.asList(
-                testProducts.get(0), // John Doe (started 2020-03-15)
-                testProducts.get(1), // Jane Smith (started 2019-06-01)
-                testProducts.get(4), // Mike Brown (started 2018-11-20)
-                testProducts.get(6), // David Martinez (started 2017-04-03)
-                testProducts.get(9), // Emily Clark (started 2020-10-12)
-                testProducts.get(10) // James White (started 2019-12-02)
+                testProducts.get(2), // Bob Johnson (started 2021-01-10)
+                testProducts.get(7)  // Lisa Anderson (started 2021-08-16)
         );
 
         assertThat(results).hasSize(expected.size());
         assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
-    // === SIMPLE TEST CASE (keeping only ONE) ===
     @Test
-    @DisplayName("Should generate working regex for simple text search")
-    void testSimpleTextSearchWithLLM() throws Exception {
-        List<User> results  = performSearch("John", "User");
-        List<User> expected = Collections.singletonList(testProducts.get(0)); // John Doe
+    @DisplayName("updated in 2025")
+    void testUpdatedIn2025() throws Exception {
+        List<User> results = performSearch("updated in 2025", "User");
+        List<User> expected = Arrays.asList(
+                testProducts.get(10), // James White (updated 2025-01-10)
+                testProducts.get(11)); // Maria Garcia (updated 2025-03-10)
 
         assertThat(results).hasSize(expected.size());
         assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
-    @DisplayName("Should find users by updated date column")
-    void testUpdatedDateSpecificSearchWithLLM() throws Exception {
-        List<User> results  = performSearch("updated in 2025", "User");
-        List<User> expected = Arrays.asList(testProducts.get(10), testProducts.get(11)); // James White, Maria Garcia
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
-    @DisplayName("Should find users starting work after 2020")
-    void testUsersStartingAfterDateSearch() throws Exception {
+    @DisplayName("users starting after 2020")
+    void testUsersStartingAfter2020() throws Exception {
         List<User> results = performSearch("users starting after 2020", "User");
         List<User> expected = Arrays.asList(
                 testProducts.get(2), // Bob Johnson (started 2021-01-10)
@@ -350,8 +353,8 @@ class UserAiFilterTest extends AbstractAiFilterTest<User> {
     }
 
     @Test
-    @DisplayName("Should find users starting work before 2020")
-    void testUsersStartingBeforeDateSearch() throws Exception {
+    @DisplayName("users starting before 2020")
+    void testUsersStartingBefore2020() throws Exception {
         List<User> results = performSearch("users starting before 2020", "User");
         List<User> expected = Arrays.asList(
                 testProducts.get(1), // Jane Smith (started 2019-06-01)
@@ -365,21 +368,18 @@ class UserAiFilterTest extends AbstractAiFilterTest<User> {
     }
 
     @Test
-    @DisplayName("Should find users starting work in 2021")
-    void testUsersStartingIn2021Search() throws Exception {
-        List<User> results = performSearch("started in 2021", "User");
-        List<User> expected = Arrays.asList(
-                testProducts.get(2), // Bob Johnson (started 2021-01-10)
-                testProducts.get(7)  // Lisa Anderson (started 2021-08-16)
-        );
+    @DisplayName("users starting in 2024")
+    void testUsersStartingIn2024() throws Exception {
+        List<User> results  = performSearch("users starting in 2024", "User");
+        List<User> expected = Collections.singletonList(testProducts.get(8)); // Robert Taylor (started 2024-01-08)
 
         assertThat(results).hasSize(expected.size());
         assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
-    @DisplayName("Should find users starting work in summer")
-    void testUsersStartingInSummerSearch() throws Exception {
+    @DisplayName("users starting in summer")
+    void testUsersStartingInSummer() throws Exception {
         List<User> results = performSearch("users starting in summer", "User");
         List<User> expected = Arrays.asList(
                 testProducts.get(1), // Jane Smith (started June 1)
@@ -391,18 +391,8 @@ class UserAiFilterTest extends AbstractAiFilterTest<User> {
     }
 
     @Test
-    @DisplayName("Should find users starting work in 2024")
-    void testUsersStartingInYearSearch() throws Exception {
-        List<User> results  = performSearch("users starting in 2024", "User");
-        List<User> expected = Collections.singletonList(testProducts.get(8)); // Robert Taylor (started 2024-01-08)
-
-        assertThat(results).hasSize(expected.size());
-        assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
-    }
-
-    @Test
-    @DisplayName("Should find users who left the company")
-    void testUsersWhoLeftSearch() throws Exception {
+    @DisplayName("users who left")
+    void testUsersWhoLeft() throws Exception {
         List<User> results = performSearch("users who left", "User");
         List<User> expected = Arrays.asList(
                 testProducts.get(2), // Bob Johnson (lastWorkingDay: 2024-06-30)
@@ -411,5 +401,34 @@ class UserAiFilterTest extends AbstractAiFilterTest<User> {
 
         assertThat(results).hasSize(expected.size());
         assertThat(results).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    /**
+     * add generated ai code to test against one of the tests.
+     */
+    class ExampleUserFilter implements Predicate<User> {
+
+        private final LocalDate now;
+
+        ExampleUserFilter(LocalDate now) {
+            this.now = now;
+        }
+
+        @Override
+        public boolean test(User entity) {
+            if (entity == null) {
+                return false;
+            }
+
+            try {
+                // Execute the generated filter code
+                return entity.getFirstWorkingDay() != null && entity.getFirstWorkingDay().isBefore(now.minusYears(3));
+            } catch (Exception e) {
+                // Log the error but don't fail the entire filter
+                System.err.println("Error in filter execution: " + e.getMessage());
+                return false;
+            }
+        }
+
     }
 }

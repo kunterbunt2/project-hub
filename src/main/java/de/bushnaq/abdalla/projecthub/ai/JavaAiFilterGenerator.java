@@ -17,6 +17,8 @@
 
 package de.bushnaq.abdalla.projecthub.ai;
 
+import de.bushnaq.abdalla.profiler.Profiler;
+import de.bushnaq.abdalla.profiler.SampleType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -32,14 +34,13 @@ import java.util.function.Predicate;
  */
 @Component
 public class JavaAiFilterGenerator implements AiFilterGenerator {
-    private static final String ANSI_BLUE   = "\u001B[36m";
-    private static final String ANSI_GRAY   = "\u001B[37m";
-    private static final String ANSI_GREEN  = "\u001B[32m";
-    private static final String ANSI_RED    = "\u001B[31m";
-    private static final String ANSI_RESET  = "\u001B[0m";    // Declaring ANSI_RESET so that we can reset the color
-    private static final String ANSI_YELLOW = "\u001B[33m";
-
-    private static final String             JAVA_PROMPT_TEMPLATE = """
+    private static final String             ANSI_BLUE              = "\u001B[36m";
+    private static final String             ANSI_GRAY              = "\u001B[37m";
+    private static final String             ANSI_GREEN             = "\u001B[32m";
+    private static final String             ANSI_RED               = "\u001B[31m";
+    private static final String             ANSI_RESET             = "\u001B[0m";    // Declaring ANSI_RESET so that we can reset the color
+    private static final String             ANSI_YELLOW            = "\u001B[33m";
+    private static final String             JAVA_PROMPT_TEMPLATE   = """
             You are a Java method body generator for filtering Java objects. Convert natural language search queries into Java code that can be compiled and executed.
             
             IMPORTANT CONTEXT: You are filtering %s entities. The 'entity' parameter passed to your method is a %s object.
@@ -55,24 +56,26 @@ public class JavaAiFilterGenerator implements AiFilterGenerator {
             3. You can access fields directly using entity.getFieldName() getter methods.
             4. For date comparisons, use OffsetDateTime/LocalDateTime classes.
             5. Handle exceptions gracefully - return false if any operation fails.
-            6. Current year is %d if year context is needed.
-            7. Use proper Java operators and control structures.
-            8. For string searches, use direct getter access with .toLowerCase().contains().
-            9. The entity parameter is already typed as %s, so you can access its getter methods directly.
-            10. Never use reflection - only use public getter methods like entity.getName(), entity.getCreated(), etc.
-            11. Return ONLY the method body code, no method signature, no class declaration. The code must be compilable as is.
-            12. Any explanation/note can be added as java code comment using //, but the answer must be compilable java code.
-            13. Do not add ` or " before or after your answer, as it would make the code not compilable.
-            14. Explain your thought process within <think></think> tags to indicate your thinking process.
-            15. Any line starting with 'Note:' must be commented out using Java comment //Note:.
+            6. Use proper Java operators and control structures.
+            7. For string searches, use direct getter access with .toLowerCase().contains().
+            8. The entity parameter is already typed as %s, so you can access its getter methods directly.
+            9. Never use reflection - only use public getter methods like entity.getName(), entity.getCreated(), etc.
+            10. Return ONLY the method body code, no method signature, no class declaration.
+            11. Explain your thought process within <think></think> tags to indicate your thinking process.
+            12. Important: add ```java ``` tags to indicate the actual code you are returning.
+            13. CRITICAL: Do not ue LocalDate.now(). For current date/time reference operations, use the 'now' field (LocalDate now) that is available in the class instead of calling LocalDate.now() or similar methods.
+                now or getNow() is not a field of the entity, but of the filter class itself.
+                Example: Use 'now' instead of 'LocalDate.now()' for getting the current date.
+                Example: Use 'now.minusDays(7)' for getting a week ago from the current date.
             
             %s
             
             Now generate a Java method body for this EXACT query:
             "%s"
             """;
-    private static final Logger             logger               = LoggerFactory.getLogger(JavaAiFilterGenerator.class);
+    private static final Logger             logger                 = LoggerFactory.getLogger(JavaAiFilterGenerator.class);
     private final        ChatClient         chatModel;
+    public static        int                compilerExceptionCount = 0;
     private final        JavaFilterCompiler javaFilterCompiler;
 
     public JavaAiFilterGenerator(ChatClient.Builder builder, JavaFilterCompiler javaFilterCompiler) {
@@ -81,9 +84,212 @@ public class JavaAiFilterGenerator implements AiFilterGenerator {
     }
 
     /**
+     * Builds an enhanced query that includes feedback from previous compilation attempts.
+     */
+    private String buildQueryWithFeedback(String originalQuery, String previousCode, String previousError, int attemptNumber) {
+        if (attemptNumber == 1 || previousCode == null || previousError == null) {
+            // First attempt - use original query
+            return originalQuery;
+        }
+
+        // Build feedback-enhanced query for subsequent attempts
+        String feedbackQuery = "IMPORTANT: The previous attempt failed to compile. Please fix the compilation issues.\n\n" +
+                "Original query: \"" + originalQuery + "\"\n\n" +
+                "Previous failed code:\n" +
+//                "<java>\n" +
+                previousCode +
+//                "\n</java>\n" +
+                "\n\nCompilation errors:\n" +
+                previousError +
+                "\n" +
+                "Please generate corrected Java method body code that fixes these compilation errors " +
+                "while still implementing the original query: \"" + originalQuery + "\"";
+
+        return feedbackQuery;
+    }
+
+    private String extractJavaCodeFromResponse(String content) {
+        //extract all between ```java and ```
+        if (content == null || content.trim().isEmpty()) {
+            return null;
+        }
+        String trimmedContent = content.trim();
+
+        // More flexible regex that handles various markdown code block formats
+        String javaCode = trimmedContent.replaceAll("(?s).*?```java\\s*\\n?(.*?)\\n?```.*", "$1").trim();
+
+        // If the above didn't match, try without the java language specifier
+        if (javaCode.equals(trimmedContent.trim())) {
+            javaCode = trimmedContent.replaceAll("(?s).*?```\\s*\\n?(.*?)\\n?```.*", "$1").trim();
+        }
+
+        return javaCode;
+    }
+
+    @Override
+    public String generateFilter(String query, String entityType) {
+        if (query == null || query.trim().isEmpty()) {
+            return "";
+        }
+
+//        logger.info("Generating Java filter for query: '{}' and entity type: '{}'", query, entityType);
+
+        try {
+            AiFilterConfig.PromptConfig config = AiFilterConfig.getPromptConfig(entityType);
+
+            // Create prompt with current year context and entity-specific configuration
+            String formattedPrompt = String.format(JAVA_PROMPT_TEMPLATE,
+                    entityType,           // You are filtering %s entities
+                    entityType,           // The 'entity' parameter passed to your method is already a %s object
+                    config.javaClass,     // The Java class you'll be filtering has this structure:
+                    config.specialConsiderations,
+                    entityType,           // Generate ONLY the method body code that goes inside a boolean test(%s entity) method
+                    entityType,           // The entity parameter is already typed as %s, so you can access its methods and fields directly
+                    config.javaExamples,
+                    query);
+
+            // Create prompt and get response using Spring AI
+            Prompt prompt = new Prompt(formattedPrompt);
+
+            System.out.printf("Java LLM prompt for '%s%s%s'\n%s%s%s\n\n", ANSI_BLUE, entityType, ANSI_RESET, ANSI_GREEN, formattedPrompt, ANSI_RESET);
+//            logger.debug("Java LLM prompt for '{}': {}", entityType, formattedPrompt);
+
+            ChatClient.ChatClientRequestSpec request  = chatModel.prompt(prompt);
+            ChatClient.CallResponseSpec      response = request.call();
+            String                           content  = response.content();
+
+            System.out.printf("Java LLM raw response\n\n%s%s%s\n\n", ANSI_YELLOW, content, ANSI_RESET);
+//            logger.debug("Java LLM raw response: {}", content);
+
+            // Extract actual answer from response (remove thinking process)
+            String extractedAnswerWithoutThinking = removeThinkingFromResponse(content);
+            String extractedCode                  = extractJavaCodeFromResponse(extractedAnswerWithoutThinking);
+
+            System.out.printf("Java LLM extracted answer\n\n%s%s%s\n\n", ANSI_YELLOW, extractedCode, ANSI_RESET);
+//            logger.debug("Java LLM extracted answer: {}", extractedCode);
+
+            if (extractedCode == null || extractedCode.trim().isEmpty()) {
+                logger.warn("Java code generation failed, result is empty");
+                throw new RuntimeException("Java code generation failed, result is empty");
+            }
+
+            return extractedCode.trim();
+
+        } catch (Exception e) {
+            logger.error("Error generating Java filter: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to generate Java filter: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Generates a Java filter and compiles it into a Predicate.
+     *
+     * @param query      The natural language query from the user
+     * @param entityType The type of entity being searched (e.g., "Product", "Version")
+     * @param now        The current date to use for date-based filtering (for testing purposes)
+     * @param <T>        The entity type
+     * @return A compiled Predicate that can be used to filter entities
+     * @throws RuntimeException if compilation fails
+     */
+    public <T> Predicate<T> generatePredicate(String query, String entityType, LocalDate now) {
+        Profiler.setAbbreviatedReport(true); // Enable abbreviated report for performance profiling
+        try (Profiler timeKeeping1 = new Profiler(this.getClass().getSimpleName(), SampleType.AI)) {
+            if (query == null || query.trim().isEmpty()) {
+                return entity -> true; // Return a predicate that matches everything
+            }
+
+            logger.info("Generating Java Predicate for query: '{}' and entity type: '{}'", query, entityType);
+
+            return generatePredicateWithFeedback(query, entityType, now, 5);
+        }
+    }
+
+    /**
+     * Generates a Java filter and compiles it into a Predicate using current date.
+     *
+     * @param query      The natural language query from the user
+     * @param entityType The type of entity being searched (e.g., "Product", "Version")
+     * @param <T>        The entity type
+     * @return A compiled Predicate that can be used to filter entities
+     * @throws RuntimeException if compilation fails
+     * @deprecated Use generatePredicate(String, String, LocalDate) instead for better testability
+     */
+    @Deprecated
+    public <T> Predicate<T> generatePredicate(String query, String entityType) {
+        return generatePredicate(query, entityType, LocalDate.now());
+    }
+
+    /**
+     * Generates a predicate with iterative feedback mechanism.
+     * If compilation fails, provides error details to the AI for correction.
+     */
+    private <T> Predicate<T> generatePredicateWithFeedback(String query, String entityType, LocalDate now, int maxRetries) {
+        String previousCode  = null;
+        String previousError = null;
+
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            String generatedJavaCode = null;
+            try {
+                // Build the prompt with feedback from previous attempts
+                String effectiveQuery = buildQueryWithFeedback(query, previousCode, previousError, attempt);
+
+                // Generate Java code using LLM
+                generatedJavaCode = generateFilter(effectiveQuery, entityType);
+
+                // Compile the Java code and return the Predicate
+                try (Profiler timeKeeping2 = new Profiler(this.getClass().getSimpleName(), SampleType.CPU)) {
+                    return javaFilterCompiler.compileFilter(generatedJavaCode, entityType, now);
+                }
+
+            } catch (Exception e) {
+                Throwable t = e.getCause();
+                if (t instanceof JavaCompilationException) {
+                    previousCode  = generatedJavaCode;//((JavaCompilationException) t).getFailedCode();
+                    previousError = ((JavaCompilationException) t).getAiFeedbackMessage();
+                    compilerExceptionCount++;
+
+                    logger.warn("Compilation failed on attempt {} for query '{}': {}", attempt, query, e.getMessage());
+
+                    if (attempt == maxRetries) {
+                        logger.error("Failed to generate compilable Java Predicate after {} attempts for query: '{}'", maxRetries, query);
+                        throw new RuntimeException("Failed to generate compilable Java Predicate after " + maxRetries + " attempts: " + t.getMessage(), e);
+                    }
+
+                    // Log the feedback that will be provided to the AI
+//                    logger.debug("Providing feedback to AI for attempt {}: {}", attempt + 1, previousError);
+                } else {
+                    logger.error("Unexpected error on attempt {} for query '{}': {}", attempt, query, e.getMessage(), e);
+
+                    // For unexpected errors, we don't have structured feedback, so treat it as a general failure
+                    if (attempt == maxRetries) {
+                        throw new RuntimeException("Failed to generate Java Predicate after " +
+                                maxRetries + " attempts: " + e.getMessage(), e);
+                    }
+                }
+            }
+        }
+
+        // This should never be reached due to the exception handling above
+        return null;
+    }
+
+    /**
+     * @deprecated Use generatePredicateWithFeedback(String, String, LocalDate, int) instead
+     */
+    @Deprecated
+    private <T> Predicate<T> generatePredicateWithFeedback(String query, String entityType, int maxRetries) {
+        return generatePredicateWithFeedback(query, entityType, LocalDate.now(), maxRetries);
+    }
+
+    @Override
+    public FilterType getFilterType() {
+        return FilterType.JAVA;
+    }
+
+    /**
      * Extract the actual answer from AI response by removing thinking process.
      */
-    private String extractAnswerFromResponse(String rawResponse) {
+    private String removeThinkingFromResponse(String rawResponse) {
         if (rawResponse == null || rawResponse.trim().isEmpty()) {
             return rawResponse;
         }
@@ -107,103 +313,5 @@ public class JavaAiFilterGenerator implements AiFilterGenerator {
         }
 
         return response.isEmpty() ? rawResponse : response;
-    }
-
-    @Override
-    public String generateFilter(String query, String entityType) {
-        if (query == null || query.trim().isEmpty()) {
-            return "";
-        }
-
-        logger.info("Generating Java filter for query: '{}' and entity type: '{}'", query, entityType);
-
-        try {
-            AiFilterConfig.PromptConfig config = AiFilterConfig.getPromptConfig(entityType);
-
-            // Create prompt with current year context and entity-specific configuration
-            int currentYear = LocalDate.now().getYear();
-            String formattedPrompt = String.format(JAVA_PROMPT_TEMPLATE,
-                    entityType,           // You are filtering %s entities
-                    entityType,           // The 'entity' parameter passed to your method is already a %s object
-                    config.javaClass,     // The Java class you'll be filtering has this structure:
-                    config.specialConsiderations,
-                    entityType,           // Generate ONLY the method body code that goes inside a boolean test(%s entity) method
-                    currentYear,          // Current year is %d if year context is needed
-                    entityType,           // The entity parameter is already typed as %s, so you can access its methods and fields directly
-                    config.javaExamples,
-                    query);
-
-            // Create prompt and get response using Spring AI
-            Prompt prompt = new Prompt(formattedPrompt);
-
-            System.out.printf("Java LLM prompt for '%s%s%s'\n%s%s%s\n\n", ANSI_BLUE, entityType, ANSI_RESET, ANSI_GREEN, formattedPrompt, ANSI_RESET);
-//            logger.debug("Java LLM prompt for '{}': {}", entityType, formattedPrompt);
-
-            ChatClient.ChatClientRequestSpec request  = chatModel.prompt(prompt);
-            ChatClient.CallResponseSpec      response = request.call();
-            String                           content  = response.content();
-
-            System.out.printf("Java LLM raw response\n\n%s%s%s\n\n", ANSI_YELLOW, content, ANSI_RESET);
-//            logger.debug("Java LLM raw response: {}", content);
-
-            // Extract actual answer from response (remove thinking process)
-            String extractedAnswer = extractAnswerFromResponse(content);
-
-            System.out.printf("Java LLM extracted answer\n\n%s%s%s\n\n", ANSI_YELLOW, extractedAnswer, ANSI_RESET);
-//            logger.debug("Java LLM extracted answer: {}", extractedAnswer);
-
-            if (extractedAnswer == null || extractedAnswer.trim().isEmpty()) {
-                logger.warn("Java code generation failed, result is empty");
-                throw new RuntimeException("Java code generation failed, result is empty");
-            }
-
-            return extractedAnswer.trim();
-
-        } catch (Exception e) {
-            logger.error("Error generating Java filter: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to generate Java filter: " + e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Generates a Java filter and compiles it into a Predicate.
-     *
-     * @param query      The natural language query from the user
-     * @param entityType The type of entity being searched (e.g., "Product", "Version")
-     * @param <T>        The entity type
-     * @return A compiled Predicate that can be used to filter entities
-     * @throws RuntimeException if compilation fails
-     */
-    public <T> Predicate<T> generatePredicate(String query, String entityType) {
-        int retries = 10;
-        do {
-            if (query == null || query.trim().isEmpty()) {
-                return entity -> true; // Return a predicate that matches everything
-            }
-
-            logger.info("Generating Java Predicate for query: '{}' and entity type: '{}'", query, entityType);
-
-            try {
-                // Generate Java code using LLM
-                String javaCode = generateFilter(query, entityType);
-
-//                logger.debug("Generated Java code: {}", javaCode);
-
-                // Compile the Java code and return the Predicate
-                return javaFilterCompiler.compileFilter(javaCode, entityType);
-
-            } catch (Exception e) {
-
-                logger.error("Failed to generate Java Predicate: {}", e.getMessage(), e);
-//                throw new RuntimeException("Failed to generate Java Predicate: " + e.getMessage(), e);
-            }
-        }
-        while (--retries > 0);
-        return null;
-    }
-
-    @Override
-    public FilterType getFilterType() {
-        return FilterType.JAVA;
     }
 }
