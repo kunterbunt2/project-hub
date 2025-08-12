@@ -51,8 +51,8 @@ public class JavaAiFilterGenerator implements AiFilterGenerator {
             %s
             
             IMPORTANT RULES:
-            1. Generate ONLY the method body code that goes inside a boolean test(%s entity) method.
-            2. The method should return true if the entity matches the search criteria, false otherwise.
+            1. Generate ONLY the method body code that goes INSIDE a boolean test(%s entity) method. Do not include method signature or class declaration. do not write 'public boolean test(%s entity){...}'.
+            2. The method body should return true if the entity matches the search criteria, false otherwise.
             3. You can access fields directly using entity.getFieldName() getter methods.
             4. For date comparisons, use OffsetDateTime/LocalDateTime classes.
             5. Handle exceptions gracefully - return false if any operation fails.
@@ -144,6 +144,7 @@ public class JavaAiFilterGenerator implements AiFilterGenerator {
                     config.javaClass,     // The Java class you'll be filtering has this structure:
                     config.specialConsiderations,
                     entityType,           // Generate ONLY the method body code that goes inside a boolean test(%s entity) method
+                    entityType,           // Do not include method signature or class declaration. do not write boolean test(%s entity){}
                     entityType,           // The entity parameter is already typed as %s, so you can access its methods and fields directly
                     config.javaExamples,
                     query);

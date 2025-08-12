@@ -170,6 +170,7 @@ public class JavaFilterCompiler {
                 import java.time.format.DateTimeFormatter;
                 import java.util.*;
                 import java.util.regex.Pattern;
+                import java.time.temporal.*;
                 import de.bushnaq.abdalla.projecthub.dto.%s;
                 import de.bushnaq.abdalla.projecthub.dto.Status;
                 import de.bushnaq.abdalla.projecthub.dto.OffDayType;
