@@ -205,20 +205,20 @@ public class JavaAiFilterGenerator implements AiFilterGenerator {
         }
     }
 
-    /**
-     * Generates a Java filter and compiles it into a Predicate using current date.
-     *
-     * @param query      The natural language query from the user
-     * @param entityType The type of entity being searched (e.g., "Product", "Version")
-     * @param <T>        The entity type
-     * @return A compiled Predicate that can be used to filter entities
-     * @throws RuntimeException if compilation fails
-     * @deprecated Use generatePredicate(String, String, LocalDate) instead for better testability
-     */
-    @Deprecated
-    public <T> Predicate<T> generatePredicate(String query, String entityType) {
-        return generatePredicate(query, entityType, LocalDate.now());
-    }
+//    /**
+//     * Generates a Java filter and compiles it into a Predicate using current date.
+//     *
+//     * @param query      The natural language query from the user
+//     * @param entityType The type of entity being searched (e.g., "Product", "Version")
+//     * @param <T>        The entity type
+//     * @return A compiled Predicate that can be used to filter entities
+//     * @throws RuntimeException if compilation fails
+//     * @deprecated Use generatePredicate(String, String, LocalDate) instead for better testability
+//     */
+//    @Deprecated
+//    public <T> Predicate<T> generatePredicate(String query, String entityType) {
+//        return generatePredicate(query, entityType, LocalDate.now());
+//    }
 
     /**
      * Generates a predicate with iterative feedback mechanism.

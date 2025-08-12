@@ -72,19 +72,20 @@ public class AbstractAiFilterTest<T> {
     private List<T> applyJavaScriptSearchQuery(String jsFunction) throws Exception {
         // Define the JavaScript function once with the provided function body
         String completeFunction = String.format("function filterEntity(entity) { %s }", jsFunction);
-//        System.out.println(completeFunction);
+        System.out.println(completeFunction);
         engine.eval(completeFunction);
 
         return testProducts.stream()
                 .filter(product -> {
                     try {
                         // Create a JavaScript-friendly wrapper object
-                        String jsonString = filterMapper.writeValueAsString(product);
+//                        String jsonString = filterMapper.writeValueAsString(product);
                         // Parse the JSON in JavaScript to create a proper JavaScript object
-                        engine.put("jsonString", jsonString);
-                        Object jsObject = engine.eval("JSON.parse(jsonString)");
+//                        engine.put("jsonString", jsonString);
+//                        Object jsObject = engine.eval("JSON.parse(jsonString)");
                         // Put the JavaScript object into the context
-                        engine.put("currentEntity", jsObject);
+//                        engine.put("currentEntity", jsObject);
+                        engine.put("currentEntity", product);
                         // Call the JavaScript function with the JavaScript object
                         Object result = engine.eval("filterEntity(currentEntity)");
 //                        System.out.println("JavaScript result: " + result + " (type: " + (result != null ? result.getClass().getSimpleName() : "null") + ")");
@@ -143,19 +144,6 @@ public class AbstractAiFilterTest<T> {
             try {
 
                 switch (filterType) {
-                    case REGEX: {
-                        // Parse the query using regex generation (existing logic)
-                        regexString = aiFilterService.parseQuery(searchValue, entityType, filterType);
-                        Pattern regexPattern = Pattern.compile(regexString);
-                        List<T> filtered     = applyRegexSearchQuery(regexPattern);
-                        System.out.println("\n=== Products matched by regex ===");
-                        System.out.println("Regex pattern: " + regexString);
-                        for (T product : filtered) {
-                            String json = filterMapper.writeValueAsString(product);
-                            System.out.println(json);
-                        }
-                        return filtered;
-                    }
                     case JAVASCRIPT: {
                         // Parse the query using JavaScript generation
                         javascriptFunction = aiFilterService.parseQuery(searchValue, entityType, filterType);

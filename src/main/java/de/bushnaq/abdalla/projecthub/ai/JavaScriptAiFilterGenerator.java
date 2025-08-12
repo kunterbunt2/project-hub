@@ -43,7 +43,7 @@ public class JavaScriptAiFilterGenerator implements AiFilterGenerator {
             
             IMPORTANT CONTEXT: You are filtering %s entities. Each 'entity' parameter passed to your function is already a %s object.
             
-            The JavaScript objects you'll be filtering have properties matching this JSON structure:
+            The Java class you'll be filtering has this structure:
             %s
             
             %s
@@ -53,7 +53,7 @@ public class JavaScriptAiFilterGenerator implements AiFilterGenerator {
             2. The function should return true if the entity matches the search criteria, false otherwise
             3. Use case-insensitive string comparisons when appropriate (use toLowerCase())
             4. For date comparisons, parse dates using new Date() constructor
-            5. Access object properties directly (e.g., entity.name, entity.created)
+            5. Access object properties using getters (e.g., entity.name, entity.created)
             6. Return ONLY the JavaScript function body, no function declaration, no explanations. The returned answer must be a valid JavaScript code. Any explanation can be added as comments, but the code must be executable. Do not add ` or " before or after the answer, as it would make the code not compilable. 
             7. Handle null/undefined values gracefully
             8. Current year is %d if year context is needed
@@ -117,7 +117,7 @@ public class JavaScriptAiFilterGenerator implements AiFilterGenerator {
             String formattedPrompt = String.format(JAVASCRIPT_PROMPT_TEMPLATE,
                     entityType,           // You are filtering %s entities
                     entityType,           // Each 'entity' parameter passed to your function is already a %s object
-                    config.jsonStructure, // The JavaScript objects you'll be filtering have properties matching this JSON structure:
+                    config.javaClass, // The JavaScript objects you'll be filtering have properties matching this JSON structure:
                     config.specialConsiderations,
                     currentYear,          // Current year is %d if year context is needed
                     config.javascriptExamples,

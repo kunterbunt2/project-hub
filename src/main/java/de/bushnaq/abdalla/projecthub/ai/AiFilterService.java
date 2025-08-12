@@ -31,25 +31,10 @@ public class AiFilterService {
 
     private final JavaAiFilterGenerator       javaGenerator;
     private final JavaScriptAiFilterGenerator javaScriptGenerator;
-    private final RegexAiFilterGenerator      regexGenerator;
 
-    public AiFilterService(RegexAiFilterGenerator regexGenerator,
-                           JavaScriptAiFilterGenerator javaScriptGenerator,
-                           JavaAiFilterGenerator javaGenerator) {
-        this.regexGenerator      = regexGenerator;
+    public AiFilterService(JavaScriptAiFilterGenerator javaScriptGenerator, JavaAiFilterGenerator javaGenerator) {
         this.javaScriptGenerator = javaScriptGenerator;
         this.javaGenerator       = javaGenerator;
-    }
-
-    /**
-     * Parses a natural language search query using LLM with regex generation (default).
-     *
-     * @param query      The natural language query from the user
-     * @param entityType The type of entity being searched (e.g., "Product", "Version")
-     * @return Regex pattern string for filtering JSON objects
-     */
-    public String parseQuery(String query, String entityType) {
-        return parseQuery(query, entityType, AiFilterGenerator.FilterType.REGEX);
     }
 
     /**
@@ -62,7 +47,6 @@ public class AiFilterService {
      */
     public String parseQuery(String query, String entityType, AiFilterGenerator.FilterType filterType) {
         return switch (filterType) {
-            case REGEX -> regexGenerator.generateFilter(query, entityType);
             case JAVASCRIPT -> javaScriptGenerator.generateFilter(query, entityType);
             case JAVA -> javaGenerator.generateFilter(query, entityType);
         };
@@ -82,28 +66,28 @@ public class AiFilterService {
         return javaGenerator.generatePredicate(query, entityType, now);
     }
 
-    /**
-     * Parses a natural language search query and returns a compiled Java Predicate using current date.
-     *
-     * @param query      The natural language query from the user
-     * @param entityType The type of entity being searched (e.g., "Product", "Version")
-     * @param <T>        The entity type
-     * @return A compiled Predicate that can be used to filter entities
-     * @throws RuntimeException if compilation fails
-     * @deprecated Use parseQueryToPredicate(String, String, LocalDate) instead for better testability
-     */
-    @Deprecated
-    public <T> Predicate<T> parseQueryToPredicate(String query, String entityType) {
-        return parseQueryToPredicate(query, entityType, LocalDate.now());
-    }
+//    /**
+//     * Parses a natural language search query and returns a compiled Java Predicate using current date.
+//     *
+//     * @param query      The natural language query from the user
+//     * @param entityType The type of entity being searched (e.g., "Product", "Version")
+//     * @param <T>        The entity type
+//     * @return A compiled Predicate that can be used to filter entities
+//     * @throws RuntimeException if compilation fails
+//     * @deprecated Use parseQueryToPredicate(String, String, LocalDate) instead for better testability
+//     */
+//    @Deprecated
+//    public <T> Predicate<T> parseQueryToPredicate(String query, String entityType) {
+//        return parseQueryToPredicate(query, entityType, LocalDate.now());
+//    }
 
-    /**
-     * @deprecated Use AiFilterGenerator.FilterType instead
-     */
-    @Deprecated
-    public enum FilterType {
-        REGEX,
-        JAVASCRIPT,
-        JAVA
-    }
+//    /**
+//     * @deprecated Use AiFilterGenerator.FilterType instead
+//     */
+//    @Deprecated
+//    public enum FilterType {
+//        REGEX,
+//        JAVASCRIPT,
+//        JAVA
+//    }
 }

@@ -64,6 +64,37 @@ public class AiFilterConfig {
                 """
                         Examples:
                         Input: "Orion"
+                        Output: return entity && entity.name && entity.name.toLowerCase().includes('orion');
+                        
+                        Input: "name contains project"
+                        Output: return entity && entity.name && entity.name.toLowerCase().includes('project');
+                        
+                        Input: "created in 2024"
+                        Output: return entity && entity.created && new Date(entity.created).getFullYear() === 2024;
+                        
+                        Input: "products created in 2024"
+                        Output: return entity && entity.created && new Date(entity.created).getFullYear() === 2024;
+                        
+                        Input: "items created in 2024"
+                        Output: return entity && entity.created && new Date(entity.created).getFullYear() === 2024;
+                        
+                        Input: "products created after January 2024"
+                        Output: if (!entity || !entity.created) return false; const created = new Date(entity.created); return created > new Date('2024-01-31');
+                        
+                        Input: "items created before December 2024"
+                        Output: if (!entity || !entity.created) return false; const created = new Date(entity.created); return created < new Date('2024-12-01');
+                        
+                        Input: "products updated in 2025"
+                        Output: if (!entity || !entity.updated) return false; const updated = new Date(entity.updated); return updated.getFullYear() === 2025;
+                        
+                        Input: "MARS"
+                        Output: return entity && entity.name && entity.name.toLowerCase().includes('mars');
+                        
+                        Input: "space products created in 2024"
+                        Output: if (!entity || !entity.name || !entity.created) return false; const hasSpace = entity.name.toLowerCase().includes('space'); const created = new Date(entity.created); const isCreated2024 = created.getFullYear() === 2024; return hasSpace && isCreated2024;""",
+                """
+                        Examples:
+                        Input: "Orion"
                         Output: return entity.getName().toLowerCase().contains("orion");
                         
                         Input: "name contains project"
@@ -661,24 +692,18 @@ public class AiFilterConfig {
         public final String javaClass;
         public final String javaExamples;
         public final String javascriptExamples;
-        public final String jsonStructure;
-        public final String regexExamples;
         public final String specialConsiderations;
 
         public PromptConfig(String javaClass, String specialConsiderations, String javaExamples) {
-            this.jsonStructure         = null;
             this.javaClass             = javaClass;
             this.specialConsiderations = specialConsiderations;
-            this.regexExamples         = null;
             this.javascriptExamples    = null;
             this.javaExamples          = javaExamples;
         }
 
-        public PromptConfig(String jsonStructure, String javaClass, String specialConsiderations, String regexExamples, String javascriptExamples, String javaExamples) {
-            this.jsonStructure         = jsonStructure;
+        public PromptConfig(String javaClass, String specialConsiderations, String javascriptExamples, String javaExamples) {
             this.javaClass             = javaClass;
             this.specialConsiderations = specialConsiderations;
-            this.regexExamples         = regexExamples;
             this.javascriptExamples    = javascriptExamples;
             this.javaExamples          = javaExamples;
         }

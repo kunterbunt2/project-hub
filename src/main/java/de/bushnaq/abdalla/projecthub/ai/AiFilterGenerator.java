@@ -44,7 +44,6 @@ public interface AiFilterGenerator {
      * Enum for different filter types
      */
     enum FilterType {
-        REGEX,
         JAVASCRIPT,
         JAVA
     }

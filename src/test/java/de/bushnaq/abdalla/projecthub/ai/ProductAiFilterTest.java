@@ -108,7 +108,7 @@ class ProductAiFilterTest extends AbstractAiFilterTest<Product> {
     @Test
     @DisplayName("MARS")
     void testMARS() throws Exception {
-        List<Product> results  = performSearch("MARS", "Product", AiFilterGenerator.FilterType.JAVA);
+        List<Product> results  = performSearch("MARS", "Product", AiFilterGenerator.FilterType.JAVASCRIPT);
         List<Product> expected = Collections.singletonList(testProducts.get(2)); // Mars Explorer
 
         assertThat(results).hasSize(expected.size());
