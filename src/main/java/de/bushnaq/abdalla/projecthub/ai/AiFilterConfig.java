@@ -64,34 +64,52 @@ public class AiFilterConfig {
                 """
                         Examples:
                         Input: "Orion"
-                        Output: return entity && entity.name && entity.name.toLowerCase().includes('orion');
+                        Output: return entity && entity.getName() && entity.getName().toLowerCase().includes('orion');
                         
                         Input: "name contains project"
-                        Output: return entity && entity.name && entity.name.toLowerCase().includes('project');
+                        Output: return entity && entity.getName() && entity.getName().toLowerCase().includes('project');
                         
                         Input: "created in 2024"
-                        Output: return entity && entity.created && new Date(entity.created).getFullYear() === 2024;
+                        Output: return entity && entity.getCreated() && entity.getCreated().getYear() === 2024;
                         
                         Input: "products created in 2024"
-                        Output: return entity && entity.created && new Date(entity.created).getFullYear() === 2024;
+                        Output: return entity && entity.getCreated() && entity.getCreated().getYear() === 2024;
                         
                         Input: "items created in 2024"
-                        Output: return entity && entity.created && new Date(entity.created).getFullYear() === 2024;
+                        Output: return entity && entity.getCreated() && entity.getCreated().getYear() === 2024;
                         
                         Input: "products created after January 2024"
-                        Output: if (!entity || !entity.created) return false; const created = new Date(entity.created); return created > new Date('2024-01-31');
+                        Output: if (!entity || !entity.getCreated()) return false; const refDate = Java.type('java.time.OffsetDateTime').of(2024, 1, 31, 23, 59, 59, 0, entity.getCreated().getOffset()); return entity.getCreated().isAfter(refDate);
                         
                         Input: "items created before December 2024"
-                        Output: if (!entity || !entity.created) return false; const created = new Date(entity.created); return created < new Date('2024-12-01');
+                        Output: if (!entity || !entity.getCreated()) return false; const refDate = Java.type('java.time.OffsetDateTime').of(2024, 12, 1, 0, 0, 0, 0, entity.getCreated().getOffset()); return entity.getCreated().isBefore(refDate);
                         
-                        Input: "products updated in 2025"
-                        Output: if (!entity || !entity.updated) return false; const updated = new Date(entity.updated); return updated.getFullYear() === 2025;
+                        Input: "products created this year"
+                        Output: if (!entity || !entity.getCreated()) return false; const currentYear = Java.type('java.time.Year').now().getValue(); return entity.getCreated().getYear() === currentYear;
+                        
+                        Input: "updated in 2024"
+                        Output: return entity && entity.getUpdated() && entity.getUpdated().getYear() === 2024;
+                        
+                        Input: "products updated in 2024"
+                        Output: return entity && entity.getUpdated() && entity.getUpdated().getYear() === 2024;
+                        
+                        Input: "items updated in 2024"
+                        Output: return entity && entity.getUpdated() && entity.getUpdated().getYear() === 2024;
+                        
+                        Input: "products updated after January 2024"
+                        Output: if (!entity || !entity.getUpdated()) return false; const refDate = Java.type('java.time.OffsetDateTime').of(2024, 1, 31, 23, 59, 59, 0, entity.getUpdated().getOffset()); return entity.getUpdated().isAfter(refDate);
+                        
+                        Input: "items updated before December 2024"
+                        Output: if (!entity || !entity.getUpdated()) return false; const refDate = Java.type('java.time.OffsetDateTime').of(2024, 12, 1, 0, 0, 0, 0, entity.getUpdated().getOffset()); return entity.getUpdated().isBefore(refDate);
+                        
+                        Input: "products updated this year"
+                        Output: if (!entity || !entity.getUpdated()) return false; const currentYear = Java.type('java.time.Year').now().getValue(); return entity.getUpdated().getYear() === currentYear;
                         
                         Input: "MARS"
-                        Output: return entity && entity.name && entity.name.toLowerCase().includes('mars');
+                        Output: return entity && entity.getName() && entity.getName().toLowerCase().includes('mars');
                         
                         Input: "space products created in 2024"
-                        Output: if (!entity || !entity.name || !entity.created) return false; const hasSpace = entity.name.toLowerCase().includes('space'); const created = new Date(entity.created); const isCreated2024 = created.getFullYear() === 2024; return hasSpace && isCreated2024;""",
+                        Output: if (!entity || !entity.getName() || !entity.getCreated()) return false; const hasSpace = entity.getName().toLowerCase().includes('space'); const isCreated2024 = entity.getCreated().getYear() === 2024; return hasSpace && isCreated2024;""",
                 """
                         Examples:
                         Input: "Orion"

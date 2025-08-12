@@ -49,6 +49,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestMethodOrder(MethodOrderer.DisplayName.class)
 class ProductAiFilterTest extends AbstractAiFilterTest<Product> {
 
+    private final AiFilterGenerator.FilterType filterType = AiFilterGenerator.FilterType.JAVASCRIPT;
+
     public ProductAiFilterTest(ObjectMapper mapper, AiFilterService aiFilterService) {
         super(mapper, aiFilterService, LocalDate.of(2025, 8, 10));
     }
@@ -108,7 +110,7 @@ class ProductAiFilterTest extends AbstractAiFilterTest<Product> {
     @Test
     @DisplayName("MARS")
     void testMARS() throws Exception {
-        List<Product> results  = performSearch("MARS", "Product", AiFilterGenerator.FilterType.JAVASCRIPT);
+        List<Product> results  = performSearch("MARS", "Product", filterType);
         List<Product> expected = Collections.singletonList(testProducts.get(2)); // Mars Explorer
 
         assertThat(results).hasSize(expected.size());
@@ -118,7 +120,7 @@ class ProductAiFilterTest extends AbstractAiFilterTest<Product> {
     @Test
     @DisplayName("name contains project")
     void testNameContainsProject() throws Exception {
-        List<Product> results  = performSearch("name contains project", "Product", AiFilterGenerator.FilterType.JAVA);
+        List<Product> results  = performSearch("name contains project", "Product", filterType);
         List<Product> expected = Collections.singletonList(testProducts.get(1)); // Project Apollo
 
         assertThat(results).hasSize(expected.size());
@@ -138,7 +140,7 @@ class ProductAiFilterTest extends AbstractAiFilterTest<Product> {
     @Test
     @DisplayName("products created after July 2024")
     void testProductsCreatedAfterJuly2024() throws Exception {
-        List<Product> results = performSearch("products created after July 2024", "Product", AiFilterGenerator.FilterType.JAVA);
+        List<Product> results = performSearch("products created after July 2024", "Product", filterType);
 //        List<Product> results = performSearch(new ExampleProductFilter());
         List<Product> expected = Arrays.asList(
                 testProducts.get(5), // Deep Space Probe (created 2024-09-05)
@@ -153,7 +155,7 @@ class ProductAiFilterTest extends AbstractAiFilterTest<Product> {
     @Test
     @DisplayName("products created in 2024")
     void testProductsCreatedIn2024() throws Exception {
-        List<Product> results = performSearch("products created in 2024", "Product", AiFilterGenerator.FilterType.JAVA);
+        List<Product> results = performSearch("products created in 2024", "Product", filterType);
         List<Product> expected = Arrays.asList(
                 testProducts.get(1),
                 testProducts.get(2),
@@ -169,7 +171,7 @@ class ProductAiFilterTest extends AbstractAiFilterTest<Product> {
     @Test
     @DisplayName("products updated in 2025")
     void testProductsUpdatedIn2025() throws Exception {
-        List<Product> results = performSearch("products updated in 2025", "Product", AiFilterGenerator.FilterType.JAVA);
+        List<Product> results = performSearch("products updated in 2025", "Product", filterType);
         List<Product> expected = Arrays.asList(
                 testProducts.get(5), // Deep Space Probe (updated 2025-01-15)
                 testProducts.get(6), // Space Station Alpha (updated 2025-02-08)
@@ -183,7 +185,7 @@ class ProductAiFilterTest extends AbstractAiFilterTest<Product> {
     @Test
     @DisplayName("space products created in 2024")
     void testSpaceProductsCreatedIn2024() throws Exception {
-        List<Product> results = performSearch("space products created in 2024", "Product", AiFilterGenerator.FilterType.JAVA);
+        List<Product> results = performSearch("space products created in 2024", "Product", filterType);
         List<Product> expected = Arrays.asList(
                 testProducts.get(5),//
                 testProducts.get(6)//

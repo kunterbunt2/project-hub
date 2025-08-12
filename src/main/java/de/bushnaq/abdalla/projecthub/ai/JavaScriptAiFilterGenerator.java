@@ -39,9 +39,9 @@ public class JavaScriptAiFilterGenerator implements AiFilterGenerator {
     private static final String ANSI_YELLOW = "\u001B[33m";
 
     private static final String     JAVASCRIPT_PROMPT_TEMPLATE = """
-            You are a JavaScript function generator for filtering JavaScript objects. Convert natural language search queries into JavaScript filter functions.
+            You are a JavaScript function generator for filtering Java objects via GraalJS. Convert natural language search queries into JavaScript filter functions.
             
-            IMPORTANT CONTEXT: You are filtering %s entities. Each 'entity' parameter passed to your function is already a %s object.
+            IMPORTANT CONTEXT: You are filtering %s entities. Each 'entity' parameter passed to your function is a Java %s object with host access enabled.
             
             The Java class you'll be filtering has this structure:
             %s
@@ -49,16 +49,19 @@ public class JavaScriptAiFilterGenerator implements AiFilterGenerator {
             %s
             
             IMPORTANT RULES:
-            1. Generate a JavaScript function that takes a JavaScript object parameter called 'entity'
+            1. Generate a JavaScript function that takes a Java object parameter called 'entity'
             2. The function should return true if the entity matches the search criteria, false otherwise
-            3. Use case-insensitive string comparisons when appropriate (use toLowerCase())
-            4. For date comparisons, parse dates using new Date() constructor
-            5. Access object properties using getters (e.g., entity.name, entity.created)
-            6. Return ONLY the JavaScript function body, no function declaration, no explanations. The returned answer must be a valid JavaScript code. Any explanation can be added as comments, but the code must be executable. Do not add ` or " before or after the answer, as it would make the code not compilable. 
-            7. Handle null/undefined values gracefully
-            8. Current year is %d if year context is needed
-            9. Use proper JavaScript syntax and operators
-            10. For date fields, they are in ISO format strings that can be parsed by new Date()
+            3. Use case-insensitive string comparisons when appropriate (use toLowerCase() on strings)
+            4. CRITICAL: The 'entity' is a Java object, NOT a JavaScript object - call Java getter methods like entity.getName(), entity.getCreated(), entity.getUpdated()
+            5. For date comparisons, use Java date methods directly - DO NOT convert to JavaScript Date objects
+            6. Use Java date methods: entity.getCreated().getYear(), entity.getCreated().isAfter(), entity.getCreated().isBefore()
+            7. To create Java date objects, use: Java.type('java.time.OffsetDateTime').of(year, month, day, hour, minute, second, nano, offset)
+            8. For current year: Java.type('java.time.Year').now().getValue()
+            9. Return ONLY the JavaScript function body, no function declaration, no explanations. The returned answer must be a valid JavaScript code.
+            10. Handle null values gracefully by checking if entity and its methods return non-null values
+            11. Current year is %d if year context is needed
+            12. NEVER use new Date() - always use Java time methods directly
+            13. NEVER access properties directly like entity.name - always use getter methods like entity.getName()
             
             %s
             

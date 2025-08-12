@@ -20,11 +20,14 @@ package de.bushnaq.abdalla.projecthub.ai;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.HostAccess;
+import org.graalvm.polyglot.ResourceLimits;
+import org.graalvm.polyglot.Value;
+import org.graalvm.polyglot.io.IOAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.time.LocalDate;
 import java.util.List;
@@ -35,31 +38,51 @@ import java.util.stream.Collectors;
 
 public class AbstractAiFilterTest<T> {
     private final   AiFilterService aiFilterService;
-    protected final ScriptEngine    engine;
     protected final ObjectMapper    filterMapper;
     protected       String          javascriptFunction;
+    protected final Context         jsContext;  // Changed from ScriptEngine to Context
     protected final Logger          logger = LoggerFactory.getLogger(this.getClass());
     protected final LocalDate       now;
     protected       String          regexString;
     protected       List<T>         testProducts;
 
     public AbstractAiFilterTest(ObjectMapper mapper, AiFilterService aiFilterService, LocalDate now) {
-        System.setProperty("polyglot.engine.WarnInterpreterOnly", "false");
         this.filterMapper    = mapper.copy();
         this.aiFilterService = aiFilterService;
         this.now             = now;
-        // Use GraalVM JavaScript engine specifically
-        ScriptEngine engineByName = new ScriptEngineManager().getEngineByName("graal.js");
-        if (engineByName != null) {
-            this.engine = new ScriptEngineManager().getEngineByName("graal.js");
-        } else {
-            // Fallback to default JavaScript engine
-            this.engine = new ScriptEngineManager().getEngineByName("javascript");
-        }
 
-        if (this.engine == null) {
-            throw new RuntimeException("No JavaScript engine found. Make sure GraalVM JS dependencies are available.");
-        }
+        // Create secure GraalVM Context with comprehensive security settings
+        HostAccess secureHostAccess = HostAccess.newBuilder(HostAccess.EXPLICIT)
+                .allowPublicAccess(true)  // Allow calling public methods like getName()
+                .build();
+
+        ResourceLimits secureResourceLimits = ResourceLimits.newBuilder()
+                .statementLimit(200, null)                    // Limit to 200 statements
+                .build();
+
+        this.jsContext = Context.newBuilder("js")
+                // Security: Comprehensive access controls
+                .allowHostAccess(secureHostAccess)           // Limited host access for getter methods
+                .allowIO(IOAccess.NONE)                      // ❌ No file system access
+                .allowNativeAccess(false)                    // ❌ No native code execution
+                .allowCreateThread(false)                    // ❌ No thread creation
+                // Allow specific Java time classes for date operations
+                .allowHostClassLookup(className -> {
+                    return className.equals("java.time.OffsetDateTime") ||
+                            className.equals("java.time.LocalDateTime") ||
+                            className.equals("java.time.LocalDate") ||
+                            className.equals("java.time.Year") ||
+                            className.equals("java.time.Duration") ||
+                            className.equals("java.time.ZoneOffset") ||
+                            className.equals("java.lang.String") ||
+                            className.equals("java.lang.Integer") ||
+                            className.equals("java.lang.Boolean");
+                })
+                .allowEnvironmentAccess(org.graalvm.polyglot.EnvironmentAccess.NONE) // ❌ No env variables
+                .allowPolyglotAccess(org.graalvm.polyglot.PolyglotAccess.NONE)       // ❌ No other languages
+                .resourceLimits(secureResourceLimits)        // Resource limits for DoS protection
+                .option("engine.WarnInterpreterOnly", "false")
+                .build();
 
         // Set up the mapper to ignore @JsonIgnore for filtering purposes
 //        this.filterMapper.setAnnotationIntrospector(new FilterAnnotationIntrospector());
@@ -67,39 +90,39 @@ public class AbstractAiFilterTest<T> {
 
     /**
      * Helper method to simulate filtering products using JavaScript functions
-     * Now works with Java objects directly instead of JSON conversion
+     * Now uses GraalVM Context API for secure execution
      */
     private List<T> applyJavaScriptSearchQuery(String jsFunction) throws Exception {
         // Define the JavaScript function once with the provided function body
         String completeFunction = String.format("function filterEntity(entity) { %s }", jsFunction);
         System.out.println(completeFunction);
-        engine.eval(completeFunction);
+
+        // Evaluate the function definition in the secure context
+        jsContext.eval("js", completeFunction);
 
         return testProducts.stream()
                 .filter(product -> {
                     try {
-                        // Create a JavaScript-friendly wrapper object
-//                        String jsonString = filterMapper.writeValueAsString(product);
-                        // Parse the JSON in JavaScript to create a proper JavaScript object
-//                        engine.put("jsonString", jsonString);
-//                        Object jsObject = engine.eval("JSON.parse(jsonString)");
-                        // Put the JavaScript object into the context
-//                        engine.put("currentEntity", jsObject);
-                        engine.put("currentEntity", product);
-                        // Call the JavaScript function with the JavaScript object
-                        Object result = engine.eval("filterEntity(currentEntity)");
-//                        System.out.println("JavaScript result: " + result + " (type: " + (result != null ? result.getClass().getSimpleName() : "null") + ")");
-                        // Handle JavaScript truthy/falsy values
-                        if (result != null) {
-                            // Convert JavaScript truthy values to boolean
-                            if (result instanceof Number) {
-                                return ((Number) result).doubleValue() != 0.0;
+                        // Put the Java object into the JavaScript context
+                        jsContext.getBindings("js").putMember("currentEntity", product);
+
+                        // Call the JavaScript function and get the result as a Value
+                        Value result = jsContext.eval("js", "filterEntity(currentEntity)");
+
+                        // Convert JavaScript result to boolean
+                        if (result != null && !result.isNull()) {
+                            // Handle JavaScript truthy/falsy values
+                            if (result.isBoolean()) {
+                                return result.asBoolean();
                             }
-                            if (result instanceof String) {
-                                return !((String) result).isEmpty();
+                            if (result.isNumber()) {
+                                return result.asDouble() != 0.0;
                             }
-                            // For other objects, check if they're not explicitly false
-                            return !Boolean.FALSE.equals(result);
+                            if (result.isString()) {
+                                return !result.asString().isEmpty();
+                            }
+                            // For other objects, check if they're truthy
+                            return !result.isNull();
                         }
                         return false;
                     } catch (Exception e) {
@@ -132,7 +155,7 @@ public class AbstractAiFilterTest<T> {
      * Perform search using regex approach (existing method)
      */
     protected List<T> performSearch(String searchValue, String entityType) throws Exception {
-        return performSearch(searchValue, entityType, AiFilterGenerator.FilterType.JAVA);
+        return performSearch(searchValue, entityType, AiFilterGenerator.FilterType.JAVASCRIPT);
     }
 
     /**

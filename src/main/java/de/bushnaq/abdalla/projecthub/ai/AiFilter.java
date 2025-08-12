@@ -224,7 +224,7 @@ public class AiFilter {
                           "key" : "P-1"
                         }""",
                 """
-                        Special considerations for Products: 
+                        Special considerations for Products:
                         - Focus on product names, keys (like P-1, PROJ-123), and creation/update dates
                         - Remember: you are filtering Product entities, so each 'entity' is already a Product
                         - When queries mention "products created in 2024" - this means filter by creation year, NOT by checking if entity.name contains "products"
