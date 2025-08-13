@@ -261,6 +261,7 @@ class OffDayAiFilterTest extends AbstractAiFilterTest<OffDay> {
     void testOffDaysCreatedIn2025() throws Exception {
         List<OffDay> results = performSearch("off days created in 2025", "OffDay");
         List<OffDay> expected = Arrays.asList(
+                testProducts.get(11), // Vacation - Jane Smith
                 testProducts.get(12), // Sick - Bob Johnson
                 testProducts.get(13)  // Trip - Alice Wilson
         );

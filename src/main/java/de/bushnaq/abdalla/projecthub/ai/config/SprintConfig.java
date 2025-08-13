@@ -69,13 +69,13 @@ public class SprintConfig {
                         Output: return entity.getName().toLowerCase().includes('authentication');
                         
                         Input: "created sprints"
-                        Output: const Status = Java.type('your.package.Status'); return entity.getStatus() === Status.CREATED;
+                        Output: const Status = Java.type('de.bushnaq.abdalla.projecthub.dto.Status'); return entity.getStatus() === Status.CREATED;
                         
                         Input: "started sprints"
-                        Output: const Status = Java.type('your.package.Status'); return entity.getStatus() === Status.STARTED;
+                        Output: const Status = Java.type('de.bushnaq.abdalla.projecthub.dto.Status'); return entity.getStatus() === Status.STARTED;
                         
                         Input: "closed sprints"
-                        Output: const Status = Java.type('your.package.Status'); return entity.getStatus() === Status.CLOSED;
+                        Output: const Status = Java.type('de.bushnaq.abdalla.projecthub.dto.Status'); return entity.getStatus() === Status.CLOSED;
                         
                         Input: "sprints starting after January 2025"
                         Output: if (!entity.getStart()) return false; const refDate = Java.type('java.time.LocalDateTime').of(2025, 1, 31, 23, 59, 59); return entity.getStart().isAfter(refDate);

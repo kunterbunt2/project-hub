@@ -51,16 +51,16 @@ public class OffDayConfig {
                 """
                         Examples:
                         Input: "vacation"
-                        Output: const OffDayType = Java.type('your.package.OffDayType'); return entity.getType() === OffDayType.VACATION;
+                        Output: const OffDayType = Java.type('de.bushnaq.abdalla.projecthub.dto.OffDayType'); return entity.getType() === OffDayType.VACATION;
                         
                         Input: "sick days"
-                        Output: const OffDayType = Java.type('your.package.OffDayType'); return entity.getType() === OffDayType.SICK;
+                        Output: const OffDayType = Java.type(de.bushnaq.abdalla.projecthub.dto.OffDayType'); return entity.getType() === OffDayType.SICK;
                         
                         Input: "holidays"
-                        Output: const OffDayType = Java.type('your.package.OffDayType'); return entity.getType() === OffDayType.HOLIDAY;
+                        Output: const OffDayType = Java.type('de.bushnaq.abdalla.projecthub.dto.OffDayType'); return entity.getType() === OffDayType.HOLIDAY;
                         
                         Input: "trips"
-                        Output: const OffDayType = Java.type('your.package.OffDayType'); return entity.getType() === OffDayType.TRIP;
+                        Output: const OffDayType = Java.type('de.bushnaq.abdalla.projecthub.dto.OffDayType'); return entity.getType() === OffDayType.TRIP;
                         
                         Input: "off days in January 2025"
                         Output: return entity.getFirstDay().getYear() === 2025 && entity.getFirstDay().getMonthValue() === 1;
@@ -78,10 +78,10 @@ public class OffDayConfig {
                         Output: return entity.getLastDay().getYear() === 2025;
                         
                         Input: "long vacations"
-                        Output: const OffDayType = Java.type('your.package.OffDayType'); const ChronoUnit = Java.type('java.time.temporal.ChronoUnit'); return entity.getType() === OffDayType.VACATION && ChronoUnit.DAYS.between(entity.getFirstDay(), entity.getLastDay()) >= 7;
+                        Output: const OffDayType = Java.type('de.bushnaq.abdalla.projecthub.dto.OffDayType'); const ChronoUnit = Java.type('java.time.temporal.ChronoUnit'); return entity.getType() === OffDayType.VACATION && ChronoUnit.DAYS.between(entity.getFirstDay(), entity.getLastDay()) >= 7;
                         
                         Input: "short trips"
-                        Output: const OffDayType = Java.type('your.package.OffDayType'); const ChronoUnit = Java.type('java.time.temporal.ChronoUnit'); return entity.getType() === OffDayType.TRIP && ChronoUnit.DAYS.between(entity.getFirstDay(), entity.getLastDay()) <= 3;
+                        Output: const OffDayType = Java.type('de.bushnaq.abdalla.projecthub.dto.OffDayType'); const ChronoUnit = Java.type('java.time.temporal.ChronoUnit'); return entity.getType() === OffDayType.TRIP && ChronoUnit.DAYS.between(entity.getFirstDay(), entity.getLastDay()) <= 3;
                         
                         Input: "off days this year"
                         Output: const currentYear = Java.type('java.time.Year').now().getValue(); return entity.getFirstDay().getYear() === currentYear;

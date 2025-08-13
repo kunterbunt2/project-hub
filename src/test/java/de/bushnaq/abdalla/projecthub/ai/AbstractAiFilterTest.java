@@ -67,7 +67,7 @@ public class AbstractAiFilterTest<T> {
      * Perform search using regex approach (existing method)
      */
     protected List<T> performSearch(String searchValue, String entityType) throws Exception {
-        return performSearch(searchValue, entityType, AiFilterGenerator.FilterType.JAVA);
+        return performSearch(searchValue, entityType, AiFilterGenerator.FilterType.JAVASCRIPT);
     }
 
     /**
