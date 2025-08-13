@@ -4,6 +4,7 @@
 .idea
 target
 node_modules
+ai-test-results
 *log.*.gz
 package.json
 package-lock.json

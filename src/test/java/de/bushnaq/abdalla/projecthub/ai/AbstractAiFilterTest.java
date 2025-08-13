@@ -92,9 +92,9 @@ public class AbstractAiFilterTest<T> {
      * Helper method to simulate filtering products using JavaScript functions
      * Now uses GraalVM Context API for secure execution
      */
-    private List<T> applyJavaScriptSearchQuery(String jsFunction) throws Exception {
+    protected List<T> applyJavaScriptSearchQuery(String jsFunction, LocalDate now) throws Exception {
         // Define the JavaScript function once with the provided function body
-        String completeFunction = String.format("function filterEntity(entity) { %s }", jsFunction);
+        String completeFunction = String.format("function filterEntity(entity, now) {\n %s \n}", jsFunction);
         System.out.println(completeFunction);
 
         // Evaluate the function definition in the secure context
@@ -105,26 +105,29 @@ public class AbstractAiFilterTest<T> {
                     try {
                         // Put the Java object into the JavaScript context
                         jsContext.getBindings("js").putMember("currentEntity", product);
+                        jsContext.getBindings("js").putMember("currentDate", now);
 
                         // Call the JavaScript function and get the result as a Value
-                        Value result = jsContext.eval("js", "filterEntity(currentEntity)");
+                        Value result = jsContext.eval("js", "filterEntity(currentEntity, currentDate)");
+
+
+                        // Explicitly check for undefined and throw exception
+                        if (result == null || result.isNull()) {
+                            throw new RuntimeException("JavaScript function returned null/undefined for entity: " + product);
+                        }
 
                         // Convert JavaScript result to boolean
-                        if (result != null && !result.isNull()) {
-                            // Handle JavaScript truthy/falsy values
-                            if (result.isBoolean()) {
-                                return result.asBoolean();
-                            }
-                            if (result.isNumber()) {
-                                return result.asDouble() != 0.0;
-                            }
-                            if (result.isString()) {
-                                return !result.asString().isEmpty();
-                            }
-                            // For other objects, check if they're truthy
-                            return !result.isNull();
+                        if (result.isBoolean()) {
+                            return result.asBoolean();
                         }
-                        return false;
+                        if (result.isNumber()) {
+                            return result.asDouble() != 0.0;
+                        }
+                        if (result.isString()) {
+                            return !result.asString().isEmpty();
+                        }
+                        // For other objects, check if they're truthy
+                        return true; // Non-null, non-primitive objects are truthy
                     } catch (Exception e) {
                         logger.warn("JavaScript execution failed for product: {}", e.getMessage());
                         e.printStackTrace(); // Add stack trace for debugging
@@ -170,7 +173,7 @@ public class AbstractAiFilterTest<T> {
                     case JAVASCRIPT: {
                         // Parse the query using JavaScript generation
                         javascriptFunction = aiFilterService.parseQuery(searchValue, entityType, filterType);
-                        List<T> filtered = applyJavaScriptSearchQuery(javascriptFunction);
+                        List<T> filtered = applyJavaScriptSearchQuery(javascriptFunction, now);
                         System.out.println("\n=== Products matched by JavaScript filter ===");
                         System.out.println("JavaScript function: " + javascriptFunction);
                         for (T product : filtered) {

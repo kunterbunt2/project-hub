@@ -151,7 +151,8 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     @Test
     @DisplayName("80% availability")
     void test80PercentAvailability() throws Exception {
-        List<Availability> results  = performSearch("80% availability", "Availability");
+        List<Availability> results = performSearch("80% availability", "Availability");
+//        List<Availability> results  = applyJavaScriptSearchQuery("return Math.round(entity.getAvailability() * 100) === 80;", now);
         List<Availability> expected = Collections.singletonList(testProducts.get(1)); // 0.8f
 
         assertThat(results).hasSize(expected.size());
@@ -161,7 +162,8 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     @Test
     @DisplayName("95% availability")
     void test95PercentAvailability() throws Exception {
-        List<Availability> results  = performSearch("95% availability", "Availability");
+        List<Availability> results = performSearch("95% availability", "Availability");
+
         List<Availability> expected = Collections.singletonList(testProducts.get(9)); // 0.95f
 
         assertThat(results).hasSize(expected.size());
@@ -169,9 +171,9 @@ class AvailabilityAiFilterTest extends AbstractAiFilterTest<Availability> {
     }
 
     @Test
-    @DisplayName("availability between 60% and 80%")
-    void testAvailabilityBetween60AndAnd80Percent() throws Exception {
-        List<Availability> results = performSearch("availability between 60% and 80%", "Availability");
+    @DisplayName("availability between 60% included and 80% included")
+    void testAvailabilityBetween60IncludedAndAnd80PercentIncluded() throws Exception {
+        List<Availability> results = performSearch("availability between 60% included and 80% included", "Availability");
         List<Availability> expected = Arrays.asList(
                 testProducts.get(1),  // 0.8f - Jane Smith
                 testProducts.get(3),  // 0.75f - Alice Wilson

@@ -332,8 +332,13 @@
                         <!-- we are missing the references for these tests online, we cannot run these tests in a github action -->
                         <exclude>**/LegacyGanttTest.java</exclude>
                         <!-- we cannot use local GPU in a github action -->
+                        <!--
                         <exclude>**/ai/*Test.java</exclude>
+                        -->
                     </excludes>
+                    <includes>
+                        <exclude>**/ai/*Test.java</exclude>
+                    </includes>
                 </configuration>
             </plugin>
             <plugin>
@@ -546,6 +551,15 @@
                     <showSuccess>true</showSuccess>
                     <!-- Add this property to prevent tests from running again -->
                     <aggregate>false</aggregate>
+                    <!-- Enable detailed failure reporting -->
+                    <outputName>surefire-report</outputName>
+                    <alwaysGenerateFailsafeReport>true</alwaysGenerateFailsafeReport>
+                    <alwaysGenerateSurefireReport>true</alwaysGenerateSurefireReport>
+                    <!-- Include failure details and stack traces -->
+                    <!--
+                    <trimStackTrace>false</trimStackTrace>
+                    <useSystemClassLoader>false</useSystemClassLoader>
+                    -->
                     <reportsDirectories>
                         <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
                     </reportsDirectories>
@@ -554,6 +568,7 @@
                     <reportSet>
                         <reports>
                             <report>report-only</report>
+                            <report>failsafe-report-only</report>
                         </reports>
                     </reportSet>
                 </reportSets>

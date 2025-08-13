@@ -43,7 +43,7 @@ public class JavaAiFilterGenerator implements AiFilterGenerator {
     private static final String             JAVA_PROMPT_TEMPLATE   = """
             You are a Java method body generator for filtering Java objects. Convert natural language search queries into Java code that can be compiled and executed.
             
-            IMPORTANT CONTEXT: You are filtering %s entities. The 'entity' parameter passed to your method is a %s object.
+            IMPORTANT CONTEXT: You are filtering %s entities. The 'entity' parameter passed to your method is a %s object. This entity is never null.
             
             The Java class you'll be filtering has this structure:
             %s
@@ -51,22 +51,22 @@ public class JavaAiFilterGenerator implements AiFilterGenerator {
             %s
             
             IMPORTANT RULES:
-            1. Generate ONLY the method body code that goes INSIDE a boolean test(%s entity) method. Do not include method signature or class declaration. do not write 'public boolean test(%s entity){...}'.
-            2. The method body should return true if the entity matches the search criteria, false otherwise.
-            3. You can access fields directly using entity.getFieldName() getter methods.
-            4. For date comparisons, use OffsetDateTime/LocalDateTime classes.
-            5. Handle exceptions gracefully - return false if any operation fails.
-            6. Use proper Java operators and control structures.
-            7. For string searches, use direct getter access with .toLowerCase().contains().
-            8. The entity parameter is already typed as %s, so you can access its getter methods directly.
-            9. Never use reflection - only use public getter methods like entity.getName(), entity.getCreated(), etc.
-            10. Return ONLY the method body code, no method signature, no class declaration.
-            11. Explain your thought process within <think></think> tags to indicate your thinking process.
-            12. Important: add ```java ``` tags to indicate the actual code you are returning.
-            13. CRITICAL: Do not ue LocalDate.now(). For current date/time reference operations, use the 'now' field (LocalDate now) that is available in the class instead of calling LocalDate.now() or similar methods.
-                now or getNow() is not a field of the entity, but of the filter class itself.
-                Example: Use 'now' instead of 'LocalDate.now()' for getting the current date.
-                Example: Use 'now.minusDays(7)' for getting a week ago from the current date.
+            - Generate ONLY the method body code that goes INSIDE a boolean test(%s entity) method. Do not include method signature or class declaration. do not write 'public boolean test(%s entity){...}'.
+            - The method body should return true if the entity matches the search criteria, false otherwise.
+            - You can access fields directly using entity.getFieldName() getter methods.
+            - For date comparisons, use OffsetDateTime/LocalDateTime classes.
+            - Handle exceptions gracefully - return false if any operation fails.
+            - Use proper Java operators and control structures.
+            - For string searches, use direct getter access with .toLowerCase().contains().
+            - The entity parameter is already typed as %s, so you can access its getter methods directly.
+            - Never use reflection - only use public getter methods like entity.getName(), entity.getCreated(), etc.
+            - Return ONLY the method body code, no method signature, no class declaration.
+            - Explain your thought process within <think></think> tags to indicate your thinking process.
+            - Important: add ```java ``` tags to indicate the actual code you are returning.
+            - CRITICAL: Do not ue LocalDate.now(). For current date/time reference operations, use the 'now' field (LocalDate now) that is available in the class instead of calling LocalDate.now() or similar methods.
+              now or getNow() is not a field of the entity, but of the filter class itself.
+              Example: Use 'now' instead of 'LocalDate.now()' for getting the current date.
+              Example: Use 'now.minusDays(7)' for getting a week ago from the current date.
             
             %s
             
@@ -205,21 +205,6 @@ public class JavaAiFilterGenerator implements AiFilterGenerator {
         }
     }
 
-//    /**
-//     * Generates a Java filter and compiles it into a Predicate using current date.
-//     *
-//     * @param query      The natural language query from the user
-//     * @param entityType The type of entity being searched (e.g., "Product", "Version")
-//     * @param <T>        The entity type
-//     * @return A compiled Predicate that can be used to filter entities
-//     * @throws RuntimeException if compilation fails
-//     * @deprecated Use generatePredicate(String, String, LocalDate) instead for better testability
-//     */
-//    @Deprecated
-//    public <T> Predicate<T> generatePredicate(String query, String entityType) {
-//        return generatePredicate(query, entityType, LocalDate.now());
-//    }
-
     /**
      * Generates a predicate with iterative feedback mechanism.
      * If compilation fails, provides error details to the AI for correction.
@@ -274,13 +259,13 @@ public class JavaAiFilterGenerator implements AiFilterGenerator {
         return null;
     }
 
-    /**
-     * @deprecated Use generatePredicateWithFeedback(String, String, LocalDate, int) instead
-     */
-    @Deprecated
-    private <T> Predicate<T> generatePredicateWithFeedback(String query, String entityType, int maxRetries) {
-        return generatePredicateWithFeedback(query, entityType, LocalDate.now(), maxRetries);
-    }
+//    /**
+//     * @deprecated Use generatePredicateWithFeedback(String, String, LocalDate, int) instead
+//     */
+//    @Deprecated
+//    private <T> Predicate<T> generatePredicateWithFeedback(String query, String entityType, int maxRetries) {
+//        return generatePredicateWithFeedback(query, entityType, LocalDate.now(), maxRetries);
+//    }
 
     @Override
     public FilterType getFilterType() {
