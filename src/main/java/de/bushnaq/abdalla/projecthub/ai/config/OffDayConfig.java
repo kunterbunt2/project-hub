@@ -51,58 +51,58 @@ public class OffDayConfig {
                 """
                         Examples:
                         Input: "vacation"
-                        Output: if (!entity || !entity.getType()) return false; const OffDayType = Java.type('your.package.OffDayType'); return entity.getType() === OffDayType.VACATION;
+                        Output: const OffDayType = Java.type('your.package.OffDayType'); return entity.getType() === OffDayType.VACATION;
                         
                         Input: "sick days"
-                        Output: if (!entity || !entity.getType()) return false; const OffDayType = Java.type('your.package.OffDayType'); return entity.getType() === OffDayType.SICK;
+                        Output: const OffDayType = Java.type('your.package.OffDayType'); return entity.getType() === OffDayType.SICK;
                         
                         Input: "holidays"
-                        Output: if (!entity || !entity.getType()) return false; const OffDayType = Java.type('your.package.OffDayType'); return entity.getType() === OffDayType.HOLIDAY;
+                        Output: const OffDayType = Java.type('your.package.OffDayType'); return entity.getType() === OffDayType.HOLIDAY;
                         
                         Input: "trips"
-                        Output: if (!entity || !entity.getType()) return false; const OffDayType = Java.type('your.package.OffDayType'); return entity.getType() === OffDayType.TRIP;
+                        Output: const OffDayType = Java.type('your.package.OffDayType'); return entity.getType() === OffDayType.TRIP;
                         
                         Input: "off days in January 2025"
-                        Output: return entity && entity.getFirstDay() && entity.getFirstDay().getYear() === 2025 && entity.getFirstDay().getMonthValue() === 1;
+                        Output: return entity.getFirstDay().getYear() === 2025 && entity.getFirstDay().getMonthValue() === 1;
                         
                         Input: "off days starting after February 2025"
-                        Output: if (!entity || !entity.getFirstDay()) return false; const refDate = Java.type('java.time.LocalDate').of(2025, 2, 28); return entity.getFirstDay().isAfter(refDate);
+                        Output: const refDate = Java.type('java.time.LocalDate').of(2025, 2, 28); return entity.getFirstDay().isAfter(refDate);
                         
                         Input: "off days ending before March 2025"
-                        Output: if (!entity || !entity.getLastDay()) return false; const refDate = Java.type('java.time.LocalDate').of(2025, 3, 1); return entity.getLastDay().isBefore(refDate);
+                        Output: const refDate = Java.type('java.time.LocalDate').of(2025, 3, 1); return entity.getLastDay().isBefore(refDate);
                         
                         Input: "off days starting in 2025"
-                        Output: return entity && entity.getFirstDay() && entity.getFirstDay().getYear() === 2025;
+                        Output: return entity.getFirstDay().getYear() === 2025;
                         
                         Input: "off days ending in 2025"
-                        Output: return entity && entity.getLastDay() && entity.getLastDay().getYear() === 2025;
+                        Output: return entity.getLastDay().getYear() === 2025;
                         
                         Input: "long vacations"
-                        Output: if (!entity || !entity.getType() || !entity.getFirstDay() || !entity.getLastDay()) return false; const OffDayType = Java.type('your.package.OffDayType'); const ChronoUnit = Java.type('java.time.temporal.ChronoUnit'); return entity.getType() === OffDayType.VACATION && ChronoUnit.DAYS.between(entity.getFirstDay(), entity.getLastDay()) >= 7;
+                        Output: const OffDayType = Java.type('your.package.OffDayType'); const ChronoUnit = Java.type('java.time.temporal.ChronoUnit'); return entity.getType() === OffDayType.VACATION && ChronoUnit.DAYS.between(entity.getFirstDay(), entity.getLastDay()) >= 7;
                         
                         Input: "short trips"
-                        Output: if (!entity || !entity.getType() || !entity.getFirstDay() || !entity.getLastDay()) return false; const OffDayType = Java.type('your.package.OffDayType'); const ChronoUnit = Java.type('java.time.temporal.ChronoUnit'); return entity.getType() === OffDayType.TRIP && ChronoUnit.DAYS.between(entity.getFirstDay(), entity.getLastDay()) <= 3;
+                        Output: const OffDayType = Java.type('your.package.OffDayType'); const ChronoUnit = Java.type('java.time.temporal.ChronoUnit'); return entity.getType() === OffDayType.TRIP && ChronoUnit.DAYS.between(entity.getFirstDay(), entity.getLastDay()) <= 3;
                         
                         Input: "off days this year"
-                        Output: if (!entity || !entity.getFirstDay()) return false; const currentYear = Java.type('java.time.Year').now().getValue(); return entity.getFirstDay().getYear() === currentYear;
+                        Output: const currentYear = Java.type('java.time.Year').now().getValue(); return entity.getFirstDay().getYear() === currentYear;
                         
                         Input: "off days this month"
-                        Output: if (!entity || !entity.getFirstDay()) return false; const now = Java.type('java.time.LocalDate').now(); return entity.getFirstDay().getYear() === now.getYear() && entity.getFirstDay().getMonth() === now.getMonth();
+                        Output: const now = Java.type('java.time.LocalDate').now(); return entity.getFirstDay().getYear() === now.getYear() && entity.getFirstDay().getMonth() === now.getMonth();
                         
                         Input: "created in 2025"
-                        Output: return entity && entity.getCreated() && entity.getCreated().getYear() === 2025;
+                        Output: return entity.getCreated().getYear() === 2025;
                         
                         Input: "off days created in 2025"
-                        Output: return entity && entity.getCreated() && entity.getCreated().getYear() === 2025;
+                        Output: return entity.getCreated().getYear() === 2025;
                         
                         Input: "updated in 2025"
-                        Output: return entity && entity.getUpdated() && entity.getUpdated().getYear() === 2025;
+                        Output: return entity.getUpdated().getYear() === 2025;
                         
                         Input: "weekend off days"
-                        Output: if (!entity || !entity.getFirstDay()) return false; const DayOfWeek = Java.type('java.time.DayOfWeek'); return entity.getFirstDay().getDayOfWeek() === DayOfWeek.SATURDAY || entity.getFirstDay().getDayOfWeek() === DayOfWeek.SUNDAY;
+                        Output: const DayOfWeek = Java.type('java.time.DayOfWeek'); return entity.getFirstDay().getDayOfWeek() === DayOfWeek.SATURDAY || entity.getFirstDay().getDayOfWeek() === DayOfWeek.SUNDAY;
                         
                         Input: "multi-day off periods"
-                        Output: return entity && entity.getFirstDay() && entity.getLastDay() && !entity.getFirstDay().equals(entity.getLastDay());""",
+                        Output: return !entity.getFirstDay().equals(entity.getLastDay());""",
                 """
                         Examples:
                         Input: "vacation"
@@ -121,28 +121,28 @@ public class OffDayConfig {
                         Output: return entity.getFirstDay().getYear() == 2025 && entity.getFirstDay().getMonthValue() == 1;
                         
                         Input: "off days starting after February 2025"
-                        Output: if (!entity || !entity.getFirstDay()) return false; const refDate = Java.type('java.time.LocalDate').of(2025, 2, 28); return entity.getFirstDay().isAfter(refDate);
+                        Output: return entity.getFirstDay().isAfter(LocalDate.of(2025, 2, 28));
                         
                         Input: "off days ending before March 2025"
-                        Output: if (!entity || !entity.getLastDay()) return false; const refDate = Java.type('java.time.LocalDate').of(2025, 3, 1); return entity.getLastDay().isBefore(refDate);
+                        Output: return entity.getLastDay().isBefore(LocalDate.of(2025, 3, 1));
                         
                         Input: "off days starting in 2025"
-                        Output: return entity.getFirstDay() != null && entity.getFirstDay().getYear() == 2025;
+                        Output: return entity.getFirstDay().getYear() == 2025;
                         
                         Input: "off days ending in 2025"
-                        Output: return entity.getLastDay() != null && entity.getLastDay().getYear() == 2025;
+                        Output: return entity.getLastDay().getYear() == 2025;
                         
                         Input: "long vacations"
-                        Output: if (!entity || !entity.getType() || !entity.getFirstDay() || !entity.getLastDay()) return false; const OffDayType = Java.type('your.package.OffDayType'); const ChronoUnit = Java.type('java.time.temporal.ChronoUnit'); return entity.getType() === OffDayType.VACATION && ChronoUnit.DAYS.between(entity.getFirstDay(), entity.getLastDay()) >= 7;
+                        Output: return entity.getType() == OffDayType.VACATION && ChronoUnit.DAYS.between(entity.getFirstDay(), entity.getLastDay()) >= 7;
                         
                         Input: "short trips"
-                        Output: if (!entity || !entity.getType() || !entity.getFirstDay() || !entity.getLastDay()) return false; const OffDayType = Java.type('your.package.OffDayType'); const ChronoUnit = Java.type('java.time.temporal.ChronoUnit'); return entity.getType() === OffDayType.TRIP && ChronoUnit.DAYS.between(entity.getFirstDay(), entity.getLastDay()) <= 3;
+                        Output: return entity.getType() == OffDayType.TRIP && ChronoUnit.DAYS.between(entity.getFirstDay(), entity.getLastDay()) <= 3;
                         
                         Input: "off days this year"
-                        Output: if (!entity || !entity.getFirstDay()) return false; const currentYear = Java.type('java.time.Year').now().getValue(); return entity.getFirstDay().getYear() === currentYear;
+                        Output: return entity.getFirstDay().getYear() == java.time.Year.now().getValue();
                         
                         Input: "off days this month"
-                        Output: if (!entity || !entity.getFirstDay()) return false; const now = Java.type('java.time.LocalDate').now(); return entity.getFirstDay().getYear() === now.getYear() && entity.getFirstDay().getMonth() === now.getMonth();
+                        Output: return entity.getFirstDay().getYear() == LocalDate.now().getYear() && entity.getFirstDay().getMonth() == LocalDate.now().getMonth();
                         
                         Input: "created in 2025"
                         Output: return entity.getCreated().getYear() == 2025;
@@ -154,10 +154,10 @@ public class OffDayConfig {
                         Output: return entity.getUpdated().getYear() == 2025;
                         
                         Input: "weekend off days"
-                        Output: if (!entity || !entity.getFirstDay()) return false; const DayOfWeek = Java.type('java.time.DayOfWeek'); return entity.getFirstDay().getDayOfWeek() === DayOfWeek.SATURDAY || entity.getFirstDay().getDayOfWeek() === DayOfWeek.SUNDAY;
+                        Output: return entity.getFirstDay().getDayOfWeek() == DayOfWeek.SATURDAY || entity.getFirstDay().getDayOfWeek() == DayOfWeek.SUNDAY;
                         
                         Input: "multi-day off periods"
-                        Output: return entity.getFirstDay() != null && entity.getLastDay() != null && !entity.getFirstDay().equals(entity.getLastDay());"""
+                        Output: return !entity.getFirstDay().equals(entity.getLastDay());"""
         );
     }
 }

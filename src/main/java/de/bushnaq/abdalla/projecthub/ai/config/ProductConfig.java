@@ -45,52 +45,52 @@ public class ProductConfig {
                 """
                         Examples:
                         Input: "Orion"
-                        Output: return entity && entity.getName() && entity.getName().toLowerCase().includes('orion');
+                        Output: return entity.getName().toLowerCase().includes('orion');
                         
                         Input: "name contains project"
-                        Output: return entity && entity.getName() && entity.getName().toLowerCase().includes('project');
+                        Output: return entity.getName().toLowerCase().includes('project');
                         
                         Input: "created in 2024"
-                        Output: return entity && entity.getCreated() && entity.getCreated().getYear() === 2024;
+                        Output: return entity.getCreated().getYear() === 2024;
                         
                         Input: "products created in 2024"
-                        Output: return entity && entity.getCreated() && entity.getCreated().getYear() === 2024;
+                        Output: return entity.getCreated().getYear() === 2024;
                         
                         Input: "items created in 2024"
-                        Output: return entity && entity.getCreated() && entity.getCreated().getYear() === 2024;
+                        Output: return entity.getCreated().getYear() === 2024;
                         
                         Input: "products created after January 2024"
-                        Output: if (!entity || !entity.getCreated()) return false; const refDate = Java.type('java.time.OffsetDateTime').of(2024, 1, 31, 23, 59, 59, 0, entity.getCreated().getOffset()); return entity.getCreated().isAfter(refDate);
+                        Output: const refDate = Java.type('java.time.OffsetDateTime').of(2024, 1, 31, 23, 59, 59, 0, entity.getCreated().getOffset()); return entity.getCreated().isAfter(refDate);
                         
                         Input: "items created before December 2024"
-                        Output: if (!entity || !entity.getCreated()) return false; const refDate = Java.type('java.time.OffsetDateTime').of(2024, 12, 1, 0, 0, 0, 0, entity.getCreated().getOffset()); return entity.getCreated().isBefore(refDate);
+                        Output: const refDate = Java.type('java.time.OffsetDateTime').of(2024, 12, 1, 0, 0, 0, 0, entity.getCreated().getOffset()); return entity.getCreated().isBefore(refDate);
                         
                         Input: "products created this year"
-                        Output: if (!entity || !entity.getCreated()) return false; const currentYear = Java.type('java.time.Year').now().getValue(); return entity.getCreated().getYear() === currentYear;
+                        Output: const currentYear = Java.type('java.time.Year').now().getValue(); return entity.getCreated().getYear() === currentYear;
                         
                         Input: "updated in 2024"
-                        Output: return entity && entity.getUpdated() && entity.getUpdated().getYear() === 2024;
+                        Output: return entity.getUpdated().getYear() === 2024;
                         
                         Input: "products updated in 2024"
-                        Output: return entity && entity.getUpdated() && entity.getUpdated().getYear() === 2024;
+                        Output: return entity.getUpdated().getYear() === 2024;
                         
                         Input: "items updated in 2024"
-                        Output: return entity && entity.getUpdated() && entity.getUpdated().getYear() === 2024;
+                        Output: return entity.getUpdated().getYear() === 2024;
                         
                         Input: "products updated after January 2024"
-                        Output: if (!entity || !entity.getUpdated()) return false; const refDate = Java.type('java.time.OffsetDateTime').of(2024, 1, 31, 23, 59, 59, 0, entity.getUpdated().getOffset()); return entity.getUpdated().isAfter(refDate);
+                        Output: const refDate = Java.type('java.time.OffsetDateTime').of(2024, 1, 31, 23, 59, 59, 0, entity.getUpdated().getOffset()); return entity.getUpdated().isAfter(refDate);
                         
                         Input: "items updated before December 2024"
-                        Output: if (!entity || !entity.getUpdated()) return false; const refDate = Java.type('java.time.OffsetDateTime').of(2024, 12, 1, 0, 0, 0, 0, entity.getUpdated().getOffset()); return entity.getUpdated().isBefore(refDate);
+                        Output: const refDate = Java.type('java.time.OffsetDateTime').of(2024, 12, 1, 0, 0, 0, 0, entity.getUpdated().getOffset()); return entity.getUpdated().isBefore(refDate);
                         
                         Input: "products updated this year"
-                        Output: if (!entity || !entity.getUpdated()) return false; const currentYear = Java.type('java.time.Year').now().getValue(); return entity.getUpdated().getYear() === currentYear;
+                        Output: const currentYear = Java.type('java.time.Year').now().getValue(); return entity.getUpdated().getYear() === currentYear;
                         
                         Input: "MARS"
-                        Output: return entity && entity.getName() && entity.getName().toLowerCase().includes('mars');
+                        Output: return entity.getName().toLowerCase().includes('mars');
                         
                         Input: "space products created in 2024"
-                        Output: if (!entity || !entity.getName() || !entity.getCreated()) return false; const hasSpace = entity.getName().toLowerCase().includes('space'); const isCreated2024 = entity.getCreated().getYear() === 2024; return hasSpace && isCreated2024;""",
+                        Output: const hasSpace = entity.getName().toLowerCase().includes('space'); const isCreated2024 = entity.getCreated().getYear() === 2024; return hasSpace && isCreated2024;""",
                 """
                         Examples:
                         Input: "Orion"
