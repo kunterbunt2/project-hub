@@ -159,15 +159,19 @@ public class AiFilterService {
                 .allowCreateThread(false)                    // ❌ No thread creation
                 // Allow specific Java time classes for date operations
                 .allowHostClassLookup(className -> {
-                    return className.equals("java.time.OffsetDateTime") ||
-                            className.equals("java.time.LocalDateTime") ||
-                            className.equals("java.time.LocalDate") ||
-                            className.equals("java.time.Year") ||
-                            className.equals("java.time.Duration") ||
-                            className.equals("java.time.ZoneOffset") ||
+                    return
+//                            className.equals("java.time.OffsetDateTime") ||
+//                            className.equals("java.time.LocalDateTime") ||
+//                            className.equals("java.time.LocalDate") ||
+//                            className.equals("java.time.Year") ||
+//                            className.equals("java.time.Duration") ||
+//                            className.equals("java.time.ZoneOffset") ||
                             className.equals("java.lang.String") ||
-                            className.equals("java.lang.Integer") ||
-                            className.equals("java.lang.Boolean");
+                                    className.equals("java.lang.Integer") ||
+                                    className.equals("java.lang.Boolean") ||
+                                    className.startsWith("java.time.") ||
+                                    className.equals("de.bushnaq.abdalla.projecthub.dto.Status") ||
+                                    className.equals("de.bushnaq.abdalla.projecthub.dto.OffDayType");
                 })
                 .allowEnvironmentAccess(org.graalvm.polyglot.EnvironmentAccess.NONE) // ❌ No env variables
                 .allowPolyglotAccess(org.graalvm.polyglot.PolyglotAccess.NONE)       // ❌ No other languages
