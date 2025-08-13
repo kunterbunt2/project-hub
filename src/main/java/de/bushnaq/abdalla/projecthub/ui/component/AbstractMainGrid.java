@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Span;
@@ -33,11 +34,12 @@ import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-import de.bushnaq.abdalla.projecthub.ai.AiFilter;
+import de.bushnaq.abdalla.projecthub.ai.AiFilterService;
 import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
 
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.function.Function;
 
 public abstract class AbstractMainGrid<T> extends Main {
     protected       ListDataProvider<T> dataProvider;
@@ -58,7 +60,7 @@ public abstract class AbstractMainGrid<T> extends Main {
         dataProvider = new ListDataProvider<T>(new ArrayList<>());
         grid.setDataProvider(dataProvider);
         grid.setSizeFull();
-        grid.addThemeVariants(com.vaadin.flow.component.grid.GridVariant.LUMO_NO_BORDER, com.vaadin.flow.component.grid.GridVariant.LUMO_NO_ROW_BORDERS);
+        grid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_NO_ROW_BORDERS);
         initGrid(clock);
     }
 
@@ -203,7 +205,7 @@ public abstract class AbstractMainGrid<T> extends Main {
             Grid<T> grid,
             String rowCounterId,
             String globalFilterId,
-            java.util.function.Function<T, String> globalFilterFunction) {
+            Function<T, String> globalFilterFunction) {
 
         HorizontalLayout headerLayout = new HorizontalLayout();
         headerLayout.setWidthFull();
@@ -301,7 +303,7 @@ public abstract class AbstractMainGrid<T> extends Main {
             Grid<T> grid,
             String rowCounterId,
             String globalFilterId,
-            java.util.function.Function<T, String> globalFilterFunction) {
+            Function<T, String> globalFilterFunction) {
         return createHeader(title, titleId, new Icon(titleIcon), createButtonId, createButtonClickHandler, grid, rowCounterId, globalFilterId, globalFilterFunction);
     }
 
@@ -316,7 +318,7 @@ public abstract class AbstractMainGrid<T> extends Main {
             VaadinUtil.CreateButtonClickHandler createButtonClickHandler,
             String rowCounterId,
             String globalFilterId,
-            java.util.function.Function<T, String> globalFilterFunction) {
+            Function<T, String> globalFilterFunction) {
         return createHeader(title, titleId, new Icon(titleIcon), createButtonId, createButtonClickHandler, grid, rowCounterId, globalFilterId, globalFilterFunction);
     }
 
@@ -332,7 +334,7 @@ public abstract class AbstractMainGrid<T> extends Main {
      * @param grid                     Optional grid to count rows from (can be null)
      * @param rowCounterId             Optional ID for row counter (can be null if grid is null)
      * @param globalFilterId           ID for the global filter field
-     * @param nlSearchService          Natural language search service
+     * @param aiFilterService          Natural language search service
      * @param mapper                   ObjectMapper for JSON serialization
      * @param entityType               The type of entity being searched (e.g., "Product", "Version")
      * @return A configured HorizontalLayout containing the header elements
@@ -346,7 +348,7 @@ public abstract class AbstractMainGrid<T> extends Main {
             Grid<T> grid,
             String rowCounterId,
             String globalFilterId,
-            AiFilter nlSearchService,
+            AiFilterService aiFilterService,
             ObjectMapper mapper,
             String entityType) {
 
@@ -381,7 +383,7 @@ public abstract class AbstractMainGrid<T> extends Main {
                     new GlobalAiFilter<>(
                             globalFilterId,
                             grid,
-                            nlSearchService,
+                            aiFilterService,
                             mapper,
                             entityType
                     );
@@ -432,10 +434,10 @@ public abstract class AbstractMainGrid<T> extends Main {
             Grid<T> grid,
             String rowCounterId,
             String globalFilterId,
-            AiFilter nlSearchService,
+            AiFilterService aiFilterService,
             ObjectMapper mapper,
             String entityType) {
-        return createSmartHeader(title, titleId, new Icon(titleIcon), createButtonId, createButtonClickHandler, grid, rowCounterId, globalFilterId, nlSearchService, mapper, entityType);
+        return createSmartHeader(title, titleId, new Icon(titleIcon), createButtonId, createButtonClickHandler, grid, rowCounterId, globalFilterId, aiFilterService, mapper, entityType);
     }
 
     /**
@@ -449,10 +451,10 @@ public abstract class AbstractMainGrid<T> extends Main {
             VaadinUtil.CreateButtonClickHandler createButtonClickHandler,
             String rowCounterId,
             String globalFilterId,
-            AiFilter nlSearchService,
+            AiFilterService aiFilterService,
             ObjectMapper mapper,
             String entityType) {
-        return createSmartHeader(title, titleId, new Icon(titleIcon), createButtonId, createButtonClickHandler, grid, rowCounterId, globalFilterId, nlSearchService, mapper, entityType);
+        return createSmartHeader(title, titleId, new Icon(titleIcon), createButtonId, createButtonClickHandler, grid, rowCounterId, globalFilterId, aiFilterService, mapper, entityType);
     }
 
     protected abstract void initGrid(Clock clock);

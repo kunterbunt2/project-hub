@@ -19,6 +19,7 @@ package de.bushnaq.abdalla.projecthub.ai;
 
 import de.bushnaq.abdalla.profiler.Profiler;
 import de.bushnaq.abdalla.profiler.SampleType;
+import de.bushnaq.abdalla.projecthub.ai.config.AiFilterConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;

@@ -26,7 +26,7 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
-import de.bushnaq.abdalla.projecthub.ai.AiFilter;
+import de.bushnaq.abdalla.projecthub.ai.AiFilterService;
 import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.dto.Location;
 import de.bushnaq.abdalla.projecthub.rest.api.OffDayApi;
@@ -70,7 +70,7 @@ public class OffDayListView extends AbstractMainGrid<OffDay> implements BeforeEn
     private             YearCalendarComponent yearCalendar;
 
 
-    public OffDayListView(OffDayApi offDayApi, UserApi userApi, Clock clock, AiFilter aiFilter, ObjectMapper mapper) {
+    public OffDayListView(OffDayApi offDayApi, UserApi userApi, Clock clock, AiFilterService aiFilterService, ObjectMapper mapper) {
         super(clock);
         this.offDayApi = offDayApi;
         this.userApi   = userApi;
@@ -84,7 +84,7 @@ public class OffDayListView extends AbstractMainGrid<OffDay> implements BeforeEn
                         () -> openOffDayDialog(null),
                         OFFDAY_ROW_COUNTER,
                         OFFDAY_GLOBAL_FILTER,
-                        aiFilter, mapper, "OffDay"
+                        aiFilterService, mapper, "OffDay"
                 ),
                 new HorizontalLayout(grid, createCalendar())
         );

@@ -25,7 +25,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
-import de.bushnaq.abdalla.projecthub.ai.AiFilter;
+import de.bushnaq.abdalla.projecthub.ai.AiFilterService;
 import de.bushnaq.abdalla.projecthub.dto.Feature;
 import de.bushnaq.abdalla.projecthub.dto.Product;
 import de.bushnaq.abdalla.projecthub.dto.Version;
@@ -67,7 +67,7 @@ public class FeatureListView extends AbstractMainGrid<Feature> implements AfterN
     private final       VersionApi versionApi;
     private             Long       versionId;
 
-    public FeatureListView(FeatureApi featureApi, ProductApi productApi, VersionApi versionApi, Clock clock, AiFilter aiFilter, ObjectMapper mapper) {
+    public FeatureListView(FeatureApi featureApi, ProductApi productApi, VersionApi versionApi, Clock clock, AiFilterService aiFilterService, ObjectMapper mapper) {
         super(clock);
         this.featureApi = featureApi;
         this.productApi = productApi;
@@ -82,7 +82,7 @@ public class FeatureListView extends AbstractMainGrid<Feature> implements AfterN
                         () -> openFeatureDialog(null),
                         FEATURE_ROW_COUNTER,
                         FEATURE_GLOBAL_FILTER,
-                        aiFilter, mapper, "Feature"
+                        aiFilterService, mapper, "Feature"
                 ),
                 grid
         );

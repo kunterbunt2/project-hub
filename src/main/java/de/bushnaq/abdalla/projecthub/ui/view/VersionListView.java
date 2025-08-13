@@ -25,7 +25,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
-import de.bushnaq.abdalla.projecthub.ai.AiFilter;
+import de.bushnaq.abdalla.projecthub.ai.AiFilterService;
 import de.bushnaq.abdalla.projecthub.dto.Product;
 import de.bushnaq.abdalla.projecthub.dto.Version;
 import de.bushnaq.abdalla.projecthub.rest.api.ProductApi;
@@ -63,7 +63,7 @@ public class VersionListView extends AbstractMainGrid<Version> implements AfterN
     private             Long       productId;
     private final       VersionApi versionApi;
 
-    public VersionListView(VersionApi versionApi, ProductApi productApi, Clock clock, AiFilter aiFilter, ObjectMapper mapper) {
+    public VersionListView(VersionApi versionApi, ProductApi productApi, Clock clock, AiFilterService aiFilterService, ObjectMapper mapper) {
         super(clock);
         this.versionApi = versionApi;
         this.productApi = productApi;
@@ -77,7 +77,7 @@ public class VersionListView extends AbstractMainGrid<Version> implements AfterN
                         () -> openVersionDialog(null),
                         VERSION_ROW_COUNTER,
                         VERSION_GLOBAL_FILTER,
-                        aiFilter, mapper, "Version"
+                        aiFilterService, mapper, "Version"
                 ),
                 grid
         );

@@ -25,7 +25,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
-import de.bushnaq.abdalla.projecthub.ai.AiFilter;
+import de.bushnaq.abdalla.projecthub.ai.AiFilterService;
 import de.bushnaq.abdalla.projecthub.dto.Product;
 import de.bushnaq.abdalla.projecthub.rest.api.ProductApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
@@ -61,7 +61,7 @@ public class ProductListView extends AbstractMainGrid<Product> implements AfterN
     public static final String     ROUTE                             = "product-list";
     private final       ProductApi productApi;
 
-    public ProductListView(ProductApi productApi, Clock clock, AiFilter aiFilter, ObjectMapper mapper) {
+    public ProductListView(ProductApi productApi, Clock clock, AiFilterService aiFilterService, ObjectMapper mapper) {
         super(clock);
         this.productApi = productApi;
 
@@ -74,7 +74,7 @@ public class ProductListView extends AbstractMainGrid<Product> implements AfterN
                         () -> openProductDialog(null),
                         PRODUCT_ROW_COUNTER,
                         PRODUCT_GLOBAL_FILTER,
-                        aiFilter, mapper, "Product"
+                        aiFilterService, mapper, "Product"
                 ),
                 grid
         );

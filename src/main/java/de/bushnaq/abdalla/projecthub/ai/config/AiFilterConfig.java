@@ -15,9 +15,7 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.ai;
-
-import de.bushnaq.abdalla.projecthub.ai.config.*;
+package de.bushnaq.abdalla.projecthub.ai.config;
 
 import java.util.HashMap;
 import java.util.Map;

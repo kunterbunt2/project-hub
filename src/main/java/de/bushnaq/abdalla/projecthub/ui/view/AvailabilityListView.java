@@ -26,7 +26,7 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.NumberRenderer;
 import com.vaadin.flow.router.*;
-import de.bushnaq.abdalla.projecthub.ai.AiFilter;
+import de.bushnaq.abdalla.projecthub.ai.AiFilterService;
 import de.bushnaq.abdalla.projecthub.dto.Availability;
 import de.bushnaq.abdalla.projecthub.dto.Location;
 import de.bushnaq.abdalla.projecthub.dto.User;
@@ -69,7 +69,7 @@ public class AvailabilityListView extends AbstractMainGrid<Availability> impleme
     private             User            currentUser;
     private final       UserApi         userApi;
 
-    public AvailabilityListView(AvailabilityApi availabilityApi, UserApi userApi, Clock clock, AiFilter aiFilter, ObjectMapper mapper) {
+    public AvailabilityListView(AvailabilityApi availabilityApi, UserApi userApi, Clock clock, AiFilterService aiFilterService, ObjectMapper mapper) {
         super(clock);
         this.availabilityApi = availabilityApi;
         this.userApi         = userApi;
@@ -83,7 +83,7 @@ public class AvailabilityListView extends AbstractMainGrid<Availability> impleme
                         () -> openAvailabilityDialog(null),
                         AVAILABILITY_ROW_COUNTER,
                         AVAILABILITY_GLOBAL_FILTER,
-                        aiFilter, mapper, "Availability"
+                        aiFilterService, mapper, "Availability"
                 ),
                 grid
         );

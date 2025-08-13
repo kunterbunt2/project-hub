@@ -25,7 +25,7 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
-import de.bushnaq.abdalla.projecthub.ai.AiFilter;
+import de.bushnaq.abdalla.projecthub.ai.AiFilterService;
 import de.bushnaq.abdalla.projecthub.dto.Availability;
 import de.bushnaq.abdalla.projecthub.dto.Location;
 import de.bushnaq.abdalla.projecthub.dto.User;
@@ -70,7 +70,7 @@ public class LocationListView extends AbstractMainGrid<Location> implements Befo
     private final       LocationApi locationApi;
     private final       UserApi     userApi;
 
-    public LocationListView(LocationApi locationApi, UserApi userApi, Clock clock, AiFilter aiFilter, ObjectMapper mapper) {
+    public LocationListView(LocationApi locationApi, UserApi userApi, Clock clock, AiFilterService aiFilterService, ObjectMapper mapper) {
         super(clock);
         this.locationApi = locationApi;
         this.userApi     = userApi;
@@ -84,7 +84,7 @@ public class LocationListView extends AbstractMainGrid<Location> implements Befo
                         () -> openLocationDialog(null),
                         LOCATION_ROW_COUNTER,
                         LOCATION_GLOBAL_FILTER,
-                        aiFilter, mapper, "Location"
+                        aiFilterService, mapper, "Location"
                 ),
                 grid
         );

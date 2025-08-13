@@ -30,7 +30,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
-import de.bushnaq.abdalla.projecthub.ai.AiFilter;
+import de.bushnaq.abdalla.projecthub.ai.AiFilterService;
 import de.bushnaq.abdalla.projecthub.dto.Feature;
 import de.bushnaq.abdalla.projecthub.dto.Product;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
@@ -78,7 +78,7 @@ public class SprintListView extends AbstractMainGrid<Sprint> implements AfterNav
     private final       VersionApi versionApi;
     private             Long       versionId;
 
-    public SprintListView(SprintApi sprintApi, ProductApi productApi, VersionApi versionApi, FeatureApi featureApi, Clock clock, AiFilter aiFilter, ObjectMapper mapper) {
+    public SprintListView(SprintApi sprintApi, ProductApi productApi, VersionApi versionApi, FeatureApi featureApi, Clock clock, AiFilterService aiFilterService, ObjectMapper mapper) {
         super(clock);
         this.sprintApi  = sprintApi;
         this.productApi = productApi;
@@ -95,7 +95,7 @@ public class SprintListView extends AbstractMainGrid<Sprint> implements AfterNav
                         () -> openSprintDialog(null),
                         SPRINT_ROW_COUNTER,
                         SPRINT_GLOBAL_FILTER,
-                        aiFilter, mapper, "Sprint"
+                        aiFilterService, mapper, "Sprint"
                 ),
                 grid
         );

@@ -17,7 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.ai.config;
 
-import de.bushnaq.abdalla.projecthub.ai.AiFilterConfig.PromptConfig;
+import de.bushnaq.abdalla.projecthub.ai.config.AiFilterConfig.PromptConfig;
 
 /**
  * Configuration for Sprint entity AI filtering

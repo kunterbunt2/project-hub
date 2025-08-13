@@ -34,10 +34,12 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.value.ValueChangeMode;
-import de.bushnaq.abdalla.projecthub.ai.AiFilter;
+import de.bushnaq.abdalla.projecthub.ai.AiFilterGenerator;
+import de.bushnaq.abdalla.projecthub.ai.AiFilterService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDate;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -47,23 +49,23 @@ import java.util.regex.PatternSyntaxException;
  */
 public class GlobalAiFilter<T> extends HorizontalLayout {
 
-    private static final Logger       logger = LoggerFactory.getLogger(GlobalAiFilter.class);
-    private final        AiFilter     aiFilter;
-    private final        String       entityType;
-    private final        ObjectMapper filterMapper;
-    private final        Grid<T>      grid;
-    private final        TextField    searchField;
-    private final        Span         statusSpan;
+    private static final Logger          logger = LoggerFactory.getLogger(GlobalAiFilter.class);
+    private final        AiFilterService aiFilterService;
+    private final        String          entityType;
+    private final        ObjectMapper    filterMapper;
+    private final        Grid<T>         grid;
+    private final        TextField       searchField;
+    private final        Span            statusSpan;
 
     public GlobalAiFilter(String fieldId,
                           Grid<T> grid,
-                          AiFilter aiFilter,
+                          AiFilterService aiFilterService,
                           ObjectMapper mapper,
                           String entityType) {
 
-        this.grid       = grid;
-        this.aiFilter   = aiFilter;
-        this.entityType = entityType;
+        this.grid            = grid;
+        this.aiFilterService = aiFilterService;
+        this.entityType      = entityType;
 
         // Create a separate ObjectMapper for filtering that includes @JsonIgnore fields
         this.filterMapper = mapper.copy();
@@ -196,16 +198,55 @@ public class GlobalAiFilter<T> extends HorizontalLayout {
         }
         int    tryCount    = 10;
         String regexString = "";
-        do {
-            // Parse the query using natural language service with entity type
-            try {
-                regexString = aiFilter.parseQuery(searchValue, entityType);
-                Pattern regexPattern = Pattern.compile(regexString);
-                applySearchQuery(regexPattern);
-            } catch (PatternSyntaxException e) {
-                logger.error("Invalid regex pattern '{}', falling back to simple text search: {}", regexString, e.getMessage());
+//        do {
+        // Parse the query using natural language service with entity type
+        try {
+//                regexString = aiFilterService.parseQuery(searchValue, entityType, AiFilterGenerator.FilterType.JAVASCRIPT);
+//                Pattern regexPattern = Pattern.compile(regexString);
+//                applySearchQuery(regexPattern);
+            AiFilterGenerator.FilterType filterType = AiFilterGenerator.FilterType.JAVASCRIPT;
+            switch (filterType) {
+                case JAVASCRIPT: {
+                    // Parse the query using JavaScript generation
+                    String              javascriptFunction = aiFilterService.parseQuery(searchValue, entityType, filterType);
+                    ListDataProvider<T> dataProvider       = (ListDataProvider<T>) grid.getDataProvider();
+                    dataProvider.setFilter(item -> {
+//                                    String json = filterMapper.writerWithDefaultPrettyPrinter().writeValueAsString(item);
+                                // Apply the LLM-generated regex pattern
+                                return aiFilterService.applyJavaScriptSearchQuery(javascriptFunction, item, LocalDate.now());
+                            }
+                    );
+
+//                        List<T> filtered = aiFilterService.applyJavaScriptSearchQuery(javascriptFunction, testProducts, now);
+//                        System.out.println("\n=== Products matched by JavaScript filter ===");
+//                        System.out.println("JavaScript function: " + javascriptFunction);
+//                        for (T product : filtered) {
+//                            String json = filterMapper.writeValueAsString(product);
+//                            System.out.println(json);
+//                        }
+//                        return filtered;
+                }
+                case JAVA: {
+                    // Parse the query using Java generation and get compiled predicate
+                    var javaPredicate = aiFilterService.parseQueryToPredicate(searchValue, entityType, LocalDate.now());
+//                        List<T>             filtered      = testProducts.stream().filter(javaPredicate).collect(Collectors.toList());
+                    ListDataProvider<T> dataProvider = (ListDataProvider<T>) grid.getDataProvider();
+//                        dataProvider.setFilter(javaPredicate);
+                    dataProvider.setFilter(javaPredicate::test
+                    );
+
+//                        System.out.println("\n=== Products matched by Java filter ===");
+//                        for (T product : filtered) {
+//                            String json = filterMapper.writeValueAsString(product);
+//                            System.out.println(json);
+//                        }
+//                        return filtered;
+                }
             }
-        } while (--tryCount > 0);
+        } catch (PatternSyntaxException e) {
+            logger.error("Invalid regex pattern '{}', falling back to simple text search: {}", regexString, e.getMessage());
+        }
+//        } while (--tryCount > 0);
 
         // Show feedback to user about what was understood
         showSearchFeedback(regexString, searchValue);

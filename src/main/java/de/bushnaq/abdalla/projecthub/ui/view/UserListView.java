@@ -24,7 +24,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
-import de.bushnaq.abdalla.projecthub.ai.AiFilter;
+import de.bushnaq.abdalla.projecthub.ai.AiFilterService;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.rest.api.UserApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
@@ -55,7 +55,7 @@ public class UserListView extends AbstractMainGrid<User> implements AfterNavigat
     private final       Clock   clock;
     private final       UserApi userApi;
 
-    public UserListView(UserApi userApi, Clock clock, AiFilter aiFilter, ObjectMapper mapper) {
+    public UserListView(UserApi userApi, Clock clock, AiFilterService aiFilterService, ObjectMapper mapper) {
         super(clock);
         this.userApi = userApi;
         this.clock   = clock;
@@ -69,7 +69,7 @@ public class UserListView extends AbstractMainGrid<User> implements AfterNavigat
                         () -> openUserDialog(null),
                         USER_ROW_COUNTER,
                         USER_GLOBAL_FILTER,
-                        aiFilter, mapper, "User"
+                        aiFilterService, mapper, "User"
                 ),
                 grid
         );
