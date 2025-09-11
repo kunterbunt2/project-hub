@@ -27,34 +27,18 @@ tbd
 
 ![Christopher Paul.de.nw](https://raw.githubusercontent.com/wiki/kunterbunt2/project-hub/calendar/Christopher%20Paul.de.nw.svg)
 
-# Status
-
-## Locations
-
-1. we can **create**, **update**, **add**, **delete** `locations`.
-
-## User
-
-1. we can **create** `users`.
-
-# Next Steps
-
-1. handle users leaving.
-2. add user availability & vacations.
-3. introduce sprint, story and task1 as a preliminary structure to allow unit tests.
-4. add unit tests that generate project progress data.
-
 # Design Philosophy
 
-1. As simple as possible, as complex as necessary.
-2. backup the development with unit tests.
-3. create data generators that can be used in unit tests.
-4. written in Java + spring boot + Vaadin.
-5. minimalistic project status tracking within one single server.
-6. simple local database, but keep option to switch to other databases.
+- As simple as possible, as complex as necessary.
+- backup the development with unit tests.
+- create data generators that can be used in unit tests.
+- written in Java + spring boot + Vaadin.
+- minimalistic project status tracking within one single server.
+- simple local database, but keep option to switch to other databases.
 
 # Ideas
 
+- introduce ai summary for all projects.
 - Take a look how jira is sending fields to the client and replicate if it is good.
 - Projects can be locked for change, which will lock start/end dates and all milestones
 - project priority can be changed by moving them within the list
@@ -62,12 +46,14 @@ tbd
 
 # Issues
 
-1. users are retired by their name instead of their email address.
-2. user email addresses must be unique.
-1. LocationDialog not showing errors in dialog.
-2. AvailabilityTest.userSecurity() generates several exceptions on server side that the test does not catch.
-3. gantt calendar too light.
-4. gantt calendar should be using sprint calendar.
+- some tests fail with java.awt.HeadlessException.
+- some ai filter test fail all the time, as the tests are vague.
+- users are retired by their name instead of their email address.
+- user email addresses must be unique.
+- LocationDialog not showing errors in dialog.
+- AvailabilityTest.userSecurity() generates several exceptions on server side that the test does not catch.
+- gantt calendar too light.
+- gantt calendar should be using sprint calendar.
 
 # License
 

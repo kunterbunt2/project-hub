@@ -22,7 +22,6 @@ import de.bushnaq.abdalla.projecthub.dto.Relation;
 import de.bushnaq.abdalla.projecthub.dto.Task;
 import de.bushnaq.abdalla.projecthub.dto.TaskMode;
 import de.bushnaq.abdalla.projecthub.dto.User;
-import de.bushnaq.abdalla.projecthub.report.AbstractCanvas;
 import de.bushnaq.abdalla.projecthub.report.AbstractRenderer;
 import de.bushnaq.abdalla.projecthub.report.dao.*;
 import de.bushnaq.abdalla.svg.util.ExtendedRectangle;
@@ -386,8 +385,8 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
     private void drawStoryBody(Task task, int x1, int x2, int y, Color fillColor, String marker, String toolTip) {
         Color originalColor = fillColor;
         if (marker == null) {
-            drawTick(task.getStart(), x1, y, TextAlignment.left);
-            drawTick(task.getFinish(), x2, y, TextAlignment.right);
+//            drawTick(task.getStart(), x1, y, TextAlignment.left);
+//            drawTick(task.getFinish(), x2, y, TextAlignment.right);
             int y1        = y + TASK_BODY_BORDER;
             int thickness = 2;
             graphics2D.fillRect(x1, y1 - getTaskHeight() / 2, x2 - x1 + 1, thickness);//upper ---
@@ -500,7 +499,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         } else {
             if (!task.getChildTasks().isEmpty()) {
                 // story
-                String tooltip = generateToolTip(task, x1, x2, y, marker, resourceName, resourceUtilization);
+                String tooltip = generateTaskToolTip(task, x1, x2, y, marker, resourceName, resourceUtilization);
                 drawStoryBody(task, x1, x2, y, fillColor, marker, tooltip);
                 graphics2D.setFont(storyFont);
                 graphics2D.setColor(textColor);
@@ -513,11 +512,13 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                 }
             } else {
                 //task
-                String tooltip = generateToolTip(task, x1, x2, y, marker, resourceName, resourceUtilization);
-                if (task.getProgress() == null) {
-                    drawTaskBody(task, x1, x2, y, fillColor, alien, 0.0f, tooltip);
-                } else {
-                    drawTaskBody(task, x1, x2, y, fillColor, alien, task.getProgress().doubleValue(), tooltip);
+                {
+                    String tooltip = generateTaskToolTip(task, x1, x2, y, marker, resourceName, resourceUtilization);
+                    if (task.getProgress() == null) {
+                        drawTaskBody(task, x1, x2, y, fillColor, alien, 0.0f, tooltip);
+                    } else {
+                        drawTaskBody(task, x1, x2, y, fillColor, alien, task.getProgress().doubleValue(), tooltip);
+                    }
                 }
                 drawConflictMarker(y, conflict);
                 drawCriticalMarker(task, x1, x2, y);
@@ -576,22 +577,23 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                         //resource name+info
                         graphics2D.setColor(textColor);
                         graphics2D.setFont(graphFont);
-                        FontMetrics fm1               = graphics2D.getFontMetrics();
-                        int         yShift            = fm1.getAscent() - 1;
-                        int         resourceNameWidth = fm1.stringWidth(resourceName);
+                        FontMetrics fm                = graphics2D.getFontMetrics();
+                        int         yShift            = fm.getAscent() - fm.getHeight() / 2;
+                        int         resourceNameWidth = fm.stringWidth(resourceName);
                         int         resourceNameX     = x1 - resourceNameWidth - RESOURCE_NAME_TO_TASK_GAP;
-                        graphics2D.drawString(resourceName, resourceNameX, y - getTaskHeight() / 2 + yShift);
                         {
-                            graphics2D.setColor(textInfoColor);
-                            graphics2D.setFont(taskResourceLocationFont);
-                            FontMetrics fm2   = graphics2D.getFontMetrics();
-                            int         infoY = y + getTaskHeight() / 2 - TASK_BODY_BORDER;
-                            graphics2D.drawString(resourceUtilization, resourceNameX, infoY);
+//                            graphics2D.setColor(textInfoColor);
+//                            graphics2D.setFont(taskResourceLocationFont);
+//                            FontMetrics fm2   = graphics2D.getFontMetrics();
+//                            int         infoY = y + getTaskHeight() / 2 - TASK_BODY_BORDER;
+//                            graphics2D.drawString(resourceUtilization, resourceNameX, infoY);
 
-                            String location      = task.getAssignedUser().getLocations().getLast().getCountry() + "/" + task.getAssignedUser().getLocations().getLast().getState();
-                            int    locationWidth = fm2.stringWidth(location);
-                            int    locationX     = x1 - locationWidth - RESOURCE_NAME_TO_TASK_GAP;
-                            graphics2D.drawString(location, locationX, infoY);
+//                            String location      = task.getAssignedUser().getLocations().getLast().getCountry() + "/" + task.getAssignedUser().getLocations().getLast().getState();
+//                            int    locationWidth = fm2.stringWidth(location);
+//                            int    locationX     = x1 - locationWidth - RESOURCE_NAME_TO_TASK_GAP;
+//                            graphics2D.drawString(location, locationX, infoY);
+                            String tooltip = generateTaskNameToolTop(resourceName, resourceUtilization, task.getAssignedUser().getLocations().getLast().getCountry(), task.getAssignedUser().getLocations().getLast().getState());
+                            graphics2D.drawString(resourceName, resourceNameX, y + yShift, tooltip);
                         }
                     }
                 }
@@ -606,8 +608,8 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
             int h  = getTaskHeight() - TASK_BODY_BORDER * 2;
             if (x2 - x1 - 1 - 1 > 0) {
                 //sometimes tasks are so small, that we cannot draw them.
-                drawTick(task.getStart(), x1, y, TextAlignment.left);
-                drawTick(task.getFinish(), x2, y, TextAlignment.right);
+//                drawTick(task.getStart(), x1, y, TextAlignment.left);
+//                drawTick(task.getFinish(), x2, y, TextAlignment.right);
                 ProjectCalendar pc;
                 User            user = task.getAssignedUser();
                 if (user != null && user.getCalendar() != null) {
@@ -638,7 +640,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                             s = new RectangleWithToolTip(xStart, y1, calendarXAxes.dayOfWeek.getWidth(), h, toolTip);
                         }
                     } else {
-                        graphics2D.setColor(new Color(fillColor.getRed(), fillColor.getGreen(), fillColor.getBlue(), 64));//very trabsparent
+                        graphics2D.setColor(new Color(fillColor.getRed(), fillColor.getGreen(), fillColor.getBlue(), 64));//very transparent
                         int xStart = calculateX(currentDay.withHour(8), currentDay.withHour(8), SECONDS_PER_DAY) - calendarXAxes.dayOfWeek.getWidth() / 2;
                         s = new RectangleWithToolTip(xStart, y1, calendarXAxes.dayOfWeek.getWidth(), h, toolTip);
                     }
@@ -647,7 +649,14 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
 
                 //progress
                 if (progress > 0.0 && numberOfLinesPerTask == 1) {
-                    graphics2D.fillRect(x1 + 1, y1 + 4, (int) ((x2 - x1) * progress - 1), h - 8);
+//                    graphics2D.fillRect(x1 + 1, y1 + 4, (int) ((x2 - x1) * progress - 1), h - 8);
+                    //- progress color must be a little bit darker than the task body.
+                    Color color = org.apache.xmlgraphics.java2d.color.ColorUtil.lightenColor(task.getAssignedUser().getColor(), 0.6f);
+                    graphics2D.setColor(color);
+                    Shape s = new RectangleWithToolTip(x1 + 1, y1 + 1, (int) ((x2 - x1) * progress - 1), h - 2, toolTip);
+//                    graphics2D.fill(s);
+//                    graphics2D.fill(s);
+                    graphics2D.fill(s);
                     if (progress < 1.0) {
                         graphics2D.setColor(Color.black);
                         graphics2D.fillRect(x1 + (int) ((x2 - x1) * progress - 1), y - getTaskHeight() / 2 + 2, 1, getTaskHeight() - 4);
@@ -704,7 +713,17 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
         return new Color(color.getRed(), color.getGreen(), color.getBlue(), 128);
     }
 
-    private String generateToolTip(Task task, int x1, int x2, int y, String marker, String resourceName, String resourceUtelization) throws Exception {
+    private String generateTaskNameToolTop(String resourceName, String resourceUtilization, String country, String state) {
+        String toolTip = "";
+
+        toolTip += String.format("%s<br>", resourceName);
+        toolTip += String.format("Availability <b>%s</b><br>", resourceUtilization);
+        toolTip += String.format("Country <b>%s</b><br>", country);
+        toolTip += String.format("State <b>%s</b><br>", state);
+        return toolTip;
+    }
+
+    private String generateTaskToolTip(Task task, int x1, int x2, int y, String marker, String resourceName, String resourceUtelization) throws Exception {
         String start    = DateUtil.createDateString(task.getStart(), dateUtil.dtfymdhms);
         String finish   = DateUtil.createDateString(task.getFinish(), dateUtil.dtfymdhms);
         String progress = null;
@@ -722,18 +741,20 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
             String primaryResourceName = resourceName;
             toolTip += String.format("<b>%s</b><br>", task.getName(), primaryResourceName + resourceUtelization, start, finish, task.getNotes());
         }
-        if (task.getChildTasks().size() == 0 || resourceName != null) {
+        if (task.getChildTasks().isEmpty() || resourceName != null) {
             String primaryResourceName = resourceName;
             toolTip += String.format("<b>Resource</b> %s<br>", primaryResourceName + resourceUtelization);
         }
         toolTip += String.format("<b>Duration</b> %s<br>", duration);
         toolTip += String.format("<b>Start</b> %s<br>", start);
         toolTip += String.format("<b>Finish</b> %s<br>", finish);
-        if (task.getChildTasks().size() == 0 && progress != null) {
+        if (task.getChildTasks().isEmpty() && progress != null) {
             toolTip += String.format("<b>Progress</b> %s<br>", progress);
         }
-        toolTip += String.format("<b>Notes</b> %s", task.getNotes());
-        toolTip += String.format("\" shape=\"rect\" coords=\"%d,%d,%d,%d\"", AbstractCanvas.transformToMapX(x1 + 1), AbstractCanvas.transformToMapY(y - getTaskHeight() / 2), AbstractCanvas.transformToMapX(x2 - 1), AbstractCanvas.transformToMapY(y + getTaskHeight() / 2));
+        if (task.getNotes() != null && !task.getNotes().isEmpty()) {
+            toolTip += String.format("<b>Notes</b> %s", task.getNotes());
+        }
+//        toolTip += String.format("\" shape=\"rect\" coords=\"%d,%d,%d,%d\"", AbstractCanvas.transformToMapX(x1 + 1), AbstractCanvas.transformToMapY(y - getTaskHeight() / 2), AbstractCanvas.transformToMapX(x2 - 1), AbstractCanvas.transformToMapY(y + getTaskHeight() / 2));
         return toolTip;
     }
 

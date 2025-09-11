@@ -17,7 +17,6 @@
 
 package de.bushnaq.abdalla.projecthub.report.dao;
 
-import de.bushnaq.abdalla.projecthub.report.AbstractCanvas;
 import de.bushnaq.abdalla.svg.util.ExtendedGraphics2D;
 
 import java.awt.*;
@@ -27,7 +26,7 @@ public class CaptionElement {
     private final Color  color           = new Color(0x2c, 0x7b, 0xf4);
     public        Font   font            = new Font(Font.SANS_SERIF, Font.PLAIN, 18);
     public        int    height          = 26;
-    private       String imageMap        = "";
+    //    private       String imageMap        = "";
     private final String relateCssPath;
     private final String text;
     public        int    width;
@@ -57,14 +56,14 @@ public class CaptionElement {
             String link = relateCssPath + text + ".png";
             graphics2D.drawStringWithLink(text, x, y + height / 2 + (ascent - 2) / 2 - 1, link);
             link = replaceSpaceWithDash(link);
-            imageMap += String.format("<area shape=\"rect\" coords=\"%d,%d,%d,%d\" href=\"%s\" >\n", AbstractCanvas.transformToMapX(x), AbstractCanvas.transformToMapY(y),
-                    AbstractCanvas.transformToMapX(x + captionWidth), AbstractCanvas.transformToMapY(y + height), link);
+//            imageMap += String.format("<area shape=\"rect\" coords=\"%d,%d,%d,%d\" href=\"%s\" >\n", AbstractCanvas.transformToMapX(x), AbstractCanvas.transformToMapY(y),
+//                    AbstractCanvas.transformToMapX(x + captionWidth), AbstractCanvas.transformToMapY(y + height), link);
         }
     }
 
-    public String getImageMap() {
-        return imageMap;
-    }
+//    public String getImageMap() {
+//        return imageMap;
+//    }
 
     private String replaceSpaceWithDash(String link) {
         return link.replace(' ', '-').toLowerCase();

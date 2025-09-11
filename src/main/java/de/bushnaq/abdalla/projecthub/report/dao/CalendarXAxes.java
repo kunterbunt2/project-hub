@@ -17,7 +17,6 @@
 
 package de.bushnaq.abdalla.projecthub.report.dao;
 
-import de.bushnaq.abdalla.projecthub.report.AbstractCanvas;
 import de.bushnaq.abdalla.projecthub.report.AbstractRenderer;
 import de.bushnaq.abdalla.util.Util;
 import de.bushnaq.abdalla.util.date.DateUtil;
@@ -213,15 +212,15 @@ public class CalendarXAxes {
         }
     }
 
-    public String drawMilestone(Milestone m, LocalDate time, int x, Color fillColor, String text, boolean drawMilestone, Color flagTextColor) {
-        return drawMilestone(m, time, x, milestone.y, fillColor, text, drawMilestone, milestone.flagY, flagTextColor, true, true);
+    public void drawMilestone(Milestone m, LocalDate time, int x, Color fillColor, String text, boolean drawMilestone, Color flagTextColor) {
+        drawMilestone(m, time, x, milestone.y, fillColor, text, drawMilestone, milestone.flagY, flagTextColor, true, true);
     }
 
-    public String drawMilestone(Milestone m, LocalDate time, int x, int y, Color fillColor, String text, boolean drawMilestone, Integer flagY,
-                                Color flagTextColor, boolean drawFlag, boolean drawNowLine) {
-        String imageMap = "";
-        int    centerX  = x;
-        int    centerY  = y;
+    public void drawMilestone(Milestone m, LocalDate time, int x, int y, Color fillColor, String text, boolean drawMilestone, Integer flagY,
+                              Color flagTextColor, boolean drawFlag, boolean drawNowLine) {
+//        String imageMap = "";
+        int centerX = x;
+        int centerY = y;
         if (text.startsWith("N")) {
             // now line
             if (drawNowLine) {
@@ -263,13 +262,13 @@ public class CalendarXAxes {
             }
             if (m != null) {
                 // imageMap
-                String lable = DateUtil.createDateString(time, imageMapSdf);
-                imageMap += "<area alt=\"<font face=arial>";
-                imageMap += String.format("<b>%s</b> = %s<br>%s.<br>", text, m.name, lable);
-                imageMap += String.format("\" shape=\"rect\" coords=\"%d,%d,%d,%d\"", AbstractCanvas.transformToMapX(centerX - milestone.width / 2),
-                        AbstractCanvas.transformToMapY(centerY), AbstractCanvas.transformToMapX(centerX + milestone.width / 2),
-                        AbstractCanvas.transformToMapY(centerY + milestone.height - 1));
-                imageMap += " >\n";
+//                String lable = DateUtil.createDateString(time, imageMapSdf);
+//                imageMap += "<area alt=\"<font face=arial>";
+//                imageMap += String.format("<b>%s</b> = %s<br>%s.<br>", text, m.name, lable);
+//                imageMap += String.format("\" shape=\"rect\" coords=\"%d,%d,%d,%d\"", AbstractCanvas.transformToMapX(centerX - milestone.width / 2),
+//                        AbstractCanvas.transformToMapY(centerY), AbstractCanvas.transformToMapX(centerX + milestone.width / 2),
+//                        AbstractCanvas.transformToMapY(centerY + milestone.height - 1));
+//                imageMap += " >\n";
             }
         }
         if (drawMilestone && drawFlag) {
@@ -294,7 +293,6 @@ public class CalendarXAxes {
                 parent.graphics2D.drawString(lable, x - milestone.width / 2, milestone.flagY + milestone.flagHeight - 1);
             }
         }
-        return imageMap;
     }
 
     public void drawMilestones() {
