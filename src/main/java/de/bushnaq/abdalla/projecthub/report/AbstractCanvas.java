@@ -24,6 +24,8 @@ import de.bushnaq.abdalla.projecthub.report.html.dao.ReportLink;
 import de.bushnaq.abdalla.svg.util.ExtendedGraphics2D;
 import de.bushnaq.abdalla.svg.util.ExtendedSvgGraphics2D;
 import de.bushnaq.abdalla.util.FileUtil;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.batik.anim.dom.SVGDOMImplementation;
 import org.apache.batik.dom.GenericDOMImplementation;
 import org.apache.batik.svggen.SVGGraphics2D;
@@ -38,11 +40,16 @@ import java.nio.charset.StandardCharsets;
 
 public abstract class AbstractCanvas extends ReportLink {
     private static final float              fine_LINE_STROKE_WIDTH = 1f;
+    @Getter
+    @Setter
     private              int                borderWidth            = 1;
+    @Getter
     private              int                chartHeight;
+    @Getter
     private              int                chartWidth;
     protected            ExtendedGraphics2D graphics2D;
     protected            GraphicsTheme      graphicsTheme;
+    @Getter
     protected            String             imageName;
     //    private final        Logger             logger                 = LoggerFactory.getLogger(this.getClass());
     protected            SVGGraphics2D      svgGenerator;
@@ -75,22 +82,6 @@ public abstract class AbstractCanvas extends ReportLink {
         String extension = "svg";
 //        return String.format("<img class=\"%s\" usemap=\"#%s\" border=\"0\" src=\"%s.%s\">", cssClass, mapName, imageName, extension);
         return String.format("<img class=\"%s\" border=\"0\" src=\"%s.%s\">", cssClass, imageName, extension);
-    }
-
-    public int getBorderWidth() {
-        return borderWidth;
-    }
-
-    public int getChartHeight() {
-        return chartHeight;
-    }
-
-    public int getChartWidth() {
-        return chartWidth;
-    }
-
-    public String getImageName() {
-        return imageName;
     }
 
     protected void prepareGraphics(final BufferedImage aImage) throws IOException {
@@ -157,10 +148,6 @@ public abstract class AbstractCanvas extends ReportLink {
             }
             text = FileUtil.loadFile(null, imageFileName).replace("<svg ", "<svg class=\"qtip-shadow\"");
         }
-    }
-
-    public void setBorderWidth(int borderWidth) {
-        this.borderWidth = borderWidth;
     }
 
     public void setChartHeight(int chartHeight) {
