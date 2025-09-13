@@ -174,7 +174,7 @@ public abstract class AbstractRenderer {
     public void drawDayBars(LocalDate currentDay) {
         //        Calendar day = Calendar.getInstance();
         //        day.setTimeInMillis(currentDay);
-        Color color = GraphColorUtil.getDayOfWeekStripeColor(graphicsTheme/*, bankHolidays*/, currentDay);
+        Color color = GraphColorUtil.getDayOfWeekBgColor(graphicsTheme/*, bankHolidays*/, currentDay);
         int   x     = calculateDayX(currentDay);
         graphics2D.setColor(color);
         //day vertical bar

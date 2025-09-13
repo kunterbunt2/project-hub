@@ -27,92 +27,72 @@ import java.time.LocalDate;
 
 public class GraphColorUtil {
 
-    public static String getDayLetter(BurnDownGraphicsTheme graphicsTheme, ProjectCalendar pc, LocalDate currentDate) {
+    public static Color getDayOfMonthBgColor(BurnDownGraphicsTheme graphicsTheme, LocalDate startCal) {
+        return switch (startCal.getDayOfWeek()) {
+            case FRIDAY, TUESDAY, MONDAY, THURSDAY, WEDNESDAY -> graphicsTheme.XAxesDayOfMonthBgColor;
+            case SATURDAY, SUNDAY -> graphicsTheme.XAxesDayOfMonthWeekendBgColor;
+            default -> null;
+        };
+
+    }
+
+    public static Color getDayOfMonthTextColor(BurnDownGraphicsTheme graphicsTheme, LocalDate startCal) {
+        return switch (startCal.getDayOfWeek()) {
+            case FRIDAY, TUESDAY, MONDAY, THURSDAY, WEDNESDAY -> graphicsTheme.XAxesDayOfMonthTextColor;
+            case SATURDAY, SUNDAY -> graphicsTheme.XAxesDayOfMonthWeekendTextColor;
+            default -> null;
+        };
+
+    }
+
+    public static Color getDayOfWeekBgColor(BurnDownGraphicsTheme graphicsTheme, LocalDate startCal) {
+        return switch (startCal.getDayOfWeek()) {
+            case FRIDAY, MONDAY, THURSDAY, TUESDAY, WEDNESDAY -> graphicsTheme.XAxesDayOfweekBgColor;
+            case SATURDAY, SUNDAY -> graphicsTheme.XAxesDayOfweekWeekendBgColor;
+            default -> null;
+        };
+
+    }
+
+    public static ProjectCalendarException getException(BurnDownGraphicsTheme graphicsTheme, ProjectCalendar pc, LocalDate currentDate) {
         if (!pc.isWorkingDate(currentDate)) {
-            ProjectCalendarException exception = pc.getException(currentDate);
-            if (exception != null) {
-                if (exception.getName().equals(OffDayType.VACATION.name())) {
-                    return "V";
-                } else if (exception.getName().equals(OffDayType.TRIP.name())) {
-                    return "T";
-                } else if (exception.getName().equals(OffDayType.SICK.name())) {
-                    return "S";
-                } else {
-                    return "H";
-                }
-            }
+            return pc.getException(currentDate);
         }
         return null;
     }
 
-//    public static Color getDayOfWeekColor(BurnDownGraphicsTheme graphicsTheme, LocalDate startCal) {
-//
-//        switch (startCal.getDayOfWeek()) {
-//            case FRIDAY:
-//                return graphicsTheme.fridayColor;
-//            case MONDAY:
-//                return graphicsTheme.ganttMondayColor;
-//            case SATURDAY:
-//                return graphicsTheme.saturdayColor;
-//            case SUNDAY:
-//                return graphicsTheme.sundayColor;
-//            case THURSDAY:
-//                return graphicsTheme.thursdayColor;
-//            case TUESDAY:
-//                return graphicsTheme.tuesdayColor;
-//            case WEDNESDAY:
-//                return graphicsTheme.wednesdayColor;
-//            default:
-//                return null;
-//
-//        }
-//
-//    }
-
-    public static Color getDayOfWeekStripeColor(BurnDownGraphicsTheme graphicsTheme/*, Map<LocalDate, String> bankHolidays*/, LocalDate startCal) {
-        //TODO: bank holidays
-//        if (bankHolidays.get(startCal) != null) {
-//            return graphicsTheme.sundayStripeColor;
-//        }
-
-        switch (startCal.getDayOfWeek()) {
-            case FRIDAY:
-                return graphicsTheme.fridayStripeColor;
-            case MONDAY:
-                return graphicsTheme.ganttMondayColor;
-            case SATURDAY:
-                return graphicsTheme.saturdayStripeColor;
-            case SUNDAY:
-                return graphicsTheme.ganttSundayStripeColor;
-            case THURSDAY:
-                return graphicsTheme.thursdayStripeColor;
-            case TUESDAY:
-                return graphicsTheme.tuesdayStripeColor;
-            case WEDNESDAY:
-                return graphicsTheme.wednesdayStripeColor;
-            default:
-                return null;
-        }
-
-    }
-
     public static Color getGanttDayStripeColor(BurnDownGraphicsTheme graphicsTheme, ProjectCalendar pc, LocalDate currentDate) {
         if (pc.isWorkingDate(currentDate)) {
-            return graphicsTheme.ganttMondayColor;
+            return graphicsTheme.XAxesDayOfweekBgColor;
         } else {
             ProjectCalendarException exception = pc.getException(currentDate);
             if (exception != null) {
                 if (exception.getName().equals(OffDayType.VACATION.name())) {
-                    return graphicsTheme.ganttVacationColor;
+                    return graphicsTheme.ganttVacationBgColor;
                 } else if (exception.getName().equals(OffDayType.TRIP.name())) {
-                    return graphicsTheme.ganttTripColor;
+                    return graphicsTheme.ganttTripBgColor;
                 } else if (exception.getName().equals(OffDayType.SICK.name())) {
-                    return graphicsTheme.ganttSickColor;
+                    return graphicsTheme.ganttSickBgColor;
                 } else {
-                    return graphicsTheme.ganttHolidayColor;
+                    return graphicsTheme.ganttHolidayBgColor;
                 }
             }
-            return graphicsTheme.ganttSundayStripeColor;
+            return graphicsTheme.XAxesDayOfMonthWeekendBgColor;
         }
+    }
+
+    public static String getOffDayLetter(ProjectCalendarException exception) {
+        if (exception != null) {
+            if (exception.getName().equals(OffDayType.VACATION.name())) {
+                return "V";
+            } else if (exception.getName().equals(OffDayType.TRIP.name())) {
+                return "T";
+            } else if (exception.getName().equals(OffDayType.SICK.name())) {
+                return "S";
+            } else {
+                return "H";
+            }
+        }
+        return null;
     }
 }

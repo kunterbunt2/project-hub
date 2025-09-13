@@ -60,7 +60,6 @@ public class GraphicsLightTheme extends BurnDownGraphicsTheme {
     };
 
     public GraphicsLightTheme() {
-        ganttGridColor = new Color(0xcce6ff, false);
 
         // gray
         Color basicTextColor       = Color.WHITE;
@@ -69,15 +68,12 @@ public class GraphicsLightTheme extends BurnDownGraphicsTheme {
 
         cssTheme             = ETheme.light;
         chartBackgroundColor = Color.white;
-        chartBorderColor     = new Color(0xaaaaaa);//new Color(0x2c, 0x7b, 0xf4);
 
-        dayOfMonthTextColor        = basicTextColor;
-        dayOfMonthBackgroundColor  = basicBackgroundColor;
-        ganttDayOfMonthBorderColor = ganttGridColor;
+        dayOfMonthTextColor       = basicTextColor;
+        dayOfMonthBackgroundColor = basicBackgroundColor;
 
         dayTextColor          = Color.BLACK;
         dayBackgroundColor    = Color.WHITE;
-        ganttDayBorderColor   = ganttGridColor;
         dayDiagramBorderColor = new Color(0xf6f8ff);
 
         delayClosedEventColor = new Color(255, 184, 184);
@@ -87,36 +83,13 @@ public class GraphicsLightTheme extends BurnDownGraphicsTheme {
         milestoneFlagColor = chartBackgroundColor;
         milestoneTextColor = basicTextColor;
 
-        ganntMonthTextColor   = basicTextColor;
-        ganttMonthBorderColor = Color.WHITE;
 
         nowEventColor        = Color.gray;
         pastEventColor       = Color.lightGray;
         ticksBackgroundColor = chartBackgroundColor;
 
-        ganttMondayColor = Color.WHITE;
-        tuesdayColor     = Color.WHITE;
-        wednesdayColor   = Color.WHITE;
-        thursdayColor    = Color.WHITE;
-        fridayColor      = Color.WHITE;
-        saturdayColor    = new Color(0xd7d7d7);//new Color(0xd9, 0xe6, 0xff, 0x88);
-        sundayColor      = new Color(0xd7d7d7);//new Color(0xff, 0xd9, 0xd9, 0x88);
-
-        mondayStripeColor      = Color.WHITE;
-        tuesdayStripeColor     = Color.WHITE;
-        wednesdayStripeColor   = Color.WHITE;
-        thursdayStripeColor    = Color.WHITE;
-        fridayStripeColor      = Color.WHITE;
-        saturdayStripeColor    = new Color(0xfafafa);//new Color(0xd9, 0xe6, 0xff, 0x88);
-        ganttSundayStripeColor = new Color(0xf7f7f7);//new Color(0xff, 0xd9, 0xd9, 0x88);
-
-//        calendarYearBackgroundColor = basicBackgroundColor;
-//        calendarYearTextColor       = basicTextColor;
-//        calendarYearBoderColor = basicBorderColor;
-
         weekBackgroundColor = basicBackgroundColor;
         weekTextColor       = basicTextColor;
-        ganttWeekBoderColor = basicBorderColor;
 
         ganttRelationColor           = new Color(0x34, 0x66, 0xed, 0x7f);
         ganttCriticalRelationColor   = new Color(0xff, 0, 0, 0x7f);
@@ -167,27 +140,6 @@ public class GraphicsLightTheme extends BurnDownGraphicsTheme {
         futureWorkDayRequestColor  = new Color(0x00, 0x60, 0xff, 0x40);
         futureWeekendRequestColor  = new Color(0x60, 0x60, 0x60, 0x40);
         ganttRequestMilestoneColor = Color.RED/*new Color(0xa7, 0x00, 0x00)*/;
-
-        int ma = 0x7f;
-        monthColor[0]  = new Color(0x18, 0x7d, 0xc3, ma);
-        monthColor[1]  = new Color(0x24, 0xae, 0xef, ma);
-        monthColor[2]  = new Color(0x27, 0x9e, 0x68, ma);
-        monthColor[3]  = new Color(0x62, 0xb7, 0x42, ma);
-        monthColor[4]  = new Color(0xac, 0xc2, 0x31, ma);
-        monthColor[5]  = new Color(0xf9, 0xb7, 0x1b, ma);
-        monthColor[6]  = new Color(0xf1, 0x75, 0x1d, ma);
-        monthColor[7]  = new Color(0xe5, 0x46, 0x29, ma);
-        monthColor[8]  = new Color(0xe7, 0x16, 0x57, ma);
-        monthColor[9]  = new Color(0xad, 0x34, 0x83, ma);
-        monthColor[10] = new Color(0x65, 0x41, 0x98, ma);
-        monthColor[11] = new Color(0x08, 0x55, 0xa3, ma);
-
-        heatColor[0] = new Color(0x27, 0x9e, 0x68, ma);
-        heatColor[1] = new Color(0x62, 0xb7, 0x42, ma);
-        heatColor[2] = new Color(0xac, 0xc2, 0x31, ma);
-        heatColor[3] = new Color(0xf9, 0xb7, 0x1b, ma);
-        heatColor[4] = new Color(0xf1, 0x75, 0x1d, ma);
-        heatColor[5] = new Color(0xe5, 0x46, 0x29, ma);
 
         linkColor = new Color(0x23, 0x6a, 0x97);
 

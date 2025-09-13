@@ -58,7 +58,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
     public static final    int                  RESOURCE_NAME_TO_TASK_GAP  = 3;
     //TODO replace with sprint calendar working day
     public static final    int                  SECONDS_PER_DAY            = 85 * 6 * 60;//seconds between work start and work end, including lunch hour
-    private static final   int                  TASK_BODY_BORDER           = 4;
+    private static final   int                  TASK_BODY_BORDER           = 1;
     public static final    int                  TASK_NAME_TO_TASK_GAP      = 5 + 8;
     private final static   Font                 graphFont                  = new Font(Font.SANS_SERIF, Font.PLAIN, 12);
     private final static   Font                 idErrorFont                = new Font(Font.SANS_SERIF, Font.BOLD, 12);
@@ -653,9 +653,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                     //- progress color must be a little bit darker than the task body.
                     Color color = org.apache.xmlgraphics.java2d.color.ColorUtil.lightenColor(task.getAssignedUser().getColor(), 0.6f);
                     graphics2D.setColor(color);
-                    Shape s = new RectangleWithToolTip(x1 + 1, y1 + 1, (int) ((x2 - x1) * progress - 1), h - 2, toolTip);
-//                    graphics2D.fill(s);
-//                    graphics2D.fill(s);
+                    Shape s = new RectangleWithToolTip(x1 + 1, y1 + 2, (int) ((x2 - x1) * progress - 1), h - 4, toolTip);
                     graphics2D.fill(s);
                     if (progress < 1.0) {
                         graphics2D.setColor(Color.black);
@@ -760,7 +758,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
 
     @Override
     protected int getTaskHeight() {
-        return LINE_HEIGHT * numberOfLinesPerTask + 4;
+        return LINE_HEIGHT * numberOfLinesPerTask;
     }
 
 //    protected void initOutOfOffice(/*GanttInformationList gattInformationList*/) {

@@ -41,12 +41,12 @@ public class BurnDownGraphicsTheme extends ScheduleGraphicsTheme {
         return burnDownColor[colorIndex];
     }
 
-    public Color getHeatColor(int index) {
-        if (index < 0) {
-            index = -index;
-        }
-        int colorIndex = index % MAX_HEAT_COLOR;
-        return heatColor[colorIndex];
-    }
+//    public Color getHeatColor(int index) {
+//        if (index < 0) {
+//            index = -index;
+//        }
+//        int colorIndex = index % MAX_HEAT_COLOR;
+//        return heatColor[colorIndex];
+//    }
 
 }

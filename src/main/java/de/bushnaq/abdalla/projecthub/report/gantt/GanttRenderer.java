@@ -28,12 +28,14 @@ import de.bushnaq.abdalla.util.GanttErrorHandler;
 import de.bushnaq.abdalla.util.TaskUtil;
 import de.bushnaq.abdalla.util.date.DateUtil;
 import net.sf.mpxj.ProjectCalendar;
+import net.sf.mpxj.ProjectCalendarException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
@@ -44,13 +46,13 @@ import java.util.List;
  */
 public class GanttRenderer extends AbstractGanttRenderer {
 
-    private static final int    GANTT_TASK_POST_SPACE = 50;
-    private static final int    GANTT_TASK_PRI_SPACE  = 50;
-    private final static Font   NoneWorkingDayFont    = new Font(Font.SANS_SERIF, Font.BOLD, 24);
-    private static final int    ONE_WEEK              = 7;
-    private final        Logger logger                = LoggerFactory.getLogger(this.getClass());
-    private final        Sprint sprint;
-
+    private static final int               GANTT_TASK_POST_SPACE = 0;
+    private static final int               GANTT_TASK_PRI_SPACE  = 0;
+    private final static Font              NoneWorkingDayFont    = new Font(Font.SANS_SERIF, Font.BOLD, 26);
+    private static final int               ONE_WEEK              = 7;
+    public final         DateTimeFormatter dtfymd                = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+    private final        Logger            logger                = LoggerFactory.getLogger(this.getClass());
+    private final        Sprint            sprint;
 
     public GanttRenderer(Context context, String sprintName, List<Throwable> exceptions, LocalDateTime now, boolean completed,
                          Sprint sprint/*, int chartWidth, int chartHeight*/, String cssClass, BurnDownGraphicsTheme graphicsTheme)
@@ -101,6 +103,16 @@ public class GanttRenderer extends AbstractGanttRenderer {
         }
     }
 
+    private String createOffDayToolTip(ProjectCalendarException exception) {
+        String toolTip = "";
+        toolTip += String.format("%s<br>", exception.getName());
+        if (exception.getFromDate().isEqual(exception.getToDate()))
+            toolTip += String.format("%s<br>", DateUtil.createDateString(exception.getFromDate(), dtfymd));
+        else
+            toolTip += String.format("%s - %s<br>", DateUtil.createDateString(exception.getFromDate(), dtfymd), DateUtil.createDateString(exception.getToDate(), dtfymd));
+        return toolTip;
+    }
+
     @Override
     public void draw(ExtendedGraphics2D graphics2D, int x, int y) throws Exception {
         this.graphics2D = graphics2D;
@@ -130,16 +142,21 @@ public class GanttRenderer extends AbstractGanttRenderer {
             {
                 //background
                 graphics2D.setColor(GraphColorUtil.getGanttDayStripeColor(graphicsTheme, pc, currentDay));
-                Shape  s      = new Rectangle(x1, y1, calendarXAxes.dayOfWeek.getWidth() - 1, getTaskHeight());
-                String letter = GraphColorUtil.getDayLetter(graphicsTheme, pc, currentDay);
-                if (letter != null) {
-                    graphics2D.fill(s);
-                    graphics2D.setColor(Color.white);
-                    graphics2D.setFont(NoneWorkingDayFont);
-                    FontMetrics fm     = graphics2D.getFontMetrics();
-                    int         yShift = fm.getAscent() - fm.getHeight() / 2;
-                    int         xShift = fm.stringWidth(letter) / 2;
-                    graphics2D.drawString(letter, x - xShift, y + yShift);
+                Shape s = new Rectangle(x1, y1, calendarXAxes.dayOfWeek.getWidth() - 1, getTaskHeight());
+
+                ProjectCalendarException exception = GraphColorUtil.getException(graphicsTheme, pc, currentDay);
+                if (exception != null) {
+                    String letter = GraphColorUtil.getOffDayLetter(exception);
+                    if (letter != null) {
+                        graphics2D.fill(s);
+                        graphics2D.setColor(Color.white);
+                        graphics2D.setFont(NoneWorkingDayFont);
+                        FontMetrics fm      = graphics2D.getFontMetrics();
+                        int         yShift  = fm.getAscent() - fm.getHeight() / 2 - 1;
+                        int         xShift  = fm.stringWidth(letter) / 2;
+                        String      tooltip = createOffDayToolTip(exception);
+                        graphics2D.drawString(letter, x - xShift, y + yShift, tooltip);
+                    }
                 }
             }
         }

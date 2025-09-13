@@ -163,7 +163,7 @@ public class User extends AbstractTimeAware implements Comparable<User> {
             }
             for (Holiday holiday : holidays) {
                 ProjectCalendarException pce = pc.addCalendarException(holiday.getDate());
-                pce.setName(holiday.getDescription());
+                pce.setName(String.format("%s (%s/%s)", holiday.getDescription(), location.getCountry(), location.getState()));
             }
         }
     }
