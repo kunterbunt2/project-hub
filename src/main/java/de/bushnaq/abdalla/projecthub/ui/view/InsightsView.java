@@ -80,7 +80,7 @@ public class InsightsView extends Main implements AfterNavigationObserver {
     // AI Insights Components
     @Autowired
     private       SprintInsightsGenerator sprintInsightsGenerator;
-    List<Sprint> sprints = new ArrayList<>();
+    List<SprintStatistics> sprintStatistics = new ArrayList<>();
     private final TaskApi    taskApi;
     private final UserApi    userApi;
     private final VersionApi versionApi;
@@ -94,7 +94,7 @@ public class InsightsView extends Main implements AfterNavigationObserver {
         this.versionApi = versionApi;
         this.featureApi = featureApi;
         this.userApi    = userApi;
-        this.now        = LocalDateTime.now(clock);
+        this.now        = ParameterOptions.getLocalNow();
 
         pageTitle = new H2("Sprint Insights");
         pageTitle.addClassNames(
@@ -252,7 +252,7 @@ public class InsightsView extends Main implements AfterNavigationObserver {
     }
 
     private void generateInsights() {
-        if (sprints.isEmpty()) {
+        if (sprintStatistics.isEmpty()) {
             Notification.show("No sprint data available. Please ensure sprints are loaded.", 3000, Notification.Position.MIDDLE);
             return;
         }
@@ -297,16 +297,16 @@ public class InsightsView extends Main implements AfterNavigationObserver {
 
     private void generateJson() {
         try {
-            jsonString = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(sprints);
+            jsonString = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(sprintStatistics);
         } catch (JsonProcessingException e) {
             logger.error("Error generating JSON for sprints", e);
             throw new RuntimeException(e);
         }
-        logger.info("Generated JSON for {} sprints", sprints.size());
+        logger.info("Generated JSON for {} sprints", sprintStatistics.size());
     }
 
     private void generateQuickSummary() {
-        if (sprints.isEmpty()) {
+        if (sprintStatistics.isEmpty()) {
             Notification.show("No sprint data available. Please ensure sprints are loaded.", 3000, Notification.Position.MIDDLE);
             return;
         }
@@ -362,7 +362,7 @@ public class InsightsView extends Main implements AfterNavigationObserver {
         List<Sprint> sprintIds = sprintApi.getAll();
 
         for (Sprint sprint : sprintIds) {
-            sprints.add(loadSprintData(authentication, sprint.getId()));
+            sprintStatistics.add(new SprintStatistics(loadSprintData(authentication, sprint.getId()), now));
         }
     }
 
