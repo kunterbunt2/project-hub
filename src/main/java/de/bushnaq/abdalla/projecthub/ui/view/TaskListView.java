@@ -82,6 +82,7 @@ public class TaskListView extends Main implements AfterNavigationObserver {
     private final       Clock             clock;
     @Autowired
     protected           Context           context;
+    private             Task              draggedTask;          // Track the currently dragged task
     public final        DateTimeFormatter dtfymdhm              = DateTimeFormatter.ofPattern("yyyy.MMM.dd HH:mm");
     private             Button            editButton;
     private final       GanttErrorHandler eh                    = new GanttErrorHandler();
@@ -103,6 +104,7 @@ public class TaskListView extends Main implements AfterNavigationObserver {
     private             Long              sprintId;
     private final       LocalDateTime     start                 = LocalDateTime.now().withHour(8).withMinute(0).withSecond(0).withNano(0);
     private final       TaskApi           taskApi;
+    private             List<Task>        taskOrder             = new ArrayList<>(); // Track current order in memory
     private final       UserApi           userApi;
     private final       VersionApi        versionApi;
     private             Long              versionId;
@@ -192,7 +194,8 @@ public class TaskListView extends Main implements AfterNavigationObserver {
 
         //- populate grid
 //        pageTitle.setText("Task of Sprint ID: " + sprintId);
-        grid.setItems(sprint.getTasks());
+        taskOrder = new ArrayList<>(sprint.getTasks());
+        grid.setItems(taskOrder);
         generateGanttChart();
     }
 
@@ -227,8 +230,35 @@ public class TaskListView extends Main implements AfterNavigationObserver {
 
         setupGridColumns();
 
+        // Enable row reordering with drag and drop in edit mode
+        grid.setRowsDraggable(false); // Will be enabled in edit mode
+
         // Enable keyboard navigation in edit mode
         setupKeyboardNavigation();
+
+        // Add drop listener for reordering
+        grid.addDropListener(event -> {
+            if (!isEditMode || draggedTask == null) return;
+
+            Task dropTargetTask = event.getDropTargetItem().orElse(null);
+
+            if (dropTargetTask != null && !draggedTask.equals(dropTargetTask)) {
+                int draggedIndex = taskOrder.indexOf(draggedTask);
+                int targetIndex  = taskOrder.indexOf(dropTargetTask);
+
+                if (draggedIndex >= 0 && targetIndex >= 0) {
+                    moveTask(draggedIndex, targetIndex);
+                }
+            }
+
+            draggedTask = null; // Clear the dragged task reference
+        });
+
+        grid.addDragStartListener(event -> {
+            if (isEditMode && !event.getDraggedItems().isEmpty()) {
+                draggedTask = event.getDraggedItems().get(0);
+            }
+        });
 
         // Add borders between columns
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
@@ -328,6 +358,9 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         saveButton.setVisible(true);
         cancelButton.setVisible(true);
 
+        // Enable drag and drop for reordering
+        grid.setRowsDraggable(true);
+
         // Add visual feedback for edit mode
         grid.addClassName("edit-mode");
 
@@ -345,6 +378,9 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         editButton.setVisible(true);
         saveButton.setVisible(false);
         cancelButton.setVisible(false);
+
+        // Disable drag and drop
+        grid.setRowsDraggable(false);
 
         // Remove visual feedback
         grid.removeClassName("edit-mode");
@@ -474,8 +510,39 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         logger.debug("Task {} marked as modified. Total modified: {}", task.getKey(), modifiedTasks.size());
     }
 
+    /**
+     * Move a task to a new position and recalculate all orderIds
+     */
+    private void moveTask(int fromIndex, int toIndex) {
+        if (fromIndex == toIndex || fromIndex < 0 || toIndex < 0 ||
+                fromIndex >= taskOrder.size() || toIndex >= taskOrder.size()) {
+            return;
+        }
+
+        logger.info("Moving task from index {} to {}", fromIndex, toIndex);
+
+        // Remove task from old position
+        Task movedTask = taskOrder.remove(fromIndex);
+
+        // Insert at new position
+        taskOrder.add(toIndex, movedTask);
+
+        // Recalculate orderIds for all tasks based on their new positions
+        for (int i = 0; i < taskOrder.size(); i++) {
+            Task task = taskOrder.get(i);
+            task.setOrderId((long) i);
+            markTaskAsModified(task);
+        }
+
+        // Refresh the grid to show new order
+        grid.getDataProvider().refreshAll();
+        logger.info("Task order updated. {} tasks marked as modified.", modifiedTasks.size());
+    }
+
     private void refreshGrid() {
-        grid.setItems(sprint.getTasks());
+        // Update taskOrder list with current sprint tasks
+        taskOrder = new ArrayList<>(sprint.getTasks());
+        grid.setItems(taskOrder);
         generateGanttChart();
     }
 
@@ -506,6 +573,30 @@ public class TaskListView extends Main implements AfterNavigationObserver {
 
     private void setupGridColumns() {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
+
+        // Order Column with Up/Down arrows - visible only in edit mode
+        {
+            grid.addComponentColumn(task -> {
+                if (isEditMode) {
+                    // Create drag handle icon (burger menu)
+                    com.vaadin.flow.component.icon.Icon dragIcon = VaadinIcon.MENU.create();
+                    dragIcon.getStyle()
+                            .set("cursor", "grab")
+                            .set("color", "var(--lumo-secondary-text-color)");
+
+                    Div dragHandle = new Div(dragIcon);
+                    dragHandle.getStyle()
+                            .set("display", "flex")
+                            .set("align-items", "center")
+                            .set("justify-content", "center");
+                    dragHandle.setTitle("Drag to reorder");
+
+                    return dragHandle;
+                } else {
+                    return new Div(); // Empty div when not in edit mode
+                }
+            }).setHeader("").setAutoWidth(true).setWidth("50px");
+        }
 
         //key
         {
@@ -732,7 +823,7 @@ public class TaskListView extends Main implements AfterNavigationObserver {
                         .collect(Collectors.joining(", "));
             }).setHeader("Dependency").setAutoWidth(true);
         }
-//        grid.addColumn(task -> task.getTaskMode().name()).setHeader("Mode").setAutoWidth(true);
+//        grid.addColumn(task -> task.getTaskMode().name()).setHeader("Mode").setAutoWidth(true;
     }
 
     /**
