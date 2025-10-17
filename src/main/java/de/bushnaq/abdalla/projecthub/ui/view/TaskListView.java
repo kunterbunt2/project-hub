@@ -372,6 +372,139 @@ public class TaskListView extends Main implements AfterNavigationObserver {
 
         // Refresh grid to show editable components
         grid.getDataProvider().refreshAll();
+
+        // Setup keyboard navigation after grid is rendered
+        getUI().ifPresent(ui -> ui.getPage().executeJs(
+                """
+                        console.log('=== EXECUTING JAVASCRIPT FROM SERVER ===');
+                        
+                        const grid = document.querySelector('vaadin-grid');
+                        console.log('Found grid:', grid);
+                        
+                        if (!grid) {
+                            console.error('Grid not found!');
+                            return;
+                        }
+                        
+                        if (grid.keyboardSetupDone) {
+                            console.log('Keyboard already setup, skipping');
+                            return;
+                        }
+                        
+                        console.log('Setting up keyboard navigation for the first time');
+                        grid.keyboardSetupDone = true;
+                        
+                        grid.addEventListener('keydown', (e) => {
+                            console.log('=== GRID KEYDOWN EVENT ===', e.key);
+                        
+                            if (e.key !== 'Tab') return;
+                        
+                            console.log('Tab pressed! Shift:', e.shiftKey);
+                        
+                            // Check if we're in an input field
+                            const target = e.target;
+                            console.log('Event target:', target.tagName);
+                        
+                            // Check if the target is within a text input in the shadow DOM
+                            const activeElement = grid.shadowRoot?.activeElement || document.activeElement;
+                            console.log('Active element:', activeElement?.tagName);
+                        
+                            const isInInput = activeElement && (
+                                activeElement.tagName === 'INPUT' || 
+                                activeElement.tagName === 'VAADIN-TEXT-FIELD' || 
+                                activeElement.tagName === 'VAADIN-COMBO-BOX' ||
+                                activeElement.tagName === 'VAADIN-DATE-TIME-PICKER'
+                            );
+                        
+                            console.log('Is in input:', isInInput);
+                        
+                            if (!isInInput) {
+                                console.log('>>> Not in input - handling indent/outdent');
+                                e.preventDefault();
+                                e.stopPropagation();
+                        
+                                // Get the active (selected) item from the grid
+                                const activeItem = grid.activeItem;
+                                console.log('Grid active item:', activeItem);
+                        
+                                if (!activeItem) {
+                                    console.log('!!! No active item in grid');
+                                    return;
+                                }
+                        
+                                // The activeItem properties are mapped by Vaadin
+                                // Try various property names that might contain the ID
+                                let taskId = activeItem.id || activeItem.orderId || activeItem.col1;
+                                console.log('Task ID from active item (trying id/orderId/col1):', taskId);
+                        
+                                // If still not found, iterate through all properties to find the ID
+                                if (!taskId) {
+                                    console.log('Trying to find ID in all properties:', Object.keys(activeItem));
+                                    // Look for properties that might be the ID
+                                    for (let key in activeItem) {
+                                        if (key.toLowerCase().includes('id') || key.toLowerCase().includes('order')) {
+                                            console.log('Found potential ID property:', key, '=', activeItem[key]);
+                                            if (activeItem[key] && !key.includes('node') && !key.includes('key')) {
+                                                taskId = activeItem[key];
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                        
+                                // Alternative: find the focused cell and get ID from the DOM
+                                if (!taskId) {
+                                    console.log('!!! No task ID found in active item, trying alternative approach');
+                        
+                                    const focusedCell = grid.shadowRoot?.querySelector('td[part~="focused-cell"]') || 
+                                                      grid.shadowRoot?.querySelector('td[part~="selected-row-cell"]');
+                                    console.log('Focused cell:', focusedCell);
+                        
+                                    if (focusedCell) {
+                                        const row = focusedCell.closest('tr');
+                                        console.log('Found row from focused cell:', row);
+                        
+                                        if (row) {
+                                            const cells = row.querySelectorAll('td');
+                                            console.log('Found cells in row:', cells.length);
+                        
+                                            // ID should be in the second column (index 1) - the first visible column after drag handle
+                                            if (cells.length > 1) {
+                                                // Try to get text from the ID column
+                                                const idCell = cells[1];
+                                                taskId = idCell.textContent?.trim();
+                                                console.log('Task ID from cell[1]:', taskId);
+                                            }
+                                        }
+                                    }
+                                }
+                        
+                                if (!taskId) {
+                                    console.log('!!! Could not determine task ID');
+                                    return;
+                                }
+                        
+                                const eventName = e.shiftKey ? 'outdent-task' : 'indent-task';
+                                console.log('>>> Dispatching:', eventName, 'for task:', taskId);
+                        
+                                grid.dispatchEvent(new CustomEvent(eventName, {
+                                    bubbles: true,
+                                    composed: true,
+                                    detail: { taskId: String(taskId) }
+                                }));
+                        
+                                console.log('>>> Event dispatched successfully');
+                            } else {
+                                console.log('In input field - handling cell navigation');
+                                // TODO: Implement cell navigation if needed
+                            }
+                        }, true);
+                        
+                        console.log('=== KEYBOARD NAVIGATION SETUP COMPLETE ===');
+                        """
+        ));
+
+        logger.info("Edit mode entered, keyboard navigation should be set up");
     }
 
     /**
@@ -391,8 +524,31 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         // Remove visual feedback
         grid.removeClassName("edit-mode");
 
+        // Update JavaScript edit mode state
+        grid.getElement().executeJs("this.updateEditMode(false);");
+
         // Refresh grid to show read-only components
         grid.getDataProvider().refreshAll();
+    }
+
+    /**
+     * Find the previous story (parent candidate) in the task list before the given task
+     */
+    private Task findPreviousStory(Task task) {
+        int taskIndex = taskOrder.indexOf(task);
+        if (taskIndex <= 0) {
+            return null;
+        }
+
+        // Search backwards for a story that could be a parent
+        for (int i = taskIndex - 1; i >= 0; i--) {
+            Task candidate = taskOrder.get(i);
+            // Only stories can be parents, and prevent circular references
+            if (candidate.isStory() && !candidate.isAncestor(task)) {
+                return candidate;
+            }
+        }
+        return null;
     }
 
     private void generateGanttChart() {
@@ -431,6 +587,54 @@ public class TaskListView extends Main implements AfterNavigationObserver {
             Div errorContainer = new Div(errorParagraph, stackTraceParagraph);
             add(errorContainer);
         }
+    }
+
+    /**
+     * Calculate the hierarchy depth of a task (how many parent levels it has)
+     */
+    private int getHierarchyDepth(Task task) {
+        int  depth   = 0;
+        Task current = task;
+        while (current.getParentTask() != null) {
+            depth++;
+            current = current.getParentTask();
+        }
+        return depth;
+    }
+
+    /**
+     * Get indented name for display based on hierarchy depth
+     */
+    private String getIndentedName(Task task) {
+        int    depth  = getHierarchyDepth(task);
+        String indent = "  ".repeat(depth); // 2 spaces per level
+        return indent + (task.getName() != null ? task.getName() : "");
+    }
+
+    /**
+     * Indent task - make it a child of the previous story (Tab key)
+     */
+    private void indentTask(Task task) {
+        Task previousStory = findPreviousStory(task);
+        if (previousStory == null) {
+            logger.debug("Cannot indent task {} - no valid parent found", task.getKey());
+            return;
+        }
+
+        logger.info("Indenting task {} to become child of {}", task.getKey(), previousStory.getKey());
+
+        // Remove from current parent if any
+        if (task.getParentTask() != null) {
+            task.getParentTask().removeChildTask(task);
+        }
+
+        // Add to new parent
+        previousStory.addChildTask(task);
+        markTaskAsModified(task);
+        markTaskAsModified(previousStory);
+
+        // Refresh grid to show updated hierarchy
+        grid.getDataProvider().refreshAll();
     }
 
     private void loadData() {
@@ -545,6 +749,26 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         logger.info("Task order updated. {} tasks marked as modified.", modifiedTasks.size());
     }
 
+    /**
+     * Outdent task - remove it as a child from its parent (Shift+Tab key)
+     */
+    private void outdentTask(Task task) {
+        if (task.getParentTask() == null) {
+            logger.debug("Cannot outdent task {} - it has no parent", task.getKey());
+            return;
+        }
+
+        logger.info("Outdenting task {} from parent {}", task.getKey(), task.getParentTask().getKey());
+
+        Task oldParent = task.getParentTask();
+        oldParent.removeChildTask(task);
+        markTaskAsModified(task);
+        markTaskAsModified(oldParent);
+
+        // Refresh grid to show updated hierarchy
+        grid.getDataProvider().refreshAll();
+    }
+
     private void refreshGrid() {
         // Update taskOrder list with current sprint tasks
         taskOrder = new ArrayList<>(sprint.getTasks());
@@ -606,7 +830,7 @@ public class TaskListView extends Main implements AfterNavigationObserver {
 
         //key
         {
-            grid.addColumn(Task::getKey).setHeader("Key").setAutoWidth(true);
+            grid.addColumn(Task::getOrderId).setHeader("ID").setAutoWidth(true);
         }
         //Type
         {
@@ -624,7 +848,7 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         }
         //Parent
         {
-            grid.addColumn(task -> task.getParentTask() != null ? task.getParentTask().getKey() : "").setHeader("Parent").setAutoWidth(true);
+            grid.addColumn(task -> task.getParentTask() != null ? task.getParentTask().getOrderId() : "").setHeader("Parent").setAutoWidth(true);
         }
         //name - Editable for all task types
         {
@@ -633,6 +857,13 @@ public class TaskListView extends Main implements AfterNavigationObserver {
                     TextField nameField = new TextField();
                     nameField.setValue(task.getName() != null ? task.getName() : "");
                     nameField.setWidthFull();
+
+                    // Add indentation using CSS padding
+                    int depth = getHierarchyDepth(task);
+                    if (depth > 0) {
+                        nameField.getStyle().set("padding-left", (depth * 20) + "px");
+                    }
+
                     nameField.addValueChangeListener(e -> {
                         if (e.isFromClient()) {
                             task.setName(e.getValue());
@@ -642,8 +873,13 @@ public class TaskListView extends Main implements AfterNavigationObserver {
                     return nameField;
                 } else {
                     Div div = new Div();
-                    div.setText(task.getName());
+                    div.setText(task.getName() != null ? task.getName() : "");
                     div.setId(TASK_GRID_NAME_PREFIX + task.getName());
+                    // Add indentation using CSS padding
+                    int depth = getHierarchyDepth(task);
+                    if (depth > 0) {
+                        div.getStyle().set("padding-left", (depth * 20) + "px");
+                    }
                     return div;
                 }
             })).setHeader("Name").setAutoWidth(true).setFlexGrow(1);
@@ -836,38 +1072,195 @@ public class TaskListView extends Main implements AfterNavigationObserver {
      * Setup keyboard navigation for Excel-like behavior
      */
     private void setupKeyboardNavigation() {
+        // Register server-side event listeners for indent/outdent
+        grid.getElement().addEventListener("indent-task", event -> {
+            String taskIdStr = event.getEventData().getString("event.detail.taskId");
+            if (taskIdStr != null && !taskIdStr.isEmpty()) {
+                try {
+                    Long taskId = Long.parseLong(taskIdStr);
+                    Task task = taskOrder.stream()
+                            .filter(t -> t.getId().equals(taskId))
+                            .findFirst()
+                            .orElse(null);
+                    if (task != null) {
+                        indentTask(task);
+                    }
+                } catch (NumberFormatException ex) {
+                    logger.warn("Invalid task ID for indent operation: {}", taskIdStr);
+                }
+            }
+        }).addEventData("event.detail.taskId");
+
+        grid.getElement().addEventListener("outdent-task", event -> {
+            String taskIdStr = event.getEventData().getString("event.detail.taskId");
+            if (taskIdStr != null && !taskIdStr.isEmpty()) {
+                try {
+                    Long taskId = Long.parseLong(taskIdStr);
+                    Task task = taskOrder.stream()
+                            .filter(t -> t.getId().equals(taskId))
+                            .findFirst()
+                            .orElse(null);
+                    if (task != null) {
+                        outdentTask(task);
+                    }
+                } catch (NumberFormatException ex) {
+                    logger.warn("Invalid task ID for outdent operation: {}", taskIdStr);
+                }
+            }
+        }).addEventData("event.detail.taskId");
+
         // Add keyboard navigation support for Tab key navigation between editable cells
+        // and Tab/Shift+Tab for indent/outdent when focused on a row
         grid.getElement().executeJs(
                 """
                         const grid = this;
+                        let isEditMode = false;
                         
-                        // Add event listener for Tab key navigation
+                        console.log('Setting up keyboard navigation for grid');
+                        
+                        // Function to update edit mode state from server
+                        grid.updateEditMode = function(editMode) {
+                            isEditMode = editMode;
+                            console.log('Edit mode updated to:', isEditMode);
+                        };
+                        
+                        // Function to get task ID from a row element
+                        function getTaskIdFromRow(row) {
+                            if (!row) return null;
+                            const cells = row.querySelectorAll('vaadin-grid-cell-content');
+                            if (cells.length > 1) {
+                                // ID is in the second column (index 1)
+                                const idText = cells[1].textContent?.trim();
+                                return idText || null;
+                            }
+                            return null;
+                        }
+                        
+                        // Function to check if we're in a text input
+                        function isInTextInput(element) {
+                            if (!element) return false;
+                        
+                            // Check for input elements
+                            if (element.tagName === 'INPUT') return true;
+                        
+                            // Check for Vaadin components
+                            const vaadinComponents = ['VAADIN-TEXT-FIELD', 'VAADIN-COMBO-BOX', 'VAADIN-DATE-TIME-PICKER'];
+                            if (vaadinComponents.includes(element.tagName)) return true;
+                        
+                            // Check if inside a shadow DOM of a Vaadin component
+                            if (element.getRootNode && element.getRootNode() !== document) {
+                                const host = element.getRootNode().host;
+                                if (host && vaadinComponents.includes(host.tagName)) return true;
+                            }
+                        
+                            return false;
+                        }
+                        
+                        // Add event listener with higher priority (capture phase)
                         grid.addEventListener('keydown', function(e) {
+                            console.log('Keydown event:', e.key, 'Edit mode:', isEditMode);
+                        
+                            // Only handle Tab key
+                            if (e.key !== 'Tab') return;
+                        
+                            console.log('Tab key pressed, shift:', e.shiftKey);
+                        
                             const activeElement = grid.getRootNode().activeElement || document.activeElement;
+                            console.log('Active element:', activeElement?.tagName, activeElement);
                         
-                            // Check if we're in an input field or combobox
-                            const isInInput = activeElement && (
-                                activeElement.tagName === 'INPUT' || 
-                                activeElement.tagName === 'VAADIN-TEXT-FIELD' ||
-                                activeElement.tagName === 'VAADIN-COMBO-BOX'
-                            );
+                            const isInInput = isInTextInput(activeElement);
+                            console.log('Is in input field:', isInInput);
                         
-                            if (!isInInput) return;
+                            // If in edit mode and NOT in an input field, handle indent/outdent
+                            if (isEditMode && !isInInput) {
+                                console.log('>>> Handling indent/outdent');
+                                e.preventDefault();
+                                e.stopPropagation();
+                        
+                                // Find the current row - check multiple ways
+                                let currentRow = null;
+                        
+                                // Try to find row from active element
+                                if (activeElement) {
+                                    currentRow = activeElement.closest('tr');
+                                    console.log('Found row from activeElement:', currentRow ? 'yes' : 'no');
+                                }
+                        
+                                // If not found, try to get the focused row from grid
+                                if (!currentRow) {
+                                    const focusedCell = grid.shadowRoot?.querySelector('[part~="focused-cell"]');
+                                    console.log('Focused cell from shadowRoot:', focusedCell);
+                                    if (focusedCell) {
+                                        currentRow = focusedCell.closest('tr');
+                                        console.log('Found row from focused cell:', currentRow ? 'yes' : 'no');
+                                    }
+                                }
+                        
+                                // Try another approach - get active item from grid
+                                if (!currentRow && grid.activeItem) {
+                                    console.log('Grid has active item:', grid.activeItem);
+                                    // Try to find the row by data
+                                    const allRows = grid.shadowRoot.querySelectorAll('tr');
+                                    console.log('Total rows found:', allRows.length);
+                                }
+                        
+                                if (!currentRow) {
+                                    console.log('!!! No current row found for indent/outdent');
+                                    return;
+                                }
+                        
+                                const taskId = getTaskIdFromRow(currentRow);
+                                console.log('Task ID from row:', taskId);
+                        
+                                if (!taskId) {
+                                    console.log('!!! No task ID found for row');
+                                    return;
+                                }
+                        
+                                console.log('>>> Dispatching event - task ID:', taskId, 'shift:', e.shiftKey);
+                        
+                                // Dispatch custom event to server
+                                if (e.shiftKey) {
+                                    // Shift+Tab = Outdent
+                                    grid.dispatchEvent(new CustomEvent('outdent-task', {
+                                        detail: { taskId: taskId }
+                                    }));
+                                    console.log('>>> Outdent event dispatched');
+                                } else {
+                                    // Tab = Indent
+                                    grid.dispatchEvent(new CustomEvent('indent-task', {
+                                        detail: { taskId: taskId }
+                                    }));
+                                    console.log('>>> Indent event dispatched');
+                                }
+                                return;
+                            }
+                        
+                            // If in an input field, handle cell navigation
+                            if (!isInInput) {
+                                console.log('Not in input field and not in edit mode or other condition not met');
+                                return;
+                            }
+                        
+                            console.log('>>> Handling cell navigation');
                         
                             // Find current cell position
                             let currentCell = activeElement.closest('vaadin-grid-cell-content');
                             if (!currentCell) {
                                 currentCell = activeElement.getRootNode().host?.closest('vaadin-grid-cell-content');
                             }
-                            if (!currentCell) return;
+                            if (!currentCell) {
+                                console.log('No current cell found for navigation');
+                                return;
+                            }
                         
                             // Handle Tab key (move to next field)
                             if (e.key === 'Tab' && !e.shiftKey) {
                                 e.preventDefault();
-                                const next = currentCell.parentElement?.nextElementSibling?.querySelector('input, vaadin-combo-box');
+                                const next = currentCell.parentElement?.nextElementSibling?.querySelector('input, vaadin-combo-box, vaadin-date-time-picker');
                                 if (next) {
                                     setTimeout(() => {
-                                        if (next.tagName === 'VAADIN-COMBO-BOX') {
+                                        if (next.tagName === 'VAADIN-COMBO-BOX' || next.tagName === 'VAADIN-DATE-TIME-PICKER') {
                                             next.focus();
                                         } else {
                                             next.focus();
@@ -879,10 +1272,10 @@ public class TaskListView extends Main implements AfterNavigationObserver {
                                     const row = currentCell.closest('tr');
                                     const nextRow = row?.nextElementSibling;
                                     if (nextRow) {
-                                        const firstInput = nextRow.querySelector('input, vaadin-combo-box');
+                                        const firstInput = nextRow.querySelector('input, vaadin-combo-box, vaadin-date-time-picker');
                                         if (firstInput) {
                                             setTimeout(() => {
-                                                if (firstInput.tagName === 'VAADIN-COMBO-BOX') {
+                                                if (firstInput.tagName === 'VAADIN-COMBO-BOX' || firstInput.tagName === 'VAADIN-DATE-TIME-PICKER') {
                                                     firstInput.focus();
                                                 } else {
                                                     firstInput.focus();
@@ -897,10 +1290,10 @@ public class TaskListView extends Main implements AfterNavigationObserver {
                             // Handle Shift+Tab (move to previous field)
                             if (e.key === 'Tab' && e.shiftKey) {
                                 e.preventDefault();
-                                const prev = currentCell.parentElement?.previousElementSibling?.querySelector('input, vaadin-combo-box');
+                                const prev = currentCell.parentElement?.previousElementSibling?.querySelector('input, vaadin-combo-box, vaadin-date-time-picker');
                                 if (prev) {
                                     setTimeout(() => {
-                                        if (prev.tagName === 'VAADIN-COMBO-BOX') {
+                                        if (prev.tagName === 'VAADIN-COMBO-BOX' || prev.tagName === 'VAADIN-DATE-TIME-PICKER') {
                                             prev.focus();
                                         } else {
                                             prev.focus();
@@ -912,11 +1305,11 @@ public class TaskListView extends Main implements AfterNavigationObserver {
                                     const row = currentCell.closest('tr');
                                     const prevRow = row?.previousElementSibling;
                                     if (prevRow) {
-                                        const inputs = prevRow.querySelectorAll('input, vaadin-combo-box');
+                                        const inputs = prevRow.querySelectorAll('input, vaadin-combo-box, vaadin-date-time-picker');
                                         const lastInput = inputs[inputs.length - 1];
                                         if (lastInput) {
                                             setTimeout(() => {
-                                                if (lastInput.tagName === 'VAADIN-COMBO-BOX') {
+                                                if (lastInput.tagName === 'VAADIN-COMBO-BOX' || lastInput.tagName === 'VAADIN-DATE-TIME-PICKER') {
                                                     lastInput.focus();
                                                 } else {
                                                     lastInput.focus();
@@ -927,7 +1320,9 @@ public class TaskListView extends Main implements AfterNavigationObserver {
                                     }
                                 }
                             }
-                        }, false);
+                        }, true);  // Use capture phase to intercept before other handlers
+                        
+                        console.log('Keyboard navigation setup complete');
                         """
         );
     }

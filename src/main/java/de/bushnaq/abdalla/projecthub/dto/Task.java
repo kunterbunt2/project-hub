@@ -152,12 +152,12 @@ public class Task implements Comparable<Task> {
 
     @JsonIgnore
     public boolean isStory() {
-        return !getChildTasks().isEmpty();
+        return !isMilestone() && (getMinEstimate() == null || getMinEstimate().isZero());
     }
 
     @JsonIgnore
     public boolean isTask() {
-        return !isMilestone() && getChildTasks().isEmpty();
+        return !isMilestone() && getMinEstimate() != null && !getMinEstimate().isZero();
     }
 
     public void recalculate() {
