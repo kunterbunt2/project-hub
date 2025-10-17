@@ -224,6 +224,10 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         grid.addThemeVariants(com.vaadin.flow.component.grid.GridVariant.LUMO_NO_BORDER, com.vaadin.flow.component.grid.GridVariant.LUMO_NO_ROW_BORDERS);
 
         setupGridColumns();
+
+        // Enable keyboard navigation in edit mode
+        setupKeyboardNavigation();
+
         // Add borders between columns
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 //        grid.addThemeVariants(GridVariant.LUMO_COLUMN_BORDERS, GridVariant.LUMO_ROW_STRIPES);
@@ -661,6 +665,268 @@ public class TaskListView extends Main implements AfterNavigationObserver {
             }).setHeader("Dependency").setAutoWidth(true);
             grid.addColumn(task -> task.getTaskMode().name()).setHeader("Mode").setAutoWidth(true);
         }
+    }
+
+    /**
+     * Setup keyboard navigation for Excel-like behavior
+     */
+    private void setupKeyboardNavigation() {
+        // Add keyboard navigation support using client-side event listeners
+        grid.getElement().executeJs(
+                """
+                        // Store reference to grid element
+                        const grid = this;
+                        
+                        // Function to focus on a specific cell input
+                        function focusCellInput(rowIndex, colIndex) {
+                            const rows = grid.querySelectorAll('vaadin-grid-cell-content');
+                            if (!rows || rows.length === 0) return false;
+                        
+                            // Calculate cell index (skip non-editable columns)
+                            const editableColumns = [2, 3, 4, 5]; // Name, Assigned, Min Estimate, Max Estimate
+                            if (!editableColumns.includes(colIndex)) return false;
+                        
+                            // Find the input field in the target cell
+                            let cellIndex = 0;
+                            for (let i = 0; i < rows.length; i++) {
+                                const cell = rows[i];
+                                const input = cell.querySelector('input, vaadin-combo-box');
+                        
+                                if (input && cellIndex === rowIndex * editableColumns.length + editableColumns.indexOf(colIndex)) {
+                                    setTimeout(() => {
+                                        if (input.tagName === 'VAADIN-COMBO-BOX') {
+                                            input.focus();
+                                            input.opened = false;
+                                        } else {
+                                            input.focus();
+                                            input.select();
+                                        }
+                                    }, 10);
+                                    return true;
+                                }
+                                if (input) cellIndex++;
+                            }
+                            return false;
+                        }
+                        
+                        // Add event listener for keyboard navigation
+                        grid.addEventListener('keydown', function(e) {
+                            const activeElement = grid.getRootNode().activeElement || document.activeElement;
+                        
+                            // Check if we're in an input field or combobox
+                            const isInInput = activeElement && (
+                                activeElement.tagName === 'INPUT' || 
+                                activeElement.tagName === 'VAADIN-TEXT-FIELD' ||
+                                activeElement.tagName === 'VAADIN-COMBO-BOX'
+                            );
+                        
+                            if (!isInInput) return;
+                        
+                            // Find current cell position
+                            let currentCell = activeElement.closest('vaadin-grid-cell-content');
+                            if (!currentCell) {
+                                currentCell = activeElement.getRootNode().host?.closest('vaadin-grid-cell-content');
+                            }
+                            if (!currentCell) return;
+                        
+                            let handled = false;
+                        
+                            // Handle Tab key (move to next field)
+                            if (e.key === 'Tab' && !e.shiftKey) {
+                                e.preventDefault();
+                                const next = currentCell.parentElement?.nextElementSibling?.querySelector('input, vaadin-combo-box');
+                                if (next) {
+                                    setTimeout(() => {
+                                        if (next.tagName === 'VAADIN-COMBO-BOX') {
+                                            next.focus();
+                                        } else {
+                                            next.focus();
+                                            next.select();
+                                        }
+                                    }, 10);
+                                } else {
+                                    // Move to next row, first editable column
+                                    const row = currentCell.closest('tr');
+                                    const nextRow = row?.nextElementSibling;
+                                    if (nextRow) {
+                                        const firstInput = nextRow.querySelector('input, vaadin-combo-box');
+                                        if (firstInput) {
+                                            setTimeout(() => {
+                                                if (firstInput.tagName === 'VAADIN-COMBO-BOX') {
+                                                    firstInput.focus();
+                                                } else {
+                                                    firstInput.focus();
+                                                    firstInput.select();
+                                                }
+                                            }, 10);
+                                        }
+                                    }
+                                }
+                                handled = true;
+                            }
+                        
+                            // Handle Shift+Tab (move to previous field)
+                            if (e.key === 'Tab' && e.shiftKey) {
+                                e.preventDefault();
+                                const prev = currentCell.parentElement?.previousElementSibling?.querySelector('input, vaadin-combo-box');
+                                if (prev) {
+                                    setTimeout(() => {
+                                        if (prev.tagName === 'VAADIN-COMBO-BOX') {
+                                            prev.focus();
+                                        } else {
+                                            prev.focus();
+                                            prev.select();
+                                        }
+                                    }, 10);
+                                } else {
+                                    // Move to previous row, last editable column
+                                    const row = currentCell.closest('tr');
+                                    const prevRow = row?.previousElementSibling;
+                                    if (prevRow) {
+                                        const inputs = prevRow.querySelectorAll('input, vaadin-combo-box');
+                                        const lastInput = inputs[inputs.length - 1];
+                                        if (lastInput) {
+                                            setTimeout(() => {
+                                                if (lastInput.tagName === 'VAADIN-COMBO-BOX') {
+                                                    lastInput.focus();
+                                                } else {
+                                                    lastInput.focus();
+                                                    lastInput.select();
+                                                }
+                                            }, 10);
+                                        }
+                                    }
+                                }
+                                handled = true;
+                            }
+                        
+                            // Handle Enter key (move down to same column)
+                            if (e.key === 'Enter' && activeElement.tagName !== 'VAADIN-COMBO-BOX') {
+                                e.preventDefault();
+                                const row = currentCell.closest('tr');
+                                const cellIndex = Array.from(row.children).indexOf(currentCell.parentElement);
+                                const nextRow = row?.nextElementSibling;
+                                if (nextRow && cellIndex >= 0) {
+                                    const nextCell = nextRow.children[cellIndex];
+                                    const nextInput = nextCell?.querySelector('input, vaadin-combo-box');
+                                    if (nextInput) {
+                                        setTimeout(() => {
+                                            if (nextInput.tagName === 'VAADIN-COMBO-BOX') {
+                                                nextInput.focus();
+                                            } else {
+                                                nextInput.focus();
+                                                nextInput.select();
+                                            }
+                                        }, 10);
+                                    }
+                                }
+                                handled = true;
+                            }
+                        
+                            // Handle Arrow Down (move to cell below)
+                            if (e.key === 'ArrowDown' && !e.altKey) {
+                                // Allow arrow down in combo box when opened
+                                if (activeElement.tagName === 'VAADIN-COMBO-BOX' && activeElement.opened) {
+                                    return;
+                                }
+                        
+                                e.preventDefault();
+                                const row = currentCell.closest('tr');
+                                const cellIndex = Array.from(row.children).indexOf(currentCell.parentElement);
+                                const nextRow = row?.nextElementSibling;
+                                if (nextRow && cellIndex >= 0) {
+                                    const nextCell = nextRow.children[cellIndex];
+                                    const nextInput = nextCell?.querySelector('input, vaadin-combo-box');
+                                    if (nextInput) {
+                                        setTimeout(() => {
+                                            if (nextInput.tagName === 'VAADIN-COMBO-BOX') {
+                                                nextInput.focus();
+                                            } else {
+                                                nextInput.focus();
+                                                nextInput.select();
+                                            }
+                                        }, 10);
+                                    }
+                                }
+                                handled = true;
+                            }
+                        
+                            // Handle Arrow Up (move to cell above)
+                            if (e.key === 'ArrowUp' && !e.altKey) {
+                                // Allow arrow up in combo box when opened
+                                if (activeElement.tagName === 'VAADIN-COMBO-BOX' && activeElement.opened) {
+                                    return;
+                                }
+                        
+                                e.preventDefault();
+                                const row = currentCell.closest('tr');
+                                const cellIndex = Array.from(row.children).indexOf(currentCell.parentElement);
+                                const prevRow = row?.previousElementSibling;
+                                if (prevRow && cellIndex >= 0) {
+                                    const prevCell = prevRow.children[cellIndex];
+                                    const prevInput = prevCell?.querySelector('input, vaadin-combo-box');
+                                    if (prevInput) {
+                                        setTimeout(() => {
+                                            if (prevInput.tagName === 'VAADIN-COMBO-BOX') {
+                                                prevInput.focus();
+                                            } else {
+                                                prevInput.focus();
+                                                prevInput.select();
+                                            }
+                                        }, 10);
+                                    }
+                                }
+                                handled = true;
+                            }
+                        
+                            // Handle Arrow Right (move to next cell in row)
+                            if (e.key === 'ArrowRight') {
+                                // Only handle if cursor is at end of text field
+                                if (activeElement.tagName === 'INPUT') {
+                                    const input = activeElement;
+                                    if (input.selectionStart === input.value.length) {
+                                        e.preventDefault();
+                                        const next = currentCell.parentElement?.nextElementSibling?.querySelector('input, vaadin-combo-box');
+                                        if (next) {
+                                            setTimeout(() => {
+                                                if (next.tagName === 'VAADIN-COMBO-BOX') {
+                                                    next.focus();
+                                                } else {
+                                                    next.focus();
+                                                    next.setSelectionRange(0, 0);
+                                                }
+                                            }, 10);
+                                        }
+                                        handled = true;
+                                    }
+                                }
+                            }
+                        
+                            // Handle Arrow Left (move to previous cell in row)
+                            if (e.key === 'ArrowLeft') {
+                                // Only handle if cursor is at start of text field
+                                if (activeElement.tagName === 'INPUT') {
+                                    const input = activeElement;
+                                    if (input.selectionStart === 0) {
+                                        e.preventDefault();
+                                        const prev = currentCell.parentElement?.previousElementSibling?.querySelector('input, vaadin-combo-box');
+                                        if (prev) {
+                                            setTimeout(() => {
+                                                if (prev.tagName === 'VAADIN-COMBO-BOX') {
+                                                    prev.focus();
+                                                } else {
+                                                    prev.focus();
+                                                    prev.setSelectionRange(prev.value.length, prev.value.length);
+                                                }
+                                            }, 10);
+                                        }
+                                        handled = true;
+                                    }
+                                }
+                            }
+                        }, true);
+                        """
+        );
     }
 
 }
