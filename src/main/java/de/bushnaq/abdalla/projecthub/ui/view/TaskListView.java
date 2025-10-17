@@ -257,7 +257,13 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         grid.addDragStartListener(event -> {
             if (isEditMode && !event.getDraggedItems().isEmpty()) {
                 draggedTask = event.getDraggedItems().get(0);
+                grid.setDropMode(com.vaadin.flow.component.grid.dnd.GridDropMode.BETWEEN); // Enable drop between rows with visual indicator
             }
+        });
+
+        grid.addDragEndListener(event -> {
+            draggedTask = null; // Clear reference when drag ends without drop
+            grid.setDropMode(null);
         });
 
         // Add borders between columns
