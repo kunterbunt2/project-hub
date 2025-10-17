@@ -53,18 +53,23 @@ public class TaskController {
     @GetMapping("/sprint/{sprintId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public List<TaskDAO> getAll(@PathVariable Long sprintId) {
-        return taskRepository.findBySprintId(sprintId);
+        return taskRepository.findBySprintIdOrderByOrderIdAsc(sprintId);
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public List<TaskDAO> getAll() {
-        return taskRepository.findAll();
+        return taskRepository.findAllByOrderByOrderIdAsc();
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public TaskDAO save(@RequestBody TaskDAO task) {
+        // Assign the next available orderId if not set or set to 0
+        if (task.getOrderId() == null || task.getOrderId() == 0L) {
+            Long maxOrderId = taskRepository.findMaxOrderId();
+            task.setOrderId(maxOrderId + 1);
+        }
         return taskRepository.save(task);
     }
 

@@ -285,18 +285,18 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         return header;
     }
 
-    /**
-     * Creates a text field component for editing task names
-     *
-     * @return TextField component for the name editor
-     */
-    private com.vaadin.flow.component.textfield.TextField createNameEditor() {
-        com.vaadin.flow.component.textfield.TextField nameField = new com.vaadin.flow.component.textfield.TextField();
-        nameField.setWidthFull();
-
-
-        return nameField;
-    }
+//    /**
+//     * Creates a text field component for editing task names
+//     *
+//     * @return TextField component for the name editor
+//     */
+//    private com.vaadin.flow.component.textfield.TextField createNameEditor() {
+//        com.vaadin.flow.component.textfield.TextField nameField = new com.vaadin.flow.component.textfield.TextField();
+//        nameField.setWidthFull();
+//
+//
+//        return nameField;
+//    }
 
     private void createTask() {
         Task task = new Task();
@@ -731,8 +731,8 @@ public class TaskListView extends Main implements AfterNavigationObserver {
                         .filter(key -> !key.isEmpty())
                         .collect(Collectors.joining(", "));
             }).setHeader("Dependency").setAutoWidth(true);
-            grid.addColumn(task -> task.getTaskMode().name()).setHeader("Mode").setAutoWidth(true);
         }
+//        grid.addColumn(task -> task.getTaskMode().name()).setHeader("Mode").setAutoWidth(true);
     }
 
     /**

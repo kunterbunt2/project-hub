@@ -18,10 +18,18 @@
 package de.bushnaq.abdalla.projecthub.repository;
 
 import de.bushnaq.abdalla.projecthub.dao.TaskDAO;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.ListCrudRepository;
 
 import java.util.List;
 
 public interface TaskRepository extends ListCrudRepository<TaskDAO, Long> {
+    List<TaskDAO> findAllByOrderByOrderIdAsc();
+
     List<TaskDAO> findBySprintId(Long sprintId);
+
+    List<TaskDAO> findBySprintIdOrderByOrderIdAsc(Long sprintId);
+
+    @Query("SELECT COALESCE(MAX(t.orderId), 0) FROM TaskDAO t")
+    Long findMaxOrderId();
 }

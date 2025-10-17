@@ -62,6 +62,7 @@ public class Task implements Comparable<Task> {
     private String         name;
     @JsonIgnore
     private String         notes;
+    private Long           orderId           = 0L;
     @JsonSerialize(using = DurationSerializer.class)
     @JsonDeserialize(using = DurationDeserializer.class)
     private Duration       originalEstimate  = Duration.ZERO;

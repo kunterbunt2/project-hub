@@ -72,6 +72,8 @@ public class TaskDAO {
     private Duration          minEstimate       = Duration.ZERO;
     @Column(nullable = false)
     private String            name;
+    @Column(nullable = false)
+    private Long              orderId           = 0L;
     @Column(nullable = true)
     @JsonSerialize(using = DurationSerializer.class)
     @JsonDeserialize(using = DurationDeserializer.class)

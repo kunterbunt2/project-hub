@@ -64,7 +64,11 @@ public class TaskApi extends AbstractApi {
                 Task[].class,
                 sprintId
         ));
-        return new ArrayList<>(Arrays.asList(response.getBody()));
+        Task[] body = response.getBody();
+        if (body == null) {
+            return new ArrayList<>();
+        }
+        return new ArrayList<>(Arrays.asList(body));
     }
 
     public List<Task> getAll() {
@@ -74,7 +78,11 @@ public class TaskApi extends AbstractApi {
                 createHttpEntity(),
                 Task[].class
         ));
-        return Arrays.asList(response.getBody());
+        Task[] body = response.getBody();
+        if (body == null) {
+            return new ArrayList<>();
+        }
+        return new ArrayList<>(Arrays.asList(body));
     }
 
     public Task getById(Long id) {
