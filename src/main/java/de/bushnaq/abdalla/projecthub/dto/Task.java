@@ -149,6 +149,16 @@ public class Task implements Comparable<Task> {
         return false;
     }
 
+    @JsonIgnore
+    public boolean isStory() {
+        return !getChildTasks().isEmpty();
+    }
+
+    @JsonIgnore
+    public boolean isTask() {
+        return !isMilestone() && getChildTasks().isEmpty();
+    }
+
     public void recalculate() {
         double fraction = ((double) getTimeSpent().toSeconds()) / getTimeSpent().plus(getRemainingEstimate()).toSeconds();
         setProgress(fraction);

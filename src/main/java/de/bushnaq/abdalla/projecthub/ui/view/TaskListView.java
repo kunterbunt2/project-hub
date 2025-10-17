@@ -21,6 +21,7 @@ import com.vaadin.flow.component.Svg;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.datetimepicker.DateTimePicker;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -81,6 +82,7 @@ public class TaskListView extends Main implements AfterNavigationObserver {
     private final       Clock             clock;
     @Autowired
     protected           Context           context;
+    public final        DateTimeFormatter dtfymdhm              = DateTimeFormatter.ofPattern("yyyy.MMM.dd HH:mm");
     private             Button            editButton;
     private final       GanttErrorHandler eh                    = new GanttErrorHandler();
     private final       FeatureApi        featureApi;
@@ -490,7 +492,8 @@ public class TaskListView extends Main implements AfterNavigationObserver {
 
         // Persist all modified tasks
         for (Task task : modifiedTasks) {
-            task.setStart(null); // Reset start date to force recalculation
+            if (!task.isMilestone())
+                task.setStart(null); // Reset start date to force recalculation
             taskApi.persist(task);
         }
 
@@ -508,13 +511,26 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         {
             grid.addColumn(Task::getKey).setHeader("Key").setAutoWidth(true);
         }
+        //Type
+        {
+            grid.addColumn(task -> {
+                if (task.isMilestone()) {
+                    return "Milestone";
+                } else if (task.isStory()) {
+                    return "Story";
+                } else if (task.isTask()) {
+                    return "Task";
+                } else {
+                    return "";
+                }
+            }).setHeader("Type").setAutoWidth(true);
+        }
         //Parent
         {
             grid.addColumn(task -> task.getParentTask() != null ? task.getParentTask().getKey() : "").setHeader("Parent").setAutoWidth(true);
         }
-        //name
+        //name - Editable for all task types
         {
-            // Create an editable column for the task name
             Grid.Column<Task> nameColumn = grid.addColumn(new ComponentRenderer<>(task -> {
                 if (isEditMode) {
                     TextField nameField = new TextField();
@@ -535,11 +551,52 @@ public class TaskListView extends Main implements AfterNavigationObserver {
                 }
             })).setHeader("Name").setAutoWidth(true).setFlexGrow(1);
         }
-        //Assigned
+        //Start - Editable only for Milestone tasks
         {
-            // Editable resource assignment column
             grid.addColumn(new ComponentRenderer<>(task -> {
-                if (isEditMode) {
+                if (isEditMode && task.isMilestone()) {
+                    // Editable for Milestone tasks
+                    DateTimePicker startField = new DateTimePicker();
+                    startField.setValue(task.getStart() != null ? task.getStart() : LocalDateTime.now());
+                    startField.setWidthFull();
+
+                    startField.addValueChangeListener(e -> {
+                        if (e.isFromClient()) {
+                            try {
+                                LocalDateTime dateTime = e.getValue();
+                                if (dateTime != null) {
+                                    task.setStart(dateTime);
+                                    markTaskAsModified(task);
+                                    startField.setInvalid(false);
+                                } else {
+                                    task.setStart(null);
+                                    markTaskAsModified(task);
+                                    startField.setInvalid(false);
+                                }
+                            } catch (Exception ex) {
+                                startField.setInvalid(true);
+                                startField.setErrorMessage("Invalid date/time format");
+                            }
+                        }
+                    });
+
+                    return startField;
+                } else {
+                    // Read-only for Story and Task tasks
+                    Div div = new Div();
+                    if (task.isMilestone())
+                        div.setText(task.getStart() != null ? DateUtil.createDateString(task.getStart(), dtfymdhm) : "");
+                    else
+                        div.setText("");
+                    return div;
+                }
+            })).setHeader("Start").setAutoWidth(true);
+        }
+        //Assigned - Editable only for Task tasks
+        {
+            grid.addColumn(new ComponentRenderer<>(task -> {
+                if (isEditMode && task.isTask()) {
+                    // Editable for Task tasks
                     ComboBox<User> userComboBox = new ComboBox<>();
                     userComboBox.setAllowCustomValue(false);
                     userComboBox.setClearButtonVisible(true);
@@ -551,7 +608,6 @@ public class TaskListView extends Main implements AfterNavigationObserver {
                     userComboBox.setItems(allUsers);
 
                     // Set current value only if task has an assigned user
-                    // Don't try to set value if resourceId is null - just leave it empty
                     if (task.getResourceId() != null) {
                         try {
                             User currentUser = sprint.getuser(task.getResourceId());
@@ -573,17 +629,22 @@ public class TaskListView extends Main implements AfterNavigationObserver {
 
                     return userComboBox;
                 } else {
+                    // Read-only for Milestone and Story tasks
                     Div div = new Div();
-                    div.setText(task.getResourceId() != null ? sprint.getuser(task.getResourceId()).getName() : "");
+                    if (task.isTask())
+                        div.setText(task.getResourceId() != null ? sprint.getuser(task.getResourceId()).getName() : "");
+                    else
+                        div.setText("");
                     return div;
                 }
             })).setHeader("Assigned").setAutoWidth(true);
         }
 
-        //Min Estimate
+        //Min Estimate - Editable only for Task tasks
         {
-            Grid.Column<Task> minEstimateColumn = grid.addColumn(new ComponentRenderer<>(task -> {
-                if (isEditMode) {
+            grid.addColumn(new ComponentRenderer<>(task -> {
+                if (isEditMode && task.isTask()) {
+                    // Editable for Task tasks
                     TextField estimateField = new TextField();
                     estimateField.setValue(!task.getMinEstimate().equals(Duration.ZERO) ?
                             DateUtil.createWorkDayDurationString(task.getMinEstimate()) : "");
@@ -606,17 +667,21 @@ public class TaskListView extends Main implements AfterNavigationObserver {
 
                     return estimateField;
                 } else {
+                    // Read-only for Milestone and Story tasks
                     Div div = new Div();
-                    div.setText(!task.getMinEstimate().equals(Duration.ZERO) ?
-                            DateUtil.createWorkDayDurationString(task.getMinEstimate()) : "");
+                    if (task.isTask())
+                        div.setText(!task.getMinEstimate().equals(Duration.ZERO) ? DateUtil.createWorkDayDurationString(task.getMinEstimate()) : "");
+                    else
+                        div.setText("");
                     return div;
                 }
             })).setHeader("Min Estimate").setAutoWidth(true);
         }
-        //Max Estimate
+        //Max Estimate - Editable only for Task tasks
         {
-            Grid.Column<Task> maxEstimateColumn = grid.addColumn(new ComponentRenderer<>(task -> {
-                if (isEditMode) {
+            grid.addColumn(new ComponentRenderer<>(task -> {
+                if (isEditMode && task.isTask()) {
+                    // Editable for Task tasks
                     TextField estimateField = new TextField();
                     estimateField.setValue(!task.getMaxEstimate().equals(Duration.ZERO) ?
                             DateUtil.createWorkDayDurationString(task.getMaxEstimate()) : "");
@@ -639,9 +704,12 @@ public class TaskListView extends Main implements AfterNavigationObserver {
 
                     return estimateField;
                 } else {
+                    // Read-only for Milestone and Story tasks
                     Div div = new Div();
-                    div.setText(!task.getMaxEstimate().equals(Duration.ZERO) ?
-                            DateUtil.createWorkDayDurationString(task.getMaxEstimate()) : "");
+                    if (task.isTask())
+                        div.setText(!task.getMaxEstimate().equals(Duration.ZERO) ? DateUtil.createWorkDayDurationString(task.getMaxEstimate()) : "");
+                    else
+                        div.setText("");
                     return div;
                 }
             })).setHeader("Max Estimate").setAutoWidth(true);
