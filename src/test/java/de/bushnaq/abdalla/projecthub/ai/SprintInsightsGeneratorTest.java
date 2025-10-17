@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.ai;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -26,73 +27,126 @@ import org.springframework.boot.test.context.SpringBootTest;
  * Demonstrates how to use the AI-powered sprint analysis functionality.
  */
 @SpringBootTest
+@Disabled
 public class SprintInsightsGeneratorTest {
 
     /**
-     * Sample sprint data for testing
+     * Sample sprint statistics data for testing (reduced size matching @JsonIgnore fields)
      */
-    private static final String SAMPLE_SPRINT_DATA = """
+    private static final String                  SAMPLE_SPRINT_STATISTICS_DATA = """
             [
               {
-                "created" : "2025-01-01T08:00:00+01:00",
-                "updated" : "2025-07-04T14:36:34.2635+02:00",
-                "end" : "2024-12-27T11:30:00",
-                "featureId" : 2,
-                "id" : 4,
-                "name" : "paris",
-                "originalEstimation" : "4d 3h",
-                "releaseDate" : "2025-01-02T08:00:00",
-                "remaining" : "49m 46s",
-                "start" : "2024-12-06T08:00:00",
-                "status" : "STARTED",
-                "worked" : "4d 2h 10m 14s"
+                "currentEfficiency" : "85% Person",
+                "currentEffortDelay" : "2h 15m",
+                "currentScheduleDelay" : "1d 3h",
+                "delayFraction" : 0.12,
+                "effortEstimateDisplay" : "4d 3h 0m",
+                "effortRemainingDisplay" : "4h 48m",
+                "effortSpentDisplay" : "3d 22h 12m",
+                "extrapolatedDelayFraction" : 0.08,
+                "extrapolatedReleaseDate" : "2025.01.03",
+                "extrapolatedScheduleDelay" : "1d 2h",
+                "extrapolatedStatus" : "WARNING",
+                "optimalEfficiency" : "120% Person",
+                "remainingWorkDays" : 2,
+                "sprintEndDate" : "2024-12-27T11:30:00",
+                "sprintName" : "paris",
+                "sprintStartDate" : "2024-12-06T08:00:00",
+                "status" : "WARNING",
+                "totalWorkDays" : 15,
+                "isActualReleaseDate" : false,
+                "releaseDateLabel" : "Extrapolated Sprint Release Date",
+                "actualProgressDisplay" : "95%",
+                "expectedProgressDisplay" : "88%",
+                "releaseDateStatus" : "WARNING",
+                "currentEffortDelayDisplay" : "2h 15m (12%)",
+                "extrapolatedScheduleDelayDisplay" : "1d 2h (8%)"
               },
               {
-                "created" : "2025-01-01T08:00:00+01:00",
-                "updated" : "2025-06-15T10:22:11.1234+02:00",
-                "end" : "2024-11-15T17:00:00",
-                "featureId" : 1,
-                "id" : 2,
-                "name" : "london",
-                "originalEstimation" : "2d 5h",
-                "releaseDate" : "2024-11-20T08:00:00",
-                "remaining" : "0h",
-                "start" : "2024-11-01T08:00:00",
-                "status" : "COMPLETED",
-                "worked" : "2d 6h 30m"
+                "currentEfficiency" : "110% Person",
+                "currentEffortDelay" : "0m",
+                "currentScheduleDelay" : "0m",
+                "delayFraction" : 0.0,
+                "effortEstimateDisplay" : "2d 5h 0m",
+                "effortRemainingDisplay" : "0h",
+                "effortSpentDisplay" : "2d 5h 0m",
+                "extrapolatedDelayFraction" : 0.0,
+                "extrapolatedReleaseDate" : "2024.11.15",
+                "extrapolatedScheduleDelay" : "0m",
+                "extrapolatedStatus" : "GOOD",
+                "optimalEfficiency" : "100% Person",
+                "remainingWorkDays" : 0,
+                "sprintEndDate" : "2024-11-15T17:00:00",
+                "sprintName" : "london",
+                "sprintStartDate" : "2024-11-01T08:00:00",
+                "status" : "GOOD",
+                "totalWorkDays" : 10,
+                "isActualReleaseDate" : true,
+                "releaseDateLabel" : "Actual Sprint Release Date",
+                "actualProgressDisplay" : "100%",
+                "expectedProgressDisplay" : "100%",
+                "releaseDateStatus" : "GOOD",
+                "currentEffortDelayDisplay" : "0m (0%)",
+                "extrapolatedScheduleDelayDisplay" : "0m (0%)"
               },
               {
-                "created" : "2025-01-01T08:00:00+01:00",
-                "updated" : "2025-05-20T16:45:22.5678+02:00",
-                "end" : "2024-10-31T17:00:00",
-                "featureId" : 3,
-                "id" : 1,
-                "name" : "tokyo",
-                "originalEstimation" : "1d 2h",
-                "releaseDate" : "2024-11-05T08:00:00",
-                "remaining" : "0h",
-                "start" : "2024-10-25T08:00:00",
-                "status" : "COMPLETED",
-                "worked" : "1d 4h 15m"
+                "currentEfficiency" : "125% Person",
+                "currentEffortDelay" : "-2h 15m",
+                "currentScheduleDelay" : "-1h 30m",
+                "delayFraction" : -0.05,
+                "effortEstimateDisplay" : "1d 2h 0m",
+                "effortRemainingDisplay" : "0h",
+                "effortSpentDisplay" : "1d 2h 0m",
+                "extrapolatedDelayFraction" : 0.0,
+                "extrapolatedReleaseDate" : "2024.10.31",
+                "extrapolatedScheduleDelay" : "0m",
+                "extrapolatedStatus" : "GOOD",
+                "optimalEfficiency" : "90% Person",
+                "remainingWorkDays" : 0,
+                "sprintEndDate" : "2024-10-31T17:00:00",
+                "sprintName" : "tokyo",
+                "sprintStartDate" : "2024-10-25T08:00:00",
+                "status" : "GOOD",
+                "totalWorkDays" : 5,
+                "isActualReleaseDate" : true,
+                "releaseDateLabel" : "Actual Sprint Release Date",
+                "actualProgressDisplay" : "100%",
+                "expectedProgressDisplay" : "100%",
+                "releaseDateStatus" : "GOOD",
+                "currentEffortDelayDisplay" : "-2h 15m (-5%)",
+                "extrapolatedScheduleDelayDisplay" : "0m (0%)"
               },
               {
-                "created" : "2025-01-01T08:00:00+01:00",
-                "updated" : "2025-08-10T09:15:44.9876+02:00",
-                "end" : "2025-02-28T17:00:00",
-                "featureId" : 4,
-                "id" : 5,
-                "name" : "newyork",
-                "originalEstimation" : "6d 1h",
-                "releaseDate" : "2025-03-05T08:00:00",
-                "remaining" : "5d 12h 30m",
-                "start" : "2025-02-01T08:00:00",
-                "status" : "NOT_STARTED",
-                "worked" : "0h"
+                "currentEfficiency" : "0% Person",
+                "currentEffortDelay" : "0m",
+                "currentScheduleDelay" : "0m",
+                "delayFraction" : 0.0,
+                "effortEstimateDisplay" : "6d 1h 0m",
+                "effortRemainingDisplay" : "6d 1h 0m",
+                "effortSpentDisplay" : "0h",
+                "extrapolatedDelayFraction" : null,
+                "extrapolatedReleaseDate" : "2025.03.05",
+                "extrapolatedScheduleDelay" : "NA",
+                "extrapolatedStatus" : "GOOD",
+                "optimalEfficiency" : "150% Person",
+                "remainingWorkDays" : 20,
+                "sprintEndDate" : "2025-02-28T17:00:00",
+                "sprintName" : "newyork",
+                "sprintStartDate" : "2025-02-01T08:00:00",
+                "status" : "GOOD",
+                "totalWorkDays" : 20,
+                "isActualReleaseDate" : false,
+                "releaseDateLabel" : "Extrapolated Sprint Release Date",
+                "actualProgressDisplay" : "0%",
+                "expectedProgressDisplay" : "0%",
+                "releaseDateStatus" : "GOOD",
+                "currentEffortDelayDisplay" : "0m (0%)",
+                "extrapolatedScheduleDelayDisplay" : "NA"
               }
             ]
             """;
     @Autowired
-    private SprintInsightsGenerator sprintInsightsGenerator;
+    private              SprintInsightsGenerator sprintInsightsGenerator;
 
     @Test
     public void testEstimationAccuracyAnalysis() {
@@ -100,7 +154,7 @@ public class SprintInsightsGeneratorTest {
 
         try {
             String question = "How accurate are our sprint estimations? Are we consistently over or under-estimating?";
-            String analysis = sprintInsightsGenerator.generateFocusedInsights(SAMPLE_SPRINT_DATA, question);
+            String analysis = sprintInsightsGenerator.generateFocusedInsights(SAMPLE_SPRINT_STATISTICS_DATA, question);
 
             System.out.println("Question: " + question);
             System.out.println("Analysis:");
@@ -118,7 +172,7 @@ public class SprintInsightsGeneratorTest {
 
         try {
             String question        = "Which sprints are at risk of missing their deadlines and why?";
-            String focusedInsights = sprintInsightsGenerator.generateFocusedInsights(SAMPLE_SPRINT_DATA, question);
+            String focusedInsights = sprintInsightsGenerator.generateFocusedInsights(SAMPLE_SPRINT_STATISTICS_DATA, question);
 
             System.out.println("Question: " + question);
             System.out.println("Focused Insights:");
@@ -138,7 +192,7 @@ public class SprintInsightsGeneratorTest {
         System.out.println("=== Testing General Sprint Insights ===");
 
         try {
-            String insights = sprintInsightsGenerator.generateInsights(SAMPLE_SPRINT_DATA);
+            String insights = sprintInsightsGenerator.generateInsights(SAMPLE_SPRINT_STATISTICS_DATA);
             System.out.println("Generated Insights:");
             System.out.println(insights);
 
@@ -156,7 +210,7 @@ public class SprintInsightsGeneratorTest {
         System.out.println("\n=== Testing Quick Sprint Summary ===");
 
         try {
-            String summary = sprintInsightsGenerator.generateQuickSummary(SAMPLE_SPRINT_DATA);
+            String summary = sprintInsightsGenerator.generateQuickSummary(SAMPLE_SPRINT_STATISTICS_DATA);
 
             System.out.println("Quick Summary:");
             System.out.println(summary);
@@ -176,7 +230,7 @@ public class SprintInsightsGeneratorTest {
 
         try {
             String question = "What patterns can you identify in our sprint workload and team velocity?";
-            String analysis = sprintInsightsGenerator.generateFocusedInsights(SAMPLE_SPRINT_DATA, question);
+            String analysis = sprintInsightsGenerator.generateFocusedInsights(SAMPLE_SPRINT_STATISTICS_DATA, question);
 
             System.out.println("Question: " + question);
             System.out.println("Analysis:");

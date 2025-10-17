@@ -52,7 +52,13 @@ public class Task implements Comparable<Task> {
     private LocalDateTime  finish;
     private Long           id;
     private boolean        impactOnCost      = true;
+    @JsonSerialize(using = DurationSerializer.class)
+    @JsonDeserialize(using = DurationDeserializer.class)
+    private Duration       maxEstimate       = Duration.ZERO;
     private boolean        milestone;
+    @JsonSerialize(using = DurationSerializer.class)
+    @JsonDeserialize(using = DurationDeserializer.class)
+    private Duration       minEstimate       = Duration.ZERO;
     private String         name;
     @JsonIgnore
     private String         notes;

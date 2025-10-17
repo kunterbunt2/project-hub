@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import de.bushnaq.abdalla.projecthub.dto.Sprint;
 import de.bushnaq.abdalla.projecthub.ui.HtmlColor;
 import de.bushnaq.abdalla.util.date.DateUtil;
@@ -34,17 +35,22 @@ import java.time.format.DateTimeFormatter;
 @Getter
 public class SprintStatistics {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+    @JsonIgnore
     private final        double            actualProgress;
     private final        String            currentEfficiency;
     private final        String            currentEffortDelay;
     private final        String            currentScheduleDelay;
     private final        double            delayFraction;
+    @JsonIgnore
     private final        Duration          effortEstimate;
     private final        String            effortEstimateDisplay;
+    @JsonIgnore
     private final        Duration          effortRemaining;
     private final        String            effortRemainingDisplay;
+    @JsonIgnore
     private final        Duration          effortSpent;
     private final        String            effortSpentDisplay;
+    @JsonIgnore
     private final        double            expectedProgress;
     private final        Double            extrapolatedDelayFraction;
     private final        String            extrapolatedReleaseDate;
@@ -52,6 +58,7 @@ public class SprintStatistics {
     private final        String            extrapolatedStatus;
     private final        boolean           isActualReleaseDate;//- if ture, the sprint has been completed, extrapolatedReleaseDate is actual release date, otherwise extrapolatedReleaseDate is an extrapolated date
     private final        String            optimalEfficiency;
+    @JsonIgnore
     private final        Duration          originalEstimation;
     private final        int               remainingWorkDays;
     private final        LocalDateTime     sprintEndDate;

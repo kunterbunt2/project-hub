@@ -19,6 +19,8 @@ package de.bushnaq.abdalla.projecthub.ui.view;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.*;
@@ -61,20 +63,20 @@ import java.util.concurrent.ExecutionException;
 public class InsightsView extends Main implements AfterNavigationObserver {
 
     @Autowired
-    protected     Context    context;
-    private final FeatureApi featureApi;
-    private       Button     generateInsightsButton;
-    private       Button     generateQuickSummaryButton;
-    private       Div        insightsContent;
+    protected Context context;
+    //    private final        FeatureApi featureApi;
+    private   Button  generateInsightsButton;
+    private   Button  generateQuickSummaryButton;
+    private   Div     insightsContent;
     String jsonString = "";
-    private       ProgressBar    loadingIndicator;
-    final         Logger         logger = LoggerFactory.getLogger(this.getClass());
-    private       VerticalLayout mainLayout;
-    private final LocalDateTime  now;
-    @Autowired
-    ObjectMapper objectMapper;
+    private       ProgressBar             loadingIndicator;
+    final         Logger                  logger = LoggerFactory.getLogger(this.getClass());
+    private       VerticalLayout          mainLayout;
+    private final LocalDateTime           now;
+    //    @Autowired
+//    ObjectMapper objectMapper;
     private final H2                      pageTitle;
-    private final ProductApi              productApi;
+    //    private final ProductApi              productApi;
     private       TextField               questionField;
     private final SprintApi               sprintApi;
     // AI Insights Components
@@ -90,11 +92,11 @@ public class InsightsView extends Main implements AfterNavigationObserver {
         this.worklogApi = worklogApi;
         this.taskApi    = taskApi;
         this.sprintApi  = sprintApi;
-        this.productApi = productApi;
+//        this.productApi = productApi;
         this.versionApi = versionApi;
-        this.featureApi = featureApi;
-        this.userApi    = userApi;
-        this.now        = ParameterOptions.getLocalNow();
+//        this.featureApi = featureApi;
+        this.userApi = userApi;
+        this.now     = ParameterOptions.getLocalNow();
 
         pageTitle = new H2("Sprint Insights");
         pageTitle.addClassNames(
@@ -121,7 +123,6 @@ public class InsightsView extends Main implements AfterNavigationObserver {
                 });
         loadData();
         generateJson();
-        displayInsights("hello this is a test");
     }
 
     private void createControlsSection() {
@@ -297,7 +298,11 @@ public class InsightsView extends Main implements AfterNavigationObserver {
 
     private void generateJson() {
         try {
-            jsonString = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(sprintStatistics);
+            // Create a separate ObjectMapper that respects @JsonIgnore annotations for AI insights
+            ObjectMapper aiObjectMapper = new ObjectMapper();
+            aiObjectMapper.registerModule(new JavaTimeModule());
+            aiObjectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+            jsonString = aiObjectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(sprintStatistics);
         } catch (JsonProcessingException e) {
             logger.error("Error generating JSON for sprints", e);
             throw new RuntimeException(e);

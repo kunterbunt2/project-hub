@@ -59,39 +59,45 @@ public class TaskDAO {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Long id;
+    private Long              id;
     @Column(nullable = false)
-    private boolean impactOnCost = true;
+    private boolean           impactOnCost      = true;
+    @JsonSerialize(using = DurationSerializer.class)
+    @JsonDeserialize(using = DurationDeserializer.class)
+    private Duration          maxEstimate       = Duration.ZERO;
     @Column(nullable = false)
-    private boolean milestone;
+    private boolean           milestone;
+    @JsonSerialize(using = DurationSerializer.class)
+    @JsonDeserialize(using = DurationDeserializer.class)
+    private Duration          minEstimate       = Duration.ZERO;
     @Column(nullable = false)
-    private String name;
+    private String            name;
     @Column(nullable = true)
     @JsonSerialize(using = DurationSerializer.class)
     @JsonDeserialize(using = DurationDeserializer.class)
-    private Duration originalEstimate = Duration.ZERO;
+    private Duration          originalEstimate  = Duration.ZERO;
     @Column(nullable = true)
-    private Long parentTaskId;
+    private Long              parentTaskId;
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn(name = "task_id", referencedColumnName = "id")
-    private List<RelationDAO> predecessors = new ArrayList<>();
+    private List<RelationDAO> predecessors      = new ArrayList<>();
     @Column(nullable = false)
-    private Number progress;
+    private Number            progress;
     @Column(nullable = true)
     @JsonSerialize(using = DurationSerializer.class)
     @JsonDeserialize(using = DurationDeserializer.class)
-    private Duration remainingEstimate = Duration.ZERO;
+    private Duration          remainingEstimate = Duration.ZERO;
     @Column(nullable = true)
-    private Long resourceId;
+    private Long              resourceId;
     @Column(nullable = false)
-    private Long sprintId;
+    private Long              sprintId;
     @Column(nullable = true)
-    private LocalDateTime start;
+    private LocalDateTime     start;
     @Column(nullable = false)
-    private TaskMode taskMode;
+    private TaskMode          taskMode;
     @Column(nullable = true)
     @JsonSerialize(using = DurationSerializer.class)
     @JsonDeserialize(using = DurationDeserializer.class)
-    private Duration timeSpent = Duration.ZERO;
+    private Duration          timeSpent         = Duration.ZERO;
 
 }
