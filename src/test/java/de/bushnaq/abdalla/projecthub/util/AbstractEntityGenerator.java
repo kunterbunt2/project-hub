@@ -234,7 +234,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     }
 
     protected Task addParentTask(String name, Sprint sprint, Task parent, Task dependency) {
-        return addTask(sprint, parent, name, null, Duration.ofDays(0), null, dependency);
+        return addTask(sprint, parent, name, null, Duration.ofDays(0), null, null, dependency);
     }
 
     protected Product addProduct(String name) {
@@ -261,9 +261,9 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
             Version version = addVersion(product, String.format("1.%d.0", i));
             Feature feature = addRandomFeature(version);
             Sprint  sprint  = addRandomSprint(feature);
-            Task    task1   = addTask(sprint, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
-            Task    task2   = addTask(sprint, task1, "Design", LocalDateTime.now(), Duration.ofDays(4), user1, null);
-            Task    task3   = addTask(sprint, task2, "Implementation", LocalDateTime.now().plusDays(4), Duration.ofDays(6), user1, task1);
+            Task    task1   = addTask(sprint, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null, null);
+            Task    task2   = addTask(sprint, task1, "Design", LocalDateTime.now(), Duration.ofDays(4), null, user1, null);
+            Task    task3   = addTask(sprint, task2, "Implementation", LocalDateTime.now().plusDays(4), Duration.ofDays(6), null, user1, task1);
         }
         testProducts();
     }
@@ -386,23 +386,27 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         return saved;
     }
 
-    protected Task addTask(String name, String workString, User user, Sprint sprint, Task parent, Task dependency) {
-        return addTask(sprint, parent, name, null, DateUtil.parseWorkDayDurationString(workString), user, dependency, null, false);
+    protected Task addTask(String name, String minWorkString, String maxWorkString, User user, Sprint sprint, Task parent, Task dependency) {
+        return addTask(sprint, parent, name, null, DateUtil.parseWorkDayDurationString(minWorkString), DateUtil.parseWorkDayDurationString(maxWorkString), user, dependency, null, false);
     }
 
-    protected Task addTask(Sprint sprint, Task parent, String name, LocalDateTime start, Duration work, User user, Task dependency) {
-        return addTask(sprint, parent, name, start, work, user, dependency, null, false);
+    protected Task addTask(Sprint sprint, Task parent, String name, LocalDateTime start, Duration minWork, Duration maxWork, User user, Task dependency) {
+        return addTask(sprint, parent, name, start, minWork, maxWork, user, dependency, null, false);
     }
 
-    protected Task addTask(Sprint sprint, Task parent, String name, LocalDateTime start, Duration work, User user, Task dependency, TaskMode taskMode, boolean milestone) {
+    protected Task addTask(Sprint sprint, Task parent, String name, LocalDateTime start, Duration minWork, Duration maxWork, User user, Task dependency, TaskMode taskMode, boolean milestone) {
         Task task = new Task();
         task.setName(name);
         task.setStart(start);
-        if (work != null) {
-            task.setOriginalEstimate(work);
-            task.setRemainingEstimate(work);
+        if (minWork != null) {
+            task.setMinEstimate(minWork);
+            task.setOriginalEstimate(minWork);
+            task.setRemainingEstimate(minWork);
         }
-//        if (work == null || work.equals(Duration.ZERO)) {
+        if (maxWork != null && !maxWork.isZero()) {
+            task.setMaxEstimate(maxWork);
+        }
+//        if (minWork == null || minWork.equals(Duration.ZERO)) {
 //            task.setFinish(start);
 //        }
         if (taskMode != null) {

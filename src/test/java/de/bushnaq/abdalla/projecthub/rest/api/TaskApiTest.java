@@ -57,13 +57,13 @@ public class TaskApiTest extends AbstractEntityGenerator {
             Version version = addVersion(product, "1.0.0");
             Feature feature = addRandomFeature(version);
             Sprint  sprint  = addRandomSprint(feature);
-            Task    task    = addTask(sprint, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
+            Task    task    = addTask(sprint, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null, null);
 
             SecurityContextHolder.clearContext();
         }
 
         assertThrows(AuthenticationCredentialsNotFoundException.class, () -> {
-            Task task = addTask(expectedSprints.getFirst(), null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
+            Task task = addTask(expectedSprints.getFirst(), null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null, null);
         });
         assertThrows(AuthenticationCredentialsNotFoundException.class, () -> {
             List<Task> allTasks = taskApi.getAll();
@@ -102,9 +102,9 @@ public class TaskApiTest extends AbstractEntityGenerator {
             Feature feature = addRandomFeature(version);
             Sprint  sprint  = addRandomSprint(feature);
 
-            Task task1 = addTask(sprint, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
-            Task task2 = addTask(sprint, task1, "Design", LocalDateTime.now(), Duration.ofDays(4), user1, null);
-            Task task3 = addTask(sprint, task1, "Implementation", LocalDateTime.now().plusDays(4), Duration.ofDays(6), user1, task1);
+            Task task1 = addTask(sprint, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null, null);
+            Task task2 = addTask(sprint, task1, "Design", LocalDateTime.now(), Duration.ofDays(4), null, user1, null);
+            Task task3 = addTask(sprint, task1, "Implementation", LocalDateTime.now().plusDays(4), null, Duration.ofDays(6), user1, task1);
         }
 
         printTables();
@@ -121,9 +121,9 @@ public class TaskApiTest extends AbstractEntityGenerator {
             Version version = addVersion(product, String.format("1.%d.0", i));
             Feature feature = addRandomFeature(version);
             Sprint  sprint  = addRandomSprint(feature);
-            Task    task1   = addTask(sprint, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
-            Task    task2   = addTask(sprint, task1, "Design", LocalDateTime.now(), Duration.ofDays(4), user1, null);
-            Task    task3   = addTask(sprint, task1, "Implementation", LocalDateTime.now().plusDays(4), Duration.ofDays(6), user1, task1);
+            Task    task1   = addTask(sprint, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null, null);
+            Task    task2   = addTask(sprint, task1, "Design", LocalDateTime.now(), Duration.ofDays(4), null, user1, null);
+            Task    task3   = addTask(sprint, task1, "Implementation", LocalDateTime.now().plusDays(4), Duration.ofDays(6), null, user1, task1);
         }
 
         testAllAndPrintTables();
@@ -147,7 +147,7 @@ public class TaskApiTest extends AbstractEntityGenerator {
             Version version = addVersion(product, "1.0.0");
             Feature feature = addRandomFeature(version);
             Sprint  sprint  = addRandomSprint(feature);
-            Task    task    = addTask(sprint, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
+            Task    task    = addTask(sprint, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null, null);
 
             setUser("user", "ROLE_USER");
         }

@@ -54,12 +54,12 @@ public class WorklogApiTest extends AbstractEntityGenerator {
             Feature feature = addRandomFeature(version);
             Sprint  sprint  = addRandomSprint(feature);
 
-            Task    task1    = addTask(sprint, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
-            Task    task2    = addTask(sprint, task1, "Design", LocalDateTime.now(), Duration.ofDays(4), user1, null);
+            Task    task1    = addTask(sprint, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null, null);
+            Task    task2    = addTask(sprint, task1, "Design", LocalDateTime.now(), Duration.ofDays(4), null, user1, null);
             Worklog worklog1 = addWorklog(task2, user1, OffsetDateTime.now(), Duration.ofHours(2), "Design work 1");
             debugUtil.logJson(worklog1);
             Worklog worklog2 = addWorklog(task2, user1, OffsetDateTime.now(), Duration.ofHours(2), "Design work 1");
-            Task    task3    = addTask(sprint, task1, "Implementation", LocalDateTime.now().plusDays(4), Duration.ofDays(6), user1, task1);
+            Task    task3    = addTask(sprint, task1, "Implementation", LocalDateTime.now().plusDays(4), Duration.ofDays(6), null, user1, task1);
             Worklog worklog3 = addWorklog(task3, user1, OffsetDateTime.now(), Duration.ofHours(1), "Implementation 1");
             Worklog worklog4 = addWorklog(task3, user1, OffsetDateTime.now(), Duration.ofHours(1), "Implementation 2");
         }
@@ -78,11 +78,11 @@ public class WorklogApiTest extends AbstractEntityGenerator {
             Version version  = addVersion(product, String.format("1.%d.0", i));
             Feature feature  = addRandomFeature(version);
             Sprint  sprint   = addRandomSprint(feature);
-            Task    task1    = addTask(sprint, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null);
-            Task    task2    = addTask(sprint, task1, "Design", LocalDateTime.now(), Duration.ofDays(4), user1, null);
+            Task    task1    = addTask(sprint, null, "Project Phase 1", LocalDateTime.now(), Duration.ofDays(10), null, null, null);
+            Task    task2    = addTask(sprint, task1, "Design", LocalDateTime.now(), Duration.ofDays(4), null, user1, null);
             Worklog worklog1 = addWorklog(task2, user1, OffsetDateTime.now(), Duration.ofHours(2), "Design work 1");
             Worklog worklog2 = addWorklog(task2, user1, OffsetDateTime.now(), Duration.ofHours(2), "Design work 1");
-            Task    task3    = addTask(sprint, task1, "Implementation", LocalDateTime.now().plusDays(4), Duration.ofDays(6), user1, task1);
+            Task    task3    = addTask(sprint, task1, "Implementation", LocalDateTime.now().plusDays(4), Duration.ofDays(6), null, user1, task1);
             Worklog worklog3 = addWorklog(task3, user1, OffsetDateTime.now(), Duration.ofHours(1), "Implementation 1");
             Worklog worklog4 = addWorklog(task3, user1, OffsetDateTime.now(), Duration.ofHours(1), "Implementation 2");
         }

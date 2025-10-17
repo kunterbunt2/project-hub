@@ -65,10 +65,10 @@ public class GanttTest extends AbstractGanttTestUtil {
         Sprint sprint         = sprintApi.getById(savedSprint.getId());
         User   resource1      = expectedUsers.stream().toList().getFirst();
         User   resource2      = expectedUsers.stream().toList().get(1);
-        Task   startMilestone = addTask(sprint, null, "Start", LocalDateTime.parse(TestInfoUtil.getTestStart(testInfo)), Duration.ZERO, null, null, TaskMode.MANUALLY_SCHEDULED, true);
+        Task   startMilestone = addTask(sprint, null, "Start", LocalDateTime.parse(TestInfoUtil.getTestStart(testInfo)), null, Duration.ZERO, null, null, TaskMode.MANUALLY_SCHEDULED, true);
         Task   task1          = addParentTask("[1] Parent Task", sprint, null, startMilestone);
-        Task   task2          = addTask("[2] Child Task", "5d", resource1, sprint, task1, null);
-        Task   task3          = addTask("[3] Child Task", "5d", resource2, sprint, task1, task2);
+        Task   task2          = addTask("[2] Child Task", "5d", null, resource1, sprint, task1, null);
+        Task   task3          = addTask("[3] Child Task", "5d", null, resource2, sprint, task1, task2);
 //        TestInfoUtil.setTestCaseIndex(testInfo, 1);
         sprint.initialize();
         sprint.initUserMap(userApi.getAll(sprint.getId()));
@@ -99,14 +99,14 @@ public class GanttTest extends AbstractGanttTestUtil {
         Sprint sprint         = expectedSprints.getFirst();
         User   resource1      = expectedUsers.stream().toList().getFirst();
         User   resource2      = expectedUsers.stream().toList().get(1);
-        Task   startMilestone = addTask(sprint, null, "Start", LocalDateTime.parse(TestInfoUtil.getTestStart(testInfo)), Duration.ZERO, null, null, TaskMode.MANUALLY_SCHEDULED, true);
+        Task   startMilestone = addTask(sprint, null, "Start", LocalDateTime.parse(TestInfoUtil.getTestStart(testInfo)), Duration.ZERO, null, null, null, TaskMode.MANUALLY_SCHEDULED, true);
         Task   task1          = addParentTask("[1] Parent Task", sprint, null, startMilestone);
-        Task   task2          = addTask("[2] Child Task ", "5d", resource1, sprint, task1, null);
-        Task   task3          = addTask("[3] Child Task ", "5d", resource2, sprint, task1, task2);
+        Task   task2          = addTask("[2] Child Task ", "5d", null, resource1, sprint, task1, null);
+        Task   task3          = addTask("[3] Child Task ", "5d", null, resource2, sprint, task1, task2);
 
         Task task4 = addParentTask("[4] Parent Task", sprint, null, task1);
-        Task task5 = addTask("[5] Child Task ", "5d", resource1, sprint, task4, null);
-        Task task6 = addTask("[6] Child Task ", "5d", resource2, sprint, task4, task5);
+        Task task5 = addTask("[5] Child Task ", "5d", null, resource1, sprint, task4, null);
+        Task task6 = addTask("[6] Child Task ", "5d", null, resource2, sprint, task4, task5);
 
 //        TestInfoUtil.setTestCaseIndex(testInfo, 2);
         sprint.initialize();
@@ -139,18 +139,18 @@ public class GanttTest extends AbstractGanttTestUtil {
         Sprint sprint         = expectedSprints.getFirst();
         User   resource1      = expectedUsers.stream().toList().getFirst();
         User   resource2      = expectedUsers.stream().toList().get(1);
-        Task   startMilestone = addTask(sprint, null, "Start", LocalDateTime.parse(TestInfoUtil.getTestStart(testInfo)), Duration.ZERO, null, null, TaskMode.MANUALLY_SCHEDULED, true);
+        Task   startMilestone = addTask(sprint, null, "Start", LocalDateTime.parse(TestInfoUtil.getTestStart(testInfo)), Duration.ZERO, null, null, null, TaskMode.MANUALLY_SCHEDULED, true);
         Task   task1          = addParentTask("[1] Parent Task", sprint, null, startMilestone);
-        Task   task2          = addTask("[2] Child Task ", "5d", resource1, sprint, task1, null);
-        Task   task3          = addTask("[3] Child Task ", "5d", resource2, sprint, task1, task2);
+        Task   task2          = addTask("[2] Child Task ", "5d", null, resource1, sprint, task1, null);
+        Task   task3          = addTask("[3] Child Task ", "5d", null, resource2, sprint, task1, task2);
 
         Task task4 = addParentTask("[4] Parent Task", sprint, null, task1);
-        Task task5 = addTask("[5] Child Task ", "5d", resource1, sprint, task4, null);
-        Task task6 = addTask("[6] Child Task ", "5d", resource2, sprint, task4, task5);
+        Task task5 = addTask("[5] Child Task ", "5d", null, resource1, sprint, task4, null);
+        Task task6 = addTask("[6] Child Task ", "5d", null, resource2, sprint, task4, task5);
 
         Task task7 = addParentTask("[7] Parent Task", sprint, null, task4);
-        Task task8 = addTask("[8] Child Task ", "5d", resource1, sprint, task7, null);
-        Task task9 = addTask("[9] Child Task ", "5d", resource2, sprint, task7, null);
+        Task task8 = addTask("[8] Child Task ", "5d", null, resource1, sprint, task7, null);
+        Task task9 = addTask("[9] Child Task ", "5d", null, resource2, sprint, task7, null);
 
 //        TestInfoUtil.setTestCaseIndex(testInfo, 3);
         sprint.initialize();

@@ -285,7 +285,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
             if (randomCase.getMaxNumberOfStories() > 0) {
                 int           numberOfStories = random.nextInt(randomCase.getMaxNumberOfStories()) + 1;
                 LocalDateTime startDateTime   = randomCase.getMinStartDate().plusDays(random.nextInt((int) randomCase.getMaxStartDateShift().toDays())).atStartOfDay().plusHours(8);
-                Task          startMilestone  = addTask(sprint, null, "Start", startDateTime, Duration.ZERO, null, null, TaskMode.MANUALLY_SCHEDULED, true);
+                Task          startMilestone  = addTask(sprint, null, "Start", startDateTime, Duration.ZERO, null, null, null, TaskMode.MANUALLY_SCHEDULED, true);
                 for (int f = 0; f < numberOfStories; f++) {
                     String storyName     = nameGenerator.generateStoryName(f);
                     Task   story         = addParentTask(storyName, sprint, null, startMilestone);
@@ -309,7 +309,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
                             }
                             while (depenedenycyTask == null && tries > 0);
                         }
-                        addTask(workName, duration, user, sprint, story, depenedenycyTask);
+                        addTask(workName, duration, null, user, sprint, story, depenedenycyTask);
                     }
                 }
             }

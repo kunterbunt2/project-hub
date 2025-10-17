@@ -134,7 +134,7 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
                         Duration           work               = resourceAssignment.getWork();
                         net.sf.mpxj.Task   parent             = mpxjTaskMap.get(mpxjTask.getParentTask().getName());
                         User               user               = userMap.get(resourceName);
-                        Task               task               = addTask(sprint, null, mpxjTask.getName(), start, MpxjUtil.toJavaDuration(work), user, null, taskMode, mpxjTask.getMilestone());
+                        Task               task               = addTask(sprint, null, mpxjTask.getName(), start, MpxjUtil.toJavaDuration(work), null, user, null, taskMode, mpxjTask.getMilestone());
                         taskMap.put(task.getName(), task);
                     } else if (!mpxjTask.hasChildTasks()) {
                         //no user assigned to this task
@@ -145,7 +145,7 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
                         if (user == null) {
                             user = addUser(resourceName, emailAddress, "de", "nw", date.toLocalDate(), generateUserColor(userIndex), (float) 1);
                         }
-                        Task task = addTask(sprint, null, mpxjTask.getName(), start, MpxjUtil.toJavaDuration(work), user, null, taskMode, mpxjTask.getMilestone());//parent task
+                        Task task = addTask(sprint, null, mpxjTask.getName(), start, MpxjUtil.toJavaDuration(work), null, user, null, taskMode, mpxjTask.getMilestone());//parent task
                         taskMap.put(task.getName(), task);
                     } else {
                         //story
@@ -155,7 +155,7 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
                         if (user == null) {
                             user = addUser(resourceName, emailAddress, "de", "nw", date.toLocalDate(), generateUserColor(userIndex), (float) 1);
                         }
-                        Task task = addTask(sprint, null, mpxjTask.getName(), start, null, user, null, taskMode, mpxjTask.getMilestone());//parent task
+                        Task task = addTask(sprint, null, mpxjTask.getName(), start, null, null, user, null, taskMode, mpxjTask.getMilestone());//parent task
                         taskMap.put(task.getName(), task);
                     }
                 }

@@ -26,7 +26,8 @@ import de.bushnaq.abdalla.projecthub.ui.view.util.FeatureListViewTester;
 import de.bushnaq.abdalla.projecthub.ui.view.util.ProductListViewTester;
 import de.bushnaq.abdalla.projecthub.ui.view.util.SprintListViewTester;
 import de.bushnaq.abdalla.projecthub.ui.view.util.VersionListViewTester;
-import de.bushnaq.abdalla.projecthub.util.*;
+import de.bushnaq.abdalla.projecthub.util.RandomCase;
+import de.bushnaq.abdalla.projecthub.util.TestInfoUtil;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -79,7 +80,7 @@ public class SprintQualityBoardTest extends AbstractUiTestUtil {
         }
         Sprint sprint = expectedSprints.getFirst();
 
-        Task startMilestone = addTask(sprint, null, "Start", LocalDateTime.parse("2024-12-15T08:00:00"), Duration.ZERO, null, null, TaskMode.MANUALLY_SCHEDULED, true);
+        Task startMilestone = addTask(sprint, null, "Start", LocalDateTime.parse("2024-12-15T08:00:00"), Duration.ZERO, null, null, null, TaskMode.MANUALLY_SCHEDULED, true);
         for (int f = 0; f < numberOfFeatures; f++) {
             String featureName = generateFeatureName(f);
             Task   feature     = addParentTask(featureName, sprint, null, startMilestone);
@@ -87,7 +88,7 @@ public class SprintQualityBoardTest extends AbstractUiTestUtil {
                 User   user     = expectedUsers.stream().toList().get(random.nextInt(numberOfUsers));
                 String duration = String.format("%dd", random.nextInt(randomCase.getMaxDurationDays()) + 1);
                 String workName = generateWorkName(featureName, t);
-                addTask(workName, duration, user, sprint, feature, null);
+                addTask(workName, duration, null, user, sprint, feature, null);
             }
         }
     }
