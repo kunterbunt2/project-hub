@@ -60,9 +60,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -73,21 +71,31 @@ import java.util.stream.Collectors;
 @PermitAll // When security is enabled, allow all authenticated users
 @RolesAllowed({"USER", "ADMIN"}) // Allow access to users with specific roles
 public class TaskListView extends Main implements AfterNavigationObserver {
+    public static final String            CANCEL_BUTTON_ID      = "cancel-tasks-button";
     public static final String            CREATE_TASK_BUTTON    = "create-task-button";
+    public static final String            EDIT_BUTTON_ID        = "edit-tasks-button";
+    public static final String            SAVE_BUTTON_ID        = "save-tasks-button";
     public static final String            TASK_GRID_NAME_PREFIX = "task-grid-name-";
     public static final String            TASK_LIST_PAGE_TITLE  = "task-list-page-title";
+    private             Button            cancelButton;
     private final       Clock             clock;
     @Autowired
     protected           Context           context;
+    private             Button            editButton;
     private final       GanttErrorHandler eh                    = new GanttErrorHandler();
     private final       FeatureApi        featureApi;
     private             Long              featureId;
     private final       Svg               ganttChart            = new Svg();
     private             GanttUtil         ganttUtil;
     private             Grid<Task>        grid;
+    private final       HorizontalLayout  headerLayout;
+    // Edit mode state management
+    private             boolean           isEditMode            = false;
     private final       Logger            logger                = LoggerFactory.getLogger(this.getClass());
+    private final       Set<Task>         modifiedTasks         = new HashSet<>();
     private final       ProductApi        productApi;
     private             Long              productId;
+    private             Button            saveButton;
     private             Sprint            sprint;
     private final       SprintApi         sprintApi;
     private             Long              sprintId;
@@ -111,45 +119,14 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         try {
             setSizeFull();
             addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
-            add(AbstractMainGrid.createHeader("Tasks", TASK_LIST_PAGE_TITLE, VaadinIcon.TASKS, CREATE_TASK_BUTTON, () -> createTask()), createGrid(clock));
+            headerLayout = createHeaderWithButtons();
+            add(headerLayout, createGrid(clock));
             this.getStyle().set("padding-left", "var(--lumo-space-m)");
             this.getStyle().set("padding-right", "var(--lumo-space-m)");
         } catch (Exception e) {
             logger.error("Error initializing TaskListView", e);
             throw e;
         }
-    }
-
-    /**
-     * Adds a column with edit/save/cancel buttons for inline editing
-     */
-    private void addEditColumn() {
-        Grid.Column<Task> editorColumn = grid.addComponentColumn(task -> {
-            Button editButton = new com.vaadin.flow.component.button.Button("Edit");
-            editButton.addThemeVariants(com.vaadin.flow.component.button.ButtonVariant.LUMO_SMALL);
-
-            // Start edit mode when the edit button is clicked
-            editButton.addClickListener(e -> {
-                if (grid.getEditor().isOpen()) {
-                    grid.getEditor().cancel();
-                }
-                grid.getEditor().editItem(task);
-            });
-
-            return editButton;
-        }).setWidth("150px").setHeader("Actions").setFlexGrow(0);
-
-        // Add save and cancel buttons to the editor toolbar
-        Button saveButton = new Button("Save", e -> grid.getEditor().save());
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SMALL);
-
-        Button cancelButton = new Button(VaadinIcon.CLOSE.create(), e -> grid.getEditor().cancel());
-        cancelButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_ERROR);
-
-        HorizontalLayout actions = new HorizontalLayout(saveButton, cancelButton);
-        actions.setPadding(false);
-
-        editorColumn.setEditorComponent(actions);
     }
 
     @Override
@@ -218,6 +195,18 @@ public class TaskListView extends Main implements AfterNavigationObserver {
     }
 
     /**
+     * Cancel edit mode and discard all changes
+     */
+    private void cancelEditMode() {
+        modifiedTasks.clear();
+
+        // Reload data to discard changes
+        loadData();
+        refreshGrid();
+        exitEditMode();
+    }
+
+    /**
      * Creates a text field component for editing task durations
      *
      * @return TextField component for the duration editor
@@ -233,10 +222,6 @@ public class TaskListView extends Main implements AfterNavigationObserver {
     private Grid<Task> createGrid(Clock clock) {
         grid = new Grid<>();
         grid.addThemeVariants(com.vaadin.flow.component.grid.GridVariant.LUMO_NO_BORDER, com.vaadin.flow.component.grid.GridVariant.LUMO_NO_ROW_BORDERS);
-
-        // Create and configure binder for the grid editor
-        com.vaadin.flow.data.binder.Binder<Task> binder = new com.vaadin.flow.data.binder.Binder<>(Task.class);
-        grid.getEditor().setBinder(binder);
 
         setupGridColumns();
         // Add borders between columns
@@ -260,6 +245,38 @@ public class TaskListView extends Main implements AfterNavigationObserver {
 
         add(grid);
         return grid;
+    }
+
+    /**
+     * Creates the header layout with Create, Edit, Save, and Cancel buttons
+     */
+    private HorizontalLayout createHeaderWithButtons() {
+        HorizontalLayout header = AbstractMainGrid.createHeader("Tasks", TASK_LIST_PAGE_TITLE, VaadinIcon.TASKS, CREATE_TASK_BUTTON, () -> createTask());
+
+        // Create Edit button
+        editButton = new Button("Edit", VaadinIcon.EDIT.create());
+        editButton.setId(EDIT_BUTTON_ID);
+        editButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        editButton.addClickListener(e -> enterEditMode());
+
+        // Create Save button
+        saveButton = new Button("Save", VaadinIcon.CHECK.create());
+        saveButton.setId(SAVE_BUTTON_ID);
+        saveButton.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
+        saveButton.setVisible(false);
+        saveButton.addClickListener(e -> saveAllChanges());
+
+        // Create Cancel button
+        cancelButton = new Button("Cancel", VaadinIcon.CLOSE.create());
+        cancelButton.setId(CANCEL_BUTTON_ID);
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+        cancelButton.setVisible(false);
+        cancelButton.addClickListener(e -> cancelEditMode());
+
+        // Add buttons to header
+        header.add(editButton, saveButton, cancelButton);
+
+        return header;
     }
 
     /**
@@ -291,6 +308,43 @@ public class TaskListView extends Main implements AfterNavigationObserver {
 //        sprint.addTask(saved);
         loadData();
         refreshGrid();
+    }
+
+    /**
+     * Enter edit mode - enable editing for all rows
+     */
+    private void enterEditMode() {
+        isEditMode = true;
+        modifiedTasks.clear();
+
+        // Update button visibility
+        editButton.setVisible(false);
+        saveButton.setVisible(true);
+        cancelButton.setVisible(true);
+
+        // Add visual feedback for edit mode
+        grid.addClassName("edit-mode");
+
+        // Refresh grid to show editable components
+        grid.getDataProvider().refreshAll();
+    }
+
+    /**
+     * Exit edit mode
+     */
+    private void exitEditMode() {
+        isEditMode = false;
+
+        // Update button visibility
+        editButton.setVisible(true);
+        saveButton.setVisible(false);
+        cancelButton.setVisible(false);
+
+        // Remove visual feedback
+        grid.removeClassName("edit-mode");
+
+        // Refresh grid to show read-only components
+        grid.getDataProvider().refreshAll();
     }
 
     private void generateGanttChart() {
@@ -406,9 +460,41 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         ganttUtil.levelResources(eh, sprint, "", ParameterOptions.getLocalNow());
     }
 
+    /**
+     * Mark a task as modified
+     */
+    private void markTaskAsModified(Task task) {
+        modifiedTasks.add(task);
+        logger.debug("Task {} marked as modified. Total modified: {}", task.getKey(), modifiedTasks.size());
+    }
+
     private void refreshGrid() {
         grid.setItems(sprint.getTasks());
         generateGanttChart();
+    }
+
+    /**
+     * Save all modified tasks to backend
+     */
+    private void saveAllChanges() {
+        if (modifiedTasks.isEmpty()) {
+            exitEditMode();
+            return;
+        }
+
+        logger.info("Saving {} modified tasks", modifiedTasks.size());
+
+        // Persist all modified tasks
+        for (Task task : modifiedTasks) {
+            task.setStart(null); // Reset start date to force recalculation
+            taskApi.persist(task);
+        }
+
+        // Clear modified tasks and reload data
+        modifiedTasks.clear();
+        loadData();
+        refreshGrid();
+        exitEditMode();
     }
 
     private void setupGridColumns() {
@@ -424,165 +510,139 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         }
         //name
         {
-            // Create an editable column for the task name with validation for text and numbers only
+            // Create an editable column for the task name
             Grid.Column<Task> nameColumn = grid.addColumn(new ComponentRenderer<>(task -> {
-                Div div = new Div();
-                div.add(task.getName());
-                div.setId(TASK_GRID_NAME_PREFIX + task.getName());
-                return div;
-            })).setHeader("Name").setAutoWidth(true);
-
-            // Create the name editor field
-            com.vaadin.flow.component.textfield.TextField nameEditor = createNameEditor();
-            nameColumn.setEditorComponent(nameEditor);
-
-            // Bind the name field to the Task's name property
-            grid.getEditor().getBinder()
-                    .forField(nameEditor)
-                    .withValidator(name -> name.matches("[a-zA-Z0-9 ]+"), "Only letters and numbers are allowed")
-                    .bind(Task::getName, Task::setName);
+                if (isEditMode) {
+                    TextField nameField = new TextField();
+                    nameField.setValue(task.getName() != null ? task.getName() : "");
+                    nameField.setWidthFull();
+                    nameField.addValueChangeListener(e -> {
+                        if (e.isFromClient()) {
+                            task.setName(e.getValue());
+                            markTaskAsModified(task);
+                        }
+                    });
+                    return nameField;
+                } else {
+                    Div div = new Div();
+                    div.setText(task.getName());
+                    div.setId(TASK_GRID_NAME_PREFIX + task.getName());
+                    return div;
+                }
+            })).setHeader("Name").setAutoWidth(true).setFlexGrow(1);
         }
         //Assigned
         {
-            // Replace with editable resource assignment column
-            Grid.Column<Task> assignedColumn = grid.addColumn(task ->
-                    task.getResourceId() != null ? sprint.getuser(task.getResourceId()).getName() : ""
-            ).setHeader("Assigned").setAutoWidth(true);
+            // Editable resource assignment column
+            grid.addColumn(new ComponentRenderer<>(task -> {
+                if (isEditMode) {
+                    ComboBox<User> userComboBox = new ComboBox<>();
+                    userComboBox.setAllowCustomValue(false);
+                    userComboBox.setClearButtonVisible(true);
+                    userComboBox.setWidthFull();
+                    userComboBox.setItemLabelGenerator(User::getName);
 
-            // Create a ComboBox for user selection
-            ComboBox<User> userComboBox = new ComboBox<>();
-            userComboBox.setAllowCustomValue(false);
-            userComboBox.setClearButtonVisible(true);
-            userComboBox.setWidthFull();
+                    // Load ALL users from the system (not just sprint users) so we can assign new users
+                    List<User> allUsers = userApi.getAll();
+                    userComboBox.setItems(allUsers);
 
-            // Configure the ComboBox to show user names
-            userComboBox.setItemLabelGenerator(User::getName);
-
-            // Set up filtering based on user input using UserApi.searchByName
-            userComboBox.setItems(query -> {
-                String filter = query.getFilter().orElse("");
-
-                // Get the pagination parameters from the query
-                int offset = query.getOffset();
-                int limit  = query.getLimit();
-
-                if (filter.isEmpty()) {
-                    // If no filter, return empty list
-                    return java.util.Collections.<User>emptyList().stream();
-                } else {
-                    // Use the UserApi.searchByName to get filtered results
-                    // Apply the pagination parameters to respect Vaadin's query contract
-                    return userApi.searchByName(filter).stream()
-                            .skip(offset)
-                            .limit(limit);
-                }
-            });
-
-            // Set the ComboBox as the editor component
-            assignedColumn.setEditorComponent(userComboBox);
-
-            // Bind the ComboBox to the Task's resourceId property using a proper Converter
-            grid.getEditor().getBinder()
-                    .forField(userComboBox)
-                    .withConverter(
-                            // Convert User to Long resourceId
-                            new com.vaadin.flow.data.converter.Converter<User, Long>() {
-                                @Override
-                                public com.vaadin.flow.data.binder.Result<Long> convertToModel(User user,
-                                                                                               com.vaadin.flow.data.binder.ValueContext context) {
-                                    return com.vaadin.flow.data.binder.Result.ok(user != null ? user.getId() : null);
-                                }
-
-                                @Override
-                                public User convertToPresentation(Long resourceId,
-                                                                  com.vaadin.flow.data.binder.ValueContext context) {
-                                    if (resourceId == null) {
-                                        return null;
-                                    }
-                                    return sprint.getuser(resourceId);
-                                }
+                    // Set current value only if task has an assigned user
+                    // Don't try to set value if resourceId is null - just leave it empty
+                    if (task.getResourceId() != null) {
+                        try {
+                            User currentUser = sprint.getuser(task.getResourceId());
+                            if (currentUser != null && allUsers.contains(currentUser)) {
+                                userComboBox.setValue(currentUser);
                             }
-                    )
-                    .bind(
-                            Task::getResourceId,
-                            Task::setResourceId
-                    );
+                        } catch (Exception ex) {
+                            logger.warn("Could not set user for task {}: {}", task.getKey(), ex.getMessage());
+                        }
+                    }
+
+                    userComboBox.addValueChangeListener(e -> {
+                        if (e.isFromClient()) {
+                            User selectedUser = e.getValue();
+                            task.setResourceId(selectedUser != null ? selectedUser.getId() : null);
+                            markTaskAsModified(task);
+                        }
+                    });
+
+                    return userComboBox;
+                } else {
+                    Div div = new Div();
+                    div.setText(task.getResourceId() != null ? sprint.getuser(task.getResourceId()).getName() : "");
+                    return div;
+                }
+            })).setHeader("Assigned").setAutoWidth(true);
         }
-//        grid.addColumn(task -> task.getStart() != null ? dateTimeFormatter.format(task.getStart()) : "").setHeader("Start").setAutoWidth(true);
-//        grid.addColumn(task -> task.getFinish() != null ? dateTimeFormatter.format(task.getFinish()) : "").setHeader("End").setAutoWidth(true);
 
         //Min Estimate
         {
-            Grid.Column<Task> minEstimateColumn = grid.addColumn(
-                    task -> !task.getMinEstimate().equals(Duration.ZERO) ? DateUtil.createWorkDayDurationString(task.getOriginalEstimate()) : ""
-            ).setHeader("Min Estimate").setAutoWidth(true);
+            Grid.Column<Task> minEstimateColumn = grid.addColumn(new ComponentRenderer<>(task -> {
+                if (isEditMode) {
+                    TextField estimateField = new TextField();
+                    estimateField.setValue(!task.getMinEstimate().equals(Duration.ZERO) ?
+                            DateUtil.createWorkDayDurationString(task.getMinEstimate()) : "");
+                    estimateField.setWidthFull();
+                    estimateField.setPlaceholder("e.g., 1d 2h 30m");
 
-            // Create a text field for duration editing
-            com.vaadin.flow.component.textfield.TextField minEstimateEditor = createDurationEditor();
-            minEstimateColumn.setEditorComponent(minEstimateEditor);
-
-            // Bind the duration field to the Task's originalEstimate property with validation
-            grid.getEditor().getBinder()
-                    .forField(minEstimateEditor)
-                    .withValidator(duration -> {
-                        try {
-                            DateUtil.parseWorkDayDurationString(duration.strip());
-                            return true;
-                        } catch (IllegalArgumentException e) {
-                            return false;
+                    estimateField.addValueChangeListener(e -> {
+                        if (e.isFromClient()) {
+                            try {
+                                Duration duration = DateUtil.parseWorkDayDurationString(e.getValue().strip());
+                                task.setMinEstimate(duration);
+                                markTaskAsModified(task);
+                                estimateField.setInvalid(false);
+                            } catch (IllegalArgumentException ex) {
+                                estimateField.setInvalid(true);
+                                estimateField.setErrorMessage("Invalid format");
+                            }
                         }
-                    }, "Invalid duration format. Use format like '1d 2h 30m'")
-                    .withConverter(
-                            // String to Duration conversion
-                            duration -> {
-                                try {
-                                    return DateUtil.parseWorkDayDurationString(duration.strip());
-                                } catch (IllegalArgumentException e) {
-                                    return Duration.ZERO;
-                                }
-                            },
-                            // Duration to String conversion
-                            DateUtil::createWorkDayDurationString
-                    )
-                    .bind(Task::getMinEstimate, Task::setMinEstimate);
+                    });
+
+                    return estimateField;
+                } else {
+                    Div div = new Div();
+                    div.setText(!task.getMinEstimate().equals(Duration.ZERO) ?
+                            DateUtil.createWorkDayDurationString(task.getMinEstimate()) : "");
+                    return div;
+                }
+            })).setHeader("Min Estimate").setAutoWidth(true);
         }
         //Max Estimate
         {
-            Grid.Column<Task> maxEstimateColumn = grid.addColumn(
-                    task -> !task.getMaxEstimate().equals(Duration.ZERO) ? DateUtil.createWorkDayDurationString(task.getOriginalEstimate()) : ""
-            ).setHeader("Max Estimate").setAutoWidth(true);
-            // Create a text field for duration editing
-            com.vaadin.flow.component.textfield.TextField maxEstimateEditor = createDurationEditor();
-            maxEstimateColumn.setEditorComponent(maxEstimateEditor);
-            // Bind the duration field to the Task's originalEstimate property with validation
-            grid.getEditor().getBinder()
-                    .forField(maxEstimateEditor)
-                    .withValidator(duration -> {
-                        try {
-                            DateUtil.parseWorkDayDurationString(duration.strip());
-                            return true;
-                        } catch (IllegalArgumentException e) {
-                            return false;
+            Grid.Column<Task> maxEstimateColumn = grid.addColumn(new ComponentRenderer<>(task -> {
+                if (isEditMode) {
+                    TextField estimateField = new TextField();
+                    estimateField.setValue(!task.getMaxEstimate().equals(Duration.ZERO) ?
+                            DateUtil.createWorkDayDurationString(task.getMaxEstimate()) : "");
+                    estimateField.setWidthFull();
+                    estimateField.setPlaceholder("e.g., 1d 2h 30m");
+
+                    estimateField.addValueChangeListener(e -> {
+                        if (e.isFromClient()) {
+                            try {
+                                Duration duration = DateUtil.parseWorkDayDurationString(e.getValue().strip());
+                                task.setMaxEstimate(duration);
+                                markTaskAsModified(task);
+                                estimateField.setInvalid(false);
+                            } catch (IllegalArgumentException ex) {
+                                estimateField.setInvalid(true);
+                                estimateField.setErrorMessage("Invalid format");
+                            }
                         }
-                    }, "Invalid duration format. Use format like '1d 2h 30m'")
-                    .withConverter(
-                            // String to Duration conversion
-                            duration -> {
-                                try {
-                                    return DateUtil.parseWorkDayDurationString(duration.strip());
-                                } catch (IllegalArgumentException e) {
-                                    return Duration.ZERO;
-                                }
-                            },
-                            // Duration to String conversion
-                            DateUtil::createWorkDayDurationString
-                    )
-                    .bind(Task::getMaxEstimate, Task::setMaxEstimate);
+                    });
+
+                    return estimateField;
+                } else {
+                    Div div = new Div();
+                    div.setText(!task.getMaxEstimate().equals(Duration.ZERO) ?
+                            DateUtil.createWorkDayDurationString(task.getMaxEstimate()) : "");
+                    return div;
+                }
+            })).setHeader("Max Estimate").setAutoWidth(true);
         }
 
-//        grid.addColumn(task -> !task.getTimeSpent().equals(Duration.ZERO) ? DateUtil.createWorkDayDurationString(task.getTimeSpent()) : "").setHeader("Time Spent").setAutoWidth(true);
-//        grid.addColumn(task -> !task.getRemainingEstimate().equals(Duration.ZERO) ? DateUtil.createWorkDayDurationString(task.getRemainingEstimate()) : "").setHeader("Remaining Estimate").setAutoWidth(true);
-//        grid.addColumn(task -> task.getProgress() != null ? String.format("%2.0f%%", task.getProgress().doubleValue() * 100) : "").setHeader("Progress").setAutoWidth(true);
         //Dependency
         {
             grid.addColumn(task -> {
@@ -601,25 +661,6 @@ public class TaskListView extends Main implements AfterNavigationObserver {
             }).setHeader("Dependency").setAutoWidth(true);
             grid.addColumn(task -> task.getTaskMode().name()).setHeader("Mode").setAutoWidth(true);
         }
-
-        // Add edit column with edit and save buttons
-        addEditColumn();
-
-        // Make the grid editable with buffered mode
-        grid.getEditor().setBuffered(true);
-
-        // Close the editor when clicking outside
-        grid.getEditor().addCloseListener(e -> {
-            Task task = e.getItem();
-            if (task != null) {
-                // Check if editor was closed with a save operation
-                // We need to manually track the save operation since isSaved() is not available
-                task.setStart(null);// Reset start date to null to force recalculation of duration and finish
-                taskApi.persist(task);
-                loadData();
-                refreshGrid();
-            }
-        });
     }
 
 }

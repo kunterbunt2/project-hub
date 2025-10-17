@@ -64,6 +64,12 @@ public class UserApi extends AbstractApi {
         return Arrays.asList(response.getBody());
     }
 
+    /**
+     * Get all users assigned to any task that belongs to this sprint.
+     *
+     * @param sprintId id of the sprint
+     * @return list of users
+     */
     public List<User> getAll(Long sprintId) {
         ResponseEntity<User[]> response = executeWithErrorHandling(() -> restTemplate.exchange(
                 getBaseUrl() + "/user/sprint/{sprintId}",
