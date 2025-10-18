@@ -151,7 +151,7 @@ public class User extends AbstractTimeAware implements Comparable<User> {
             if (i + 1 < locations.size())
                 endDateInclusive = locations.get(i + 1).getStart();//end of this location is start of next location
             else
-                endDateInclusive = ParameterOptions.now.plusYears(MAX_PROJECT_LENGTH).toLocalDate();
+                endDateInclusive = ParameterOptions.getNow().plusYears(MAX_PROJECT_LENGTH).toLocalDate();
             HolidayManager holidayManager = HolidayManager.getInstance(ManagerParameters.create(location.getCountry()));
             List<Holiday>  holidays       = holidayManager.getHolidays(startDateInclusive, endDateInclusive, location.getState()).stream().sorted().collect(Collectors.toList());
             URL            url            = getClass().getClassLoader().getResource("holidays/carnival-holidays.xml");

@@ -20,6 +20,7 @@ package de.bushnaq.abdalla.projecthub;
 import de.bushnaq.abdalla.projecthub.report.dao.BurnDownGraphicsTheme;
 import de.bushnaq.abdalla.projecthub.report.dao.GraphicsLightTheme;
 import de.bushnaq.abdalla.util.date.DateUtil;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,32 +53,32 @@ public abstract class ParameterOptions {
     public                 boolean               closedRequests                              = true;
     public                 boolean               closingRequests                             = true;
     public                 boolean               detailed                                    = true;//should always be true, otherwise resources will not be shown in burn down chart
-    //    public String domainName = "DOMAIN";
     public                 List<Throwable>       exceptions                                  = new ArrayList<>();
     public                 String[]              files                                       = {};
-    //    public String folder = null;//for test purposes
     public                 BurnDownGraphicsTheme graphicsTheme                               = new GraphicsLightTheme();
     public                 boolean               individualLog                               = false;//resource individual log visible as drill down list of work burn down chart. Legacy!
-    // public boolean infringements = false;
     public                 Integer               limitProjectOverview                        = null;// 6 * 30;
     public                 Integer               limitResourceUtilization                    = null;// 1 * 30;
     protected final        Logger                logger                                      = LoggerFactory.getLogger(this.getClass());
-    public static          OffsetDateTime        now                                         = OffsetDateTime.now();
+    @Setter
+    private static         OffsetDateTime        now;
     public                 boolean               outOfOfficeOnly                             = false;//no ramdb cost records
-    //    public String password = "PManager2018";
     public                 boolean               queryTeamPlanner;
     public                 boolean               quickMode                                   = false;//only query active projects and resource map
     public                 String                reportFolder                                = "./";
     public                 boolean               resourceMap                                 = false;
     public                 boolean               resourceUtilizationPane                     = false;//only used in tests to cover code, currently cannot be enabled in production mode
-    //    public long smbTimeout = 180;
-    //    public boolean useLocalShareFolder = false;
-//    public SmbParameters smbParameters = new SmbParameters();
     public                 boolean               verbose                                     = false;//in verbose mode, temporary <filename>-tp.xml file will not be deleted.
     public                 String                xlsxFile                                    = null;//used only by Xlsx2mppMain
 
     public static LocalDateTime getLocalNow() {
         return DateUtil.offsetDateTimeToLocalDateTime(now);
+    }
+
+    public static OffsetDateTime getNow() {
+        if (now != null)
+            return now;
+        return OffsetDateTime.now();
     }
 
     public abstract void start(String[] args) throws Exception;

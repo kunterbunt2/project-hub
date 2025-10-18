@@ -93,7 +93,7 @@ public class TaskListViewTest extends AbstractUiTestUtil {
     @MethodSource("listRandomCases")
     @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void testCreate(RandomCase randomCase, TestInfo testInfo) throws Exception {
-        ParameterOptions.now = OffsetDateTime.now().withHour(8).withMinute(0).withSecond(0).withNano(0);
+        ParameterOptions.setNow(OffsetDateTime.now().withHour(8).withMinute(0).withSecond(0).withNano(0));
         TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());

@@ -27,11 +27,13 @@ import de.bushnaq.abdalla.projecthub.Context;
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.report.gantt.GanttChart;
+import de.bushnaq.abdalla.projecthub.report.gantt.GanttUtil;
 import de.bushnaq.abdalla.projecthub.report.html.util.HtmlUtil;
 import de.bushnaq.abdalla.projecthub.rest.api.*;
 import de.bushnaq.abdalla.projecthub.ui.HtmlColor;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.util.RenderUtil;
+import de.bushnaq.abdalla.util.GanttErrorHandler;
 import de.bushnaq.abdalla.util.date.DateUtil;
 import de.bushnaq.abdalla.util.date.ReportUtil;
 import jakarta.annotation.security.PermitAll;
@@ -65,8 +67,10 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
     @Autowired
     protected           Context          context;
     private final       LocalDateTime    created;
+    private final GanttErrorHandler eh = new GanttErrorHandler();
     private final       FeatureApi       featureApi;
     private             Long             featureId;
+    private             GanttUtil        ganttUtil;
     private final       HtmlUtil         htmlUtil                = new HtmlUtil();
     final               Logger           logger                  = LoggerFactory.getLogger(this.getClass());
     private final       LocalDateTime    now;
@@ -125,6 +129,7 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
             this.sprintId = Long.parseLong(queryParameters.getParameters().get("sprint").getFirst());
         }
 
+        ganttUtil = new GanttUtil(context);
         loadData();
 
         pageTitle.setText(sprint.getName());
@@ -426,6 +431,7 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
             logger.error("Error loading sprint data", e);
             // Handle exception appropriately
         }
+        ganttUtil.levelResources(eh, sprint, "", ParameterOptions.getLocalNow());
 
     }
 

@@ -62,10 +62,10 @@ public class ProjectHubParameterOptions extends ParameterOptions {
             String            dateString    = line.getOptionValue(CLI_OPTION_DATE);
             DateTimeFormatter dtf           = DateTimeFormatter.ofPattern("yyyy.MMM.dd HH:mm");
             LocalDateTime     localDateTime = LocalDateTime.parse(dateString, dtf);
-            localDateTime.minusHours(localDateTime.getHour() - 8);
-            localDateTime.minusMinutes(localDateTime.getMinute());
-            now = DateUtil.localDateTimeToOffsetDateTime(localDateTime);
-            logger.info("simulating report for " + dtf.format(now));
+            localDateTime = localDateTime.minusHours(localDateTime.getHour() - 8);
+            localDateTime = localDateTime.minusMinutes(localDateTime.getMinute());
+            setNow(DateUtil.localDateTimeToOffsetDateTime(localDateTime));
+            logger.info("simulating report for " + dtf.format(getNow()));
         } else {
             //revert to default, which is now
         }

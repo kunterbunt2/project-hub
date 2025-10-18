@@ -220,7 +220,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
     }
 
     protected void generateOneProduct(TestInfo testInfo) throws Exception {
-        ParameterOptions.now = OffsetDateTime.parse("2025-01-01T08:00:00+01:00");
+        ParameterOptions.setNow(OffsetDateTime.parse("2025-01-01T08:00:00+01:00"));
         addOneProduct(generateTestCaseName(testInfo));
     }
 

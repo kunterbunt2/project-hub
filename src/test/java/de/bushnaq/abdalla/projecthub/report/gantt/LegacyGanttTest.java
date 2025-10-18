@@ -84,7 +84,7 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
             UniversalProjectReader reader      = new UniversalProjectReader();
             ProjectFile            projectFile = reader.read(inputStream);
             LocalDateTime          date        = projectFile.getProjectProperties().getStartDate();//ensure start date matches
-            ParameterOptions.now = DateUtil.localDateTimeToOffsetDateTime(date);
+            ParameterOptions.setNow(DateUtil.localDateTimeToOffsetDateTime(date));
             //populate mpxjTaskMap and resourceMap
             for (net.sf.mpxj.Task mpxjTask : projectFile.getTasks()) {
                 if (isValidTask(mpxjTask)) {
@@ -199,7 +199,7 @@ public class LegacyGanttTest extends AbstractLegacyGanttTestUtil {
                 readSprint.initUserMap(userApi.getAll(readSprint.getId()));
                 readSprint.initTaskMap(taskApi.getAll(readSprint.getId()), worklogApi.getAll(readSprint.getId()));
                 levelResources(testInfo, readSprint, projectFile);
-                ParameterOptions.now = ParameterOptions.now.plusDays(TestInfoUtil.getDaysAfterStart(testInfo));
+                ParameterOptions.setNow(ParameterOptions.getNow().plusDays(TestInfoUtil.getDaysAfterStart(testInfo)));
                 generateWorklogs(readSprint, ParameterOptions.getLocalNow());
                 initializeInstances();//reload from db for our test comparison
                 generateGanttChart(testInfo, readSprint.getId(), projectFile);

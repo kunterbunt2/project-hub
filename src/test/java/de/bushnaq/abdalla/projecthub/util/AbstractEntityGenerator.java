@@ -102,8 +102,8 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
 
         feature.setVersion(version);
         feature.setVersionId(version.getId());
-        feature.setCreated(ParameterOptions.now);
-        feature.setUpdated(ParameterOptions.now);
+        feature.setCreated(ParameterOptions.getNow());
+        feature.setUpdated(ParameterOptions.getNow());
         Feature saved = featureApi.persist(feature);
         expectedFeatures.add(saved);
 
@@ -240,8 +240,8 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     protected Product addProduct(String name) {
         Product product = new Product();
         product.setName(name);
-        product.setCreated(ParameterOptions.now);
-        product.setUpdated(ParameterOptions.now);
+        product.setCreated(ParameterOptions.getNow());
+        product.setUpdated(ParameterOptions.getNow());
 
         Product saved = productApi.persist(product);
         expectedProducts.add(saved);
@@ -300,7 +300,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     protected User addRandomUser() {
         String    name      = nameGenerator.generateUserName(userIndex);
         String    email     = nameGenerator.generateUserEmail(userIndex);
-        LocalDate firstDate = ParameterOptions.now.toLocalDate();
+        LocalDate firstDate = ParameterOptions.getNow().toLocalDate();
 
         User         saved = addUser(name, email, "de", "nw", firstDate, generateUserColor(userIndex), 0.7f, LocalDate.parse(FIRST_OFF_DAY_START_DATE), LocalDate.parse(FIRST_OFF_DAY_FINISH_DATE), OffDayType.VACATION);
         GanttContext gc    = new GanttContext();
@@ -322,7 +322,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
     protected User addRandomUser(int index, float availability) {
         String       name      = nameGenerator.generateUserName(index);
         String       email     = nameGenerator.generateUserEmail(userIndex);
-        LocalDate    firstDate = ParameterOptions.now.toLocalDate().minusYears(1);
+        LocalDate    firstDate = ParameterOptions.getNow().toLocalDate().minusYears(1);
         User         saved     = addUser(name, email, "de", "nw", firstDate, generateUserColor(userIndex), availability);
         GanttContext gc        = new GanttContext();
         gc.initialize();
@@ -344,7 +344,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
             long      time      = System.currentTimeMillis();
             String    name      = nameGenerator.generateUserName(userIndex);
             String    email     = nameGenerator.generateUserEmail(userIndex);
-            LocalDate firstDate = ParameterOptions.now.toLocalDate().minusYears(1);
+            LocalDate firstDate = ParameterOptions.getNow().toLocalDate().minusYears(1);
             User      saved     = addUser(name, email, "de", "nw", firstDate, generateUserColor(userIndex), 0.5f);
             System.out.println("Adding user: " + saved.getName() + " took " + (System.currentTimeMillis() - time) + " ms");
 //            GanttContext gc        = new GanttContext();
@@ -376,8 +376,8 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         sprint.setStatus(Status.STARTED);
         sprint.setFeature(feature);
         sprint.setFeatureId(feature.getId());
-        sprint.setCreated(ParameterOptions.now);
-        sprint.setUpdated(ParameterOptions.now);
+        sprint.setCreated(ParameterOptions.getNow());
+        sprint.setUpdated(ParameterOptions.getNow());
         Sprint saved = sprintApi.persist(sprint);
         expectedSprints.add(saved);
         feature.addSprint(saved);
@@ -483,8 +483,8 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
         version.setName(versionName);
         version.setProduct(product);
         version.setProductId(product.getId());
-        version.setCreated(ParameterOptions.now);
-        version.setUpdated(ParameterOptions.now);
+        version.setCreated(ParameterOptions.getNow());
+        version.setUpdated(ParameterOptions.getNow());
         Version saved = versionApi.persist(version);
         product.addVersion(saved);
         expectedVersions.add(saved);
@@ -575,7 +575,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
 
     @PostConstruct
     protected void postConstruct() {
-        ParameterOptions.now = OffsetDateTime.parse("2025-01-01T08:00:00+01:00");
+        ParameterOptions.setNow(OffsetDateTime.parse("2025-01-01T08:00:00+01:00"));
 
         // Set the correct port after injection
         String baseUrl = "http://localhost:" + port + "/api";

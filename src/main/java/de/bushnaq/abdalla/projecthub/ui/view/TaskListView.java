@@ -199,6 +199,47 @@ public class TaskListView extends Main implements AfterNavigationObserver {
     }
 
     /**
+     * Assign a user to a newly created task.
+     * First tries to find a task above in the ordered list with an assigned user.
+     * If not found, assigns the currently logged-in user.
+     */
+    private void assignUserToNewTask(Task newTask) {
+        Long assignedUserId = null;
+
+        // Find the index of the new task in the ordered list
+        int newTaskIndex = taskOrder.indexOf(newTask);
+
+        // Look for a task above with an assigned user
+        if (newTaskIndex > 0) {
+            for (int i = newTaskIndex - 1; i >= 0; i--) {
+                Task previousTask = taskOrder.get(i);
+                if (previousTask.getResourceId() != null) {
+                    assignedUserId = previousTask.getResourceId();
+                    break;
+                }
+            }
+        }
+
+        // If no user found above, use the currently logged-in user
+        if (assignedUserId == null) {
+            String currentUserName = getUserName();
+            try {
+                User currentUser = userApi.getByName(currentUserName);
+                if (currentUser != null) {
+                    assignedUserId = currentUser.getId();
+                }
+            } catch (Exception e) {
+                logger.warn("Could not find user with name: " + currentUserName, e);
+            }
+        }
+
+        // Assign the user to the new task
+        if (assignedUserId != null) {
+            newTask.setResourceId(assignedUserId);
+        }
+    }
+
+    /**
      * Cancel edit mode and discard all changes
      */
     private void cancelEditMode() {
@@ -691,6 +732,7 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         task.setSprint(sprint);
         task.setSprintId(sprint.getId());
         task.setMilestone(true);
+        task.setStart(ParameterOptions.getLocalNow().withHour(8).withMinute(0).withSecond(0).withNano(0));
 
         Task saved = taskApi.persist(task);
         loadData();
@@ -730,6 +772,10 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         task.setRemainingEstimate(work);
         taskOrder.add(task);
         indentTask(task);
+
+        // Assign user to the new task
+        assignUserToNewTask(task);
+
         Task saved = taskApi.persist(task);
         loadData();
         refreshGrid();
@@ -1005,6 +1051,24 @@ public class TaskListView extends Main implements AfterNavigationObserver {
                         .mapToLong(Task::getOrderId)
                         .max()
                         .orElse(0L) + 1;
+    }
+
+    /**
+     * Get the currently logged-in user's name or email.
+     * Copied from MainLayout for consistency.
+     */
+    private String getUserName() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String         userName       = authentication != null ? authentication.getName() : "Guest";
+
+        // If using OIDC, try to get the email address from authentication details
+        if (authentication != null && authentication.getPrincipal() instanceof org.springframework.security.oauth2.core.oidc.user.OidcUser oidcUser) {
+            String email = oidcUser.getEmail();
+            if (email != null && !email.isEmpty()) {
+                userName = email;
+            }
+        }
+        return userName;
     }
 
     /**
