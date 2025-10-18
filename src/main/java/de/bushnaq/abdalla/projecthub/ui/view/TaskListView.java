@@ -301,6 +301,16 @@ public class TaskListView extends Main implements AfterNavigationObserver {
     private void createGridColumns() {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
 
+        // Hidden Identifier column - contains the actual task ID for JavaScript logic
+        {
+            Grid.Column<Task> identifierColumn = grid.addColumn(task -> task.getId() != null ? task.getId().toString() : "")
+                    .setHeader("Identifier")
+                    .setAutoWidth(true);
+            identifierColumn.setVisible(false);
+            identifierColumn.setKey("identifier");
+            identifierColumn.setId("task-grid-identifier-column");
+        }
+
         // Order Column with Up/Down arrows - visible only in edit mode
         {
             grid.addComponentColumn(task -> {
@@ -807,7 +817,7 @@ public class TaskListView extends Main implements AfterNavigationObserver {
                         
                                 // The activeItem properties are mapped by Vaadin
                                 // Try various property names that might contain the ID
-                                let taskId = activeItem.id || activeItem.orderId || activeItem.col2;
+                                let taskId = activeItem.id || activeItem.orderId || activeItem.col0;
                                 console.log('Task ID from active item (trying id/orderId/col1):', taskId);
                         
                                 // If still not found, iterate through all properties to find the ID
@@ -913,12 +923,21 @@ public class TaskListView extends Main implements AfterNavigationObserver {
             return null;
         }
 
+        // Get the current parent of the task
+        Task currentParent = task.getParentTask();
+
         // Search backwards for a story that could be a parent
+        // The story must be at the same hierarchy level (same parent as the task)
         for (int i = taskIndex - 1; i >= 0; i--) {
             Task candidate = taskOrder.get(i);
+
             // Only stories can be parents, and prevent circular references
             if (candidate.isStory() && !candidate.isAncestor(task)) {
-                return candidate;
+                // Check if the candidate is at the same hierarchy level
+                // (has the same parent as the task)
+                if (candidate.getParentTask() == currentParent) {
+                    return candidate;
+                }
             }
         }
         return null;
@@ -1238,10 +1257,11 @@ public class TaskListView extends Main implements AfterNavigationObserver {
                         function getTaskIdFromRow(row) {
                             if (!row) return null;
                             const cells = row.querySelectorAll('vaadin-grid-cell-content');
-                            if (cells.length > 1) {
-                                // ID is in the second column (index 1)
-                                const idText = cells[1].textContent?.trim();
-                                return idText || null;
+                            // The first column (index 0) is the hidden Identifier column with actual task ID
+                            if (cells.length > 0) {
+                                const identifierText = cells[0].textContent?.trim();
+                                console.log('Task ID from identifier column (index 0):', identifierText);
+                                return identifierText || null;
                             }
                             return null;
                         }
