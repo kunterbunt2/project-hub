@@ -47,7 +47,7 @@ public class TaskListViewTester {
     }
 
     public void createTask(String newTaskName) {
-        seleniumHandler.click(TaskListView.CREATE_TASK_BUTTON);
+        seleniumHandler.click(TaskListView.CREATE_TASK_BUTTON_ID);
     }
 
     /**

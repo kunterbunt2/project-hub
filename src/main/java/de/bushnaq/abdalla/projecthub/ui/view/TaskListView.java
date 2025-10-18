@@ -41,7 +41,6 @@ import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.report.gantt.GanttUtil;
 import de.bushnaq.abdalla.projecthub.rest.api.*;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
-import de.bushnaq.abdalla.projecthub.ui.component.AbstractMainGrid;
 import de.bushnaq.abdalla.projecthub.ui.util.RenderUtil;
 import de.bushnaq.abdalla.util.GanttErrorHandler;
 import de.bushnaq.abdalla.util.date.DateUtil;
@@ -72,39 +71,41 @@ import java.util.stream.Collectors;
 @PermitAll // When security is enabled, allow all authenticated users
 @RolesAllowed({"USER", "ADMIN"}) // Allow access to users with specific roles
 public class TaskListView extends Main implements AfterNavigationObserver {
-    public static final String            CANCEL_BUTTON_ID      = "cancel-tasks-button";
-    public static final String            CREATE_TASK_BUTTON    = "create-task-button";
-    public static final String            EDIT_BUTTON_ID        = "edit-tasks-button";
-    public static final String            SAVE_BUTTON_ID        = "save-tasks-button";
-    public static final String            TASK_GRID_NAME_PREFIX = "task-grid-name-";
-    public static final String            TASK_LIST_PAGE_TITLE  = "task-list-page-title";
+    public static final String            CANCEL_BUTTON_ID           = "cancel-tasks-button";
+    public static final String            CREATE_MILESTONE_BUTTON_ID = "create-milestone-button";
+    public static final String            CREATE_STORY_BUTTON_ID     = "create-story-button";
+    public static final String            CREATE_TASK_BUTTON_ID      = "create-task-button";
+    public static final String            EDIT_BUTTON_ID             = "edit-tasks-button";
+    public static final String            SAVE_BUTTON_ID             = "save-tasks-button";
+    public static final String            TASK_GRID_NAME_PREFIX      = "task-grid-name-";
+    public static final String            TASK_LIST_PAGE_TITLE       = "task-list-page-title";
     private             Button            cancelButton;
     private final       Clock             clock;
     @Autowired
     protected           Context           context;
     private             Task              draggedTask;          // Track the currently dragged task
-    public final        DateTimeFormatter dtfymdhm              = DateTimeFormatter.ofPattern("yyyy.MMM.dd HH:mm");
+    public final        DateTimeFormatter dtfymdhm                   = DateTimeFormatter.ofPattern("yyyy.MMM.dd HH:mm");
     private             Button            editButton;
-    private final       GanttErrorHandler eh                    = new GanttErrorHandler();
+    private final       GanttErrorHandler eh                         = new GanttErrorHandler();
     private final       FeatureApi        featureApi;
     private             Long              featureId;
-    private final       Svg               ganttChart            = new Svg();
+    private final       Svg               ganttChart                 = new Svg();
     private             GanttUtil         ganttUtil;
     private             Grid<Task>        grid;
     private final       HorizontalLayout  headerLayout;
     // Edit mode state management
-    private             boolean           isEditMode            = false;
-    private final       Logger            logger                = LoggerFactory.getLogger(this.getClass());
-    private final       Set<Task>         modifiedTasks         = new HashSet<>();
+    private             boolean           isEditMode                 = false;
+    private final       Logger            logger                     = LoggerFactory.getLogger(this.getClass());
+    private final       Set<Task>         modifiedTasks              = new HashSet<>();
     private final       ProductApi        productApi;
     private             Long              productId;
     private             Button            saveButton;
     private             Sprint            sprint;
     private final       SprintApi         sprintApi;
     private             Long              sprintId;
-    private final       LocalDateTime     start                 = LocalDateTime.now().withHour(8).withMinute(0).withSecond(0).withNano(0);
+    private final       LocalDateTime     start                      = LocalDateTime.now().withHour(8).withMinute(0).withSecond(0).withNano(0);
     private final       TaskApi           taskApi;
-    private             List<Task>        taskOrder             = new ArrayList<>(); // Track current order in memory
+    private             List<Task>        taskOrder                  = new ArrayList<>(); // Track current order in memory
     private final       UserApi           userApi;
     private final       VersionApi        versionApi;
     private             Long              versionId;
@@ -194,9 +195,7 @@ public class TaskListView extends Main implements AfterNavigationObserver {
 
         //- populate grid
 //        pageTitle.setText("Task of Sprint ID: " + sprintId);
-        taskOrder = new ArrayList<>(sprint.getTasks());
-        grid.setItems(taskOrder);
-        generateGanttChart();
+        refreshGrid();
     }
 
     /**
@@ -228,7 +227,7 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         grid = new Grid<>();
         grid.addThemeVariants(com.vaadin.flow.component.grid.GridVariant.LUMO_NO_BORDER, com.vaadin.flow.component.grid.GridVariant.LUMO_NO_ROW_BORDERS);
 
-        setupGridColumns();
+        createGridColumns();
 
         // Enable row reordering with drag and drop in edit mode
         grid.setRowsDraggable(false); // Will be enabled in edit mode
@@ -247,7 +246,17 @@ public class TaskListView extends Main implements AfterNavigationObserver {
                 int targetIndex  = taskOrder.indexOf(dropTargetTask);
 
                 if (draggedIndex >= 0 && targetIndex >= 0) {
+                    // Remove from old parent before moving
+                    if (draggedTask.getParentTask() != null) {
+                        Task oldParent = draggedTask.getParentTask();
+                        oldParent.removeChildTask(draggedTask);
+                        markTaskAsModified(oldParent);
+                    }
+
                     moveTask(draggedIndex, targetIndex);
+
+                    // Try to re-parent the task based on its new position
+                    indentTask(draggedTask);
                 }
             }
 
@@ -289,11 +298,350 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         return grid;
     }
 
+    private void createGridColumns() {
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
+
+        // Order Column with Up/Down arrows - visible only in edit mode
+        {
+            grid.addComponentColumn(task -> {
+                if (isEditMode) {
+                    // Create drag handle icon (burger menu)
+                    com.vaadin.flow.component.icon.Icon dragIcon = VaadinIcon.MENU.create();
+                    dragIcon.getStyle()
+                            .set("cursor", "grab")
+                            .set("color", "var(--lumo-secondary-text-color)");
+
+                    Div dragHandle = new Div(dragIcon);
+                    dragHandle.getStyle()
+                            .set("display", "flex")
+                            .set("align-items", "center")
+                            .set("justify-content", "center");
+                    dragHandle.setTitle("Drag to reorder");
+
+                    return dragHandle;
+                } else {
+                    return new Div(); // Empty div when not in edit mode
+                }
+            }).setHeader("").setAutoWidth(true).setWidth("50px");
+        }
+
+        //Key
+        {
+            grid.addColumn(Task::getKey).setHeader("Key").setAutoWidth(true);
+        }
+
+        //ID
+        {
+//            Grid.Column<Task> id = grid.addColumn(Task::getOrderId).setHeader("ID").setAutoWidth(true);
+//            id.setId("task-grid-id-column");
+            grid.addColumn(Task::getOrderId).setHeader("ID").setAutoWidth(true).setId("task-grid-id-column");
+        }
+        //Parent
+        {
+            grid.addColumn(task -> task.getParentTask() != null ? task.getParentTask().getOrderId() : "").setHeader("Parent").setAutoWidth(true);
+        }
+        //name - Editable for all task types, with icon on the left
+        {
+            Grid.Column<Task> nameColumn = grid.addColumn(new ComponentRenderer<>(task -> {
+                // Calculate indentation depth
+                int depth        = getHierarchyDepth(task);
+                int indentPixels = depth * 20;
+
+                // Create container for icon + name
+                HorizontalLayout container = new HorizontalLayout();
+                container.setSpacing(false);
+                container.setPadding(false);
+                container.setAlignItems(com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment.CENTER);
+                container.getStyle().set("padding-left", indentPixels + "px");
+
+                // Add icon based on task type
+                if (task.isMilestone()) {
+                    // Diamond shape for milestone
+                    Div diamond = new Div();
+                    diamond.getElement().getStyle()
+                            .set("width", "12px")
+                            .set("height", "12px")
+                            .set("background-color", "#1976d2")
+                            .set("transform", "rotate(45deg)")
+                            .set("margin-right", "8px")
+                            .set("flex-shrink", "0");
+                    diamond.getElement().setAttribute("title", "Milestone");
+                    container.add(diamond);
+                } else if (task.isStory()) {
+                    // Downward triangle for story
+                    Div triangle = new Div();
+                    triangle.getElement().getStyle()
+                            .set("width", "0")
+                            .set("height", "0")
+                            .set("border-left", "6px solid transparent")
+                            .set("border-right", "6px solid transparent")
+                            .set("border-top", "10px solid #43a047")
+                            .set("margin-right", "8px")
+                            .set("flex-shrink", "0");
+                    triangle.getElement().setAttribute("title", "Story");
+                    container.add(triangle);
+                } else if (task.isTask()) {
+                    // Task gets no visible icon, but add spacing to match icon width
+                    // Triangle width is 12px (6px + 6px) + 8px margin = 20px total
+                    Div spacer = new Div();
+                    spacer.getElement().getStyle()
+                            .set("width", "20px")
+                            .set("height", "1px")
+                            .set("flex-shrink", "0");
+                    container.add(spacer);
+                }
+
+                // Add name field or text
+                if (isEditMode) {
+                    TextField nameField = new TextField();
+                    nameField.setValue(task.getName() != null ? task.getName() : "");
+                    nameField.setWidthFull();
+
+                    nameField.addValueChangeListener(e -> {
+                        if (e.isFromClient()) {
+                            task.setName(e.getValue());
+                            markTaskAsModified(task);
+                        }
+                    });
+                    container.add(nameField);
+                    container.setFlexGrow(1, nameField);
+                } else {
+                    Div div = new Div();
+                    div.setText(task.getName() != null ? task.getName() : "");
+                    div.setId(TASK_GRID_NAME_PREFIX + task.getName());
+                    container.add(div);
+                    container.setFlexGrow(1, div);
+                }
+
+                return container;
+            })).setHeader("Name").setAutoWidth(true).setFlexGrow(1);
+        }
+        //Start - Editable only for Milestone tasks
+        {
+            grid.addColumn(new ComponentRenderer<>(task -> {
+                if (isEditMode && task.isMilestone()) {
+                    // Editable for Milestone tasks
+                    DateTimePicker startField = new DateTimePicker();
+                    startField.setValue(task.getStart() != null ? task.getStart() : LocalDateTime.now());
+                    startField.setWidthFull();
+
+                    startField.addValueChangeListener(e -> {
+                        if (e.isFromClient()) {
+                            try {
+                                LocalDateTime dateTime = e.getValue();
+                                if (dateTime != null) {
+                                    task.setStart(dateTime);
+                                    markTaskAsModified(task);
+                                    startField.setInvalid(false);
+                                } else {
+                                    task.setStart(null);
+                                    markTaskAsModified(task);
+                                    startField.setInvalid(false);
+                                }
+                            } catch (Exception ex) {
+                                startField.setInvalid(true);
+                                startField.setErrorMessage("Invalid date/time format");
+                            }
+                        }
+                    });
+
+                    return startField;
+                } else {
+                    // Read-only for Story and Task tasks
+                    Div div = new Div();
+                    if (task.isMilestone())
+                        div.setText(task.getStart() != null ? DateUtil.createDateString(task.getStart(), dtfymdhm) : "");
+                    else
+                        div.setText("");
+                    return div;
+                }
+            })).setHeader("Start").setAutoWidth(true);
+        }
+        //Assigned - Editable only for Task tasks
+        {
+            grid.addColumn(new ComponentRenderer<>(task -> {
+                if (isEditMode && task.isTask()) {
+                    // Editable for Task tasks
+                    ComboBox<User> userComboBox = new ComboBox<>();
+                    userComboBox.setAllowCustomValue(false);
+                    userComboBox.setClearButtonVisible(true);
+                    userComboBox.setWidthFull();
+                    userComboBox.setItemLabelGenerator(User::getName);
+
+                    // Load ALL users from the system (not just sprint users) so we can assign new users
+                    List<User> allUsers = userApi.getAll();
+                    userComboBox.setItems(allUsers);
+
+                    // Set current value only if task has an assigned user
+                    if (task.getResourceId() != null) {
+                        try {
+                            User currentUser = sprint.getuser(task.getResourceId());
+                            if (currentUser != null && allUsers.contains(currentUser)) {
+                                userComboBox.setValue(currentUser);
+                            }
+                        } catch (Exception ex) {
+                            logger.warn("Could not set user for task {}: {}", task.getKey(), ex.getMessage());
+                        }
+                    }
+
+                    userComboBox.addValueChangeListener(e -> {
+                        if (e.isFromClient()) {
+                            User selectedUser = e.getValue();
+                            task.setResourceId(selectedUser != null ? selectedUser.getId() : null);
+                            markTaskAsModified(task);
+                        }
+                    });
+
+                    return userComboBox;
+                } else {
+                    // Read-only for Milestone and Story tasks
+                    Div div = new Div();
+                    if (task.isTask())
+                        div.setText(task.getResourceId() != null ? sprint.getuser(task.getResourceId()).getName() : "");
+                    else
+                        div.setText("");
+                    return div;
+                }
+            })).setHeader("Assigned").setAutoWidth(true);
+        }
+
+        //Min Estimate - Editable only for Task tasks
+        {
+            grid.addColumn(new ComponentRenderer<>(task -> {
+                if (isEditMode && task.isTask()) {
+                    // Editable for Task tasks
+                    TextField estimateField = new TextField();
+                    estimateField.setValue(!task.getMinEstimate().equals(Duration.ZERO) ?
+                            DateUtil.createWorkDayDurationString(task.getMinEstimate()) : "");
+                    estimateField.setWidthFull();
+                    estimateField.setPlaceholder("e.g., 1d 2h 30m");
+
+                    estimateField.addValueChangeListener(e -> {
+                        if (e.isFromClient()) {
+                            try {
+                                Duration duration = DateUtil.parseWorkDayDurationString(e.getValue().strip());
+                                task.setMinEstimate(duration);
+                                markTaskAsModified(task);
+                                estimateField.setInvalid(false);
+                            } catch (IllegalArgumentException ex) {
+                                estimateField.setInvalid(true);
+                                estimateField.setErrorMessage("Invalid format");
+                            }
+                        }
+                    });
+
+                    return estimateField;
+                } else {
+                    // Read-only for Milestone and Story tasks
+                    Div div = new Div();
+                    if (task.isTask())
+                        div.setText(!task.getMinEstimate().equals(Duration.ZERO) ? DateUtil.createWorkDayDurationString(task.getMinEstimate()) : "");
+                    else
+                        div.setText("");
+                    return div;
+                }
+            })).setHeader("Min Estimate").setAutoWidth(true);
+        }
+        //Max Estimate - Editable only for Task tasks
+        {
+            grid.addColumn(new ComponentRenderer<>(task -> {
+                if (isEditMode && task.isTask()) {
+                    // Editable for Task tasks
+                    TextField estimateField = new TextField();
+                    estimateField.setValue(!task.getMaxEstimate().equals(Duration.ZERO) ?
+                            DateUtil.createWorkDayDurationString(task.getMaxEstimate()) : "");
+                    estimateField.setWidthFull();
+                    estimateField.setPlaceholder("e.g., 1d 2h 30m");
+
+                    estimateField.addValueChangeListener(e -> {
+                        if (e.isFromClient()) {
+                            try {
+                                Duration duration = DateUtil.parseWorkDayDurationString(e.getValue().strip());
+                                task.setMaxEstimate(duration);
+                                markTaskAsModified(task);
+                                estimateField.setInvalid(false);
+                            } catch (IllegalArgumentException ex) {
+                                estimateField.setInvalid(true);
+                                estimateField.setErrorMessage("Invalid format");
+                            }
+                        }
+                    });
+
+                    return estimateField;
+                } else {
+                    // Read-only for Milestone and Story tasks
+                    Div div = new Div();
+                    if (task.isTask())
+                        div.setText(!task.getMaxEstimate().equals(Duration.ZERO) ? DateUtil.createWorkDayDurationString(task.getMaxEstimate()) : "");
+                    else
+                        div.setText("");
+                    return div;
+                }
+            })).setHeader("Max Estimate").setAutoWidth(true);
+        }
+
+        //Dependency
+        {
+            grid.addColumn(task -> {
+                List<Relation> relations = task.getPredecessors();
+                if (relations == null || relations.isEmpty()) {
+                    return "";
+                }
+
+                return relations.stream()
+                        .map(relation -> {
+                            Task predecessor = sprint.getTaskById(relation.getPredecessorId());
+                            return predecessor != null ? predecessor.getKey() : "";
+                        })
+                        .filter(key -> !key.isEmpty())
+                        .collect(Collectors.joining(", "));
+            }).setHeader("Dependency").setAutoWidth(true);
+        }
+//        grid.addColumn(task -> task.getTaskMode().name()).setHeader("Mode").setAutoWidth(true;
+    }
+
     /**
      * Creates the header layout with Create, Edit, Save, and Cancel buttons
      */
     private HorizontalLayout createHeaderWithButtons() {
-        HorizontalLayout header = AbstractMainGrid.createHeader("Tasks", TASK_LIST_PAGE_TITLE, VaadinIcon.TASKS, CREATE_TASK_BUTTON, () -> createTask());
+        // Create header without the create button (we'll add three buttons manually)
+        HorizontalLayout header = new HorizontalLayout();
+        header.setWidthFull();
+        header.setAlignItems(com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment.CENTER);
+        header.getStyle().set("padding", "var(--lumo-space-m)");
+
+        // Create title with icon
+        com.vaadin.flow.component.icon.Icon icon = VaadinIcon.TASKS.create();
+        icon.getStyle().set("margin-right", "var(--lumo-space-s)");
+
+        com.vaadin.flow.component.html.H2 title = new com.vaadin.flow.component.html.H2("Tasks");
+        title.setId(TASK_LIST_PAGE_TITLE);
+        title.getStyle()
+                .set("margin", "0")
+                .set("font-size", "var(--lumo-font-size-xl)")
+                .set("font-weight", "600");
+
+        HorizontalLayout titleLayout = new HorizontalLayout(icon, title);
+        titleLayout.setAlignItems(com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment.CENTER);
+        titleLayout.setSpacing(false);
+
+        // Create Milestone button
+        Button createMilestoneButton = new Button("Create Milestone", VaadinIcon.FLAG.create());
+        createMilestoneButton.setId(CREATE_MILESTONE_BUTTON_ID);
+        createMilestoneButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        createMilestoneButton.addClickListener(e -> createMilestone());
+
+        // Create Story button
+        Button createStoryButton = new Button("Create Story", VaadinIcon.BOOK.create());
+        createStoryButton.setId(CREATE_STORY_BUTTON_ID);
+        createStoryButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        createStoryButton.addClickListener(e -> createStory());
+
+        // Create Task button
+        Button createTaskButton = new Button("Create Task", VaadinIcon.TASKS.create());
+        createTaskButton.setId(CREATE_TASK_BUTTON_ID);
+        createTaskButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        createTaskButton.addClickListener(e -> createTask());
 
         // Create Edit button
         editButton = new Button("Edit", VaadinIcon.EDIT.create());
@@ -315,39 +663,64 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         cancelButton.setVisible(false);
         cancelButton.addClickListener(e -> cancelEditMode());
 
-        // Add buttons to header
-        header.add(editButton, saveButton, cancelButton);
+        // Add all components to header
+        header.add(titleLayout, createMilestoneButton, createStoryButton, createTaskButton, editButton, saveButton, cancelButton);
+        header.expand(titleLayout); // Make title take remaining space
 
         return header;
     }
 
-//    /**
-//     * Creates a text field component for editing task names
-//     *
-//     * @return TextField component for the name editor
-//     */
-//    private com.vaadin.flow.component.textfield.TextField createNameEditor() {
-//        com.vaadin.flow.component.textfield.TextField nameField = new com.vaadin.flow.component.textfield.TextField();
-//        nameField.setWidthFull();
-//
-//
-//        return nameField;
-//    }
+    /**
+     * Create a new Milestone task
+     */
+    private void createMilestone() {
+        long nextOrderId = getNextOrderId();
 
-    private void createTask() {
         Task task = new Task();
-        task.setName("New Task");
+        task.setName("New Milestone-" + nextOrderId);
         task.setSprint(sprint);
         task.setSprintId(sprint.getId());
-//        task.setStart(start);
-        Duration work = Duration.ofHours(7).plus(Duration.ofMinutes(30));
-        task.setOriginalEstimate(work);
-        task.setRemainingEstimate(work);
-
+        task.setMilestone(true);
 
         Task saved = taskApi.persist(task);
-//        saved.setSprint(sprint);
-//        sprint.addTask(saved);
+        loadData();
+        refreshGrid();
+    }
+
+    /**
+     * Create a new Story task
+     */
+    private void createStory() {
+        long nextOrderId = getNextOrderId();
+
+        Task task = new Task();
+        task.setName("New Story-" + nextOrderId);
+        task.setSprint(sprint);
+        task.setSprintId(sprint.getId());
+
+        Task saved = taskApi.persist(task);
+        loadData();
+        refreshGrid();
+    }
+
+    /**
+     * Create a new Task with default estimates
+     */
+    private void createTask() {
+        long nextOrderId = getNextOrderId();
+
+        Task task = new Task();
+        task.setName("New Task-" + nextOrderId);
+        task.setSprint(sprint);
+        task.setSprintId(sprint.getId());
+        sprint.addTask(task);
+        Duration work = Duration.ofHours(7).plus(Duration.ofMinutes(30));
+        task.setMinEstimate(work);
+        task.setOriginalEstimate(work);
+        task.setRemainingEstimate(work);
+        taskOrder.add(task);
+        indentTask(task);
+        Task saved = taskApi.persist(task);
         loadData();
         refreshGrid();
     }
@@ -434,7 +807,7 @@ public class TaskListView extends Main implements AfterNavigationObserver {
                         
                                 // The activeItem properties are mapped by Vaadin
                                 // Try various property names that might contain the ID
-                                let taskId = activeItem.id || activeItem.orderId || activeItem.col1;
+                                let taskId = activeItem.id || activeItem.orderId || activeItem.col2;
                                 console.log('Task ID from active item (trying id/orderId/col1):', taskId);
                         
                                 // If still not found, iterate through all properties to find the ID
@@ -603,12 +976,16 @@ public class TaskListView extends Main implements AfterNavigationObserver {
     }
 
     /**
-     * Get indented name for display based on hierarchy depth
+     * Get the next available orderId for a new task in the sprint
+     *
+     * @return The next orderId to use (1 if sprint is empty, otherwise max orderId + 1)
      */
-    private String getIndentedName(Task task) {
-        int    depth  = getHierarchyDepth(task);
-        String indent = "  ".repeat(depth); // 2 spaces per level
-        return indent + (task.getName() != null ? task.getName() : "");
+    private long getNextOrderId() {
+        return sprint.getTasks().isEmpty() ? 1 :
+                sprint.getTasks().stream()
+                        .mapToLong(Task::getOrderId)
+                        .max()
+                        .orElse(0L) + 1;
     }
 
     /**
@@ -799,273 +1176,6 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         loadData();
         refreshGrid();
         exitEditMode();
-    }
-
-    private void setupGridColumns() {
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withZone(clock.getZone()).withLocale(getLocale());
-
-        // Order Column with Up/Down arrows - visible only in edit mode
-        {
-            grid.addComponentColumn(task -> {
-                if (isEditMode) {
-                    // Create drag handle icon (burger menu)
-                    com.vaadin.flow.component.icon.Icon dragIcon = VaadinIcon.MENU.create();
-                    dragIcon.getStyle()
-                            .set("cursor", "grab")
-                            .set("color", "var(--lumo-secondary-text-color)");
-
-                    Div dragHandle = new Div(dragIcon);
-                    dragHandle.getStyle()
-                            .set("display", "flex")
-                            .set("align-items", "center")
-                            .set("justify-content", "center");
-                    dragHandle.setTitle("Drag to reorder");
-
-                    return dragHandle;
-                } else {
-                    return new Div(); // Empty div when not in edit mode
-                }
-            }).setHeader("").setAutoWidth(true).setWidth("50px");
-        }
-
-        //key
-        {
-            grid.addColumn(Task::getOrderId).setHeader("ID").setAutoWidth(true);
-        }
-        //Type
-        {
-            grid.addColumn(task -> {
-                if (task.isMilestone()) {
-                    return "Milestone";
-                } else if (task.isStory()) {
-                    return "Story";
-                } else if (task.isTask()) {
-                    return "Task";
-                } else {
-                    return "";
-                }
-            }).setHeader("Type").setAutoWidth(true);
-        }
-        //Parent
-        {
-            grid.addColumn(task -> task.getParentTask() != null ? task.getParentTask().getOrderId() : "").setHeader("Parent").setAutoWidth(true);
-        }
-        //name - Editable for all task types
-        {
-            Grid.Column<Task> nameColumn = grid.addColumn(new ComponentRenderer<>(task -> {
-                if (isEditMode) {
-                    TextField nameField = new TextField();
-                    nameField.setValue(task.getName() != null ? task.getName() : "");
-                    nameField.setWidthFull();
-
-                    // Add indentation using CSS padding
-                    int depth = getHierarchyDepth(task);
-                    if (depth > 0) {
-                        nameField.getStyle().set("padding-left", (depth * 20) + "px");
-                    }
-
-                    nameField.addValueChangeListener(e -> {
-                        if (e.isFromClient()) {
-                            task.setName(e.getValue());
-                            markTaskAsModified(task);
-                        }
-                    });
-                    return nameField;
-                } else {
-                    Div div = new Div();
-                    div.setText(task.getName() != null ? task.getName() : "");
-                    div.setId(TASK_GRID_NAME_PREFIX + task.getName());
-                    // Add indentation using CSS padding
-                    int depth = getHierarchyDepth(task);
-                    if (depth > 0) {
-                        div.getStyle().set("padding-left", (depth * 20) + "px");
-                    }
-                    return div;
-                }
-            })).setHeader("Name").setAutoWidth(true).setFlexGrow(1);
-        }
-        //Start - Editable only for Milestone tasks
-        {
-            grid.addColumn(new ComponentRenderer<>(task -> {
-                if (isEditMode && task.isMilestone()) {
-                    // Editable for Milestone tasks
-                    DateTimePicker startField = new DateTimePicker();
-                    startField.setValue(task.getStart() != null ? task.getStart() : LocalDateTime.now());
-                    startField.setWidthFull();
-
-                    startField.addValueChangeListener(e -> {
-                        if (e.isFromClient()) {
-                            try {
-                                LocalDateTime dateTime = e.getValue();
-                                if (dateTime != null) {
-                                    task.setStart(dateTime);
-                                    markTaskAsModified(task);
-                                    startField.setInvalid(false);
-                                } else {
-                                    task.setStart(null);
-                                    markTaskAsModified(task);
-                                    startField.setInvalid(false);
-                                }
-                            } catch (Exception ex) {
-                                startField.setInvalid(true);
-                                startField.setErrorMessage("Invalid date/time format");
-                            }
-                        }
-                    });
-
-                    return startField;
-                } else {
-                    // Read-only for Story and Task tasks
-                    Div div = new Div();
-                    if (task.isMilestone())
-                        div.setText(task.getStart() != null ? DateUtil.createDateString(task.getStart(), dtfymdhm) : "");
-                    else
-                        div.setText("");
-                    return div;
-                }
-            })).setHeader("Start").setAutoWidth(true);
-        }
-        //Assigned - Editable only for Task tasks
-        {
-            grid.addColumn(new ComponentRenderer<>(task -> {
-                if (isEditMode && task.isTask()) {
-                    // Editable for Task tasks
-                    ComboBox<User> userComboBox = new ComboBox<>();
-                    userComboBox.setAllowCustomValue(false);
-                    userComboBox.setClearButtonVisible(true);
-                    userComboBox.setWidthFull();
-                    userComboBox.setItemLabelGenerator(User::getName);
-
-                    // Load ALL users from the system (not just sprint users) so we can assign new users
-                    List<User> allUsers = userApi.getAll();
-                    userComboBox.setItems(allUsers);
-
-                    // Set current value only if task has an assigned user
-                    if (task.getResourceId() != null) {
-                        try {
-                            User currentUser = sprint.getuser(task.getResourceId());
-                            if (currentUser != null && allUsers.contains(currentUser)) {
-                                userComboBox.setValue(currentUser);
-                            }
-                        } catch (Exception ex) {
-                            logger.warn("Could not set user for task {}: {}", task.getKey(), ex.getMessage());
-                        }
-                    }
-
-                    userComboBox.addValueChangeListener(e -> {
-                        if (e.isFromClient()) {
-                            User selectedUser = e.getValue();
-                            task.setResourceId(selectedUser != null ? selectedUser.getId() : null);
-                            markTaskAsModified(task);
-                        }
-                    });
-
-                    return userComboBox;
-                } else {
-                    // Read-only for Milestone and Story tasks
-                    Div div = new Div();
-                    if (task.isTask())
-                        div.setText(task.getResourceId() != null ? sprint.getuser(task.getResourceId()).getName() : "");
-                    else
-                        div.setText("");
-                    return div;
-                }
-            })).setHeader("Assigned").setAutoWidth(true);
-        }
-
-        //Min Estimate - Editable only for Task tasks
-        {
-            grid.addColumn(new ComponentRenderer<>(task -> {
-                if (isEditMode && task.isTask()) {
-                    // Editable for Task tasks
-                    TextField estimateField = new TextField();
-                    estimateField.setValue(!task.getMinEstimate().equals(Duration.ZERO) ?
-                            DateUtil.createWorkDayDurationString(task.getMinEstimate()) : "");
-                    estimateField.setWidthFull();
-                    estimateField.setPlaceholder("e.g., 1d 2h 30m");
-
-                    estimateField.addValueChangeListener(e -> {
-                        if (e.isFromClient()) {
-                            try {
-                                Duration duration = DateUtil.parseWorkDayDurationString(e.getValue().strip());
-                                task.setMinEstimate(duration);
-                                markTaskAsModified(task);
-                                estimateField.setInvalid(false);
-                            } catch (IllegalArgumentException ex) {
-                                estimateField.setInvalid(true);
-                                estimateField.setErrorMessage("Invalid format");
-                            }
-                        }
-                    });
-
-                    return estimateField;
-                } else {
-                    // Read-only for Milestone and Story tasks
-                    Div div = new Div();
-                    if (task.isTask())
-                        div.setText(!task.getMinEstimate().equals(Duration.ZERO) ? DateUtil.createWorkDayDurationString(task.getMinEstimate()) : "");
-                    else
-                        div.setText("");
-                    return div;
-                }
-            })).setHeader("Min Estimate").setAutoWidth(true);
-        }
-        //Max Estimate - Editable only for Task tasks
-        {
-            grid.addColumn(new ComponentRenderer<>(task -> {
-                if (isEditMode && task.isTask()) {
-                    // Editable for Task tasks
-                    TextField estimateField = new TextField();
-                    estimateField.setValue(!task.getMaxEstimate().equals(Duration.ZERO) ?
-                            DateUtil.createWorkDayDurationString(task.getMaxEstimate()) : "");
-                    estimateField.setWidthFull();
-                    estimateField.setPlaceholder("e.g., 1d 2h 30m");
-
-                    estimateField.addValueChangeListener(e -> {
-                        if (e.isFromClient()) {
-                            try {
-                                Duration duration = DateUtil.parseWorkDayDurationString(e.getValue().strip());
-                                task.setMaxEstimate(duration);
-                                markTaskAsModified(task);
-                                estimateField.setInvalid(false);
-                            } catch (IllegalArgumentException ex) {
-                                estimateField.setInvalid(true);
-                                estimateField.setErrorMessage("Invalid format");
-                            }
-                        }
-                    });
-
-                    return estimateField;
-                } else {
-                    // Read-only for Milestone and Story tasks
-                    Div div = new Div();
-                    if (task.isTask())
-                        div.setText(!task.getMaxEstimate().equals(Duration.ZERO) ? DateUtil.createWorkDayDurationString(task.getMaxEstimate()) : "");
-                    else
-                        div.setText("");
-                    return div;
-                }
-            })).setHeader("Max Estimate").setAutoWidth(true);
-        }
-
-        //Dependency
-        {
-            grid.addColumn(task -> {
-                List<Relation> relations = task.getPredecessors();
-                if (relations == null || relations.isEmpty()) {
-                    return "";
-                }
-
-                return relations.stream()
-                        .map(relation -> {
-                            Task predecessor = sprint.getTaskById(relation.getPredecessorId());
-                            return predecessor != null ? predecessor.getKey() : "";
-                        })
-                        .filter(key -> !key.isEmpty())
-                        .collect(Collectors.joining(", "));
-            }).setHeader("Dependency").setAutoWidth(true);
-        }
-//        grid.addColumn(task -> task.getTaskMode().name()).setHeader("Mode").setAutoWidth(true;
     }
 
     /**
