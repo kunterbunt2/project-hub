@@ -1158,6 +1158,8 @@ public class TaskListView extends Main implements AfterNavigationObserver {
 
         Task oldParent = task.getParentTask();
         oldParent.removeChildTask(task);
+        if (oldParent.getParentTask() != null)
+            oldParent.getParentTask().addChildTask(task);
         markTaskAsModified(task);
         markTaskAsModified(oldParent);
 
