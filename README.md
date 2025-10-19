@@ -46,6 +46,7 @@ tbd
 
 # Issues
 
+- changing assignment must also change hidden dependencies
 - some tests fail with java.awt.HeadlessException.
 - some ai filter test fail all the time, as the tests are vague.
 - users are retired by their name instead of their email address.

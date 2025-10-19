@@ -62,30 +62,30 @@ import java.util.function.Function;
 @PageTitle("Sprint Quality Board")
 @PermitAll // When security is enabled, allow all authenticated users
 public class SprintQualityBoard extends Main implements AfterNavigationObserver {
-    public static final String           SPRINT_GRID_NAME_PREFIX = "sprint-grid-name-";
-    private final       Clock            clock;
+    public static final String            SPRINT_GRID_NAME_PREFIX = "sprint-grid-name-";
+    private final       Clock             clock;
     @Autowired
-    protected           Context          context;
-    private final       LocalDateTime    created;
-    private final GanttErrorHandler eh = new GanttErrorHandler();
-    private final       FeatureApi       featureApi;
-    private             Long             featureId;
-    private             GanttUtil        ganttUtil;
-    private final       HtmlUtil         htmlUtil                = new HtmlUtil();
-    final               Logger           logger                  = LoggerFactory.getLogger(this.getClass());
-    private final       LocalDateTime    now;
-    private final       H2               pageTitle;
-    private final       ProductApi       productApi;
-    private             Long             productId;
-    private             Sprint           sprint;
-    private final       SprintApi        sprintApi;
-    private             Long             sprintId;
-    private             SprintStatistics sprintStatistics;
-    private final       TaskApi          taskApi;
-    private final       UserApi          userApi;
-    private final       VersionApi       versionApi;
-    private             Long             versionId;
-    private final       WorklogApi       worklogApi;
+    protected           Context           context;
+    private final       LocalDateTime     created;
+    private final       GanttErrorHandler eh                      = new GanttErrorHandler();
+    private final       FeatureApi        featureApi;
+    private             Long              featureId;
+    private             GanttUtil         ganttUtil;
+    private final       HtmlUtil          htmlUtil                = new HtmlUtil();
+    final               Logger            logger                  = LoggerFactory.getLogger(this.getClass());
+    private final       LocalDateTime     now;
+    private final       H2                pageTitle;
+    private final       ProductApi        productApi;
+    private             Long              productId;
+    private             Sprint            sprint;
+    private final       SprintApi         sprintApi;
+    private             Long              sprintId;
+    private             SprintStatistics  sprintStatistics;
+    private final       TaskApi           taskApi;
+    private final       UserApi           userApi;
+    private final       VersionApi        versionApi;
+    private             Long              versionId;
+    private final       WorklogApi        worklogApi;
 
     public SprintQualityBoard(WorklogApi worklogApi, TaskApi taskApi, SprintApi sprintApi, ProductApi productApi, VersionApi versionApi, FeatureApi featureApi, UserApi userApi, Clock clock) {
         created         = LocalDateTime.now(clock);
@@ -175,9 +175,31 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
                         }
                     }
                 });
+
+        // Check if sprint has start date
+        if (sprint.getStart() == null) {
+            // Display message in the center of the page
+            Div messageContainer = new Div();
+            messageContainer.getStyle()
+                    .set("display", "flex")
+                    .set("justify-content", "center")
+                    .set("align-items", "center")
+                    .set("height", "50vh")
+                    .set("width", "100%");
+
+            H3 message = new H3("No Sprint Data to Show");
+            message.getStyle()
+                    .set("color", "var(--lumo-secondary-text-color)");
+
+            messageContainer.add(message);
+            add(messageContainer);
+            logTime();
+            return;
+        } else {
 //        renderBurnDownChart();
-        createSprintDetailsLayout();
-        createGanttChart();
+            createSprintDetailsLayout();
+            createGanttChart();
+        }
         logTime();
     }
 
@@ -425,8 +447,10 @@ public class SprintQualityBoard extends Main implements AfterNavigationObserver 
             sprint.initUserMap(usersFuture.get());
             sprint.initTaskMap(tasksFuture.get(), worklogsFuture.get());
             logger.info("sprint user, task and worklog maps initialized in {} ms", System.currentTimeMillis() - time);
-            sprint.recalculate(ParameterOptions.getLocalNow());
-            sprintStatistics = new SprintStatistics(sprint, now);
+            if (sprint.getStart() != null) {
+                sprint.recalculate(ParameterOptions.getLocalNow());
+                sprintStatistics = new SprintStatistics(sprint, now);
+            }
         } catch (InterruptedException | ExecutionException e) {
             logger.error("Error loading sprint data", e);
             // Handle exception appropriately

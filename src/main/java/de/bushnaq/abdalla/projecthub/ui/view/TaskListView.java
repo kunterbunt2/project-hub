@@ -349,7 +349,7 @@ public class TaskListView extends Main implements AfterNavigationObserver {
                     .setAutoWidth(true);
             identifierColumn.setVisible(false);
             identifierColumn.setKey("identifier");
-            identifierColumn.setId("task-grid-identifier-column");
+            identifierColumn.setId("task-grid-id-column");
         }
 
         // Order Column with Up/Down arrows - visible only in edit mode
@@ -385,7 +385,7 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         {
 //            Grid.Column<Task> id = grid.addColumn(Task::getOrderId).setHeader("ID").setAutoWidth(true);
 //            id.setId("task-grid-id-column");
-            grid.addColumn(Task::getOrderId).setHeader("ID").setAutoWidth(true).setId("task-grid-id-column");
+            grid.addColumn(Task::getOrderId).setHeader("#").setAutoWidth(true).setId("task-grid-#-column");
         }
         //Parent
         {
