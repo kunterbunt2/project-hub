@@ -387,6 +387,42 @@ public class TaskListView extends Main implements AfterNavigationObserver {
 //            id.setId("task-grid-id-column");
             grid.addColumn(Task::getOrderId).setHeader("#").setAutoWidth(true).setId("task-grid-#-column");
         }
+        //Dependency
+        {
+            grid.addColumn(new ComponentRenderer<>(task -> {
+                if (isEditMode) {
+                    // Editable - show current dependencies as text with an edit button
+                    HorizontalLayout container = new HorizontalLayout();
+                    container.setSpacing(false);
+                    container.setPadding(false);
+                    container.setAlignItems(com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment.CENTER);
+                    container.setWidthFull();
+
+                    // Display current dependencies as text
+                    String dependencyText = getDependencyText(task);
+                    Div    textDiv        = new Div();
+                    textDiv.setText(dependencyText);
+                    textDiv.getStyle()
+                            .set("flex-grow", "1")
+                            .set("padding", "var(--lumo-space-xs)")
+                            .set("min-width", "0"); // Allow shrinking
+
+                    // Edit button
+                    Button editButton = new Button(VaadinIcon.EDIT.create());
+                    editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
+                    editButton.getStyle().set("margin-left", "var(--lumo-space-xs)");
+                    editButton.addClickListener(e -> openDependencyEditor(task));
+
+                    container.add(textDiv, editButton);
+                    return container;
+                } else {
+                    // Read-only - show dependencies as text
+                    Div div = new Div();
+                    div.setText(getDependencyText(task));
+                    return div;
+                }
+            })).setHeader("Dependency").setAutoWidth(true);
+        }
         //Parent
         {
             grid.addColumn(task -> task.getParentTask() != null ? task.getParentTask().getOrderId() : "").setHeader("Parent").setAutoWidth(true);
@@ -631,25 +667,6 @@ public class TaskListView extends Main implements AfterNavigationObserver {
             })).setHeader("Max Estimate").setAutoWidth(true);
         }
 
-        //Dependency
-        {
-            grid.addColumn(task -> {
-                List<Relation> relations = task.getPredecessors();
-                if (relations == null || relations.isEmpty()) {
-                    return "";
-                }
-
-                return relations.stream()
-                        .filter(Relation::isVisible) // Only show visible dependencies
-                        .map(relation -> {
-                            Task predecessor = sprint.getTaskById(relation.getPredecessorId());
-                            return predecessor != null ? String.valueOf(predecessor.getOrderId()) : "";
-                        })
-                        .filter(orderId -> !orderId.isEmpty())
-                        .collect(Collectors.joining(", "));
-            }).setHeader("Dependency").setAutoWidth(true);
-        }
-//        grid.addColumn(task -> task.getTaskMode().name()).setHeader("Mode").setAutoWidth(true;
     }
 
     /**
@@ -979,7 +996,7 @@ public class TaskListView extends Main implements AfterNavigationObserver {
             Task candidate = taskOrder.get(i);
 
             // Only stories can be parents, and prevent circular references
-            if (candidate.isStory() && !candidate.isAncestor(task)) {
+            if (candidate.isStory() && !candidate.isDescendant(task)) {
                 // Check if the candidate is at the same hierarchy level
                 // (has the same parent as the task)
                 if (candidate.getParentTask() == currentParent) {
@@ -1026,6 +1043,38 @@ public class TaskListView extends Main implements AfterNavigationObserver {
             Div errorContainer = new Div(errorParagraph, stackTraceParagraph);
             add(errorContainer);
         }
+    }
+
+    /**
+     * Get the dependency text for display (comma-separated orderIds of visible predecessors)
+     */
+    private String getDependencyText(Task task) {
+        List<Relation> relations = task.getPredecessors();
+        if (relations == null || relations.isEmpty()) {
+            return "";
+        }
+
+        return relations.stream()
+                .filter(Relation::isVisible) // Only show visible dependencies
+                .map(relation -> {
+                    Task predecessor = sprint.getTaskById(relation.getPredecessorId());
+                    return predecessor != null ? String.valueOf(predecessor.getOrderId()) : "";
+                })
+                .filter(orderId -> !orderId.isEmpty())
+                .collect(Collectors.joining(", "));
+    }
+
+    /**
+     * Get list of tasks that can be predecessors for the given task
+     * Excludes: the task itself, its descendants, and tasks that would create cycles
+     */
+    private List<Task> getEligiblePredecessorTasks(Task task) {
+        return taskOrder.stream()
+                .filter(t -> !t.getId().equals(task.getId())) // Not the task itself
+                .filter(t -> !t.isDescendant(task)) // Not a descendant (would create cycle)
+                .filter(t -> !task.isDescendant(t)) // Not an ancestor (would create cycle)
+                .sorted(Comparator.comparing(Task::getOrderId))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -1211,6 +1260,170 @@ public class TaskListView extends Main implements AfterNavigationObserver {
     }
 
     /**
+     * Open a dialog to edit task dependencies
+     */
+    private void openDependencyEditor(Task task) {
+        // Create dialog
+        com.vaadin.flow.component.dialog.Dialog dialog = new com.vaadin.flow.component.dialog.Dialog();
+        dialog.setHeaderTitle("Edit Dependencies for Task #" + task.getOrderId());
+        dialog.setWidth("600px");
+        dialog.setHeight("500px");
+
+        // Main layout
+        com.vaadin.flow.component.orderedlayout.VerticalLayout layout = new com.vaadin.flow.component.orderedlayout.VerticalLayout();
+        layout.setSpacing(true);
+        layout.setPadding(true);
+        layout.setSizeFull();
+
+        // Info text
+        Paragraph info = new Paragraph("Select tasks that must be completed before this task can start:");
+        info.getStyle().set("margin-top", "0");
+
+        // Get list of eligible predecessor tasks (all tasks except self and descendants)
+        List<Task> eligibleTasks = getEligiblePredecessorTasks(task);
+
+        // Get current visible predecessors
+        Set<Long> currentPredecessorIds = task.getPredecessors().stream()
+                .filter(Relation::isVisible)
+                .map(Relation::getPredecessorId)
+                .collect(Collectors.toSet());
+
+        // Create checkbox group for task selection
+        com.vaadin.flow.component.orderedlayout.VerticalLayout checkboxContainer = new com.vaadin.flow.component.orderedlayout.VerticalLayout();
+        checkboxContainer.setSpacing(false);
+        checkboxContainer.setPadding(false);
+        checkboxContainer.getStyle()
+                .set("overflow-y", "auto")
+                .set("flex-grow", "1")
+                .set("border", "1px solid var(--lumo-contrast-20pct)")
+                .set("border-radius", "var(--lumo-border-radius-m)")
+                .set("padding", "var(--lumo-space-s)");
+
+        // Map to store checkbox states
+        Map<Long, com.vaadin.flow.component.checkbox.Checkbox> checkboxMap = new HashMap<>();
+
+        // Create checkboxes for each eligible task
+        for (Task eligibleTask : eligibleTasks) {
+            com.vaadin.flow.component.checkbox.Checkbox checkbox = new com.vaadin.flow.component.checkbox.Checkbox();
+
+            // Format label: "5 - Implement login feature"
+            String label = String.format("%d - %s", eligibleTask.getOrderId(), eligibleTask.getName());
+
+            // Add icon based on task type
+            HorizontalLayout checkboxLayout = new HorizontalLayout();
+            checkboxLayout.setSpacing(false);
+            checkboxLayout.setPadding(false);
+            checkboxLayout.setAlignItems(com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment.CENTER);
+
+            if (eligibleTask.isMilestone()) {
+                Div diamond = new Div();
+                diamond.getElement().getStyle()
+                        .set("width", "8px")
+                        .set("height", "8px")
+                        .set("background-color", "#1976d2")
+                        .set("transform", "rotate(45deg)")
+                        .set("margin-right", "8px")
+                        .set("flex-shrink", "0");
+                checkboxLayout.add(diamond);
+            } else if (eligibleTask.isStory()) {
+                Div triangle = new Div();
+                triangle.getElement().getStyle()
+                        .set("width", "0")
+                        .set("height", "0")
+                        .set("border-left", "4px solid transparent")
+                        .set("border-right", "4px solid transparent")
+                        .set("border-top", "7px solid #43a047")
+                        .set("margin-right", "8px")
+                        .set("flex-shrink", "0");
+                checkboxLayout.add(triangle);
+            }
+
+            checkbox.setLabel(label);
+            checkbox.setValue(currentPredecessorIds.contains(eligibleTask.getId()));
+            checkboxMap.put(eligibleTask.getId(), checkbox);
+
+            checkboxContainer.add(checkbox);
+        }
+
+        // Quick edit text field (alternative input method)
+        TextField quickEditField = new TextField("Quick Edit (comma-separated #s)");
+        quickEditField.setWidthFull();
+        quickEditField.setPlaceholder("e.g., 3, 5, 12");
+        quickEditField.setValue(getDependencyText(task));
+        quickEditField.setHelperText("You can also type order IDs directly");
+
+        // Sync quick edit field with checkboxes
+        quickEditField.addValueChangeListener(e -> {
+            if (e.isFromClient()) {
+                String value = e.getValue().trim();
+                if (value.isEmpty()) {
+                    // Uncheck all
+                    checkboxMap.values().forEach(cb -> cb.setValue(false));
+                } else {
+                    // Parse comma-separated values
+                    Set<Long> orderIds = parseOrderIds(value);
+
+                    // Update checkboxes based on parsed IDs
+                    for (Task eligibleTask : eligibleTasks) {
+                        com.vaadin.flow.component.checkbox.Checkbox cb = checkboxMap.get(eligibleTask.getId());
+                        if (cb != null) {
+                            cb.setValue(orderIds.contains(eligibleTask.getOrderId()));
+                        }
+                    }
+                }
+            }
+        });
+
+        // Sync checkboxes with quick edit field
+        for (Task eligibleTask : eligibleTasks) {
+            com.vaadin.flow.component.checkbox.Checkbox cb = checkboxMap.get(eligibleTask.getId());
+            if (cb != null) {
+                cb.addValueChangeListener(e -> {
+                    if (e.isFromClient()) {
+                        // Update quick edit field with current selection
+                        String newValue = eligibleTasks.stream()
+                                .filter(t -> checkboxMap.get(t.getId()).getValue())
+                                .map(t -> String.valueOf(t.getOrderId()))
+                                .collect(Collectors.joining(", "));
+                        quickEditField.setValue(newValue);
+                    }
+                });
+            }
+        }
+
+        // Add components to layout
+        layout.add(info, checkboxContainer, quickEditField);
+
+        // Footer buttons
+        Button saveButton = new Button("Save", event -> {
+            // Get selected task IDs
+            Set<Long> selectedTaskIds = checkboxMap.entrySet().stream()
+                    .filter(entry -> entry.getValue().getValue())
+                    .map(Map.Entry::getKey)
+                    .collect(Collectors.toSet());
+
+            // Update task dependencies
+            updateTaskDependencies(task, selectedTaskIds);
+
+            // Mark task as modified
+            markTaskAsModified(task);
+
+            // Refresh grid
+            grid.getDataProvider().refreshAll();
+
+            dialog.close();
+        });
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        Button cancelButton = new Button("Cancel", event -> dialog.close());
+
+        dialog.getFooter().add(cancelButton, saveButton);
+
+        dialog.add(layout);
+        dialog.open();
+    }
+
+    /**
      * Outdent task - remove it as a child from its parent (Shift+Tab key)
      */
     private void outdentTask(Task task) {
@@ -1230,6 +1443,28 @@ public class TaskListView extends Main implements AfterNavigationObserver {
 
         // Refresh grid to show updated hierarchy
         grid.getDataProvider().refreshAll();
+    }
+
+    /**
+     * Parse comma-separated order IDs from a string
+     */
+    private Set<Long> parseOrderIds(String input) {
+        Set<Long> orderIds = new HashSet<>();
+        if (input == null || input.trim().isEmpty()) {
+            return orderIds;
+        }
+
+        String[] parts = input.split(",");
+        for (String part : parts) {
+            try {
+                Long orderId = Long.parseLong(part.trim());
+                orderIds.add(orderId);
+            } catch (NumberFormatException e) {
+                // Ignore invalid numbers
+                logger.warn("Invalid order ID in input: {}", part.trim());
+            }
+        }
+        return orderIds;
     }
 
     private void refreshGrid() {
@@ -1522,6 +1757,24 @@ public class TaskListView extends Main implements AfterNavigationObserver {
                         console.log('Keyboard navigation setup complete');
                         """
         );
+    }
+
+    /**
+     * Update task dependencies based on selected task IDs
+     */
+    private void updateTaskDependencies(Task task, Set<Long> selectedTaskIds) {
+        // Remove all visible predecessors
+        task.getPredecessors().removeIf(Relation::isVisible);
+
+        // Add new visible predecessors
+        for (Long taskId : selectedTaskIds) {
+            Task predecessor = sprint.getTaskById(taskId);
+            if (predecessor != null) {
+                task.addPredecessor(predecessor, true); // true = visible
+            }
+        }
+
+        logger.info("Updated dependencies for task {}: {}", task.getKey(), selectedTaskIds);
     }
 
 }

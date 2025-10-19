@@ -302,7 +302,7 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
                             do {
                                 depenedenycyTask = sprint.getTasks().get(random.nextInt(sprint.getTasks().size()));
                                 //make sure this task is not a parent of our parent and not a milestone
-                                if (depenedenycyTask.isMilestone() || depenedenycyTask.isAncestor(story)) {
+                                if (depenedenycyTask.isMilestone() || depenedenycyTask.isDescendant(story)) {
                                     depenedenycyTask = null;
                                     tries--;
                                 }
