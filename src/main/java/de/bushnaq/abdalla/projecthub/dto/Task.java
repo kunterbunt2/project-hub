@@ -292,6 +292,20 @@ public class Task implements Comparable<Task> {
     }
 
     /**
+     * Calculate the hierarchy depth of a task (how many parent levels it has)
+     */
+    @JsonIgnore
+    public int getHierarchyDepth() {
+        int  depth   = 0;
+        Task current = this;
+        while (current.getParentTask() != null) {
+            depth++;
+            current = current.getParentTask();
+        }
+        return depth;
+    }
+
+    /**
      * Gets the task's key in the format "T-{id}".
      *
      * @return the task key string

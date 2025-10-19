@@ -182,6 +182,20 @@ public class Sprint extends AbstractTimeAware implements Comparable<Sprint> {
         return latestDate;
     }
 
+    /**
+     * Get the next available orderId for a new task in the sprint
+     *
+     * @return The next orderId to use (1 if sprint is empty, otherwise max orderId + 1)
+     */
+    @JsonIgnore
+    public long getNextOrderId() {
+        return getTasks().isEmpty() ? 1 :
+                getTasks().stream()
+                        .mapToLong(Task::getOrderId)
+                        .max()
+                        .orElse(0L) + 1;
+    }
+
     public Task getTaskById(Long predecessorId) {
         return tasks.stream().filter(task -> task.getId().equals(predecessorId)).findFirst().orElse(null);
     }
