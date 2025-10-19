@@ -276,28 +276,37 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         // Enable keyboard navigation in edit mode
         setupKeyboardNavigation();
 
-        // Add drop listener for reordering
+        // Add drop listener for reordering and dependency management
         grid.addDropListener(event -> {
             if (!isEditMode || draggedTask == null) return;
 
             Task dropTargetTask = event.getDropTargetItem().orElse(null);
 
             if (dropTargetTask != null && !draggedTask.equals(dropTargetTask)) {
-                int draggedIndex = taskOrder.indexOf(draggedTask);
-                int targetIndex  = taskOrder.indexOf(dropTargetTask);
+                // Check drop location to determine action
+                com.vaadin.flow.component.grid.dnd.GridDropLocation dropLocation = event.getDropLocation();
 
-                if (draggedIndex >= 0 && targetIndex >= 0) {
-                    // Remove from old parent before moving
-                    if (draggedTask.getParentTask() != null) {
-                        Task oldParent = draggedTask.getParentTask();
-                        oldParent.removeChildTask(draggedTask);
-                        markTaskAsModified(oldParent);
+                if (dropLocation == com.vaadin.flow.component.grid.dnd.GridDropLocation.ON_TOP) {
+                    // Handle dependency creation/removal when dropping ON_TOP
+                    handleDependencyDrop(draggedTask, dropTargetTask);
+                } else {
+                    // Handle reordering when dropping BETWEEN
+                    int draggedIndex = taskOrder.indexOf(draggedTask);
+                    int targetIndex  = taskOrder.indexOf(dropTargetTask);
+
+                    if (draggedIndex >= 0 && targetIndex >= 0) {
+                        // Remove from old parent before moving
+                        if (draggedTask.getParentTask() != null) {
+                            Task oldParent = draggedTask.getParentTask();
+                            oldParent.removeChildTask(draggedTask);
+                            markTaskAsModified(oldParent);
+                        }
+
+                        moveTask(draggedIndex, targetIndex);
+
+                        // Try to re-parent the task based on its new position
+                        indentTask(draggedTask);
                     }
-
-                    moveTask(draggedIndex, targetIndex);
-
-                    // Try to re-parent the task based on its new position
-                    indentTask(draggedTask);
                 }
             }
 
@@ -307,13 +316,24 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         grid.addDragStartListener(event -> {
             if (isEditMode && !event.getDraggedItems().isEmpty()) {
                 draggedTask = event.getDraggedItems().get(0);
-                grid.setDropMode(com.vaadin.flow.component.grid.dnd.GridDropMode.BETWEEN); // Enable drop between rows with visual indicator
+                grid.setDropMode(com.vaadin.flow.component.grid.dnd.GridDropMode.ON_TOP_OR_BETWEEN); // Enable drop on top or between rows
             }
         });
 
         grid.addDragEndListener(event -> {
             draggedTask = null; // Clear reference when drag ends without drop
             grid.setDropMode(null);
+        });
+
+        // Add drop filter to prevent invalid dependency creation
+        grid.setDropFilter(dropTargetTask -> {
+            if (!isEditMode || draggedTask == null || dropTargetTask == null) {
+                return true; // Allow drop if not in edit mode or no dragged task
+            }
+
+            // For ON_TOP drops, check if dependency creation is valid
+            // This uses the same eligibility logic as DependencyDialog
+            return isEligiblePredecessor(dropTargetTask, draggedTask);
         });
 
         // Add borders between columns
@@ -1120,6 +1140,39 @@ public class TaskListView extends Main implements AfterNavigationObserver {
     }
 
     /**
+     * Handle dependency creation/removal when dropping a task ON_TOP of another task.
+     * If dependency exists, it will be removed. Otherwise, it will be created.
+     *
+     * @param sourceTask The task being dragged (will become dependent on target)
+     * @param targetTask The task being dropped onto (will become predecessor of source)
+     */
+    private void handleDependencyDrop(Task sourceTask, Task targetTask) {
+        logger.info("Handling dependency drop: {} onto {}", sourceTask.getKey(), targetTask.getKey());
+
+        // Check if dependency already exists (target is already a predecessor of source)
+        boolean dependencyExists = sourceTask.getPredecessors().stream()
+                .filter(Relation::isVisible)
+                .anyMatch(relation -> relation.getPredecessorId().equals(targetTask.getId()));
+
+        if (dependencyExists) {
+            // Remove the dependency
+            sourceTask.getPredecessors().removeIf(relation ->
+                    relation.isVisible() && relation.getPredecessorId().equals(targetTask.getId()));
+            logger.info("Removed dependency: {} no longer depends on {}", sourceTask.getKey(), targetTask.getKey());
+        } else {
+            // Add the dependency (target becomes predecessor of source)
+            sourceTask.addPredecessor(targetTask, true); // true = visible
+            logger.info("Created dependency: {} now depends on {}", sourceTask.getKey(), targetTask.getKey());
+        }
+
+        // Mark the source task as modified
+        markTaskAsModified(sourceTask);
+
+        // Refresh grid to show updated dependencies
+        grid.getDataProvider().refreshAll();
+    }
+
+    /**
      * Indent task - make it a child of the previous story (Tab key)
      */
     private void indentTask(Task task) {
@@ -1143,6 +1196,37 @@ public class TaskListView extends Main implements AfterNavigationObserver {
 
         // Refresh grid to show updated hierarchy
         grid.getDataProvider().refreshAll();
+    }
+
+    /**
+     * Check if a task is eligible as a predecessor for another task.
+     * Uses the same eligibility logic as DependencyDialog.
+     *
+     * @param predecessor The potential predecessor task
+     * @param dependent   The task that would depend on the predecessor
+     * @return true if the predecessor is eligible, false otherwise
+     */
+    private boolean isEligiblePredecessor(Task predecessor, Task dependent) {
+        // A task is eligible as a predecessor if:
+        // 1. Not the same task (cannot depend on itself)
+        // 2. Not a descendant of the dependent (would create cycle)
+        // 3. Not an ancestor of the dependent (would create cycle)
+
+        boolean isEligible = !predecessor.getId().equals(dependent.getId()) // Not the same task
+                && !predecessor.isDescendantOf(dependent) // Not a descendant (would create cycle)
+                && !dependent.isDescendantOf(predecessor); // Not an ancestor (would create cycle)
+
+        if (!isEligible) {
+            if (predecessor.getId().equals(dependent.getId())) {
+                logger.debug("Cannot create dependency: task {} cannot depend on itself", dependent.getKey());
+            } else if (predecessor.isDescendantOf(dependent)) {
+                logger.debug("Cannot create dependency: {} is a descendant of {}", predecessor.getKey(), dependent.getKey());
+            } else if (dependent.isDescendantOf(predecessor)) {
+                logger.debug("Cannot create dependency: {} is an ancestor of {}", predecessor.getKey(), dependent.getKey());
+            }
+        }
+
+        return isEligible;
     }
 
     private void loadData() {
