@@ -398,20 +398,48 @@ public class TaskListView extends Main implements AfterNavigationObserver {
                     container.setAlignItems(com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment.CENTER);
                     container.setWidthFull();
 
+                    // Style the container to look like an editable field
+                    container.getStyle()
+                            .set("background-color", "var(--lumo-contrast-10pct)")
+                            .set("border", "1px solid var(--lumo-contrast-20pct)")
+                            .set("border-radius", "var(--lumo-border-radius-m)")
+                            .set("padding", "0")
+                            .set("min-height", "var(--lumo-size-m)")
+                            .set("cursor", "pointer");
+
                     // Display current dependencies as text
                     String dependencyText = getDependencyText(task);
                     Div    textDiv        = new Div();
-                    textDiv.setText(dependencyText);
+                    textDiv.setText(dependencyText.isEmpty() ? "Click to edit..." : dependencyText);
                     textDiv.getStyle()
                             .set("flex-grow", "1")
                             .set("padding", "var(--lumo-space-xs)")
-                            .set("min-width", "0"); // Allow shrinking
+                            .set("min-width", "0")
+                            .set("overflow", "hidden")
+                            .set("text-overflow", "ellipsis")
+                            .set("white-space", "nowrap");
+
+                    // Add placeholder style if empty
+                    if (dependencyText.isEmpty()) {
+                        textDiv.getStyle()
+                                .set("color", "var(--lumo-secondary-text-color)")
+                                .set("font-style", "italic");
+                    }
 
                     // Edit button
                     Button editButton = new Button(VaadinIcon.EDIT.create());
-                    editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
-                    editButton.getStyle().set("margin-left", "var(--lumo-space-xs)");
+                    editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY_INLINE);
+                    editButton.getStyle()
+                            .set("margin", "0")
+                            .set("min-width", "var(--lumo-size-m)");
                     editButton.addClickListener(e -> openDependencyEditor(task));
+
+                    // Make the whole container clickable
+                    container.addClickListener(e -> {
+                        if (e.getButton() == 0) { // Left mouse button
+                            openDependencyEditor(task);
+                        }
+                    });
 
                     container.add(textDiv, editButton);
                     return container;
