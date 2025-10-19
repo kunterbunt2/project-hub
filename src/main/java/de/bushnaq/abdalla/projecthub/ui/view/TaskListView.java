@@ -1307,13 +1307,18 @@ public class TaskListView extends Main implements AfterNavigationObserver {
             com.vaadin.flow.component.checkbox.Checkbox checkbox = new com.vaadin.flow.component.checkbox.Checkbox();
 
             // Format label: "5 - Implement login feature"
-            String label = String.format("%d - %s", eligibleTask.getOrderId(), eligibleTask.getName());
+            String label = String.format("#%d - %s", eligibleTask.getOrderId(), eligibleTask.getName());
+
+            // Calculate indentation depth (same as in grid)
+            int depth        = getHierarchyDepth(eligibleTask);
+            int indentPixels = depth * 20;
 
             // Add icon based on task type
             HorizontalLayout checkboxLayout = new HorizontalLayout();
             checkboxLayout.setSpacing(false);
             checkboxLayout.setPadding(false);
             checkboxLayout.setAlignItems(com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment.CENTER);
+            checkboxLayout.getStyle().set("padding-left", indentPixels + "px");
 
             if (eligibleTask.isMilestone()) {
                 Div diamond = new Div();
@@ -1336,13 +1341,23 @@ public class TaskListView extends Main implements AfterNavigationObserver {
                         .set("margin-right", "8px")
                         .set("flex-shrink", "0");
                 checkboxLayout.add(triangle);
+            } else {
+                // Add spacer for tasks to align with other task types
+                Div spacer = new Div();
+                spacer.getElement().getStyle()
+                        .set("width", "15px")
+                        .set("height", "1px")
+                        .set("flex-shrink", "0");
+                checkboxLayout.add(spacer);
             }
 
             checkbox.setLabel(label);
             checkbox.setValue(currentPredecessorIds.contains(eligibleTask.getId()));
             checkboxMap.put(eligibleTask.getId(), checkbox);
 
-            checkboxContainer.add(checkbox);
+            // Wrap checkbox in the layout to apply indentation and icons
+            checkboxLayout.add(checkbox);
+            checkboxContainer.add(checkboxLayout);
         }
 
         // Quick edit text field (alternative input method)
