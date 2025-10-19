@@ -85,7 +85,7 @@ public class TaskListView extends Main implements AfterNavigationObserver {
     @Autowired
     protected           Context           context;
     private             Task              draggedTask;          // Track the currently dragged task
-    public final        DateTimeFormatter dtfymdhm                   = DateTimeFormatter.ofPattern("yyyy.MMM.dd HH:mm");
+    private final       DateTimeFormatter dtfymdhm                   = DateTimeFormatter.ofPattern("yyyy.MMM.dd HH:mm");
     private             Button            editButton;
     private final       GanttErrorHandler eh                         = new GanttErrorHandler();
     private final       FeatureApi        featureApi;
@@ -94,8 +94,7 @@ public class TaskListView extends Main implements AfterNavigationObserver {
     private             GanttUtil         ganttUtil;
     private             Grid<Task>        grid;
     private final       HorizontalLayout  headerLayout;
-    // Edit mode state management
-    private             boolean           isEditMode                 = false;
+    private             boolean           isEditMode                 = false;// Edit mode state management
     private final       Logger            logger                     = LoggerFactory.getLogger(this.getClass());
     private final       Set<Task>         modifiedTasks              = new HashSet<>();
     private final       ProductApi        productApi;
@@ -250,19 +249,6 @@ public class TaskListView extends Main implements AfterNavigationObserver {
         refreshGrid();
         exitEditMode();
     }
-
-//    /**
-//     * Creates a text field component for editing task durations
-//     *
-//     * @return TextField component for the duration editor
-//     */
-//    private TextField createDurationEditor() {
-//        TextField durationField = new TextField();
-//        durationField.setWidthFull();
-//
-//
-//        return durationField;
-//    }
 
     private Grid<Task> createGrid(Clock clock) {
         grid = new Grid<>();

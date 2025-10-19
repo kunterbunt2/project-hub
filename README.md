@@ -46,6 +46,7 @@ tbd
 
 # Issues
 
+- sometimes adding a story and two tasks will add additionally one task.
 - changing assignment must also change hidden dependencies
 - some tests fail with java.awt.HeadlessException.
 - some ai filter test fail all the time, as the tests are vague.
