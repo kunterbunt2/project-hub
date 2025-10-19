@@ -432,7 +432,15 @@ public class TaskListView extends Main implements AfterNavigationObserver {
                     editButton.getStyle()
                             .set("margin", "0")
                             .set("min-width", "var(--lumo-size-m)");
-                    editButton.addClickListener(e -> openDependencyEditor(task));
+
+                    // Stop event propagation before adding click listener
+                    editButton.getElement().addEventListener("click", e -> {
+                        // This will be executed first and stops propagation
+                    }).addEventData("event.stopPropagation()");
+
+                    editButton.addClickListener(e -> {
+                        openDependencyEditor(task);
+                    });
 
                     // Make the whole container clickable
                     container.addClickListener(e -> {
