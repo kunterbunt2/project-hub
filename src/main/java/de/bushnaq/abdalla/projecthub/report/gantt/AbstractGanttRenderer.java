@@ -571,7 +571,7 @@ public abstract class AbstractGanttRenderer extends AbstractRenderer {
                         graphics2D.setFont(graphFont);
                         FontMetrics fm     = graphics2D.getFontMetrics();
                         int         yShift = fm.getAscent() - fm.getHeight() / 2;
-                        graphics2D.drawString(taskName, x2 + TASK_NAME_TO_TASK_GAP, y + yShift);
+                        graphics2D.drawString(task.getKey() + " " + taskName, x2 + TASK_NAME_TO_TASK_GAP, y + yShift);
                     }
                     if (resourceName != null) {
                         //resource name+info

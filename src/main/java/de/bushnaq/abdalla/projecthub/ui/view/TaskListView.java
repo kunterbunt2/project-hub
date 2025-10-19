@@ -640,11 +640,12 @@ public class TaskListView extends Main implements AfterNavigationObserver {
                 }
 
                 return relations.stream()
+                        .filter(Relation::isVisible) // Only show visible dependencies
                         .map(relation -> {
                             Task predecessor = sprint.getTaskById(relation.getPredecessorId());
-                            return predecessor != null ? predecessor.getKey() : "";
+                            return predecessor != null ? String.valueOf(predecessor.getOrderId()) : "";
                         })
-                        .filter(key -> !key.isEmpty())
+                        .filter(orderId -> !orderId.isEmpty())
                         .collect(Collectors.joining(", "));
             }).setHeader("Dependency").setAutoWidth(true);
         }
