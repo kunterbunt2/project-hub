@@ -1,0 +1,324 @@
+/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package de.bushnaq.abdalla.projecthub.ui;
+
+import dasniko.testcontainers.keycloak.KeycloakContainer;
+import de.bushnaq.abdalla.projecthub.ai.chatterbox.Narrator;
+import de.bushnaq.abdalla.projecthub.dto.OffDayType;
+import de.bushnaq.abdalla.projecthub.ui.dialog.FeatureDialog;
+import de.bushnaq.abdalla.projecthub.ui.dialog.ProductDialog;
+import de.bushnaq.abdalla.projecthub.ui.dialog.VersionDialog;
+import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
+import de.bushnaq.abdalla.projecthub.ui.util.RenderUtil;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import de.bushnaq.abdalla.projecthub.ui.view.FeatureListView;
+import de.bushnaq.abdalla.projecthub.ui.view.ProductListView;
+import de.bushnaq.abdalla.projecthub.ui.view.SprintListView;
+import de.bushnaq.abdalla.projecthub.ui.view.VersionListView;
+import de.bushnaq.abdalla.projecthub.ui.view.util.*;
+import de.bushnaq.abdalla.projecthub.util.RandomCase;
+import de.bushnaq.abdalla.projecthub.util.TestInfoUtil;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+
+import java.time.Duration;
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@ExtendWith(SpringExtension.class)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
+        properties = {
+                "server.port=8080",
+                "spring.profiles.active=test",
+                // Disable basic authentication for these tests
+                "spring.security.basic.enabled=false"
+        }
+)
+@AutoConfigureMockMvc
+@Transactional
+@Testcontainers
+public class GenerateSprint extends AbstractUiTestUtil {
+    public static final  float                      EXAGGERATE_HIGH   = 1f;
+    public static final  float                      EXAGGERATE_LOW    = 0.25f;
+    public static final  float                      EXAGGERATE_NORMAL = 0.3f;
+    // Start Keycloak container with realm configuration
+    @Container
+    private static final KeycloakContainer          keycloak          = new KeycloakContainer("quay.io/keycloak/keycloak:24.0.1")
+            .withRealmImportFile("keycloak/project-hub-realm.json")
+            .withAdminUsername("admin")
+            .withAdminPassword("admin")
+            // Expose on a fixed port for more reliable testing
+            .withExposedPorts(8080, 8443)
+            // Add debugging to see container output
+            .withLogConsumer(outputFrame -> System.out.println("Keycloak: " + outputFrame.getUtf8String()))
+            // Make Keycloak accessible from outside the container
+            .withEnv("KC_HOSTNAME_STRICT", "false")
+            .withEnv("KC_HOSTNAME_STRICT_HTTPS", "false");
+    @Autowired
+    private              AvailabilityListViewTester availabilityListViewTester;
+    @Autowired
+    private              FeatureListViewTester      featureListViewTester;
+    private              String                     featureName;
+    //    private final        LocalDate                  firstDay        = LocalDate.of(2025, 6, 1);
+//    private final        LocalDate                  firstDayRecord1 = LocalDate.of(2025, 8, 1);
+//    private final        LocalDate                  lastDay         = LocalDate.of(2025, 6, 1);
+//    private final        LocalDate                  lastDayRecord1  = LocalDate.of(2025, 8, 5);
+    @Autowired
+    private              LocationListViewTester     locationListViewTester;
+    @Autowired
+    private              OffDayListViewTester       offDayListViewTester;
+    @Autowired
+    private              ProductListViewTester      productListViewTester;
+    private              String                     productName;
+    @Autowired
+    private              SeleniumHandler            seleniumHandler;
+    @Autowired
+    private              SprintListViewTester       sprintListViewTester;
+    private              String                     sprintName;
+    @Autowired
+    private              TaskListViewTester         taskListViewTester;
+    private              String                     taskName;
+    private final        OffDayType                 typeRecord1       = OffDayType.VACATION;
+    @Autowired
+    private              UserListViewTester         userListViewTester;
+    private              String                     userName;
+    @Autowired
+    private              VersionListViewTester      versionListViewTester;
+    private              String                     versionName;
+
+    @ParameterizedTest
+    @MethodSource("listRandomCases")
+    @WithMockUser(username = "admin-user", roles = "ADMIN")
+    public void createASprint(RandomCase randomCase, TestInfo testInfo) throws Exception {
+        // Set browser window to a fixed size for consistent screenshots
+//        seleniumHandler.setWindowSize(1024, 800);
+        seleniumHandler.setWindowSize(1800, 1300);
+
+//        printAuthentication();
+        TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
+        TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
+        setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
+        generateProductsIfNeeded(testInfo, randomCase);
+        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+        Narrator narrator = new Narrator("tts/" + testInfo.getTestClass().get().getSimpleName(), 1.0f, EXAGGERATE_NORMAL, .3f);
+//        userName    = "Christopher Paul";
+        productName = "Jupiter";
+        versionName = "1.0.0";
+        featureName = "Property request api";
+        sprintName  = nameGenerator.generateSprintName(0);
+        taskName    = nameGenerator.generateSprintName(0);
+
+
+        narrator.narrate("Good morning, my name is Jennifer Holleman. I am the product manager of Kassandra and I will be demonstrating the latest alpha version of the Kassandra project server to you today.");
+        narrator.pause(1);
+        narrator.narrate("Kassandra is a project planning and progress tracking server targeting small to medium team sizes. It is a open source project and has an Apachee two dot zero license.");
+        narrator.pause(1);
+        productListViewTester.switchToProductListViewWithOidc("jennifer.holleman@kassandra.org", "password", "../project-hub.wiki/screenshots/login-view.png", testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+        narrator.narrate("Kassandra supports OIDC authentication and authorization. I just logged into the server using my kassandra dot org ID.");
+        narrator.pause(1);
+        narrator.narrate("The first page you see when you log into the server is the Products page where all Products are listed.");
+        narrator.pause(1);
+        narrator.narrate("Lets start by adding a new product.");
+
+        //---------------------------------------------------------------------------------------..
+        // Create a Product
+        //---------------------------------------------------------------------------------------..
+        seleniumHandler.click(ProductListView.CREATE_PRODUCT_BUTTON);
+        narrator.pushExaggeration(EXAGGERATE_HIGH);
+        narrator.narrate("Lets call it Jupiter!");
+        narrator.pop();
+        seleniumHandler.setTextField(ProductDialog.PRODUCT_NAME_FIELD, productName);
+        narrator.pause(1);
+        narrator.narrateAsync("Push Save to save.");
+        narrator.narrateAsync("Select Save to close the dialog and persist our product.");
+        seleniumHandler.click(ProductDialog.CONFIRM_BUTTON);
+        narrator.pushExaggeration(EXAGGERATE_HIGH);
+        narrator.narrate("And we got ourself a new product!");
+        narrator.pop();
+        narrator.pause(1);
+        narrator.narrate("With the little notepad and trashcan icons, on the right side, you can edit or delete your product.");
+
+        narrator.pause(1);
+
+        narrator.narrate("Lets select our product.");
+        productListViewTester.selectProduct(productName);
+        narrator.narrate("This takes us to the Versions Page.");
+        narrator.pause(.5f);
+        narrator.narrate("Every Product can have any number of versions.");
+        narrator.pause(1);
+        narrator.narrate("Jupiter is a totally new product, so lets create a first version for it.");
+        narrator.narrate("Select the Create button...");
+
+        //---------------------------------------------------------------------------------------..
+        // Create a Version
+        //---------------------------------------------------------------------------------------..
+        seleniumHandler.click(VersionListView.CREATE_VERSION_BUTTON);
+        narrator.narrate("Lets use the obvious: one, dot, zero, dot, zero.");
+        seleniumHandler.setTextField(VersionDialog.VERSION_NAME_FIELD, versionName);
+        narrator.narrateAsync("Select Save to close the dialog and persist our version.");
+        seleniumHandler.click(VersionDialog.CONFIRM_BUTTON);
+        narrator.pushExaggeration(EXAGGERATE_HIGH);
+        narrator.narrate("And we got ourself a new version!");
+        narrator.pop();
+        narrator.pause(1);
+        narrator.narrate("The little notepad and trashcan icons, on the right side, can be used to edit or delete your version.");
+
+        narrator.pause(1);
+
+        narrator.narrate("Lets select our version.");
+        versionListViewTester.selectVersion(versionName);
+        narrator.narrate("This takes us to the Features Page. Features are what we actually want to plan and track, although they are split into one or more sprints.");
+        narrator.pause(.5f);
+        narrator.narrate("Every product version can have any number of features.");
+        narrator.pause(1);
+        narrator.narrate("Lets assume Jupiter is a server that keeps track of micro services configurations. So the first feature would be a rest API that supports retrieving configurations.");
+        narrator.narrate("Select the Create button");
+
+        //---------------------------------------------------------------------------------------..
+        // Create Feature
+        //---------------------------------------------------------------------------------------..
+        seleniumHandler.click(FeatureListView.CREATE_FEATURE_BUTTON_ID);
+        narrator.narrate("Lets call the feature 'Property request API'.");
+        seleniumHandler.setTextField(FeatureDialog.FEATURE_NAME_FIELD, featureName);
+        narrator.narrateAsync("Select Save close the dialog and persist our feature.");
+        seleniumHandler.click(FeatureDialog.CONFIRM_BUTTON);
+        narrator.pushExaggeration(EXAGGERATE_HIGH);
+        narrator.narrate("Jupiter has its first feature!");
+        narrator.pop();
+        narrator.pause(1);
+        narrator.narrate("Again, as in the other pages, the little notepad and trashcan icons, on the right side, can be used to edit or delete your feature.");
+
+        narrator.pause(1);
+
+        narrator.narrate("Lets select our feature.");
+        featureListViewTester.selectFeature(featureName);
+        seleniumHandler.waitUntilBrowserClosed(5000);
+//        takeSprintDialogScreenshots();
+
+        sprintListViewTester.selectSprint(sprintName);
+        seleniumHandler.waitForElementToBeClickable(RenderUtil.GANTT_CHART);
+        seleniumHandler.waitForElementToBeClickable(RenderUtil.BURNDOWN_CHART);
+
+        // After visiting the SprintQualityBoard, go back to SprintListView and use the column config button
+        seleniumHandler.click("Sprints (" + sprintName + ")"); // Go back to SprintListView using breadcrumb
+        // Find and click the column configuration button
+        seleniumHandler.click(SprintListView.SPRINT_GRID_CONFIG_BUTTON_PREFIX + sprintName);
+        seleniumHandler.waitForElementToBeClickable(RenderUtil.GANTT_CHART);
+
+
+        userListViewTester.switchToUserListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+//        takeUserDialogScreenshots();
+
+        // Navigate to AvailabilityListView for the current user and take screenshots
+        availabilityListViewTester.switchToAvailabilityListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
+//        takeAvailabilityDialogScreenshots();
+
+        // Navigate to LocationListView for the current user and take screenshots
+        locationListViewTester.switchToLocationListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
+//        takeLocationDialogScreenshots();
+
+        // Navigate to OffDayListView for the current user and take screenshots
+        offDayListViewTester.switchToOffDayListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
+//        takeOffDayDialogScreenshots();
+
+    }
+
+    // Method to get the public-facing URL, fixing potential redirect issues
+    private static String getPublicFacingUrl(KeycloakContainer container) {
+        return String.format("http://%s:%s",
+                container.getHost(),
+                container.getMappedPort(8080));
+    }
+
+    private static List<RandomCase> listRandomCases() {
+        RandomCase[] randomCases = new RandomCase[]{//
+                new RandomCase(1, LocalDate.parse("2025-10-23"), Duration.ofDays(10), 0, 0, 0, 0, 6, 8, 12, 6, 13)//
+        };
+        return Arrays.stream(randomCases).toList();
+    }
+
+    private void printAuthentication() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            String username = authentication.getName();
+            String password = "test-password";
+            logger.info("Running demo with user: {} and password: {}", username, password);
+        } else {
+            logger.warn("No authenticated user found. Running demo without authentication.");
+        }
+    }
+
+    // Configure Spring Security to use the Keycloak container
+    @DynamicPropertySource
+    static void registerKeycloakProperties(DynamicPropertyRegistry registry) {
+        // Start the container
+        keycloak.start();
+
+        // Get the actual URL that's accessible from outside the container
+        String externalUrl = getPublicFacingUrl(keycloak);
+        System.out.println("Keycloak External URL: " + externalUrl);
+
+        // Log all container environment information for debugging
+        System.out.println("Keycloak Container:");
+        System.out.println("  Auth Server URL: " + keycloak.getAuthServerUrl());
+        System.out.println("  Container IP: " + keycloak.getHost());
+        System.out.println("  HTTP Port Mapping: " + keycloak.getMappedPort(8080));
+        System.out.println("  HTTPS Port Mapping: " + keycloak.getMappedPort(8443));
+
+        // Override the authServerUrl with our public-facing URL
+        String publicAuthServerUrl = externalUrl + "/";
+
+        // Create properties with the public URL
+        Map<String, String> props = new HashMap<>();
+        props.put("spring.security.oauth2.client.provider.keycloak.issuer-uri", publicAuthServerUrl + "realms/project-hub-realm");
+        props.put("spring.security.oauth2.client.provider.keycloak.authorization-uri", publicAuthServerUrl + "realms/project-hub-realm/protocol/openid-connect/auth");
+        props.put("spring.security.oauth2.client.provider.keycloak.token-uri", publicAuthServerUrl + "realms/project-hub-realm/protocol/openid-connect/token");
+        props.put("spring.security.oauth2.client.provider.keycloak.user-info-uri", publicAuthServerUrl + "realms/project-hub-realm/protocol/openid-connect/userinfo");
+        props.put("spring.security.oauth2.client.provider.keycloak.jwk-set-uri", publicAuthServerUrl + "realms/project-hub-realm/protocol/openid-connect/certs");
+
+        props.put("spring.security.oauth2.client.registration.keycloak.client-id", "project-hub-client");
+        props.put("spring.security.oauth2.client.registration.keycloak.client-secret", "test-client-secret");
+        props.put("spring.security.oauth2.client.registration.keycloak.scope", "openid,profile,email");
+        props.put("spring.security.oauth2.client.registration.keycloak.authorization-grant-type", "authorization_code");
+        props.put("spring.security.oauth2.client.registration.keycloak.redirect-uri", "{baseUrl}/login/oauth2/code/{registrationId}");
+
+        props.put("spring.security.oauth2.resourceserver.jwt.issuer-uri", publicAuthServerUrl + "realms/project-hub-realm");
+
+        // Register all properties
+        props.forEach((key, value) -> registry.add(key, () -> value));
+    }
+
+}

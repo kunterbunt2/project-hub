@@ -2,8 +2,9 @@
 .classpath
 .project
 .idea
-target
-node_modules
+/target
+/tts
+/node_modules
 ai-test-results
 *log.*.gz
 package.json

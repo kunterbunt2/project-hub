@@ -145,10 +145,10 @@ public class Demo extends AbstractUiTestUtil {
         generateProductsIfNeeded(testInfo, randomCase);
 
         productListViewTester.switchToProductListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
-
         // Demo the natural language search capabilities
         demonstrateNaturalLanguageSearch();
 
         seleniumHandler.waitUntilBrowserClosed(0);
     }
+
 }
