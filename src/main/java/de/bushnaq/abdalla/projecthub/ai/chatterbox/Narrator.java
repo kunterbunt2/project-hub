@@ -43,25 +43,25 @@ import java.util.regex.Pattern;
 
 public class Narrator {
 
-    private static final Pattern          ID_PREFIX    = Pattern.compile("^(\\d{3,})-.*");
-    private static final Logger           logger       = LoggerFactory.getLogger(Narrator.class);
+    private static final Pattern                  ID_PREFIX    = Pattern.compile("^(\\d{3,})-.*");
+    private static final Logger                   logger       = LoggerFactory.getLogger(Narrator.class);
     // Single composite attribute stack: top frame holds latest overrides; search top-down
-    private final        Deque<AttrFrame> attrStack    = new ArrayDeque<>();
-    private final        Path             audioDir;// Directory to store generated audio files
-    private final        Path             cacheDir;// Subfolder for canonical cached files
+    private final        Deque<NarratorAttribute> attrStack    = new ArrayDeque<>();
+    private final        Path                     audioDir;// Directory to store generated audio files
+    private final        Path                     cacheDir;// Subfolder for canonical cached files
     @Getter
     @Setter
-    private              float            cfgWeight;
+    private              float                    cfgWeight;
     @Getter
     @Setter
-    private              float            exaggeration;
-    private              Playback         lastPlayback = null;
-    private              int              nextId; // incrementing file id per audioDir
+    private              float                    exaggeration;
+    private              Playback                 lastPlayback = null;
+    private              int                      nextId; // incrementing file id per audioDir
     // Serialize all playback: each request waits for the previous to finish before starting
-    private final        Object           queueLock    = new Object();
+    private final        Object                   queueLock    = new Object();
     @Getter
     @Setter
-    private              float            temperature;
+    private              float                    temperature;
 
     public Narrator(String relativeFolder, float temperature, float exaggeration, float cfgWeight) {
         this.audioDir     = Path.of(relativeFolder);
@@ -125,21 +125,21 @@ public class Narrator {
 
     // Resolve effective values: look from top-most frame down; fall back to defaults
     private float effectiveCfgWeight() {
-        for (AttrFrame f : attrStack) {
+        for (NarratorAttribute f : attrStack) {
             if (f.cfg != null) return f.cfg;
         }
         return cfgWeight;
     }
 
     private float effectiveExaggeration() {
-        for (AttrFrame f : attrStack) {
+        for (NarratorAttribute f : attrStack) {
             if (f.ex != null) return f.ex;
         }
         return exaggeration;
     }
 
     private float effectiveTemperature() {
-        for (AttrFrame f : attrStack) {
+        for (NarratorAttribute f : attrStack) {
             if (f.temp != null) return f.temp;
         }
         return temperature;
@@ -222,13 +222,31 @@ public class Narrator {
         narrateAsync(text).await();
     }
 
+    // New: Blocking narration with per-call attributes override
+    public void narrate(NarratorAttribute attrs, String text) throws Exception {
+        narrateAsync(attrs, text).await();
+    }
+
     // Non-blocking narration that returns a handle to await or stop playback
     public Playback narrateAsync(String text) throws Exception {
         // Resolve effective attributes from frames or defaults
         float eTemp = effectiveTemperature();
         float eEx   = effectiveExaggeration();
         float eCfg  = effectiveCfgWeight();
+        return narrateResolved(eTemp, eEx, eCfg, text);
+    }
 
+    // New: Non-blocking narration with per-call attributes override
+    public Playback narrateAsync(NarratorAttribute attrs, String text) throws Exception {
+        // If attrs provided, take precedence; else fall back to stack/defaults
+        float eTemp = attrs != null && attrs.getTemp() != null ? attrs.getTemp() : effectiveTemperature();
+        float eEx   = attrs != null && attrs.getEx() != null ? attrs.getEx() : effectiveExaggeration();
+        float eCfg  = attrs != null && attrs.getCfg() != null ? attrs.getCfg() : effectiveCfgWeight();
+        return narrateResolved(eTemp, eEx, eCfg, text);
+    }
+
+    // Core implementation shared by both overloads
+    private Playback narrateResolved(float eTemp, float eEx, float eCfg, String text) throws Exception {
         String canonicalName = buildFileName(text, eTemp, eEx, eCfg);
         Path   out           = cacheDir.resolve(canonicalName);
 
@@ -340,20 +358,24 @@ public class Narrator {
     }
 
     // Pop entire frame: removes all attributes pushed into the current frame
+    @Deprecated
     public void pop() {
         if (!attrStack.isEmpty()) attrStack.pop();
     }
 
+    @Deprecated
     public Narrator pushCfgWeight(float value) {
         topOrNew().cfg = value;
         return this;
     }
 
+    @Deprecated
     public Narrator pushExaggeration(float value) {
         topOrNew().ex = value;
         return this;
     }
 
+    @Deprecated
     public Narrator pushTemperature(float value) {
         topOrNew().temp = value;
         return this;
@@ -388,19 +410,13 @@ public class Narrator {
     }
 
     // Helper: ensure there's a top frame to write into
-    private AttrFrame topOrNew() {
-        AttrFrame top = attrStack.peek();
+    private NarratorAttribute topOrNew() {
+        NarratorAttribute top = attrStack.peek();
         if (top == null) {
-            top = new AttrFrame();
+            top = new NarratorAttribute();
             attrStack.push(top);
         }
         return top;
-    }
-
-    private static class AttrFrame {
-        Float cfg;   // nullable
-        Float ex;    // nullable
-        Float temp;  // nullable
     }
 
     // Playback handle for non-blocking control with queue support
