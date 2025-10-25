@@ -23,67 +23,68 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Narrator provides text-to-speech generation with on-disk caching and queued audio playback.
+ * Narrator orchestrates text-to-speech synthesis and audio playback.
  * <p>
- * Responsibilities are split into collaborators:
- * - TtsCacheManager: build canonical name, manage cache/chronological files
- * - TtsEngine: synthesize WAV bytes for text
- * - AudioPlayer: serialized playback with {@link Playback}
+ * Responsibilities:
+ * <ul>
+ *   <li>Builds a canonical name for the text + parameters via {@link TtsCacheManager#buildFileName(String, float, float, float)}</li>
+ *   <li>Requests a chronological target path from {@link TtsCacheManager#prepareChronological(String)}</li>
+ *   <li>Synthesizes audio only when the current id is not up-to-date, then writes it via {@link TtsCacheManager#writeChronological(byte[], Path)}</li>
+ *   <li>Queues playback with {@link AudioPlayer}</li>
+ * </ul>
  */
 public class Narrator {
 
-    private static final Logger logger = LoggerFactory.getLogger(Narrator.class);
-    private final AudioPlayer     audioPlayer;  // playback queue/handles
-    private final TtsCacheManager cacheManager; // file/cache coordinator
+    private static final Logger          logger = LoggerFactory.getLogger(Narrator.class);
+    private final        AudioPlayer     audioPlayer;  // playback queue/handles
+    private final        TtsCacheManager cacheManager; // chronological file coordinator
     @Getter
     @Setter
-    private float cfgWeight;
+    private              float           cfgWeight;
     @Getter
     @Setter
-    private float exaggeration;
+    private              float           exaggeration;
     @Getter
-    private volatile Playback playback; // most recently scheduled playback for external access
+    private volatile     Playback        playback; // most recently scheduled playback for external access
     @Getter
     @Setter
-    private float temperature;
-    private final TtsEngine       ttsEngine;    // synthesis strategy
+    private              float           temperature;
+    private final        TtsEngine       ttsEngine;    // synthesis strategy
 
     /**
-     * Creates a Narrator storing generated audio under the given folder using default TTS engine.
+     * Creates a Narrator storing audio under {@code relativeFolder} and using the default TTS engine.
      */
     public Narrator(String relativeFolder) {
         this(relativeFolder, defaultEngine());
     }
 
     /**
-     * Creates a Narrator with an explicit {@link TtsEngine}.
+     * Creates a Narrator storing audio under {@code relativeFolder} and using a provided {@link TtsEngine}.
+     *
+     * @param relativeFolder output directory for chronological WAV files
+     * @param engine         TTS engine implementation used to synthesize audio
      */
     public Narrator(String relativeFolder, TtsEngine engine) {
         Path audioDir = Path.of(relativeFolder);
         this.cacheManager = new TtsCacheManager(audioDir);
         this.audioPlayer  = new AudioPlayer();
         this.ttsEngine    = engine;
-        // defaults
         this.temperature  = 0.5f;
         this.exaggeration = 0.5f;
         this.cfgWeight    = 1.0f;
     }
 
     private static TtsEngine defaultEngine() {
-        return (text, temp, ex, cfg) -> {
-            // Delegate to existing implementation to preserve behavior
-            return ChatterboxTTS.generateSpeech(text, temp, ex, cfg);
-            // return CoquiTTS.generateSpeech(text);
-        };
+        return (text, temp, ex, cfg) -> ChatterboxTTS.generateSpeech(text, temp, ex, cfg);
     }
 
     /**
-     * Synchronously speak the provided text using the current instance defaults.
+     * Synchronously synthesize and play the given text using current instance defaults.
+     * Blocks until playback finishes.
      */
     public Narrator narrate(String text) throws Exception {
         narrateAsync(text);
@@ -92,7 +93,7 @@ public class Narrator {
     }
 
     /**
-     * Synchronously speak with per-call attributes.
+     * Synchronously synthesize and play using per-call attributes. Blocks until playback finishes.
      */
     public Narrator narrate(NarratorAttribute attrs, String text) throws Exception {
         narrateAsync(attrs, text);
@@ -101,7 +102,8 @@ public class Narrator {
     }
 
     /**
-     * Asynchronously speak using instance defaults.
+     * Asynchronously synthesize and queue playback using instance defaults.
+     * Returns immediately with a {@link Playback} handle available via {@link #getPlayback()}.
      */
     public Narrator narrateAsync(String text) throws Exception {
         float eTemp = this.temperature;
@@ -111,7 +113,8 @@ public class Narrator {
     }
 
     /**
-     * Asynchronously speak using per-call attributes.
+     * Asynchronously synthesize and queue playback using per-call attributes.
+     * Nullable fields in {@code attrs} fall back to instance defaults.
      */
     public Narrator narrateAsync(NarratorAttribute attrs, String text) throws Exception {
         float eTemp = attrs != null && attrs.getTemperature() != null ? attrs.getTemperature() : this.temperature;
@@ -120,41 +123,48 @@ public class Narrator {
         return narrateResolved(eTemp, eEx, eCfg, text);
     }
 
-    // Core orchestration: resolve file from cache, synthesize if missing, copy chronological, queue playback
+    /**
+     * Core flow:
+     * <ol>
+     *   <li>Build canonical name containing sanitized text + hash.</li>
+     *   <li>Ask {@link TtsCacheManager} for the next id's plan.</li>
+     *   <li>If up-to-date, reuse the file; otherwise synthesize and write to the plan path.</li>
+     *   <li>Queue playback and expose the {@link Playback} handle.</li>
+     * </ol>
+     */
     private Narrator narrateResolved(float eTemp, float eEx, float eCfg, String text) throws Exception {
-        String canonicalName = cacheManager.buildFileName(text, eTemp, eEx, eCfg);
-        Path   canonicalPath = cacheManager.canonicalPath(canonicalName);
+        String                     canonicalName = cacheManager.buildFileName(text, eTemp, eEx, eCfg);
+        TtsCacheManager.ChronoPlan plan          = cacheManager.prepareChronological(canonicalName);
 
-        cacheManager.cleanupCacheSiblings(canonicalName);
-
-        if (!Files.exists(canonicalPath)) {
-            long t0 = System.nanoTime();
-            logger.info("TTS generate start: temp={}, ex={}, cfg={}, file={}, text=\"{}\"", eTemp, eEx, eCfg, canonicalName, text);
-            byte[] audio = ttsEngine.synthesize(text, eTemp, eEx, eCfg);
-            cacheManager.writeCanonical(audio, canonicalName);
-            long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - t0);
-            logger.info("TTS generate done:   temp={}, ex={}, cfg={}, file={}, bytes={}, took={} ms", eTemp, eEx, eCfg, canonicalName, audio.length, tookMs);
+        Path pathToPlay;
+        if (plan.upToDate()) {
+            // Already matches; reuse
+            pathToPlay = plan.path();
+            logger.debug("Narration up-to-date at {}", pathToPlay.getFileName());
         } else {
-            logger.debug("TTS cache hit: canonical file={}", canonicalName);
+            long t0 = System.nanoTime();
+            logger.info("TTS generate start: temp={}, ex={}, cfg={}, file={}, text=\"{}\"", eTemp, eEx, eCfg, plan.path().getFileName(), text);
+            byte[] audio = ttsEngine.synthesize(text, eTemp, eEx, eCfg);
+            cacheManager.writeChronological(audio, plan.path());
+            long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - t0);
+            logger.info("TTS generate done:   temp={}, ex={}, cfg={}, file={}, bytes={}, took={} ms", eTemp, eEx, eCfg, plan.path().getFileName(), audio.length, tookMs);
+            pathToPlay = plan.path();
         }
 
-        Path chronological = cacheManager.copyToChronological(canonicalPath, canonicalName);
-        File fileToPlay    = cacheManager.toFile(chronological);
-
-        Playback current = audioPlayer.play(fileToPlay);
-        this.playback = current;
+        File fileToPlay = cacheManager.toFile(pathToPlay);
+        this.playback = audioPlayer.play(fileToPlay);
         return this;
     }
 
     /**
-     * Sleeps the current thread for 1s.
+     * Sleeps the current thread for roughly one second.
      */
     public void pause() throws InterruptedException {
         Thread.sleep(1000);
     }
 
     /**
-     * Sleeps the current thread for 0.5s.
+     * Sleeps the current thread for roughly half a second.
      */
     public void shortPause() throws InterruptedException {
         Thread.sleep(500);
