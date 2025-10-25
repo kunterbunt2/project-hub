@@ -150,36 +150,28 @@ public class GenerateASprint extends AbstractUiTestUtil {
         // Products Page
         //---------------------------------------------------------------------------------------..
 //        narrator.pause(1);
-        narrator.narrate(NORMAL, "Kassandra is a project planning and progress tracking server targeting small to medium team sizes. It is a open source project and has an Apachee two dot zero license.");
-        narrator.pause(1);
-        narrator.narrate(NORMAL, "Kassandra supports OIDC authentication and authorization. I just logged into the server using my kassandra dot org ID.");
-        narrator.pause(1);
-        narrator.narrate(NORMAL, "The first page you see when you log into the server is the Products page where all Products are listed.");
-        narrator.pause(1);
+        narrator.narrate(NORMAL, "Kassandra is a project planning and progress tracking server targeting small to medium team sizes. It is a open source project and has an Apachee two dot zero license.").pause();
+        narrator.narrate(NORMAL, "Kassandra supports OIDC authentication and authorization. I just logged into the server using my kassandra dot org ID.").pause();
+        narrator.narrate(NORMAL, "The first page you see when you log into the server is the Products page where all Products are listed.").pause();
         //---------------------------------------------------------------------------------------..
         // Create a Product
         //---------------------------------------------------------------------------------------..
         narrator.narrate(NORMAL, "Lets start by adding a new product by selecting the Create button.");
         seleniumHandler.click(ProductListView.CREATE_PRODUCT_BUTTON);
-        narrator.narrate(INTENSE, "Lets call it Jupiter!");
+        narrator.narrate(INTENSE, "Lets call it Jupiter!").pause();
         seleniumHandler.setTextField(ProductDialog.PRODUCT_NAME_FIELD, productName);
-        narrator.pause(1);
-        narrator.narrateAsync(NORMAL, "Select Save to close the dialog and persist our product.");
+        narrator.narrateAsync(NORMAL, "Select Save to close the dialog and persist our product.").pause();
         seleniumHandler.click(ProductDialog.CONFIRM_BUTTON);
-        narrator.narrate(INTENSE, "And we got ourself a new product!");
-        narrator.pause(1);
-        narrator.narrate(NORMAL, "With the little notepad and trashcan icons, on the right side, you can edit or delete your product.");
-        narrator.pause(1);
+        narrator.narrate(INTENSE, "And we got ourself a new product!").pause();
+        narrator.narrate(NORMAL, "With the little notepad and trashcan icons, on the right side, you can edit or delete your product.").pause();
         narrator.narrate(NORMAL, "Lets select our product...");
         productListViewTester.selectProduct(productName);
 
         //---------------------------------------------------------------------------------------..
         // Versions Page
         //---------------------------------------------------------------------------------------..
-        narrator.narrate(NORMAL, "This takes us to the Versions Page.");
-        narrator.pause(.5f);
-        narrator.narrate(NORMAL, "Every Product can have any number of versions.");
-        narrator.pause(1);
+        narrator.narrate(NORMAL, "This takes us to the Versions Page.").shortPause();
+        narrator.narrate(NORMAL, "Every Product can have any number of versions.").pause();
         narrator.narrate(NORMAL, "Jupiter is a totally new product, so lets create a first version for it.");
         narrator.narrate(NORMAL, "Select the Create button...");
         //---------------------------------------------------------------------------------------..
@@ -190,21 +182,18 @@ public class GenerateASprint extends AbstractUiTestUtil {
         seleniumHandler.setTextField(VersionDialog.VERSION_NAME_FIELD, versionName);
         narrator.narrateAsync(NORMAL, "Select Save to close the dialog and persist our version.");
         seleniumHandler.click(VersionDialog.CONFIRM_BUTTON);
-        narrator.narrate(INTENSE, "And we got ourself a new version!");
-        narrator.pause(1);
-        narrator.narrate(NORMAL, "The little notepad and trashcan icons, on the right side, can be used to edit or delete your version.");
-        narrator.pause(1);
+        narrator.narrate(INTENSE, "And we got ourself a new version!").pause();
+        narrator.narrate(NORMAL, "The little notepad and trashcan icons, on the right side, can be used to edit or delete your version.").pause();
         narrator.narrate(NORMAL, "Lets select our version.");
         versionListViewTester.selectVersion(versionName);
 
         //---------------------------------------------------------------------------------------..
         // Features Page
         //---------------------------------------------------------------------------------------..
-        narrator.narrate(NORMAL, "This takes us to the Features Page. Features are what we actually want to plan and track, although they are split into one or more sprints.");
-        narrator.pause(.5f);
-        narrator.narrate(NORMAL, "Every product version can have any number of features.");
-        narrator.pause(1);
-        narrator.narrate(NORMAL, "Lets assume Jupiter is a server that keeps track of micro services configurations. So the first feature would be a rest API that supports retrieving configurations.");
+        narrator.narrate(NORMAL, "This takes us to the Features Page. Features are what we actually want to plan and track, although they are split into one or more sprints.").shortPause();
+        narrator.narrate(NORMAL, "Every product version can have any number of features.").pause();
+        narrator.narrate(NORMAL, "Lets assume Jupiter is a server that keeps track of micro services configurations.").shortPause();
+        narrator.narrate(NORMAL, "So the first feature would be a rest API that supports retrieving configurations.").shortPause();
         narrator.narrate(NORMAL, "Select the Create button...");
         //---------------------------------------------------------------------------------------..
         // Create Feature
@@ -214,19 +203,16 @@ public class GenerateASprint extends AbstractUiTestUtil {
         seleniumHandler.setTextField(FeatureDialog.FEATURE_NAME_FIELD, featureName);
         narrator.narrateAsync(NORMAL, "Select Save to close the dialog and persist our feature.");
         seleniumHandler.click(FeatureDialog.CONFIRM_BUTTON);
-        narrator.narrate(INTENSE, "Jupiter has its first feature!");
-        narrator.pause(1);
-        narrator.narrate(NORMAL, "Again, as in the other pages, the little notepad and trashcan icons, on the right side, can be used to edit or delete your feature.");
-        narrator.pause(1);
+        narrator.narrate(INTENSE, "Jupiter has its first feature!").pause();
+        narrator.narrate(NORMAL, "Again, as in the other pages, the little notepad and trashcan icons, on the right side, can be used to edit or delete your feature.").pause();
         narrator.narrate(NORMAL, "Lets select our feature...");
         featureListViewTester.selectFeature(featureName);
 
         //---------------------------------------------------------------------------------------..
         // Sprints Page
         //---------------------------------------------------------------------------------------..
-        narrator.narrate(NORMAL, "We are now on the Sprints page of our product. On this page we however only see sprints related to the Feature we just selected.");
-        narrator.pause(0.5f);
-        narrator.narrate(NORMAL, "Lets create a sprint for our feature and just call it: Minimum Viable Product.");
+        narrator.narrate(NORMAL, "We are now on the Sprints page of our product. On this page we however only see sprints related to the Feature we just selected.").shortPause();
+        narrator.narrate(NORMAL, "Lets create a sprint for our feature and just call it: Minimum Viable Product.").shortPause();
         narrator.narrate(NORMAL, "Select the Create button.");
         //---------------------------------------------------------------------------------------..
         // Create a Sprint
@@ -235,16 +221,15 @@ public class GenerateASprint extends AbstractUiTestUtil {
         seleniumHandler.setTextField(SprintDialog.SPRINT_NAME_FIELD, sprintName);
         narrator.narrateAsync(NORMAL, "Select Save to close the dialog and persist our sprint.");
         seleniumHandler.click(SprintDialog.CONFIRM_BUTTON);
-        narrator.narrate(INTENSE, "That was easy!");
+        narrator.narrate(INTENSE, "That was easy!").pause();
         narrator.narrate(NORMAL, "Now we need to start planning our sprint. We do this in the Tasks page. Not by selecting the sprint, but configuring it with the small crog icon on the right side.");
         seleniumHandler.click(SprintListView.SPRINT_GRID_CONFIG_BUTTON_PREFIX + sprintName);
 
         //---------------------------------------------------------------------------------------..
         // Tasks Page
         //---------------------------------------------------------------------------------------..
-        narrator.narrate(NORMAL, "This is the page where you plan your sprint including the gantt chart.");
-        narrator.pause(1f);
-        narrator.narrate(NORMAL, "Lets start by adding a milestone that will fix the starting point of our sprint.");
+        narrator.narrate(NORMAL, "This is the page where you plan your sprint including the gantt chart.").shortPause();
+        narrator.narrate(NORMAL, "Lets start by adding a milestone that will fix the starting point of our sprint.").shortPause();
         narrator.narrate(NORMAL, "Select the Create Milestone button...");
         seleniumHandler.click(TaskListView.CREATE_MILESTONE_BUTTON_ID);
         String milestoneName = "New Milestone-1";
@@ -252,8 +237,7 @@ public class GenerateASprint extends AbstractUiTestUtil {
         narrator.narrate(NORMAL, "Lets also create a story. We use stories as containers for the actual work items called tasks.");
         seleniumHandler.click(TaskListView.CREATE_STORY_BUTTON_ID);
         seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, "New Story-2");
-        narrator.narrate(NORMAL, "You can see that all the new created items are always added to the end of our table.");
-        narrator.pause(1f);
+        narrator.narrate(NORMAL, "You can see that all the new created items are always added to the end of our table.").pause();
         narrator.narrate(NORMAL, "Lets create 3 additional tasks as work units for our first sprint.");
         seleniumHandler.click(TaskListView.CREATE_TASK_BUTTON_ID);
         seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, "New Task-3");
@@ -261,20 +245,19 @@ public class GenerateASprint extends AbstractUiTestUtil {
         seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, "New Task-4");
         seleniumHandler.click(TaskListView.CREATE_TASK_BUTTON_ID);
         seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, "New Task-5");
-        narrator.narrate(INTENSE, "Good!");
-        narrator.pause(1f);
-        narrator.narrate(NORMAL, "Select the edit button to change to whole table into edit mode...");
+        narrator.narrate(INTENSE, "Good!").pause();
+        narrator.narrate(NORMAL, "Select the edit button to change to whole table into edit mode...").pause();
         seleniumHandler.click(TaskListView.EDIT_BUTTON_ID);
-        narrator.pause(1f);
-        narrator.narrate(NORMAL, "We can now edit all valid milestone, story or task cells.");
+        narrator.narrate(NORMAL, "We can now edit all valid milestone, story or task cells.").pause();
         narrator.narrate(NORMAL, "Lets give the milestone a fixed start date and time. We want our developers to start working on this Monday first thing in the morning.");
         seleniumHandler.click(TaskListView.TASK_GRID_NAME_PREFIX + milestoneName);
 
 
-        narrator.narrate(NORMAL, "If you look carefully, you will notice that all three tasks have been assigned to the story. The story is the parent of these tasks.");
-        narrator.narrate(NORMAL, "Kassandra does that automatically. All three tasks also are automatically assigned to myself.");
-        narrator.narrate(NORMAL, "But, as i am not a developer, we will assign these tasks to a developer.");
-        narrator.narrate(NORMAL, "We want our story to depend on our milestone. The story can only start after the milestone.");
+        narrator.narrate(NORMAL, "If you look carefully, you will notice that all three tasks have been assigned to the story.").pause();
+        narrator.narrate(NORMAL, "The story is the parent of these tasks.").pause();
+        narrator.narrate(NORMAL, "Kassandra does that automatically. All three tasks also are automatically assigned to myself.").pause();
+        narrator.narrate(NORMAL, "But, as i am not a developer, we will assign these tasks to a developer.").pause();
+        narrator.narrate(NORMAL, "We want our story to depend on our milestone. The story can only start after the milestone.").pause();
         narrator.narrate(NORMAL, "Defining such a dependency between a task or story to other tasks or stories can be done in 3 different ways...");
 
 

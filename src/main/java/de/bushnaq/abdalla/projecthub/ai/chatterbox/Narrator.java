@@ -22,7 +22,9 @@ import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sound.sampled.*;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -63,6 +65,8 @@ public class Narrator {
     private              float    exaggeration;
     private              Playback lastPlayback = null;
     private              int      nextId; // incrementing file id per audioDir
+    @Getter
+    private volatile     Playback playback;//most recently scheduled playback for external access
     private final        Object   queueLock    = new Object();// Serialize all playback: each request waits for the previous to finish before starting
     @Getter
     @Setter
@@ -89,8 +93,6 @@ public class Narrator {
             throw new RuntimeException("Failed to create audio output directory: " + this.audioDir, e);
         }
         initNextId();
-        // Log available playback mixers to help choose a device
-        logAvailablePlaybackMixers();
     }
 
     private String buildFileName(String text, float temperature, float exaggeration, float cfgWeight) {
@@ -136,33 +138,6 @@ public class Narrator {
         return s.length() <= maxLen ? s : s.substring(0, maxLen);
     }
 
-    /**
-     * Find a playback mixer by name from system property or environment variable, else return null.
-     * Matching is case-insensitive and checks both name and description contains the token.
-     * <p>
-     * System property: projecthub.audio.playback.mixer
-     * Env var: PROJECTHUB_AUDIO_PLAYBACK_MIXER
-     */
-    private static Mixer.Info findConfiguredPlaybackMixer() {
-        String token = "direct audio device: directsound playback"; // Replace with actual retrieval logic
-//        String token = System.getProperty("projecthub.audio.playback.mixer");
-//        if (token == null || token.isBlank()) {
-//            token = System.getenv("PROJECTHUB_AUDIO_PLAYBACK_MIXER");
-//        }
-//        if (token == null || token.isBlank()) return null;
-        String t = token.toLowerCase(Locale.ROOT);
-        for (Mixer.Info info : AudioSystem.getMixerInfo()) {
-            String name = info.getName() == null ? "" : info.getName().toLowerCase(Locale.ROOT);
-            String desc = info.getDescription() == null ? "" : info.getDescription().toLowerCase(Locale.ROOT);
-            if (name.contains(t) || desc.contains(t)) {
-                logger.warn("using playback mixer '{}'.", token);
-                return info;
-            }
-        }
-        logger.warn("Requested playback mixer '{}' not found. Falling back to default.", token);
-        return null;
-    }
-
     private void initNextId() {
         int max = 0;
         try {
@@ -190,35 +165,16 @@ public class Narrator {
     }
 
     /**
-     * Enumerate and log all playback-capable mixers (supporting Clip or SourceDataLine).
-     */
-    private static void logAvailablePlaybackMixers() {
-        try {
-            for (Mixer.Info info : AudioSystem.getMixerInfo()) {
-                Mixer   mixer          = AudioSystem.getMixer(info);
-                boolean supportsClip   = mixer.isLineSupported(new DataLine.Info(Clip.class, null));
-                boolean supportsSource = mixer.isLineSupported(new DataLine.Info(javax.sound.sampled.SourceDataLine.class, null));
-                if (supportsClip || supportsSource) {
-                    logger.info("Playback device: name='{}', desc='{}', vendor='{}', version='{}' (Clip={}, SourceDataLine={})",
-                            info.getName(), info.getDescription(), info.getVendor(), info.getVersion(), supportsClip, supportsSource);
-                }
-            }
-        } catch (Throwable t) {
-            logger.warn("Failed to enumerate playback mixers", t);
-        }
-    }
-
-    // Blocking convenience method preserving existing behavior
-
-    /**
      * Synchronously speak the provided text using the current instance defaults.
      * This call blocks until playback of the generated or cached audio finishes.
      *
      * @param text text to synthesize and play
      * @throws Exception if TTS generation, file IO, or audio playback fails
      */
-    public void narrate(String text) throws Exception {
-        narrateAsync(text).await();
+    public Narrator narrate(String text) throws Exception {
+        narrateAsync(text);
+        getPlayback().await();
+        return this;
     }
 
     /**
@@ -230,21 +186,21 @@ public class Narrator {
      * @param text  text to synthesize and play
      * @throws Exception if TTS generation, file IO, or audio playback fails
      */
-    public void narrate(NarratorAttribute attrs, String text) throws Exception {
-        narrateAsync(attrs, text).await();
+    public Narrator narrate(NarratorAttribute attrs, String text) throws Exception {
+        narrateAsync(attrs, text);
+        getPlayback().await();
+        return this;
     }
-
-    // Non-blocking narration that returns a handle to await or stop playback
 
     /**
      * Asynchronously speak the provided text using the current instance defaults.
-     * Returns immediately with a {@link Playback} handle that can be used to await or stop playback.
+     * Returns {@code this} to allow call chaining; the current playback handle can be retrieved via {@link #getPlayback()}.
      *
      * @param text text to synthesize and play
-     * @return playback handle
+     * @return this narrator instance for chaining
      * @throws Exception if TTS generation or file IO fails prior to starting playback
      */
-    public Playback narrateAsync(String text) throws Exception {
+    public Narrator narrateAsync(String text) throws Exception {
         // Use instance defaults
         float eTemp = this.temperature;
         float eEx   = this.exaggeration;
@@ -255,14 +211,14 @@ public class Narrator {
     /**
      * Asynchronously speak the provided text using per-call attributes.
      * Any null fields in {@code attrs} will fall back to the instance defaults.
-     * Returns immediately with a {@link Playback} handle that can be used to await or stop playback.
+     * Returns {@code this} to allow call chaining; the current playback handle can be retrieved via {@link #getPlayback()}.
      *
      * @param attrs optional attribute overrides (may be null)
      * @param text  text to synthesize and play
-     * @return playback handle
+     * @return this narrator instance for chaining
      * @throws Exception if TTS generation or file IO fails prior to starting playback
      */
-    public Playback narrateAsync(NarratorAttribute attrs, String text) throws Exception {
+    public Narrator narrateAsync(NarratorAttribute attrs, String text) throws Exception {
         // If attrs provided, take precedence; else fall back to instance defaults
         float eTemp = attrs != null && attrs.getTemperature() != null ? attrs.getTemperature() : this.temperature;
         float eEx   = attrs != null && attrs.getExaggeration() != null ? attrs.getExaggeration() : this.exaggeration;
@@ -271,7 +227,7 @@ public class Narrator {
     }
 
     // Core implementation shared by both overloads
-    private Playback narrateResolved(float eTemp, float eEx, float eCfg, String text) throws Exception {
+    private Narrator narrateResolved(float eTemp, float eEx, float eCfg, String text) throws Exception {
         String canonicalName = buildFileName(text, eTemp, eEx, eCfg);
         Path   out           = cacheDir.resolve(canonicalName);
 
@@ -306,11 +262,13 @@ public class Narrator {
             logger.warn("Failed to create chronological file {} from {}", idOut.getFileName(), out.getFileName(), e);
         }
 
-        final Playback thisPlayback = new Playback();
+        // Prepare playback and queue behind any prior playback
         final Playback prevPlayback;
+        final Playback current = new Playback();
         synchronized (queueLock) {
-            prevPlayback = lastPlayback;
-            lastPlayback = thisPlayback;
+            prevPlayback  = lastPlayback;
+            lastPlayback  = current;
+            this.playback = current; // expose latest handle
         }
 
         final File file = idOut.toFile(); // play the chronological file
@@ -320,55 +278,42 @@ public class Narrator {
                 if (prevPlayback != null) prevPlayback.await();
 
                 // If stopped before starting, complete and return
-                if (thisPlayback.isCanceled()) {
-                    thisPlayback.finishEarly();
+                if (current.isCanceled()) {
+                    current.finishEarly();
                     return;
                 }
 
                 Clip clip = null;
-//                Mixer.Info chosen = findConfiguredPlaybackMixer();
-//                try {
-//                    if (chosen != null) {
-//                        Mixer mixer = AudioSystem.getMixer(chosen);
-//                        if (mixer.isLineSupported(new DataLine.Info(Clip.class, null))) {
-//                            clip = (Clip) mixer.getLine(new DataLine.Info(Clip.class, null));
-//                            logger.info("Using configured playback mixer: {}", chosen.getName());
-//                        }
-//                    }
-//                } catch (Exception e) {
-//                    logger.warn("Failed to get Clip from configured mixer, falling back to default: {}", e.toString());
-//                    clip = null;
-//                }
                 if (clip == null) {
                     clip = AudioSystem.getClip();
                 }
-                thisPlayback.setClip(clip);
+                current.setClip(clip);
 
                 clip.addLineListener(ev -> {
                     if (ev.getType() == LineEvent.Type.STOP) {
-                        thisPlayback.countDown();
+                        current.countDown();
                     }
                 });
 
                 clip.open(AudioSystem.getAudioInputStream(file));
 
-                if (thisPlayback.isCanceled()) {
-                    thisPlayback.finishEarly();
+                if (current.isCanceled()) {
+                    current.finishEarly();
                     return;
                 }
 
                 clip.start();
-                thisPlayback.await(); // wait until STOP event or external stop
+                current.await(); // wait until STOP event or external stop
             } catch (Exception e) {
-                thisPlayback.countDown(); // ensure latch is released on failure
+                current.countDown(); // ensure latch is released on failure
             } finally {
-                thisPlayback.closeQuietly();
+                current.closeQuietly();
             }
         }, "Narrator-Playback");
         t.setDaemon(true);
         t.start();
 
-        return thisPlayback;
+        return this;
     }
 
     private String nextIdPrefix() {
@@ -379,14 +324,13 @@ public class Narrator {
     }
 
     /**
-     * Sleeps the current thread for the requested number of seconds.
+     * Sleeps the current thread for 1s.
      * Convenience helper to pause UI/test flows between narrations.
      *
-     * @param seconds number of seconds to sleep
      * @throws InterruptedException if the thread is interrupted while sleeping
      */
-    public void pause(float seconds) throws InterruptedException {
-        Thread.sleep((long) (seconds * 1000));
+    public void pause() throws InterruptedException {
+        Thread.sleep((long) (1000));
     }
 
     private static String sanitizePrefix(String s) {
@@ -401,6 +345,16 @@ public class Narrator {
             return "tts";
         }
         return cleaned;
+    }
+
+    /**
+     * Sleeps the current thread for 0.5s.
+     * Convenience helper to pause UI/test flows between narrations.
+     *
+     * @throws InterruptedException if the thread is interrupted while sleeping
+     */
+    public void shortPause() throws InterruptedException {
+        Thread.sleep((long) (500));
     }
 
     private static String shortSha256Hex(String input, int hexLen) {
