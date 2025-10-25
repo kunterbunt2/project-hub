@@ -46,36 +46,40 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Utility class for recording screen during UI tests using JavaCV (FFmpeg)
  */
 public class VideoRecorder {
-    private        String                                                    audioDevice    = System.getProperty("videoRecorder.audioDevice", "auto");
+    private        String                                                    audioDevice      = System.getProperty("videoRecorder.audioDevice", "auto");
     private        FFmpegFrameGrabber                                        audioGrabber;
     private        Thread                                                    audioThread;
     private        Rectangle                                                 captureArea;  // Optional explicit capture area
+    // Video rate control config
+    private final  boolean                                                   cbrRateControl   = Boolean.parseBoolean(System.getProperty("videoRecorder.cbr", "true"));
     private        String                                                    currentTestName;
-    private final  int                                                       frameRate      = Integer.getInteger("videoRecorder.fps", 60);
+    private final  int                                                       frameRate        = Integer.getInteger("videoRecorder.fps", 60);
     // Config
-    private        boolean                                                   includeAudio   = Boolean.parseBoolean(System.getProperty("videoRecorder.audioEnabled", "true"));
+    private        boolean                                                   includeAudio     = Boolean.parseBoolean(System.getProperty("videoRecorder.audioEnabled", "true"));
     @Getter
-    private        boolean                                                   isRecording    = false;
+    private        boolean                                                   isRecording      = false;
     private        long                                                      lastAudioPtsUs;
     private        long                                                      lastVideoTimestampUs;
-    private final  Logger                                                    logger         = LoggerFactory.getLogger(this.getClass());
+    private final  Logger                                                    logger           = LoggerFactory.getLogger(this.getClass());
     private        long                                                      mirroredAudioFramesRecorded; // sample frames (per time step), not raw samples
     private        Thread                                                    mirroredAudioThread; // thread pumping mirrored WAVs
     // Audio mirror queue (PCM frames)
-    private final  LinkedBlockingQueue<javax.sound.sampled.AudioInputStream> mirroredQueue  = new LinkedBlockingQueue<>();
+    private final  LinkedBlockingQueue<javax.sound.sampled.AudioInputStream> mirroredQueue    = new LinkedBlockingQueue<>();
     private        File                                                      outputDirectory;
     private        FFmpegFrameRecorder                                       recorder;
     // Recording metrics
     private        long                                                      recordingStartNanos;
     private final  File                                                      rootDirectory;
-    private final  AtomicBoolean                                             running        = new AtomicBoolean(false);
+    private final  AtomicBoolean                                             running          = new AtomicBoolean(false);
     // JavaCV/FFmpeg members
     private        FFmpegFrameGrabber                                        screenGrabber;
     private static long                                                      startTime;
+    private final  int                                                       videoBitrateKbps = Math.max(25000, Integer.getInteger("videoRecorder.videoBitrateKbps", 64000));
     private        long                                                      videoFramesRecorded;
     private        Thread                                                    videoThread;
     private        WebDriver                                                 webDriver;    // Used to compute content-only area
-    private final  String                                                    windowsCapture = System.getProperty("videoRecorder.winCapture", "gdigrab");
+    private final  String                                                    windowsCapture   = System.getProperty("videoRecorder.winCapture", "gdigrab");
+    private final  String                                                    x264Preset       = System.getProperty("videoRecorder.preset", "veryslow");
 
     public VideoRecorder() {
         this(new File("test-recordings"));
@@ -197,7 +201,7 @@ public class VideoRecorder {
                 // ddagrab and gdigrab both support offsets in modern ffmpeg
                 screenGrabber.setOption("offset_x", Integer.toString(area.x));
                 screenGrabber.setOption("offset_y", Integer.toString(area.y));
-                logger.info("Windows screen capture using {} at {} fps", fmt, frameRate);
+                logger.info("Windows screen capture using {} at {} fps at {} Kbps", fmt, frameRate, videoBitrateKbps);
             } else if (os.contains("mac")) {
                 // macOS: use avfoundation; region cropping via filter later if needed
                 // Default device 1 for screen; JavaCV expects device index like ":1"
@@ -517,11 +521,30 @@ public class VideoRecorder {
             recorder.setFormat("mp4");
             recorder.setVideoCodec(avcodec.AV_CODEC_ID_H264);
             recorder.setFrameRate(frameRate);
-            recorder.setVideoOption("preset", "veryfast");
-            recorder.setVideoOption("tune", "zerolatency");
-            recorder.setVideoOption("crf", "23");
             recorder.setPixelFormat(0); // yuv420p
-            recorder.setVideoOption("vsync", "vfr");
+            recorder.setVideoOption("preset", x264Preset);
+            recorder.setVideoOption("tune", "zerolatency");
+
+            // --- Rate control: CBR vs. CRF/VBR ---
+            if (cbrRateControl) {
+                int bps = Math.max(25000, videoBitrateKbps) * 1000; // ensure >= 25,000 kbps
+                recorder.setVideoBitrate(bps);
+                recorder.setVideoOption("b:v", Integer.toString(bps));
+                recorder.setVideoOption("minrate", Integer.toString(bps));
+                recorder.setVideoOption("maxrate", Integer.toString(bps));
+                recorder.setVideoOption("bufsize", Integer.toString(bps * 2));
+                // Encourage strict CBR with HRD
+                recorder.setVideoOption("x264-params", "nal-hrd=cbr");
+                // Prefer constant frame rate for tighter CBR control
+                recorder.setVideoOption("vsync", "cfr");
+                logger.info("Video rate control: CBR @ {} kbps (preset={})", bps / 1000, x264Preset);
+            } else {
+                // Quality-based VBR using CRF
+                recorder.setVideoOption("crf", System.getProperty("videoRecorder.crf", "23"));
+                recorder.setVideoOption("vsync", "vfr");
+                logger.info("Video rate control: CRF={} (preset={})", System.getProperty("videoRecorder.crf", "23"), x264Preset);
+            }
+
             if (addAudioTrack) {
                 recorder.setAudioCodec(avcodec.AV_CODEC_ID_AAC);
                 recorder.setAudioBitrate(192_000);
