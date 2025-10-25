@@ -19,6 +19,7 @@ package de.bushnaq.abdalla.projecthub.ui;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 import de.bushnaq.abdalla.projecthub.ai.chatterbox.Narrator;
+import de.bushnaq.abdalla.projecthub.ai.chatterbox.NarratorAttribute;
 import de.bushnaq.abdalla.projecthub.dto.OffDayType;
 import de.bushnaq.abdalla.projecthub.ui.dialog.FeatureDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ProductDialog;
@@ -68,12 +69,13 @@ import java.util.Map;
 @Transactional
 @Testcontainers
 public class GenerateASprint extends AbstractUiTestUtil {
-    public static final  float                      EXAGGERATE_HIGH   = 1f;
-    public static final  float                      EXAGGERATE_LOW    = 0.25f;
-    public static final  float                      EXAGGERATE_NORMAL = 0.3f;
+    //    public static final  float                      EXAGGERATE_LOW    = 0.25f;
+//    public static final  float                      EXAGGERATE_NORMAL = 0.3f;
+    public static final  NarratorAttribute          INTENSE     = new NarratorAttribute(.7f, .3f, 1f);
+    public static final  NarratorAttribute          NORMAL      = new NarratorAttribute(.5f, .5f, 1f);
     // Start Keycloak container with realm configuration
     @Container
-    private static final KeycloakContainer          keycloak          = new KeycloakContainer("quay.io/keycloak/keycloak:24.0.1")
+    private static final KeycloakContainer          keycloak    = new KeycloakContainer("quay.io/keycloak/keycloak:24.0.1")
             .withRealmImportFile("keycloak/project-hub-realm.json")
             .withAdminUsername("admin")
             .withAdminPassword("admin")
@@ -108,7 +110,7 @@ public class GenerateASprint extends AbstractUiTestUtil {
     @Autowired
     private              TaskListViewTester         taskListViewTester;
     private              String                     taskName;
-    private final        OffDayType                 typeRecord1       = OffDayType.VACATION;
+    private final        OffDayType                 typeRecord1 = OffDayType.VACATION;
     @Autowired
     private              UserListViewTester         userListViewTester;
     private              String                     userName;
@@ -133,7 +135,7 @@ public class GenerateASprint extends AbstractUiTestUtil {
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         generateProductsIfNeeded(testInfo, randomCase);
         seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
-        Narrator narrator = new Narrator("tts/" + testInfo.getTestClass().get().getSimpleName(), 1.0f, EXAGGERATE_NORMAL, .3f);
+        Narrator narrator = new Narrator("tts/" + testInfo.getTestClass().get().getSimpleName());
         productName = "Jupiter";
         versionName = "1.0.0";
         featureName = "Property request api";
@@ -141,151 +143,139 @@ public class GenerateASprint extends AbstractUiTestUtil {
         taskName    = nameGenerator.generateSprintName(0);
 
 
+        narrator.narrateAsync(NORMAL, "Good morning, my name is Jennifer Holleman. I am the product manager of Kassandra and I will be demonstrating the latest alpha version of the Kassandra project server to you today.");
         productListViewTester.switchToProductListViewWithOidc("jennifer.holleman@kassandra.org", "password", "../project-hub.wiki/screenshots/login-view.png", testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+
         //---------------------------------------------------------------------------------------..
         // Products Page
         //---------------------------------------------------------------------------------------..
-
-        narrator.narrate("Good morning, my name is Jennifer Holleman. I am the product manager of Kassandra and I will be demonstrating the latest alpha version of the Kassandra project server to you today.");
+//        narrator.pause(1);
+        narrator.narrate(NORMAL, "Kassandra is a project planning and progress tracking server targeting small to medium team sizes. It is a open source project and has an Apachee two dot zero license.");
         narrator.pause(1);
-        narrator.narrate("Kassandra is a project planning and progress tracking server targeting small to medium team sizes. It is a open source project and has an Apachee two dot zero license.");
+        narrator.narrate(NORMAL, "Kassandra supports OIDC authentication and authorization. I just logged into the server using my kassandra dot org ID.");
         narrator.pause(1);
-        narrator.narrate("Kassandra supports OIDC authentication and authorization. I just logged into the server using my kassandra dot org ID.");
-        narrator.pause(1);
-        narrator.narrate("The first page you see when you log into the server is the Products page where all Products are listed.");
+        narrator.narrate(NORMAL, "The first page you see when you log into the server is the Products page where all Products are listed.");
         narrator.pause(1);
         //---------------------------------------------------------------------------------------..
         // Create a Product
         //---------------------------------------------------------------------------------------..
-        narrator.narrate("Lets start by adding a new product by selecting the Create button.");
+        narrator.narrate(NORMAL, "Lets start by adding a new product by selecting the Create button.");
         seleniumHandler.click(ProductListView.CREATE_PRODUCT_BUTTON);
-        narrator.pushExaggeration(EXAGGERATE_HIGH);
-        narrator.narrate("Lets call it Jupiter!");
-        narrator.pop();
+        narrator.narrate(INTENSE, "Lets call it Jupiter!");
         seleniumHandler.setTextField(ProductDialog.PRODUCT_NAME_FIELD, productName);
         narrator.pause(1);
-        narrator.narrateAsync("Select Save to close the dialog and persist our product.");
+        narrator.narrateAsync(NORMAL, "Select Save to close the dialog and persist our product.");
         seleniumHandler.click(ProductDialog.CONFIRM_BUTTON);
-        narrator.pushExaggeration(EXAGGERATE_HIGH);
-        narrator.narrate("And we got ourself a new product!");
-        narrator.pop();
+        narrator.narrate(INTENSE, "And we got ourself a new product!");
         narrator.pause(1);
-        narrator.narrate("With the little notepad and trashcan icons, on the right side, you can edit or delete your product.");
+        narrator.narrate(NORMAL, "With the little notepad and trashcan icons, on the right side, you can edit or delete your product.");
         narrator.pause(1);
-        narrator.narrate("Lets select our product...");
+        narrator.narrate(NORMAL, "Lets select our product...");
         productListViewTester.selectProduct(productName);
 
         //---------------------------------------------------------------------------------------..
         // Versions Page
         //---------------------------------------------------------------------------------------..
-        narrator.narrate("This takes us to the Versions Page.");
+        narrator.narrate(NORMAL, "This takes us to the Versions Page.");
         narrator.pause(.5f);
-        narrator.narrate("Every Product can have any number of versions.");
+        narrator.narrate(NORMAL, "Every Product can have any number of versions.");
         narrator.pause(1);
-        narrator.narrate("Jupiter is a totally new product, so lets create a first version for it.");
-        narrator.narrate("Select the Create button...");
+        narrator.narrate(NORMAL, "Jupiter is a totally new product, so lets create a first version for it.");
+        narrator.narrate(NORMAL, "Select the Create button...");
         //---------------------------------------------------------------------------------------..
         // Create a Version
         //---------------------------------------------------------------------------------------..
         seleniumHandler.click(VersionListView.CREATE_VERSION_BUTTON);
-        narrator.narrate("Lets use the obvious: one, dot, zero, dot, zero.");
+        narrator.narrate(NORMAL, "Lets use the obvious. One, dot, zero, dot, zero.");
         seleniumHandler.setTextField(VersionDialog.VERSION_NAME_FIELD, versionName);
-        narrator.narrateAsync("Select Save to close the dialog and persist our version.");
+        narrator.narrateAsync(NORMAL, "Select Save to close the dialog and persist our version.");
         seleniumHandler.click(VersionDialog.CONFIRM_BUTTON);
-        narrator.pushExaggeration(EXAGGERATE_HIGH);
-        narrator.narrate("And we got ourself a new version!");
-        narrator.pop();
+        narrator.narrate(INTENSE, "And we got ourself a new version!");
         narrator.pause(1);
-        narrator.narrate("The little notepad and trashcan icons, on the right side, can be used to edit or delete your version.");
+        narrator.narrate(NORMAL, "The little notepad and trashcan icons, on the right side, can be used to edit or delete your version.");
         narrator.pause(1);
-        narrator.narrate("Lets select our version.");
+        narrator.narrate(NORMAL, "Lets select our version.");
         versionListViewTester.selectVersion(versionName);
 
         //---------------------------------------------------------------------------------------..
         // Features Page
         //---------------------------------------------------------------------------------------..
-        narrator.narrate("This takes us to the Features Page. Features are what we actually want to plan and track, although they are split into one or more sprints.");
+        narrator.narrate(NORMAL, "This takes us to the Features Page. Features are what we actually want to plan and track, although they are split into one or more sprints.");
         narrator.pause(.5f);
-        narrator.narrate("Every product version can have any number of features.");
+        narrator.narrate(NORMAL, "Every product version can have any number of features.");
         narrator.pause(1);
-        narrator.narrate("Lets assume Jupiter is a server that keeps track of micro services configurations. So the first feature would be a rest API that supports retrieving configurations.");
-        narrator.narrate("Select the Create button...");
+        narrator.narrate(NORMAL, "Lets assume Jupiter is a server that keeps track of micro services configurations. So the first feature would be a rest API that supports retrieving configurations.");
+        narrator.narrate(NORMAL, "Select the Create button...");
         //---------------------------------------------------------------------------------------..
         // Create Feature
         //---------------------------------------------------------------------------------------..
         seleniumHandler.click(FeatureListView.CREATE_FEATURE_BUTTON_ID);
-        narrator.narrate("Lets call the feature 'Property request API'.");
+        narrator.narrate(NORMAL, "Lets call the feature 'Property request API'.");
         seleniumHandler.setTextField(FeatureDialog.FEATURE_NAME_FIELD, featureName);
-        narrator.narrateAsync("Select Save to close the dialog and persist our feature.");
+        narrator.narrateAsync(NORMAL, "Select Save to close the dialog and persist our feature.");
         seleniumHandler.click(FeatureDialog.CONFIRM_BUTTON);
-        narrator.pushExaggeration(EXAGGERATE_HIGH);
-        narrator.narrate("Jupiter has its first feature!");
-        narrator.pop();
+        narrator.narrate(INTENSE, "Jupiter has its first feature!");
         narrator.pause(1);
-        narrator.narrate("Again, as in the other pages, the little notepad and trashcan icons, on the right side, can be used to edit or delete your feature.");
+        narrator.narrate(NORMAL, "Again, as in the other pages, the little notepad and trashcan icons, on the right side, can be used to edit or delete your feature.");
         narrator.pause(1);
-        narrator.narrate("Lets select our feature...");
+        narrator.narrate(NORMAL, "Lets select our feature...");
         featureListViewTester.selectFeature(featureName);
 
         //---------------------------------------------------------------------------------------..
         // Sprints Page
         //---------------------------------------------------------------------------------------..
-        narrator.narrate("We are now on the Sprints page of our product. On this page we however only see sprints related to the Feature we just selected.");
+        narrator.narrate(NORMAL, "We are now on the Sprints page of our product. On this page we however only see sprints related to the Feature we just selected.");
         narrator.pause(0.5f);
-        narrator.narrate("Lets create a sprint for our feature and just call it: Minimum Viable Product.");
-        narrator.narrate("Select the Create button.");
+        narrator.narrate(NORMAL, "Lets create a sprint for our feature and just call it: Minimum Viable Product.");
+        narrator.narrate(NORMAL, "Select the Create button.");
         //---------------------------------------------------------------------------------------..
         // Create a Sprint
         //---------------------------------------------------------------------------------------..
         seleniumHandler.click(SprintListView.CREATE_SPRINT_BUTTON);
         seleniumHandler.setTextField(SprintDialog.SPRINT_NAME_FIELD, sprintName);
-        narrator.narrateAsync("Select Save to close the dialog and persist our sprint.");
+        narrator.narrateAsync(NORMAL, "Select Save to close the dialog and persist our sprint.");
         seleniumHandler.click(SprintDialog.CONFIRM_BUTTON);
-        narrator.pushExaggeration(EXAGGERATE_HIGH);
-        narrator.narrate("That was easy!");
-        narrator.pop();
-        narrator.narrate("Now we need to start planning our sprint. We do this in the Tasks page. Not by selecting the sprint, but configuring it with the small crog icon on the right side.");
+        narrator.narrate(INTENSE, "That was easy!");
+        narrator.narrate(NORMAL, "Now we need to start planning our sprint. We do this in the Tasks page. Not by selecting the sprint, but configuring it with the small crog icon on the right side.");
         seleniumHandler.click(SprintListView.SPRINT_GRID_CONFIG_BUTTON_PREFIX + sprintName);
 
         //---------------------------------------------------------------------------------------..
         // Tasks Page
         //---------------------------------------------------------------------------------------..
-        narrator.narrate("This is the page where you plan your sprint including the gantt chart.");
+        narrator.narrate(NORMAL, "This is the page where you plan your sprint including the gantt chart.");
         narrator.pause(1f);
-        narrator.narrate("Lets start by adding a milestone that will fix the starting point of our sprint.");
-        narrator.narrate("Select the Create Milestone button...");
+        narrator.narrate(NORMAL, "Lets start by adding a milestone that will fix the starting point of our sprint.");
+        narrator.narrate(NORMAL, "Select the Create Milestone button...");
         seleniumHandler.click(TaskListView.CREATE_MILESTONE_BUTTON_ID);
         String milestoneName = "New Milestone-1";
         seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, milestoneName);
-        narrator.narrate("Lets also create a story. We use stories as containers for the actual work items called tasks.");
+        narrator.narrate(NORMAL, "Lets also create a story. We use stories as containers for the actual work items called tasks.");
         seleniumHandler.click(TaskListView.CREATE_STORY_BUTTON_ID);
         seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, "New Story-2");
-        narrator.narrate("You can see that all the new created items are always added to the end of our table.");
+        narrator.narrate(NORMAL, "You can see that all the new created items are always added to the end of our table.");
         narrator.pause(1f);
-        narrator.narrate("Lets create 3 additional tasks as work units for our first sprint.");
+        narrator.narrate(NORMAL, "Lets create 3 additional tasks as work units for our first sprint.");
         seleniumHandler.click(TaskListView.CREATE_TASK_BUTTON_ID);
         seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, "New Task-3");
         seleniumHandler.click(TaskListView.CREATE_TASK_BUTTON_ID);
         seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, "New Task-4");
         seleniumHandler.click(TaskListView.CREATE_TASK_BUTTON_ID);
         seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, "New Task-5");
-        narrator.pushExaggeration(EXAGGERATE_HIGH);
-        narrator.narrate("Good!");
-        narrator.pop();
+        narrator.narrate(INTENSE, "Good!");
         narrator.pause(1f);
-        narrator.narrate("Select the edit button to change to whole table into edit mode...");
+        narrator.narrate(NORMAL, "Select the edit button to change to whole table into edit mode...");
         seleniumHandler.click(TaskListView.EDIT_BUTTON_ID);
         narrator.pause(1f);
-        narrator.narrate("We can now edit all valid milestone, story or task cells.");
-        narrator.narrate("Lets give the milestone a fixed start date and time. We want our developers to start working on this Monday first thing in the morning.");
+        narrator.narrate(NORMAL, "We can now edit all valid milestone, story or task cells.");
+        narrator.narrate(NORMAL, "Lets give the milestone a fixed start date and time. We want our developers to start working on this Monday first thing in the morning.");
         seleniumHandler.click(TaskListView.TASK_GRID_NAME_PREFIX + milestoneName);
 
 
-        narrator.narrate("If you look carefully, you will notice that all three tasks have been assigned to the story. The story is the parent of these tasks.");
-        narrator.narrate("Kassandra does that automatically. All three tasks also are automatically assigned to myself.");
-        narrator.narrate("But, as i am not a developer, we will assign these tasks to a developer.");
-        narrator.narrate("We want our story to depend on our milestone. The story can only start after the milestone.");
-        narrator.narrate("Defining such a dependency between a task or story to other tasks or stories can be done in 3 different ways...");
+        narrator.narrate(NORMAL, "If you look carefully, you will notice that all three tasks have been assigned to the story. The story is the parent of these tasks.");
+        narrator.narrate(NORMAL, "Kassandra does that automatically. All three tasks also are automatically assigned to myself.");
+        narrator.narrate(NORMAL, "But, as i am not a developer, we will assign these tasks to a developer.");
+        narrator.narrate(NORMAL, "We want our story to depend on our milestone. The story can only start after the milestone.");
+        narrator.narrate(NORMAL, "Defining such a dependency between a task or story to other tasks or stories can be done in 3 different ways...");
 
 
 //        sprintListViewTester.selectSprint(sprintName);

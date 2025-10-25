@@ -22,7 +22,7 @@ import de.bushnaq.abdalla.projecthub.ai.chatterbox.Narrator;
 import org.junit.jupiter.api.Test;
 
 public class TestCoquiTTS {
-    Narrator narrator = new Narrator("tts", 1.0f, 0.5f, .3f);
+    Narrator narrator = new Narrator("tts");
 
     @Test
     public void listLanguages() throws Exception {

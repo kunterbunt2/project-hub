@@ -23,7 +23,7 @@ import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import org.junit.jupiter.api.Test;
 
 public class TestChatterboxTTS {
-    Narrator        narrator        = new Narrator("tts", 1.0f, 0.5f, .3f);
+    Narrator        narrator        = new Narrator("tts");
     SeleniumHandler seleniumHandler = new SeleniumHandler();
 
     @Test

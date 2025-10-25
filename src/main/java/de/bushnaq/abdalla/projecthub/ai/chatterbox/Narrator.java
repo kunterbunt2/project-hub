@@ -63,12 +63,9 @@ public class Narrator {
     @Setter
     private              float                    temperature;
 
-    public Narrator(String relativeFolder, float temperature, float exaggeration, float cfgWeight) {
-        this.audioDir     = Path.of(relativeFolder);
-        this.cacheDir     = this.audioDir.resolve("cache");
-        this.temperature  = temperature;
-        this.exaggeration = exaggeration;
-        this.cfgWeight    = cfgWeight;
+    public Narrator(String relativeFolder) {
+        this.audioDir = Path.of(relativeFolder);
+        this.cacheDir = this.audioDir.resolve("cache");
         try {
             Files.createDirectories(this.audioDir);
             Files.createDirectories(this.cacheDir);
@@ -126,21 +123,21 @@ public class Narrator {
     // Resolve effective values: look from top-most frame down; fall back to defaults
     private float effectiveCfgWeight() {
         for (NarratorAttribute f : attrStack) {
-            if (f.cfg != null) return f.cfg;
+            if (f.cfg_weight != null) return f.cfg_weight;
         }
         return cfgWeight;
     }
 
     private float effectiveExaggeration() {
         for (NarratorAttribute f : attrStack) {
-            if (f.ex != null) return f.ex;
+            if (f.exaggeration != null) return f.exaggeration;
         }
         return exaggeration;
     }
 
     private float effectiveTemperature() {
         for (NarratorAttribute f : attrStack) {
-            if (f.temp != null) return f.temp;
+            if (f.temperature != null) return f.temperature;
         }
         return temperature;
     }
@@ -239,9 +236,9 @@ public class Narrator {
     // New: Non-blocking narration with per-call attributes override
     public Playback narrateAsync(NarratorAttribute attrs, String text) throws Exception {
         // If attrs provided, take precedence; else fall back to stack/defaults
-        float eTemp = attrs != null && attrs.getTemp() != null ? attrs.getTemp() : effectiveTemperature();
-        float eEx   = attrs != null && attrs.getEx() != null ? attrs.getEx() : effectiveExaggeration();
-        float eCfg  = attrs != null && attrs.getCfg() != null ? attrs.getCfg() : effectiveCfgWeight();
+        float eTemp = attrs != null && attrs.getTemperature() != null ? attrs.getTemperature() : effectiveTemperature();
+        float eEx   = attrs != null && attrs.getExaggeration() != null ? attrs.getExaggeration() : effectiveExaggeration();
+        float eCfg  = attrs != null && attrs.getCfg_weight() != null ? attrs.getCfg_weight() : effectiveCfgWeight();
         return narrateResolved(eTemp, eEx, eCfg, text);
     }
 
@@ -365,19 +362,19 @@ public class Narrator {
 
     @Deprecated
     public Narrator pushCfgWeight(float value) {
-        topOrNew().cfg = value;
+        topOrNew().cfg_weight = value;
         return this;
     }
 
     @Deprecated
     public Narrator pushExaggeration(float value) {
-        topOrNew().ex = value;
+        topOrNew().exaggeration = value;
         return this;
     }
 
     @Deprecated
     public Narrator pushTemperature(float value) {
-        topOrNew().temp = value;
+        topOrNew().temperature = value;
         return this;
     }
 
