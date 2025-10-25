@@ -274,9 +274,9 @@ public class ProductListViewTester {
                     seleniumHandler.takeElementScreenShot(seleniumHandler.findElement(By.id(LoginView.LOGIN_VIEW)), LoginView.LOGIN_VIEW, screenshotFileName);
                 }
 
-                // Click with JavaScript for more reliability
-                seleniumHandler.executeJavaScript("document.getElementById('" + LoginView.OIDC_LOGIN_BUTTON + "').click();");
-                System.out.println("OIDC Login: Clicked login button via JavaScript");
+                // Click with SeleniumHandler for mouse movement and humanization
+                seleniumHandler.click(LoginView.OIDC_LOGIN_BUTTON);
+                System.out.println("OIDC Login: Clicked login button with mouse movement");
 
                 // Wait a moment and check the current URL
 //                try {
@@ -296,15 +296,19 @@ public class ProductListViewTester {
                     seleniumHandler.waitUntil(ExpectedConditions.presenceOfElementLocated(By.id("username")));
 //                    System.out.println("OIDC Login: Username field found");
 
-                    // Fill in credentials
+                    // Fill in credentials with humanized typing and mouse movement
 //                    System.out.println("OIDC Login: Filling in credentials");
-                    seleniumHandler.findElement(By.id("username")).sendKeys(username);
-                    seleniumHandler.findElement(By.id("password")).sendKeys(password);
+                    WebElement usernameField = seleniumHandler.findElement(By.id("username"));
+                    WebElement passwordField = seleniumHandler.findElement(By.id("password"));
 
-                    // Click login button
+                    // Type into Keycloak fields with humanization
+                    seleniumHandler.typeIntoElement(usernameField, username);
+                    seleniumHandler.typeIntoElement(passwordField, password);
+
+                    // Click login button with mouse movement
 //                    System.out.println("OIDC Login: Clicking Keycloak login button");
                     WebElement loginButton = seleniumHandler.findElement(By.id("kc-login"));
-                    loginButton.click();
+                    seleniumHandler.clickElement(loginButton);
 
                     // Wait for redirect back
 //                    System.out.println("OIDC Login: Waiting for redirect back to application");

@@ -127,6 +127,19 @@ public class SeleniumHandler {
         logger.info("Clicked element with ID: " + id);
     }
 
+    /**
+     * Clicks a WebElement directly with mouse movement support.
+     * This is useful for elements that aren't part of the standard Vaadin component structure,
+     * such as Keycloak login buttons or other external pages.
+     *
+     * @param element the WebElement to click
+     */
+    public void clickElement(WebElement element) {
+        moveMouseToElement(element);
+        element.click();
+        logger.info("Clicked element with mouse movement");
+    }
+
     @PreDestroy
     public void destroy() {
         if (videoRecorder.isRecording()) {
@@ -1233,6 +1246,27 @@ public class SeleniumHandler {
         WebElement i = e.findElement(By.tagName("input"));
         moveMouseToElement(i);
         i.click();
+    }
+
+    /**
+     * Types text into a WebElement directly with humanized typing support.
+     * This is useful for input fields that aren't part of the standard Vaadin component structure,
+     * such as Keycloak login fields or other external pages.
+     *
+     * @param element the WebElement (input or textarea) to type into
+     * @param text    the text to type
+     */
+    public void typeIntoElement(WebElement element, String text) {
+        moveMouseToElement(element);
+        // Clear any existing text first
+        String value = element.getAttribute("value");
+        if (value != null && !value.isEmpty()) {
+            element.sendKeys(Keys.CONTROL + "a");
+            element.sendKeys(Keys.DELETE);
+        }
+        // Type with humanization
+        typeText(element, text);
+        logger.info("Typed text into element with humanization");
     }
 
     /**
