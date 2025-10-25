@@ -33,8 +33,6 @@ import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -43,29 +41,31 @@ import java.util.regex.Pattern;
 
 public class Narrator {
 
-    private static final Pattern                  ID_PREFIX    = Pattern.compile("^(\\d{3,})-.*");
-    private static final Logger                   logger       = LoggerFactory.getLogger(Narrator.class);
-    // Single composite attribute stack: top frame holds latest overrides; search top-down
-    private final        Deque<NarratorAttribute> attrStack    = new ArrayDeque<>();
-    private final        Path                     audioDir;// Directory to store generated audio files
-    private final        Path                     cacheDir;// Subfolder for canonical cached files
+    private static final Pattern  ID_PREFIX    = Pattern.compile("^(\\d{3,})-.*");
+    private static final Logger   logger       = LoggerFactory.getLogger(Narrator.class);
+    private final        Path     audioDir; // Directory to store generated audio files
+    private final        Path     cacheDir; // Subfolder for canonical cached files
     @Getter
     @Setter
-    private              float                    cfgWeight;
+    private              float    cfgWeight;
     @Getter
     @Setter
-    private              float                    exaggeration;
-    private              Playback                 lastPlayback = null;
-    private              int                      nextId; // incrementing file id per audioDir
+    private              float    exaggeration;
+    private              Playback lastPlayback = null;
+    private              int      nextId; // incrementing file id per audioDir
     // Serialize all playback: each request waits for the previous to finish before starting
-    private final        Object                   queueLock    = new Object();
+    private final        Object   queueLock    = new Object();
     @Getter
     @Setter
-    private              float                    temperature;
+    private              float    temperature;
 
     public Narrator(String relativeFolder) {
         this.audioDir = Path.of(relativeFolder);
         this.cacheDir = this.audioDir.resolve("cache");
+        // Set sensible defaults used when no per-call attributes are provided
+        this.temperature  = 0.5f;
+        this.exaggeration = 0.5f;
+        this.cfgWeight    = 1.0f;
         try {
             Files.createDirectories(this.audioDir);
             Files.createDirectories(this.cacheDir);
@@ -118,28 +118,6 @@ public class Narrator {
     private static String crop(String s, int maxLen) {
         if (s == null) return "";
         return s.length() <= maxLen ? s : s.substring(0, maxLen);
-    }
-
-    // Resolve effective values: look from top-most frame down; fall back to defaults
-    private float effectiveCfgWeight() {
-        for (NarratorAttribute f : attrStack) {
-            if (f.cfg_weight != null) return f.cfg_weight;
-        }
-        return cfgWeight;
-    }
-
-    private float effectiveExaggeration() {
-        for (NarratorAttribute f : attrStack) {
-            if (f.exaggeration != null) return f.exaggeration;
-        }
-        return exaggeration;
-    }
-
-    private float effectiveTemperature() {
-        for (NarratorAttribute f : attrStack) {
-            if (f.temperature != null) return f.temperature;
-        }
-        return temperature;
     }
 
     /**
@@ -219,26 +197,26 @@ public class Narrator {
         narrateAsync(text).await();
     }
 
-    // New: Blocking narration with per-call attributes override
+    // Blocking narration with per-call attributes override
     public void narrate(NarratorAttribute attrs, String text) throws Exception {
         narrateAsync(attrs, text).await();
     }
 
     // Non-blocking narration that returns a handle to await or stop playback
     public Playback narrateAsync(String text) throws Exception {
-        // Resolve effective attributes from frames or defaults
-        float eTemp = effectiveTemperature();
-        float eEx   = effectiveExaggeration();
-        float eCfg  = effectiveCfgWeight();
+        // Use instance defaults
+        float eTemp = this.temperature;
+        float eEx   = this.exaggeration;
+        float eCfg  = this.cfgWeight;
         return narrateResolved(eTemp, eEx, eCfg, text);
     }
 
-    // New: Non-blocking narration with per-call attributes override
+    // Non-blocking narration with per-call attributes override
     public Playback narrateAsync(NarratorAttribute attrs, String text) throws Exception {
-        // If attrs provided, take precedence; else fall back to stack/defaults
-        float eTemp = attrs != null && attrs.getTemperature() != null ? attrs.getTemperature() : effectiveTemperature();
-        float eEx   = attrs != null && attrs.getExaggeration() != null ? attrs.getExaggeration() : effectiveExaggeration();
-        float eCfg  = attrs != null && attrs.getCfg_weight() != null ? attrs.getCfg_weight() : effectiveCfgWeight();
+        // If attrs provided, take precedence; else fall back to instance defaults
+        float eTemp = attrs != null && attrs.getTemperature() != null ? attrs.getTemperature() : this.temperature;
+        float eEx   = attrs != null && attrs.getExaggeration() != null ? attrs.getExaggeration() : this.exaggeration;
+        float eCfg  = attrs != null && attrs.getCfg_weight() != null ? attrs.getCfg_weight() : this.cfgWeight;
         return narrateResolved(eTemp, eEx, eCfg, text);
     }
 
@@ -354,30 +332,6 @@ public class Narrator {
         Thread.sleep((long) (seconds * 1000));
     }
 
-    // Pop entire frame: removes all attributes pushed into the current frame
-    @Deprecated
-    public void pop() {
-        if (!attrStack.isEmpty()) attrStack.pop();
-    }
-
-    @Deprecated
-    public Narrator pushCfgWeight(float value) {
-        topOrNew().cfg_weight = value;
-        return this;
-    }
-
-    @Deprecated
-    public Narrator pushExaggeration(float value) {
-        topOrNew().exaggeration = value;
-        return this;
-    }
-
-    @Deprecated
-    public Narrator pushTemperature(float value) {
-        topOrNew().temperature = value;
-        return this;
-    }
-
     private static String sanitizePrefix(String s) {
         // Replace non-filename-safe characters with '_', collapse repeats, trim underscores
         String cleaned = s
@@ -404,16 +358,6 @@ public class Narrator {
             // Fallback to simple hashCode if SHA-256 not available
             return Integer.toHexString(input.hashCode());
         }
-    }
-
-    // Helper: ensure there's a top frame to write into
-    private NarratorAttribute topOrNew() {
-        NarratorAttribute top = attrStack.peek();
-        if (top == null) {
-            top = new NarratorAttribute();
-            attrStack.push(top);
-        }
-        return top;
     }
 
     // Playback handle for non-blocking control with queue support
