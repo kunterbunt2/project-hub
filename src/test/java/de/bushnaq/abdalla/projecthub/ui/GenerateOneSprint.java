@@ -126,9 +126,8 @@ public class GenerateOneSprint extends AbstractUiTestUtil {
         // Set browser window to a fixed size for consistent screenshots
 //        seleniumHandler.setWindowSize(1024, 800);
         seleniumHandler.setWindowSize(1800, 1300);
-        // Enable humanized typing for demo-like input behavior
+        // Enable humanized typing and mouse movement for demo-like input behavior
         seleniumHandler.setHumanize(true);
-        seleniumHandler.setMouseMovementEnabled(true);
 //        seleniumHandler.setTypingDelayMillis(50);
 
 //        printAuthentication();
@@ -165,115 +164,115 @@ public class GenerateOneSprint extends AbstractUiTestUtil {
         seleniumHandler.click(ProductDialog.CONFIRM_BUTTON);
         narrator.narrate(INTENSE, "And we got ourself a new product!").pause();
 
+
+        narrator.narrate(NORMAL, "With the little notepad and trashcan icons, on the right side, you can edit or delete your product.").pause();
+        narrator.narrate(NORMAL, "Lets select our product...");
+        productListViewTester.selectProduct(productName);
+
+        //---------------------------------------------------------------------------------------..
+        // Versions Page
+        //---------------------------------------------------------------------------------------..
+        narrator.narrate(NORMAL, "This takes us to the Versions Page.").pause();
+        narrator.narrate(NORMAL, "Every Product can have any number of versions.").pause();
+        narrator.narrate(NORMAL, "Jupiter is a totally new product, so lets create a first version for it.");
+        narrator.narrate(NORMAL, "Select the Create button...");
+        //---------------------------------------------------------------------------------------..
+        // Create a Version
+        //---------------------------------------------------------------------------------------..
+        seleniumHandler.click(VersionListView.CREATE_VERSION_BUTTON);
+        narrator.narrate(NORMAL, "Lets use the obvious. One, dot, zero, dot, zero.");
+        seleniumHandler.setTextField(VersionDialog.VERSION_NAME_FIELD, versionName);
+        narrator.narrateAsync(NORMAL, "Select Save to close the dialog and persist our version.");
+        seleniumHandler.click(VersionDialog.CONFIRM_BUTTON);
+        narrator.narrate(INTENSE, "And we got ourself a new version!").longPause();
+        narrator.narrate(NORMAL, "The little notepad and trashcan icons, on the right side, can be used to edit or delete your version.").pause();
+        narrator.narrate(NORMAL, "Lets select our version.");
+        versionListViewTester.selectVersion(versionName);
+
+        //---------------------------------------------------------------------------------------..
+        // Features Page
+        //---------------------------------------------------------------------------------------..
+        narrator.narrate(NORMAL, "This takes us to the Features Page. Features are what we actually want to plan and track, although they are split into one or more sprints.").pause();
+        narrator.narrate(NORMAL, "Every product version can have any number of features.").pause();
+        narrator.narrate(NORMAL, "Lets assume Jupiter is a server that keeps track of micro services configurations.").pause();
+        narrator.narrate(NORMAL, "So the first feature would be a rest API that supports retrieving configurations.").pause();
+        narrator.narrate(NORMAL, "Select the Create button...");
+        //---------------------------------------------------------------------------------------..
+        // Create Feature
+        //---------------------------------------------------------------------------------------..
+        seleniumHandler.click(FeatureListView.CREATE_FEATURE_BUTTON_ID);
+        narrator.narrate(NORMAL, "Lets call the feature 'Property request API'.");
+        seleniumHandler.setTextField(FeatureDialog.FEATURE_NAME_FIELD, featureName);
+        narrator.narrateAsync(NORMAL, "Select Save to close the dialog and persist our feature.");
+        seleniumHandler.click(FeatureDialog.CONFIRM_BUTTON);
+        narrator.narrate(INTENSE, "Jupiter has its first feature!").longPause();
+        narrator.narrate(NORMAL, "Again, as in the other pages, the little notepad and trashcan icons, on the right side, can be used to edit or delete your feature.").pause();
+        narrator.narrate(NORMAL, "Lets select our feature...");
+        featureListViewTester.selectFeature(featureName);
+
+        //---------------------------------------------------------------------------------------..
+        // Sprints Page
+        //---------------------------------------------------------------------------------------..
+        narrator.narrate(NORMAL, "We are now on the Sprints page of our product. On this page we however only see sprints related to the Feature we just selected.").pause();
+        narrator.narrate(NORMAL, "Lets create a sprint for our feature and just call it: Minimum Viable Product.").pause();
+        narrator.narrate(NORMAL, "Select the Create button.");
+        //---------------------------------------------------------------------------------------..
+        // Create a Sprint
+        //---------------------------------------------------------------------------------------..
+        seleniumHandler.click(SprintListView.CREATE_SPRINT_BUTTON);
+        seleniumHandler.setTextField(SprintDialog.SPRINT_NAME_FIELD, sprintName);
+        narrator.narrateAsync(NORMAL, "Select Save to close the dialog and persist our sprint.");
+        seleniumHandler.click(SprintDialog.CONFIRM_BUTTON);
+        narrator.narrate(INTENSE, "That was easy!").longPause();
+        narrator.narrate(NORMAL, "Now we need to start planning our sprint. We do this in the Tasks page. Not by selecting the sprint, but configuring it with the small crog icon on the right side.");
+        seleniumHandler.click(SprintListView.SPRINT_GRID_CONFIG_BUTTON_PREFIX + sprintName);
+
+        //---------------------------------------------------------------------------------------..
+        // Tasks Page
+        //---------------------------------------------------------------------------------------..
+        narrator.narrate(NORMAL, "This is the page where you plan your sprint including the gantt chart.").pause();
+        narrator.narrate(NORMAL, "Lets start by adding a milestone that will fix the starting point of our sprint.").pause();
+        narrator.narrate(NORMAL, "Select the Create Milestone button...");
+        seleniumHandler.click(TaskListView.CREATE_MILESTONE_BUTTON_ID);
+        String milestoneName = "New Milestone-1";
+        seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, milestoneName);
+        narrator.narrate(NORMAL, "Lets also create a story. We use stories as containers for the actual work items called tasks.");
+        seleniumHandler.click(TaskListView.CREATE_STORY_BUTTON_ID);
+        seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, "New Story-2");
+        narrator.narrate(NORMAL, "You can see that all the new created items are always added to the end of our table.").pause();
+        narrator.narrate(NORMAL, "Lets create 3 additional tasks as work units for our first sprint.");
+        seleniumHandler.click(TaskListView.CREATE_TASK_BUTTON_ID);
+        seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, "New Task-3");
+        seleniumHandler.click(TaskListView.CREATE_TASK_BUTTON_ID);
+        seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, "New Task-4");
+        seleniumHandler.click(TaskListView.CREATE_TASK_BUTTON_ID);
+        seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, "New Task-5");
+        narrator.narrate(INTENSE, "Good!").longPause();
+        narrator.narrate(NORMAL, "Select the edit button to change to whole table into edit mode...").pause();
+        seleniumHandler.click(TaskListView.EDIT_BUTTON_ID);
+        narrator.narrate(NORMAL, "We can now edit all valid milestone, story or task cells.").pause();
+        narrator.narrate(NORMAL, "Lets give the milestone a fixed start date and time. We want our developers to start working on this Monday first thing in the morning.");
+        seleniumHandler.click(TaskListView.TASK_GRID_NAME_PREFIX + milestoneName);
+
+
+        narrator.narrate(NORMAL, "If you look carefully, you will notice that all three tasks have been assigned to the story.").pause();
+        narrator.narrate(NORMAL, "The story is the parent of these tasks.").pause();
+        narrator.narrate(NORMAL, "Kassandra does that automatically. All three tasks also are automatically assigned to myself.").pause();
+        narrator.narrate(NORMAL, "But, as i am not a developer, we will assign these tasks to a developer.").pause();
+        narrator.narrate(NORMAL, "We want our story to depend on our milestone. The story can only start after the milestone.").pause();
+        narrator.narrate(NORMAL, "Defining such a dependency between a task or story to other tasks or stories can be done in 3 different ways...");
+
+
+        sprintListViewTester.selectSprint(sprintName);
+        seleniumHandler.waitForElementToBeClickable(RenderUtil.GANTT_CHART);
+        seleniumHandler.waitForElementToBeClickable(RenderUtil.BURNDOWN_CHART);
+
+        // After visiting the SprintQualityBoard, go back to SprintListView and use the column config button
+        seleniumHandler.click("Sprints (" + sprintName + ")"); // Go back to SprintListView using breadcrumb
+        // Find and click the column configuration button
+        seleniumHandler.click(SprintListView.SPRINT_GRID_CONFIG_BUTTON_PREFIX + sprintName);
+        seleniumHandler.waitForElementToBeClickable(RenderUtil.GANTT_CHART);
         if (false) {
-
-            narrator.narrate(NORMAL, "With the little notepad and trashcan icons, on the right side, you can edit or delete your product.").pause();
-            narrator.narrate(NORMAL, "Lets select our product...");
-            productListViewTester.selectProduct(productName);
-
-            //---------------------------------------------------------------------------------------..
-            // Versions Page
-            //---------------------------------------------------------------------------------------..
-            narrator.narrate(NORMAL, "This takes us to the Versions Page.").pause();
-            narrator.narrate(NORMAL, "Every Product can have any number of versions.").pause();
-            narrator.narrate(NORMAL, "Jupiter is a totally new product, so lets create a first version for it.");
-            narrator.narrate(NORMAL, "Select the Create button...");
-            //---------------------------------------------------------------------------------------..
-            // Create a Version
-            //---------------------------------------------------------------------------------------..
-            seleniumHandler.click(VersionListView.CREATE_VERSION_BUTTON);
-            narrator.narrate(NORMAL, "Lets use the obvious. One, dot, zero, dot, zero.");
-            seleniumHandler.setTextField(VersionDialog.VERSION_NAME_FIELD, versionName);
-            narrator.narrateAsync(NORMAL, "Select Save to close the dialog and persist our version.");
-            seleniumHandler.click(VersionDialog.CONFIRM_BUTTON);
-            narrator.narrate(INTENSE, "And we got ourself a new version!").longPause();
-            narrator.narrate(NORMAL, "The little notepad and trashcan icons, on the right side, can be used to edit or delete your version.").pause();
-            narrator.narrate(NORMAL, "Lets select our version.");
-            versionListViewTester.selectVersion(versionName);
-
-            //---------------------------------------------------------------------------------------..
-            // Features Page
-            //---------------------------------------------------------------------------------------..
-            narrator.narrate(NORMAL, "This takes us to the Features Page. Features are what we actually want to plan and track, although they are split into one or more sprints.").pause();
-            narrator.narrate(NORMAL, "Every product version can have any number of features.").pause();
-            narrator.narrate(NORMAL, "Lets assume Jupiter is a server that keeps track of micro services configurations.").pause();
-            narrator.narrate(NORMAL, "So the first feature would be a rest API that supports retrieving configurations.").pause();
-            narrator.narrate(NORMAL, "Select the Create button...");
-            //---------------------------------------------------------------------------------------..
-            // Create Feature
-            //---------------------------------------------------------------------------------------..
-            seleniumHandler.click(FeatureListView.CREATE_FEATURE_BUTTON_ID);
-            narrator.narrate(NORMAL, "Lets call the feature 'Property request API'.");
-            seleniumHandler.setTextField(FeatureDialog.FEATURE_NAME_FIELD, featureName);
-            narrator.narrateAsync(NORMAL, "Select Save to close the dialog and persist our feature.");
-            seleniumHandler.click(FeatureDialog.CONFIRM_BUTTON);
-            narrator.narrate(INTENSE, "Jupiter has its first feature!").longPause();
-            narrator.narrate(NORMAL, "Again, as in the other pages, the little notepad and trashcan icons, on the right side, can be used to edit or delete your feature.").pause();
-            narrator.narrate(NORMAL, "Lets select our feature...");
-            featureListViewTester.selectFeature(featureName);
-
-            //---------------------------------------------------------------------------------------..
-            // Sprints Page
-            //---------------------------------------------------------------------------------------..
-            narrator.narrate(NORMAL, "We are now on the Sprints page of our product. On this page we however only see sprints related to the Feature we just selected.").pause();
-            narrator.narrate(NORMAL, "Lets create a sprint for our feature and just call it: Minimum Viable Product.").pause();
-            narrator.narrate(NORMAL, "Select the Create button.");
-            //---------------------------------------------------------------------------------------..
-            // Create a Sprint
-            //---------------------------------------------------------------------------------------..
-            seleniumHandler.click(SprintListView.CREATE_SPRINT_BUTTON);
-            seleniumHandler.setTextField(SprintDialog.SPRINT_NAME_FIELD, sprintName);
-            narrator.narrateAsync(NORMAL, "Select Save to close the dialog and persist our sprint.");
-            seleniumHandler.click(SprintDialog.CONFIRM_BUTTON);
-            narrator.narrate(INTENSE, "That was easy!").longPause();
-            narrator.narrate(NORMAL, "Now we need to start planning our sprint. We do this in the Tasks page. Not by selecting the sprint, but configuring it with the small crog icon on the right side.");
-            seleniumHandler.click(SprintListView.SPRINT_GRID_CONFIG_BUTTON_PREFIX + sprintName);
-
-            //---------------------------------------------------------------------------------------..
-            // Tasks Page
-            //---------------------------------------------------------------------------------------..
-            narrator.narrate(NORMAL, "This is the page where you plan your sprint including the gantt chart.").pause();
-            narrator.narrate(NORMAL, "Lets start by adding a milestone that will fix the starting point of our sprint.").pause();
-            narrator.narrate(NORMAL, "Select the Create Milestone button...");
-            seleniumHandler.click(TaskListView.CREATE_MILESTONE_BUTTON_ID);
-            String milestoneName = "New Milestone-1";
-            seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, milestoneName);
-            narrator.narrate(NORMAL, "Lets also create a story. We use stories as containers for the actual work items called tasks.");
-            seleniumHandler.click(TaskListView.CREATE_STORY_BUTTON_ID);
-            seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, "New Story-2");
-            narrator.narrate(NORMAL, "You can see that all the new created items are always added to the end of our table.").pause();
-            narrator.narrate(NORMAL, "Lets create 3 additional tasks as work units for our first sprint.");
-            seleniumHandler.click(TaskListView.CREATE_TASK_BUTTON_ID);
-            seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, "New Task-3");
-            seleniumHandler.click(TaskListView.CREATE_TASK_BUTTON_ID);
-            seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, "New Task-4");
-            seleniumHandler.click(TaskListView.CREATE_TASK_BUTTON_ID);
-            seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, "New Task-5");
-            narrator.narrate(INTENSE, "Good!").longPause();
-            narrator.narrate(NORMAL, "Select the edit button to change to whole table into edit mode...").pause();
-            seleniumHandler.click(TaskListView.EDIT_BUTTON_ID);
-            narrator.narrate(NORMAL, "We can now edit all valid milestone, story or task cells.").pause();
-            narrator.narrate(NORMAL, "Lets give the milestone a fixed start date and time. We want our developers to start working on this Monday first thing in the morning.");
-            seleniumHandler.click(TaskListView.TASK_GRID_NAME_PREFIX + milestoneName);
-
-
-            narrator.narrate(NORMAL, "If you look carefully, you will notice that all three tasks have been assigned to the story.").pause();
-            narrator.narrate(NORMAL, "The story is the parent of these tasks.").pause();
-            narrator.narrate(NORMAL, "Kassandra does that automatically. All three tasks also are automatically assigned to myself.").pause();
-            narrator.narrate(NORMAL, "But, as i am not a developer, we will assign these tasks to a developer.").pause();
-            narrator.narrate(NORMAL, "We want our story to depend on our milestone. The story can only start after the milestone.").pause();
-            narrator.narrate(NORMAL, "Defining such a dependency between a task or story to other tasks or stories can be done in 3 different ways...");
-
-
-            sprintListViewTester.selectSprint(sprintName);
-            seleniumHandler.waitForElementToBeClickable(RenderUtil.GANTT_CHART);
-            seleniumHandler.waitForElementToBeClickable(RenderUtil.BURNDOWN_CHART);
-
-            // After visiting the SprintQualityBoard, go back to SprintListView and use the column config button
-            seleniumHandler.click("Sprints (" + sprintName + ")"); // Go back to SprintListView using breadcrumb
-            // Find and click the column configuration button
-            seleniumHandler.click(SprintListView.SPRINT_GRID_CONFIG_BUTTON_PREFIX + sprintName);
-            seleniumHandler.waitForElementToBeClickable(RenderUtil.GANTT_CHART);
 
 
 //        userListViewTester.switchToUserListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));

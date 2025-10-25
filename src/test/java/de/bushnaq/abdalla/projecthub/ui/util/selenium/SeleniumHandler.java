@@ -43,6 +43,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Stack;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -61,10 +62,7 @@ public class SeleniumHandler {
     private final        Duration        implicitWaitDuration;
     private final        Stack<Duration> implicitWaitStack             = new Stack<>();
     private final        Logger          logger                        = LoggerFactory.getLogger(this.getClass());
-    // Mouse movement configuration
-    private              boolean         mouseMovementEnabled          = false;
-    private              int             mouseMovementSpeed            = 5;    // pixels per step
-    private              int             mouseMovementStepDelay        = 5;    // milliseconds between steps
+    private final        Random          random                        = new Random(); // For human-like randomness
     private              Robot           robot                         = null; // Lazily initialized
     private              int             typingDelayMillis             = 50;
     private final        VideoRecorder   videoRecorder;
@@ -492,24 +490,6 @@ public class SeleniumHandler {
     }
 
     /**
-     * Gets the current mouse movement speed in pixels per step.
-     *
-     * @return the number of pixels moved per step
-     */
-    public int getMouseMovementSpeed() {
-        return mouseMovementSpeed;
-    }
-
-    /**
-     * Gets the current delay between mouse movement steps.
-     *
-     * @return the delay in milliseconds
-     */
-    public int getMouseMovementStepDelay() {
-        return mouseMovementStepDelay;
-    }
-
-    /**
      * Gets or initializes the Robot instance for mouse movement.
      * Returns null if Robot cannot be initialized (e.g., in headless mode or due to security restrictions).
      *
@@ -564,6 +544,106 @@ public class SeleniumHandler {
     }
 
     /**
+     * Performs a human-like mouse movement from one point to another.
+     * Uses a B-spline curve for natural arc-like path and variable speed with easing
+     * (starts fast, ends slow) to simulate real human mouse movement.
+     *
+     * @param fromX starting X coordinate
+     * @param fromY starting Y coordinate
+     * @param toX   target X coordinate
+     * @param toY   target Y coordinate
+     */
+    private void humanLikeMouseMove(int fromX, int fromY, int toX, int toY) {
+        Robot robotInstance = getRobot();
+        if (robotInstance == null) {
+            return;
+        }
+
+        int    deltaX   = toX - fromX;
+        int    deltaY   = toY - fromY;
+        double distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+        // If the distance is very small, just move directly
+        if (distance < 5) {
+            robotInstance.mouseMove(toX, toY);
+            return;
+        }
+
+        // Generate control points for B-spline to create a shallow arc
+        // Add a perpendicular offset to create a curved path
+        double midX = (fromX + toX) / 2.0;
+        double midY = (fromY + toY) / 2.0;
+
+        // Calculate perpendicular direction for the curve
+        double perpX      = -deltaY;
+        double perpY      = deltaX;
+        double perpLength = Math.sqrt(perpX * perpX + perpY * perpY);
+
+        // Normalize and scale the perpendicular offset (shallow arc, about 5-10% of distance)
+        double curveFactor = 0.05 + random.nextDouble() * 0.05; // 5-10% arc
+        double offsetX     = (perpX / perpLength) * distance * curveFactor;
+        double offsetY     = (perpY / perpLength) * distance * curveFactor;
+
+        // Randomly choose arc direction
+        if (random.nextBoolean()) {
+            offsetX = -offsetX;
+            offsetY = -offsetY;
+        }
+
+        // Control point for the curve (offset from midpoint)
+        double ctrlX = midX + offsetX;
+        double ctrlY = midY + offsetY;
+
+        // Calculate number of steps (more steps for smoother movement)
+        int steps = (int) (distance / 3); // Approximately 3 pixels per step
+        steps = Math.max(steps, 20); // Minimum steps for smoothness
+        steps = Math.min(steps, 200); // Maximum to prevent overly slow movements
+
+        // Move the mouse along a quadratic B-spline curve with variable speed
+        for (int i = 1; i <= steps; i++) {
+            double t = i / (double) steps;
+
+            // Apply easing function: starts fast (large steps), ends slow (small steps)
+            // Using a cubic ease-out function: 1 - (1-t)^3
+            double eased = 1 - Math.pow(1 - t, 3);
+
+            // Quadratic Bezier curve formula
+            double x = Math.pow(1 - eased, 2) * fromX +
+                    2 * (1 - eased) * eased * ctrlX +
+                    Math.pow(eased, 2) * toX;
+            double y = Math.pow(1 - eased, 2) * fromY +
+                    2 * (1 - eased) * eased * ctrlY +
+                    Math.pow(eased, 2) * toY;
+
+            robotInstance.mouseMove((int) x, (int) y);
+
+            // Variable delay: faster at start, slower at end
+            // Start with 1-3ms, end with 3-8ms
+            int delay;
+            if (t < 0.3) {
+                // Fast start
+                delay = 1 + random.nextInt(3);
+            } else if (t < 0.7) {
+                // Medium speed
+                delay = 2 + random.nextInt(4);
+            } else {
+                // Slow end for precision
+                delay = 3 + random.nextInt(6);
+            }
+
+            if (delay > 0) {
+                robotInstance.delay(delay);
+            }
+        }
+
+        // Ensure we end exactly at the target position
+        robotInstance.mouseMove(toX, toY);
+
+        // Small pause at the end (human-like settling)
+        robotInstance.delay(20 + random.nextInt(30));
+    }
+
+    /**
      * Helper method to initialize WebDriverWait if it hasn't been initialized yet.
      * This is used by methods that need to wait for elements or conditions.
      */
@@ -600,11 +680,12 @@ public class SeleniumHandler {
 
     /**
      * Gets whether mouse movement is currently enabled.
+     * Mouse movement is controlled by the humanize flag.
      *
-     * @return true if mouse movement is enabled, false otherwise
+     * @return true if humanize (and thus mouse movement) is enabled, false otherwise
      */
     public boolean isMouseMovementEnabled() {
-        return mouseMovementEnabled;
+        return humanize;
     }
 
     public boolean isRecording() {
@@ -627,14 +708,14 @@ public class SeleniumHandler {
 
     /**
      * Moves the mouse cursor smoothly to the center of the specified element.
-     * This method only performs the movement if mouse movement is enabled and not in headless mode.
+     * This method only performs the movement if humanize is enabled and not in headless mode.
      * The actual click should still be performed by Selenium for reliability.
      *
      * @param element the WebElement to move the mouse to
      */
     private void moveMouseToElement(WebElement element) {
-        // Skip if mouse movement is disabled or we're in headless mode
-        if (!mouseMovementEnabled || isSeleniumHeadless()) {
+        // Skip if humanize is disabled or we're in headless mode
+        if (!humanize || isSeleniumHeadless()) {
             return;
         }
 
@@ -663,8 +744,8 @@ public class SeleniumHandler {
             // Get current mouse position
             java.awt.Point currentMouse = MouseInfo.getPointerInfo().getLocation();
 
-            // Perform smooth mouse movement
-            smoothMouseMove(currentMouse.x, currentMouse.y, targetX, targetY);
+            // Perform smooth mouse movement with human-like characteristics
+            humanLikeMouseMove(currentMouse.x, currentMouse.y, targetX, targetY);
 
             logger.debug("Moved mouse to element at ({}, {})", targetX, targetY);
 
@@ -968,10 +1049,14 @@ public class SeleniumHandler {
 
     /**
      * Enable or disable humanized typing mode.
-     * When enabled, text is typed character-by-character with a tiny delay.
+     * When enabled, text is typed character-by-character with variable human-like delays,
+     * and mouse movements become more natural with curved paths and variable speed.
      */
     public void setHumanize(boolean humanize) {
         this.humanize = humanize;
+        if (humanize && !isSeleniumHeadless()) {
+            logger.info("Humanize mode enabled (typing and mouse movement with natural variation)");
+        }
     }
 
     public void setImplicitWaitDuration(Duration duration) {
@@ -1007,57 +1092,6 @@ public class SeleniumHandler {
         logger.info("sent loginUser='{}' to element with id '{}'%n", loginUser, LoginView.LOGIN_VIEW_USERNAME);
         // Humanized typing
         typeText(usernameElement, loginUser);
-    }
-
-    /**
-     * Enable or disable human-like mouse movement.
-     * When enabled, the mouse cursor will smoothly move to elements before clicking them.
-     * This is automatically disabled in headless mode.
-     *
-     * @param enabled true to enable mouse movement, false to disable
-     */
-    public void setMouseMovementEnabled(boolean enabled) {
-        if (enabled && isSeleniumHeadless()) {
-            logger.warn("Cannot enable mouse movement in headless mode");
-            this.mouseMovementEnabled = false;
-        } else {
-            this.mouseMovementEnabled = enabled;
-            if (enabled) {
-                logger.info("Mouse movement enabled (speed: {}, delay: {}ms)", mouseMovementSpeed, mouseMovementStepDelay);
-            }
-        }
-    }
-
-    /**
-     * Sets the speed of mouse movement in pixels per step.
-     * Lower values result in slower, smoother movement.
-     * Higher values result in faster, more direct movement.
-     *
-     * @param pixelsPerStep the number of pixels to move per step (must be positive)
-     */
-    public void setMouseMovementSpeed(int pixelsPerStep) {
-        if (pixelsPerStep > 0) {
-            this.mouseMovementSpeed = pixelsPerStep;
-            logger.debug("Mouse movement speed set to {} pixels per step", pixelsPerStep);
-        } else {
-            logger.warn("Invalid mouse movement speed: {}, must be positive", pixelsPerStep);
-        }
-    }
-
-    /**
-     * Sets the delay between mouse movement steps in milliseconds.
-     * Higher values result in slower movement.
-     * Set to 0 for no delay (fastest movement).
-     *
-     * @param milliseconds the delay in milliseconds between steps
-     */
-    public void setMouseMovementStepDelay(int milliseconds) {
-        if (milliseconds >= 0) {
-            this.mouseMovementStepDelay = milliseconds;
-            logger.debug("Mouse movement step delay set to {}ms", milliseconds);
-        } else {
-            logger.warn("Invalid mouse movement step delay: {}, must be non-negative", milliseconds);
-        }
     }
 
     public void setTextArea(String id, String userName) {
@@ -1117,50 +1151,6 @@ public class SeleniumHandler {
         if (driver != null) {
             driver.manage().window().setSize(windowSize);
         }
-    }
-
-    /**
-     * Performs a smooth mouse movement from one point to another using linear interpolation.
-     * The movement is divided into steps to create a smooth visual effect.
-     *
-     * @param fromX starting X coordinate
-     * @param fromY starting Y coordinate
-     * @param toX   target X coordinate
-     * @param toY   target Y coordinate
-     */
-    private void smoothMouseMove(int fromX, int fromY, int toX, int toY) {
-        Robot robotInstance = getRobot();
-        if (robotInstance == null) {
-            return;
-        }
-
-        int    deltaX   = toX - fromX;
-        int    deltaY   = toY - fromY;
-        double distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-
-        // If the distance is very small, just move directly
-        if (distance < 5) {
-            robotInstance.mouseMove(toX, toY);
-            return;
-        }
-
-        // Calculate number of steps based on distance and speed
-        int steps = (int) (distance / mouseMovementSpeed);
-        steps = Math.max(steps, 10); // Minimum steps for smoothness
-
-        // Move the mouse in steps
-        for (int i = 1; i <= steps; i++) {
-            int x = fromX + (int) ((deltaX * i) / (double) steps);
-            int y = fromY + (int) ((deltaY * i) / (double) steps);
-            robotInstance.mouseMove(x, y);
-
-            if (mouseMovementStepDelay > 0) {
-                robotInstance.delay(mouseMovementStepDelay);
-            }
-        }
-
-        // Ensure we end exactly at the target position
-        robotInstance.mouseMove(toX, toY);
     }
 
     /**
@@ -1271,7 +1261,8 @@ public class SeleniumHandler {
 
     /**
      * Internal helper to type text into an input/textarea.
-     * Respects humanized typing mode if enabled.
+     * Respects humanized typing mode if enabled, using variable delays
+     * to simulate real human typing patterns (not perfectly rhythmic).
      */
     private void typeText(WebElement inputElement, String text) {
         if (text == null || text.isEmpty()) return;
@@ -1279,12 +1270,26 @@ public class SeleniumHandler {
             inputElement.sendKeys(text);
             return;
         }
+
         for (int idx = 0; idx < text.length(); idx++) {
             String ch = String.valueOf(text.charAt(idx));
             inputElement.sendKeys(ch);
+
             if (typingDelayMillis > 0) {
                 try {
-                    Thread.sleep(typingDelayMillis);
+                    // Variable delay: base delay +/- 50% randomness
+                    // This creates a more natural typing rhythm
+                    int minDelay      = typingDelayMillis / 2;
+                    int maxDelay      = typingDelayMillis + (typingDelayMillis / 2);
+                    int variableDelay = minDelay + random.nextInt(maxDelay - minDelay + 1);
+
+                    // Occasionally add a longer pause (simulating thinking/hesitation)
+                    // About 10% chance of a longer pause
+                    if (random.nextInt(10) == 0) {
+                        variableDelay += typingDelayMillis * (2 + random.nextInt(3)); // 2-4x longer
+                    }
+
+                    Thread.sleep(variableDelay);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
