@@ -232,12 +232,12 @@
             <artifactId>vaadin-lumo-theme</artifactId>
         </dependency>
 
-        <!-- Monte Screen Recorder for UI test video recording -->
+        <!-- JavaCV for screen/audio recording in tests -->
         <dependency>
-            <groupId>com.github.stephenc.monte</groupId>
-            <artifactId>monte-screen-recorder</artifactId>
-            <!--            <version>0.7.7.1-SNAPSHOT</version>-->
-            <version>0.7.7.0</version>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>javacv-platform</artifactId>
+            <version>1.5.10</version>
+            <scope>test</scope>
         </dependency>
 
         <!-- Spring AI dependencies -->
