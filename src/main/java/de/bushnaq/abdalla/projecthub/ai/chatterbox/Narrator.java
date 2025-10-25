@@ -34,7 +34,6 @@ import java.security.MessageDigest;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -93,7 +92,7 @@ public class Narrator {
     }
 
     private void cleanupCacheSiblings(String canonicalName) {
-        // canonicalName format: <prefix>_<hash>.wav ; delete other files with same <prefix>_*.wav
+        // canonicalName format: <prefix>_<hash>.wav ; delete other files with same <prefix>_* .wav
         int sep = canonicalName.lastIndexOf('_');
         int dot = canonicalName.lastIndexOf('.');
         if (sep <= 0 || dot <= sep) return;
@@ -360,74 +359,5 @@ public class Narrator {
         }
     }
 
-    // Playback handle for non-blocking control with queue support
-    public static class Playback {
-        private volatile boolean        canceled = false;
-        private volatile Clip           clip;
-        private volatile boolean        closed   = false;
-        private final    CountDownLatch done     = new CountDownLatch(1);
-
-        private Playback() {
-        }
-
-        public void await() throws InterruptedException {
-            done.await();
-            closeQuietly();
-        }
-
-        public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
-            boolean finished = done.await(timeout, unit);
-            if (finished) closeQuietly();
-            return finished;
-        }
-
-        void closeQuietly() {
-            if (!closed) {
-                closed = true;
-                Clip c = this.clip;
-                if (c != null) {
-                    try {
-                        c.close();
-                    } catch (Exception ignored) {
-                    }
-                }
-            }
-        }
-
-        void countDown() {
-            if (done.getCount() > 0) done.countDown();
-        }
-
-        void finishEarly() {
-            countDown();
-            closeQuietly();
-        }
-
-        boolean isCanceled() {
-            return canceled;
-        }
-
-        public boolean isDone() {
-            return done.getCount() == 0;
-        }
-
-        void setClip(Clip clip) {
-            this.clip = clip;
-        }
-
-        public void stop() {
-            canceled = true;
-            Clip c = this.clip;
-            if (c != null) {
-                try {
-                    c.stop();
-                } catch (Exception ignored) {
-                }
-            } else {
-                countDown();
-                closeQuietly();
-            }
-        }
-    }
 
 }
