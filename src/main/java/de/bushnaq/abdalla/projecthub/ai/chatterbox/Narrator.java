@@ -38,6 +38,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Narrator provides text-to-speech generation with on-disk caching and queued audio playback.
+ * <p>
+ * Features:
+ * <ul>
+ *   <li>Deterministic cache key based on text and TTS attributes (temperature, exaggeration, cfgWeight)</li>
+ *   <li>Chronological copies for easy per-session/history browsing</li>
+ *   <li>Serialized playback: each clip waits until the previous one finishes</li>
+ *   <li>Per-call attribute overrides via {@link NarratorAttribute}; instance fields are used as defaults</li>
+ * </ul>
+ */
 public class Narrator {
 
     private static final Pattern  ID_PREFIX    = Pattern.compile("^(\\d{3,})-.*");
@@ -52,12 +63,18 @@ public class Narrator {
     private              float    exaggeration;
     private              Playback lastPlayback = null;
     private              int      nextId; // incrementing file id per audioDir
-    // Serialize all playback: each request waits for the previous to finish before starting
-    private final        Object   queueLock    = new Object();
+    private final        Object   queueLock    = new Object();// Serialize all playback: each request waits for the previous to finish before starting
     @Getter
     @Setter
     private              float    temperature;
 
+    /**
+     * Creates a Narrator that stores generated audio under the given folder.
+     * A cache subfolder is created for canonical files.
+     *
+     * @param relativeFolder target directory for generated audio and the cache subfolder
+     * @throws RuntimeException if the directory cannot be created
+     */
     public Narrator(String relativeFolder) {
         this.audioDir = Path.of(relativeFolder);
         this.cacheDir = this.audioDir.resolve("cache");
@@ -192,16 +209,41 @@ public class Narrator {
     }
 
     // Blocking convenience method preserving existing behavior
+
+    /**
+     * Synchronously speak the provided text using the current instance defaults.
+     * This call blocks until playback of the generated or cached audio finishes.
+     *
+     * @param text text to synthesize and play
+     * @throws Exception if TTS generation, file IO, or audio playback fails
+     */
     public void narrate(String text) throws Exception {
         narrateAsync(text).await();
     }
 
-    // Blocking narration with per-call attributes override
+    /**
+     * Synchronously speak the provided text using per-call attributes.
+     * Any null fields in {@code attrs} will fall back to the instance defaults.
+     * This call blocks until playback finishes.
+     *
+     * @param attrs optional attribute overrides (may be null)
+     * @param text  text to synthesize and play
+     * @throws Exception if TTS generation, file IO, or audio playback fails
+     */
     public void narrate(NarratorAttribute attrs, String text) throws Exception {
         narrateAsync(attrs, text).await();
     }
 
     // Non-blocking narration that returns a handle to await or stop playback
+
+    /**
+     * Asynchronously speak the provided text using the current instance defaults.
+     * Returns immediately with a {@link Playback} handle that can be used to await or stop playback.
+     *
+     * @param text text to synthesize and play
+     * @return playback handle
+     * @throws Exception if TTS generation or file IO fails prior to starting playback
+     */
     public Playback narrateAsync(String text) throws Exception {
         // Use instance defaults
         float eTemp = this.temperature;
@@ -210,7 +252,16 @@ public class Narrator {
         return narrateResolved(eTemp, eEx, eCfg, text);
     }
 
-    // Non-blocking narration with per-call attributes override
+    /**
+     * Asynchronously speak the provided text using per-call attributes.
+     * Any null fields in {@code attrs} will fall back to the instance defaults.
+     * Returns immediately with a {@link Playback} handle that can be used to await or stop playback.
+     *
+     * @param attrs optional attribute overrides (may be null)
+     * @param text  text to synthesize and play
+     * @return playback handle
+     * @throws Exception if TTS generation or file IO fails prior to starting playback
+     */
     public Playback narrateAsync(NarratorAttribute attrs, String text) throws Exception {
         // If attrs provided, take precedence; else fall back to instance defaults
         float eTemp = attrs != null && attrs.getTemperature() != null ? attrs.getTemperature() : this.temperature;
@@ -327,6 +378,13 @@ public class Narrator {
                 : id + "-";
     }
 
+    /**
+     * Sleeps the current thread for the requested number of seconds.
+     * Convenience helper to pause UI/test flows between narrations.
+     *
+     * @param seconds number of seconds to sleep
+     * @throws InterruptedException if the thread is interrupted while sleeping
+     */
     public void pause(float seconds) throws InterruptedException {
         Thread.sleep((long) (seconds * 1000));
     }
