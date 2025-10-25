@@ -53,18 +53,25 @@ import static org.junit.jupiter.api.Assertions.*;
 @Component
 @Getter
 public class SeleniumHandler {
-    private       WebDriver       driver;
+    private static final int             DEFAULT_BROWSER_CHROME_HEIGHT = 130; // Typical Chrome window chrome height in pixels
+    private              Integer         browserChromeHeight           = null; // Cached browser chrome height
+    private              WebDriver       driver;
     // Humanize typing configuration
-    private       boolean         humanize          = false;
-    private final Duration        implicitWaitDuration;
-    private final Stack<Duration> implicitWaitStack = new Stack<>();
-    private final Logger          logger            = LoggerFactory.getLogger(this.getClass());
-    private       int             typingDelayMillis = 50;
-    private final VideoRecorder   videoRecorder;
-    private       WebDriverWait   wait;
-    private       Duration        waitDuration;
-    private final Stack<Duration> waitDurationStack = new Stack<>();
-    private       Dimension       windowSize;  // Added field to store custom window size
+    private              boolean         humanize                      = false;
+    private final        Duration        implicitWaitDuration;
+    private final        Stack<Duration> implicitWaitStack             = new Stack<>();
+    private final        Logger          logger                        = LoggerFactory.getLogger(this.getClass());
+    // Mouse movement configuration
+    private              boolean         mouseMovementEnabled          = false;
+    private              int             mouseMovementSpeed            = 5;    // pixels per step
+    private              int             mouseMovementStepDelay        = 5;    // milliseconds between steps
+    private              Robot           robot                         = null; // Lazily initialized
+    private              int             typingDelayMillis             = 50;
+    private final        VideoRecorder   videoRecorder;
+    private              WebDriverWait   wait;
+    private              Duration        waitDuration;
+    private final        Stack<Duration> waitDurationStack             = new Stack<>();
+    private              Dimension       windowSize;                     // Added field to store custom window size
 
     public SeleniumHandler() {
         this(Duration.ofSeconds(10), Duration.ofSeconds(30));
@@ -76,9 +83,46 @@ public class SeleniumHandler {
         this.videoRecorder        = new VideoRecorder();
     }
 
+    /**
+     * Centers the mouse cursor on the browser window.
+     * This is useful before starting recordings to ensure the mouse starts
+     * in a predictable position rather than wherever it was previously.
+     * Only works if mouse movement is enabled and not in headless mode.
+     */
+    public void centerMouseOnBrowser() {
+        // Skip if we're in headless mode
+        if (isSeleniumHeadless()) {
+            return;
+        }
+
+        Robot robotInstance = getRobot();
+        if (robotInstance == null) {
+            logger.debug("Robot not available, cannot center mouse");
+            return;
+        }
+
+        try {
+            // Get browser window position and size
+            Point     windowPosition = driver.manage().window().getPosition();
+            Dimension windowSize     = driver.manage().window().getSize();
+
+            // Calculate center of browser window
+            int centerX = windowPosition.getX() + (windowSize.getWidth() / 2);
+            int centerY = windowPosition.getY() + (windowSize.getHeight() / 2);
+
+            // Move mouse to center (instantly, no smooth movement)
+            robotInstance.mouseMove(centerX, centerY);
+            logger.debug("Centered mouse on browser at ({}, {})", centerX, centerY);
+
+        } catch (Exception e) {
+            logger.warn("Failed to center mouse on browser: {}", e.getMessage());
+        }
+    }
+
     public void click(String id) {
         waitUntil(ExpectedConditions.elementToBeClickable(By.id(id)));
         WebElement element = findElement(By.id(id));
+        moveMouseToElement(element);
         element.click();
         logger.info("Clicked element with ID: " + id);
     }
@@ -190,6 +234,37 @@ public class SeleniumHandler {
         get(url);
         waitUntil(ExpectedConditions.urlContains(url));
         testForAnyError();
+    }
+
+    /**
+     * Calculates and caches the browser chrome height (window decorations, address bar, toolbar).
+     * Uses JavaScript to determine the actual height by comparing outer and inner window heights.
+     *
+     * @return the browser chrome height in pixels
+     */
+    private int getBrowserChromeHeight() {
+        if (browserChromeHeight != null) {
+            return browserChromeHeight;
+        }
+
+        try {
+            // Use JavaScript to calculate the chrome height
+            Long outerHeight = (Long) executeJavaScript("return window.outerHeight;");
+            Long innerHeight = (Long) executeJavaScript("return window.innerHeight;");
+
+            if (outerHeight != null && innerHeight != null) {
+                browserChromeHeight = (int) (outerHeight - innerHeight);
+                logger.debug("Calculated browser chrome height: {} pixels", browserChromeHeight);
+            } else {
+                browserChromeHeight = DEFAULT_BROWSER_CHROME_HEIGHT;
+                logger.debug("Using default browser chrome height: {} pixels", browserChromeHeight);
+            }
+        } catch (Exception e) {
+            browserChromeHeight = DEFAULT_BROWSER_CHROME_HEIGHT;
+            logger.debug("Failed to calculate chrome height, using default: {} pixels", browserChromeHeight);
+        }
+
+        return browserChromeHeight;
     }
 
     public boolean getCheckbox(String id) {
@@ -403,6 +478,53 @@ public class SeleniumHandler {
         return value;
     }
 
+    /**
+     * Gets the current mouse movement speed in pixels per step.
+     *
+     * @return the number of pixels moved per step
+     */
+    public int getMouseMovementSpeed() {
+        return mouseMovementSpeed;
+    }
+
+    /**
+     * Gets the current delay between mouse movement steps.
+     *
+     * @return the delay in milliseconds
+     */
+    public int getMouseMovementStepDelay() {
+        return mouseMovementStepDelay;
+    }
+
+    /**
+     * Gets or initializes the Robot instance for mouse movement.
+     * Returns null if Robot cannot be initialized (e.g., in headless mode or due to security restrictions).
+     *
+     * @return the Robot instance, or null if unavailable
+     */
+    private Robot getRobot() {
+        if (robot != null) {
+            return robot;
+        }
+
+        // Don't even try to create Robot in headless mode
+        if (isSeleniumHeadless()) {
+            logger.debug("Headless mode detected, Robot not available");
+            return null;
+        }
+
+        try {
+            robot = new Robot();
+            robot.setAutoDelay(0); // We'll control delays manually
+            logger.info("Robot initialized successfully for mouse movement");
+        } catch (AWTException e) {
+            logger.warn("Failed to initialize Robot for mouse movement: {}", e.getMessage());
+            robot = null;
+        }
+
+        return robot;
+    }
+
     public String getRouteValue(Class<?> viewClass) {
         if (viewClass.isAnnotationPresent(com.vaadin.flow.router.Route.class)) {
             com.vaadin.flow.router.Route route = viewClass.getAnnotation(com.vaadin.flow.router.Route.class);
@@ -463,6 +585,15 @@ public class SeleniumHandler {
         return isElementPresent(By.id(id));
     }
 
+    /**
+     * Gets whether mouse movement is currently enabled.
+     *
+     * @return true if mouse movement is enabled, false otherwise
+     */
+    public boolean isMouseMovementEnabled() {
+        return mouseMovementEnabled;
+    }
+
     public boolean isRecording() {
         return videoRecorder.isRecording();
     }
@@ -475,9 +606,59 @@ public class SeleniumHandler {
         // Find the login button using a more specific XPath selector that matches the attributes
 //        WebElement button = findElement(By.xpath("//vaadin-button[@slot='submit' and contains(@theme, 'submit')]"));
         WebElement button = findElement(By.id(LoginView.LOGIN_VIEW_SUBMIT_BUTTON));
+        moveMouseToElement(button);
         button.click();
         logger.info("Clicked login submit button");
         waitForPageLoaded();
+    }
+
+    /**
+     * Moves the mouse cursor smoothly to the center of the specified element.
+     * This method only performs the movement if mouse movement is enabled and not in headless mode.
+     * The actual click should still be performed by Selenium for reliability.
+     *
+     * @param element the WebElement to move the mouse to
+     */
+    private void moveMouseToElement(WebElement element) {
+        // Skip if mouse movement is disabled or we're in headless mode
+        if (!mouseMovementEnabled || isSeleniumHeadless()) {
+            return;
+        }
+
+        // Initialize Robot if needed
+        Robot robotInstance = getRobot();
+        if (robotInstance == null) {
+            logger.debug("Robot not available, skipping mouse movement");
+            return;
+        }
+
+        try {
+            // Get element location and size relative to the page
+            Point     elementLocation = element.getLocation();
+            Dimension elementSize     = element.getSize();
+
+            // Get browser window position on screen
+            Point windowPosition = driver.manage().window().getPosition();
+
+            // Calculate browser chrome height (cached after first calculation)
+            int chromeHeight = getBrowserChromeHeight();
+
+            // Calculate target screen coordinates (center of element)
+            int targetX = windowPosition.getX() + elementLocation.getX() + (elementSize.getWidth() / 2);
+            int targetY = windowPosition.getY() + elementLocation.getY() + (elementSize.getHeight() / 2) + chromeHeight;
+
+            // Get current mouse position
+            java.awt.Point currentMouse = MouseInfo.getPointerInfo().getLocation();
+
+            // Perform smooth mouse movement
+            smoothMouseMove(currentMouse.x, currentMouse.y, targetX, targetY);
+
+            logger.debug("Moved mouse to element at ({}, {})", targetX, targetY);
+
+        } catch (Exception e) {
+            logger.warn("Failed to move mouse to element: {}", e.getMessage());
+            // Continue with normal Selenium click even if mouse movement fails
+        }
     }
 
     /**
@@ -543,6 +724,7 @@ public class SeleniumHandler {
             if (!weClicked) {
                 WebElement row = findElement(By.id(gridRowBaseId + rowName));
                 try {
+                    moveMouseToElement(row);
                     row.click();
                     weClicked = true;
                     logger.info("Clicked row: " + gridRowBaseId + rowName);
@@ -589,6 +771,7 @@ public class SeleniumHandler {
         do {
             WebElement row = findElement(By.id(gridRowBaseId + rowName));
             try {
+                moveMouseToElement(row);
                 row.click();
             } catch (StaleElementReferenceException e) {
                 //ignore and retry
@@ -628,6 +811,7 @@ public class SeleniumHandler {
     public void sendKeys(String id, CharSequence... keysToSend) {
         WebElement e = findElement(By.id(id));
         WebElement i = e.findElement(By.tagName("input"));
+        moveMouseToElement(i);  // Move mouse to input field before sending keys
         i.sendKeys(keysToSend);
     }
 
@@ -636,6 +820,7 @@ public class SeleniumHandler {
         if (old != value) {
             WebElement e = findElement(By.id(id));
             WebElement i = e.findElement(By.tagName("input"));
+            moveMouseToElement(i);
             if (value) {
                 if (!i.isSelected()) {
                     i.click();
@@ -707,6 +892,7 @@ public class SeleniumHandler {
         WebElement e = findElement(By.id(id));
         WebElement i = e.findElement(By.tagName("input"));
         waitForElementToBeInteractable(i.getAttribute("id"));
+        moveMouseToElement(i);  // Move mouse to combobox field before typing
         String value = i.getAttribute("value");
         if (value.isEmpty()) {
         } else {
@@ -780,9 +966,10 @@ public class SeleniumHandler {
     }
 
     public void setIntegerField(String id, String userName) {
-        WebElement e     = findElement(By.id(id));
-        WebElement i     = e.findElement(By.tagName("input"));
-        String     value = i.getAttribute("value");
+        WebElement e = findElement(By.id(id));
+        WebElement i = e.findElement(By.tagName("input"));
+        moveMouseToElement(i);  // Move mouse to integer field before typing
+        String value = i.getAttribute("value");
         if (value.isEmpty()) {
         } else {
             i.sendKeys(Keys.CONTROL + "a");
@@ -794,6 +981,7 @@ public class SeleniumHandler {
 
     public void setLoginPassword(String loginPassword) {
         WebElement passwordElement = findElement(By.id(LoginView.LOGIN_VIEW_PASSWORD));
+        moveMouseToElement(passwordElement);  // Move mouse to password field before typing
         logger.info("sent loginPassword='{}' to element with name '{}}'%n", loginPassword, LoginView.LOGIN_VIEW_PASSWORD);
         // Humanized typing
         typeText(passwordElement, loginPassword);
@@ -802,15 +990,68 @@ public class SeleniumHandler {
     public void setLoginUser(String loginUser) {
         waitForElementToBeLocated(LoginView.LOGIN_VIEW_USERNAME);
         WebElement usernameElement = findElement(By.id(LoginView.LOGIN_VIEW_USERNAME));
+        moveMouseToElement(usernameElement);  // Move mouse to username field before typing
         logger.info("sent loginUser='{}' to element with id '{}'%n", loginUser, LoginView.LOGIN_VIEW_USERNAME);
         // Humanized typing
         typeText(usernameElement, loginUser);
     }
 
+    /**
+     * Enable or disable human-like mouse movement.
+     * When enabled, the mouse cursor will smoothly move to elements before clicking them.
+     * This is automatically disabled in headless mode.
+     *
+     * @param enabled true to enable mouse movement, false to disable
+     */
+    public void setMouseMovementEnabled(boolean enabled) {
+        if (enabled && isSeleniumHeadless()) {
+            logger.warn("Cannot enable mouse movement in headless mode");
+            this.mouseMovementEnabled = false;
+        } else {
+            this.mouseMovementEnabled = enabled;
+            if (enabled) {
+                logger.info("Mouse movement enabled (speed: {}, delay: {}ms)", mouseMovementSpeed, mouseMovementStepDelay);
+            }
+        }
+    }
+
+    /**
+     * Sets the speed of mouse movement in pixels per step.
+     * Lower values result in slower, smoother movement.
+     * Higher values result in faster, more direct movement.
+     *
+     * @param pixelsPerStep the number of pixels to move per step (must be positive)
+     */
+    public void setMouseMovementSpeed(int pixelsPerStep) {
+        if (pixelsPerStep > 0) {
+            this.mouseMovementSpeed = pixelsPerStep;
+            logger.debug("Mouse movement speed set to {} pixels per step", pixelsPerStep);
+        } else {
+            logger.warn("Invalid mouse movement speed: {}, must be positive", pixelsPerStep);
+        }
+    }
+
+    /**
+     * Sets the delay between mouse movement steps in milliseconds.
+     * Higher values result in slower movement.
+     * Set to 0 for no delay (fastest movement).
+     *
+     * @param milliseconds the delay in milliseconds between steps
+     */
+    public void setMouseMovementStepDelay(int milliseconds) {
+        if (milliseconds >= 0) {
+            this.mouseMovementStepDelay = milliseconds;
+            logger.debug("Mouse movement step delay set to {}ms", milliseconds);
+        } else {
+            logger.warn("Invalid mouse movement step delay: {}, must be non-negative", milliseconds);
+        }
+    }
+
     public void setTextArea(String id, String userName) {
-        WebElement e     = findElement(By.id(id));
-        WebElement i     = e.findElement(By.tagName("textarea"));
-        String     value = i.getAttribute("value");
+        WebElement e = findElement(By.id(id));
+        WebElement i = e.findElement(By.tagName("textarea"));
+        moveMouseToElement(i);  // Move mouse to text area before typing
+        String value = i.getAttribute("value");
         if (value.isEmpty()) {
         } else {
             i.sendKeys(Keys.CONTROL + "a");
@@ -822,9 +1063,10 @@ public class SeleniumHandler {
 
     public void setTextField(String id, String text) {
         waitUntil(ExpectedConditions.elementToBeClickable(By.id(id)));
-        WebElement e     = findElement(By.id(id));
-        WebElement i     = e.findElement(By.tagName("input"));
-        String     value = i.getAttribute("value");
+        WebElement e = findElement(By.id(id));
+        WebElement i = e.findElement(By.tagName("input"));
+        moveMouseToElement(i);  // Move mouse to text field before typing
+        String value = i.getAttribute("value");
         if (value.isEmpty()) {
         } else {
             i.sendKeys(Keys.CONTROL + "a");
@@ -865,6 +1107,50 @@ public class SeleniumHandler {
     }
 
     /**
+     * Performs a smooth mouse movement from one point to another using linear interpolation.
+     * The movement is divided into steps to create a smooth visual effect.
+     *
+     * @param fromX starting X coordinate
+     * @param fromY starting Y coordinate
+     * @param toX   target X coordinate
+     * @param toY   target Y coordinate
+     */
+    private void smoothMouseMove(int fromX, int fromY, int toX, int toY) {
+        Robot robotInstance = getRobot();
+        if (robotInstance == null) {
+            return;
+        }
+
+        int    deltaX   = toX - fromX;
+        int    deltaY   = toY - fromY;
+        double distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+        // If the distance is very small, just move directly
+        if (distance < 5) {
+            robotInstance.mouseMove(toX, toY);
+            return;
+        }
+
+        // Calculate number of steps based on distance and speed
+        int steps = (int) (distance / mouseMovementSpeed);
+        steps = Math.max(steps, 10); // Minimum steps for smoothness
+
+        // Move the mouse in steps
+        for (int i = 1; i <= steps; i++) {
+            int x = fromX + (int) ((deltaX * i) / (double) steps);
+            int y = fromY + (int) ((deltaY * i) / (double) steps);
+            robotInstance.mouseMove(x, y);
+
+            if (mouseMovementStepDelay > 0) {
+                robotInstance.delay(mouseMovementStepDelay);
+            }
+        }
+
+        // Ensure we end exactly at the target position
+        robotInstance.mouseMove(toX, toY);
+    }
+
+    /**
      * Start recording screen activities for the current test
      *
      * @param folderName Subfolder name for storing the video
@@ -874,6 +1160,10 @@ public class SeleniumHandler {
         if (!videoRecorder.isRecording()) {
             try {
                 getDriver(); // Ensure the driver is initialized and browser is open
+
+                // Center the mouse on the browser window before starting recording
+                // This prevents the mouse from starting far away (e.g., on a second monitor)
+                centerMouseOnBrowser();
 
                 // Pass the WebDriver to VideoRecorder to access browser content
                 videoRecorder.setWebDriver(driver);
@@ -941,6 +1231,7 @@ public class SeleniumHandler {
     public void toggleCheckbox(String id) {
         WebElement e = findElement(By.id(id));
         WebElement i = e.findElement(By.tagName("input"));
+        moveMouseToElement(i);
         i.click();
     }
 

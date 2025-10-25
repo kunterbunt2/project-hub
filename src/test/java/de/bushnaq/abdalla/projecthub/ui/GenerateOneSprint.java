@@ -128,6 +128,7 @@ public class GenerateOneSprint extends AbstractUiTestUtil {
         seleniumHandler.setWindowSize(1800, 1300);
         // Enable humanized typing for demo-like input behavior
         seleniumHandler.setHumanize(true);
+        seleniumHandler.setMouseMovementEnabled(true);
 //        seleniumHandler.setTypingDelayMillis(50);
 
 //        printAuthentication();
