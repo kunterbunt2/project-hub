@@ -17,6 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.ai.chatterbox;
 
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.VideoRecorder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,9 +30,9 @@ import java.io.File;
  * Handles serialized audio playback using {@link Playback} handles.
  */
 public class AudioPlayer {
-    private static final Logger logger = LoggerFactory.getLogger(AudioPlayer.class);
-    private       Playback lastPlayback = null;
-    private final Object   queueLock    = new Object();
+    private static final Logger   logger       = LoggerFactory.getLogger(AudioPlayer.class);
+    private              Playback lastPlayback = null;
+    private final        Object   queueLock    = new Object();
 
     /**
      * Queue a file for playback. Each playback waits for the previous to finish.
@@ -53,6 +54,15 @@ public class AudioPlayer {
                     current.finishEarly();
                     return;
                 }
+
+                // Mirror the WAV to any registered sink (e.g., VideoRecorder)
+                try {
+                    AudioMirrorRegistry.AudioMirror mirror = AudioMirrorRegistry.get();
+                    if (mirror != null) mirror.mirror(file);
+                } catch (Throwable mirrorEx) {
+                    logger.debug("Audio mirror ignored: {}", mirrorEx.toString());
+                }
+                logger.info("Playing audio file: {} - {}", VideoRecorder.getVideoTime(), file.getAbsolutePath());
 
                 Clip clip = AudioSystem.getClip();
                 current.setClip(clip);
@@ -84,4 +94,3 @@ public class AudioPlayer {
         return current;
     }
 }
-

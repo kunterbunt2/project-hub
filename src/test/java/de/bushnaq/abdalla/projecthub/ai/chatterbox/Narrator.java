@@ -83,13 +83,10 @@ public class Narrator {
     }
 
     /**
-     * Synchronously synthesize and play the given text using current instance defaults.
-     * Blocks until playback finishes.
+     * Sleeps the current thread for roughly half a second.
      */
-    public Narrator narrate(String text) throws Exception {
-        narrateAsync(text);
-        getPlayback().await();
-        return this;
+    public void longPause() throws InterruptedException {
+        Thread.sleep(1000);
     }
 
     /**
@@ -102,14 +99,13 @@ public class Narrator {
     }
 
     /**
-     * Asynchronously synthesize and queue playback using instance defaults.
-     * Returns immediately with a {@link Playback} handle available via {@link #getPlayback()}.
+     * Synchronously synthesize and play the given text using current instance defaults.
+     * Blocks until playback finishes.
      */
-    public Narrator narrateAsync(String text) throws Exception {
-        float eTemp = this.temperature;
-        float eEx   = this.exaggeration;
-        float eCfg  = this.cfgWeight;
-        return narrateResolved(eTemp, eEx, eCfg, text);
+    public Narrator narrate(String text) throws Exception {
+        narrateAsync(text);
+        getPlayback().await();
+        return this;
     }
 
     /**
@@ -120,6 +116,17 @@ public class Narrator {
         float eTemp = attrs != null && attrs.getTemperature() != null ? attrs.getTemperature() : this.temperature;
         float eEx   = attrs != null && attrs.getExaggeration() != null ? attrs.getExaggeration() : this.exaggeration;
         float eCfg  = attrs != null && attrs.getCfg_weight() != null ? attrs.getCfg_weight() : this.cfgWeight;
+        return narrateResolved(eTemp, eEx, eCfg, text);
+    }
+
+    /**
+     * Asynchronously synthesize and queue playback using instance defaults.
+     * Returns immediately with a {@link Playback} handle available via {@link #getPlayback()}.
+     */
+    public Narrator narrateAsync(String text) throws Exception {
+        float eTemp = this.temperature;
+        float eEx   = this.exaggeration;
+        float eCfg  = this.cfgWeight;
         return narrateResolved(eTemp, eEx, eCfg, text);
     }
 
@@ -160,13 +167,6 @@ public class Narrator {
      * Sleeps the current thread for roughly one second.
      */
     public void pause() throws InterruptedException {
-        Thread.sleep(1000);
-    }
-
-    /**
-     * Sleeps the current thread for roughly half a second.
-     */
-    public void shortPause() throws InterruptedException {
         Thread.sleep(500);
     }
 }
