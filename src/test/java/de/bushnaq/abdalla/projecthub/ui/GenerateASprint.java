@@ -22,14 +22,11 @@ import de.bushnaq.abdalla.projecthub.ai.chatterbox.Narrator;
 import de.bushnaq.abdalla.projecthub.dto.OffDayType;
 import de.bushnaq.abdalla.projecthub.ui.dialog.FeatureDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ProductDialog;
+import de.bushnaq.abdalla.projecthub.ui.dialog.SprintDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.VersionDialog;
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
-import de.bushnaq.abdalla.projecthub.ui.util.RenderUtil;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
-import de.bushnaq.abdalla.projecthub.ui.view.FeatureListView;
-import de.bushnaq.abdalla.projecthub.ui.view.ProductListView;
-import de.bushnaq.abdalla.projecthub.ui.view.SprintListView;
-import de.bushnaq.abdalla.projecthub.ui.view.VersionListView;
+import de.bushnaq.abdalla.projecthub.ui.view.*;
 import de.bushnaq.abdalla.projecthub.ui.view.util.*;
 import de.bushnaq.abdalla.projecthub.util.RandomCase;
 import de.bushnaq.abdalla.projecthub.util.TestInfoUtil;
@@ -70,7 +67,7 @@ import java.util.Map;
 @AutoConfigureMockMvc
 @Transactional
 @Testcontainers
-public class GenerateSprint extends AbstractUiTestUtil {
+public class GenerateASprint extends AbstractUiTestUtil {
     public static final  float                      EXAGGERATE_HIGH   = 1f;
     public static final  float                      EXAGGERATE_LOW    = 0.25f;
     public static final  float                      EXAGGERATE_NORMAL = 0.3f;
@@ -126,6 +123,9 @@ public class GenerateSprint extends AbstractUiTestUtil {
         // Set browser window to a fixed size for consistent screenshots
 //        seleniumHandler.setWindowSize(1024, 800);
         seleniumHandler.setWindowSize(1800, 1300);
+        // Enable humanized typing for demo-like input behavior
+        seleniumHandler.setHumanize(true);
+//        seleniumHandler.setTypingDelayMillis(50);
 
 //        printAuthentication();
         TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
@@ -134,35 +134,36 @@ public class GenerateSprint extends AbstractUiTestUtil {
         generateProductsIfNeeded(testInfo, randomCase);
         seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
         Narrator narrator = new Narrator("tts/" + testInfo.getTestClass().get().getSimpleName(), 1.0f, EXAGGERATE_NORMAL, .3f);
-//        userName    = "Christopher Paul";
         productName = "Jupiter";
         versionName = "1.0.0";
         featureName = "Property request api";
-        sprintName  = nameGenerator.generateSprintName(0);
+        sprintName  = "Minimum Viable Product";
         taskName    = nameGenerator.generateSprintName(0);
 
+
+        productListViewTester.switchToProductListViewWithOidc("jennifer.holleman@kassandra.org", "password", "../project-hub.wiki/screenshots/login-view.png", testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+        //---------------------------------------------------------------------------------------..
+        // Products Page
+        //---------------------------------------------------------------------------------------..
 
         narrator.narrate("Good morning, my name is Jennifer Holleman. I am the product manager of Kassandra and I will be demonstrating the latest alpha version of the Kassandra project server to you today.");
         narrator.pause(1);
         narrator.narrate("Kassandra is a project planning and progress tracking server targeting small to medium team sizes. It is a open source project and has an Apachee two dot zero license.");
         narrator.pause(1);
-        productListViewTester.switchToProductListViewWithOidc("jennifer.holleman@kassandra.org", "password", "../project-hub.wiki/screenshots/login-view.png", testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
         narrator.narrate("Kassandra supports OIDC authentication and authorization. I just logged into the server using my kassandra dot org ID.");
         narrator.pause(1);
         narrator.narrate("The first page you see when you log into the server is the Products page where all Products are listed.");
         narrator.pause(1);
-        narrator.narrate("Lets start by adding a new product.");
-
         //---------------------------------------------------------------------------------------..
         // Create a Product
         //---------------------------------------------------------------------------------------..
+        narrator.narrate("Lets start by adding a new product by selecting the Create button.");
         seleniumHandler.click(ProductListView.CREATE_PRODUCT_BUTTON);
         narrator.pushExaggeration(EXAGGERATE_HIGH);
         narrator.narrate("Lets call it Jupiter!");
         narrator.pop();
         seleniumHandler.setTextField(ProductDialog.PRODUCT_NAME_FIELD, productName);
         narrator.pause(1);
-        narrator.narrateAsync("Push Save to save.");
         narrator.narrateAsync("Select Save to close the dialog and persist our product.");
         seleniumHandler.click(ProductDialog.CONFIRM_BUTTON);
         narrator.pushExaggeration(EXAGGERATE_HIGH);
@@ -170,18 +171,19 @@ public class GenerateSprint extends AbstractUiTestUtil {
         narrator.pop();
         narrator.pause(1);
         narrator.narrate("With the little notepad and trashcan icons, on the right side, you can edit or delete your product.");
-
         narrator.pause(1);
-
-        narrator.narrate("Lets select our product.");
+        narrator.narrate("Lets select our product...");
         productListViewTester.selectProduct(productName);
+
+        //---------------------------------------------------------------------------------------..
+        // Versions Page
+        //---------------------------------------------------------------------------------------..
         narrator.narrate("This takes us to the Versions Page.");
         narrator.pause(.5f);
         narrator.narrate("Every Product can have any number of versions.");
         narrator.pause(1);
         narrator.narrate("Jupiter is a totally new product, so lets create a first version for it.");
         narrator.narrate("Select the Create button...");
-
         //---------------------------------------------------------------------------------------..
         // Create a Version
         //---------------------------------------------------------------------------------------..
@@ -195,64 +197,123 @@ public class GenerateSprint extends AbstractUiTestUtil {
         narrator.pop();
         narrator.pause(1);
         narrator.narrate("The little notepad and trashcan icons, on the right side, can be used to edit or delete your version.");
-
         narrator.pause(1);
-
         narrator.narrate("Lets select our version.");
         versionListViewTester.selectVersion(versionName);
+
+        //---------------------------------------------------------------------------------------..
+        // Features Page
+        //---------------------------------------------------------------------------------------..
         narrator.narrate("This takes us to the Features Page. Features are what we actually want to plan and track, although they are split into one or more sprints.");
         narrator.pause(.5f);
         narrator.narrate("Every product version can have any number of features.");
         narrator.pause(1);
         narrator.narrate("Lets assume Jupiter is a server that keeps track of micro services configurations. So the first feature would be a rest API that supports retrieving configurations.");
-        narrator.narrate("Select the Create button");
-
+        narrator.narrate("Select the Create button...");
         //---------------------------------------------------------------------------------------..
         // Create Feature
         //---------------------------------------------------------------------------------------..
         seleniumHandler.click(FeatureListView.CREATE_FEATURE_BUTTON_ID);
         narrator.narrate("Lets call the feature 'Property request API'.");
         seleniumHandler.setTextField(FeatureDialog.FEATURE_NAME_FIELD, featureName);
-        narrator.narrateAsync("Select Save close the dialog and persist our feature.");
+        narrator.narrateAsync("Select Save to close the dialog and persist our feature.");
         seleniumHandler.click(FeatureDialog.CONFIRM_BUTTON);
         narrator.pushExaggeration(EXAGGERATE_HIGH);
         narrator.narrate("Jupiter has its first feature!");
         narrator.pop();
         narrator.pause(1);
         narrator.narrate("Again, as in the other pages, the little notepad and trashcan icons, on the right side, can be used to edit or delete your feature.");
-
         narrator.pause(1);
-
-        narrator.narrate("Lets select our feature.");
+        narrator.narrate("Lets select our feature...");
         featureListViewTester.selectFeature(featureName);
-        seleniumHandler.waitUntilBrowserClosed(5000);
-//        takeSprintDialogScreenshots();
 
-        sprintListViewTester.selectSprint(sprintName);
-        seleniumHandler.waitForElementToBeClickable(RenderUtil.GANTT_CHART);
-        seleniumHandler.waitForElementToBeClickable(RenderUtil.BURNDOWN_CHART);
-
-        // After visiting the SprintQualityBoard, go back to SprintListView and use the column config button
-        seleniumHandler.click("Sprints (" + sprintName + ")"); // Go back to SprintListView using breadcrumb
-        // Find and click the column configuration button
+        //---------------------------------------------------------------------------------------..
+        // Sprints Page
+        //---------------------------------------------------------------------------------------..
+        narrator.narrate("We are now on the Sprints page of our product. On this page we however only see sprints related to the Feature we just selected.");
+        narrator.pause(0.5f);
+        narrator.narrate("Lets create a sprint for our feature and just call it: Minimum Viable Product.");
+        narrator.narrate("Select the Create button.");
+        //---------------------------------------------------------------------------------------..
+        // Create a Sprint
+        //---------------------------------------------------------------------------------------..
+        seleniumHandler.click(SprintListView.CREATE_SPRINT_BUTTON);
+        seleniumHandler.setTextField(SprintDialog.SPRINT_NAME_FIELD, sprintName);
+        narrator.narrateAsync("Select Save to close the dialog and persist our sprint.");
+        seleniumHandler.click(SprintDialog.CONFIRM_BUTTON);
+        narrator.pushExaggeration(EXAGGERATE_HIGH);
+        narrator.narrate("That was easy!");
+        narrator.pop();
+        narrator.narrate("Now we need to start planning our sprint. We do this in the Tasks page. Not by selecting the sprint, but configuring it with the small crog icon on the right side.");
         seleniumHandler.click(SprintListView.SPRINT_GRID_CONFIG_BUTTON_PREFIX + sprintName);
-        seleniumHandler.waitForElementToBeClickable(RenderUtil.GANTT_CHART);
+
+        //---------------------------------------------------------------------------------------..
+        // Tasks Page
+        //---------------------------------------------------------------------------------------..
+        narrator.narrate("This is the page where you plan your sprint including the gantt chart.");
+        narrator.pause(1f);
+        narrator.narrate("Lets start by adding a milestone that will fix the starting point of our sprint.");
+        narrator.narrate("Select the Create Milestone button...");
+        seleniumHandler.click(TaskListView.CREATE_MILESTONE_BUTTON_ID);
+        String milestoneName = "New Milestone-1";
+        seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, milestoneName);
+        narrator.narrate("Lets also create a story. We use stories as containers for the actual work items called tasks.");
+        seleniumHandler.click(TaskListView.CREATE_STORY_BUTTON_ID);
+        seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, "New Story-2");
+        narrator.narrate("You can see that all the new created items are always added to the end of our table.");
+        narrator.pause(1f);
+        narrator.narrate("Lets create 3 additional tasks as work units for our first sprint.");
+        seleniumHandler.click(TaskListView.CREATE_TASK_BUTTON_ID);
+        seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, "New Task-3");
+        seleniumHandler.click(TaskListView.CREATE_TASK_BUTTON_ID);
+        seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, "New Task-4");
+        seleniumHandler.click(TaskListView.CREATE_TASK_BUTTON_ID);
+        seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, "New Task-5");
+        narrator.pushExaggeration(EXAGGERATE_HIGH);
+        narrator.narrate("Good!");
+        narrator.pop();
+        narrator.pause(1f);
+        narrator.narrate("Select the edit button to change to whole table into edit mode...");
+        seleniumHandler.click(TaskListView.EDIT_BUTTON_ID);
+        narrator.pause(1f);
+        narrator.narrate("We can now edit all valid milestone, story or task cells.");
+        narrator.narrate("Lets give the milestone a fixed start date and time. We want our developers to start working on this Monday first thing in the morning.");
+        seleniumHandler.click(TaskListView.TASK_GRID_NAME_PREFIX + milestoneName);
 
 
-        userListViewTester.switchToUserListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+        narrator.narrate("If you look carefully, you will notice that all three tasks have been assigned to the story. The story is the parent of these tasks.");
+        narrator.narrate("Kassandra does that automatically. All three tasks also are automatically assigned to myself.");
+        narrator.narrate("But, as i am not a developer, we will assign these tasks to a developer.");
+        narrator.narrate("We want our story to depend on our milestone. The story can only start after the milestone.");
+        narrator.narrate("Defining such a dependency between a task or story to other tasks or stories can be done in 3 different ways...");
+
+
+//        sprintListViewTester.selectSprint(sprintName);
+//        seleniumHandler.waitForElementToBeClickable(RenderUtil.GANTT_CHART);
+//        seleniumHandler.waitForElementToBeClickable(RenderUtil.BURNDOWN_CHART);
+//
+//        // After visiting the SprintQualityBoard, go back to SprintListView and use the column config button
+//        seleniumHandler.click("Sprints (" + sprintName + ")"); // Go back to SprintListView using breadcrumb
+//        // Find and click the column configuration button
+//        seleniumHandler.click(SprintListView.SPRINT_GRID_CONFIG_BUTTON_PREFIX + sprintName);
+//        seleniumHandler.waitForElementToBeClickable(RenderUtil.GANTT_CHART);
+
+
+//        userListViewTester.switchToUserListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
 //        takeUserDialogScreenshots();
 
         // Navigate to AvailabilityListView for the current user and take screenshots
-        availabilityListViewTester.switchToAvailabilityListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
+//        availabilityListViewTester.switchToAvailabilityListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
 //        takeAvailabilityDialogScreenshots();
 
         // Navigate to LocationListView for the current user and take screenshots
-        locationListViewTester.switchToLocationListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
+//        locationListViewTester.switchToLocationListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
 //        takeLocationDialogScreenshots();
 
         // Navigate to OffDayListView for the current user and take screenshots
-        offDayListViewTester.switchToOffDayListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
+//        offDayListViewTester.switchToOffDayListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
 //        takeOffDayDialogScreenshots();
+        seleniumHandler.waitUntilBrowserClosed(5000);
 
     }
 
@@ -265,7 +326,7 @@ public class GenerateSprint extends AbstractUiTestUtil {
 
     private static List<RandomCase> listRandomCases() {
         RandomCase[] randomCases = new RandomCase[]{//
-                new RandomCase(1, LocalDate.parse("2025-10-23"), Duration.ofDays(10), 0, 0, 0, 0, 6, 8, 12, 6, 13)//
+                new RandomCase(1, LocalDate.parse("2025-10-23"), Duration.ofDays(10), 0, 0, 0, 0, 0, 6, 8, 12, 6, 13)//
         };
         return Arrays.stream(randomCases).toList();
     }

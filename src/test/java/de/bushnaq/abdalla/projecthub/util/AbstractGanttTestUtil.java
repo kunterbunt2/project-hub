@@ -254,17 +254,17 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
         }
         Profiler.log("generating users for test case " + randomCase.getTestCaseIndex());
         {
-            int numberOfProducts = random.nextInt(randomCase.getMaxNumberOfProducts()) + 1;
+            int numberOfProducts = generateRandomValue(randomCase.getMinNumberOfProducts(), randomCase.getMaxNumberOfProducts());
             try (Profiler pc = new Profiler(SampleType.JPA)) {
                 for (int p = 0; p < numberOfProducts; p++) {
                     Product product          = addProduct(nameGenerator.generateProductName(productIndex));
-                    int     numberOfVersions = random.nextInt(randomCase.getMaxNumberOfVersions()) + 1;
+                    int     numberOfVersions = generateRandomValue(1, randomCase.getMaxNumberOfVersions());
                     for (int v = 0; v < numberOfVersions; v++) {
                         Version version          = addVersion(product, nameGenerator.generateVersionName(v));
-                        int     numberOfFeatures = random.nextInt(randomCase.getMaxNumberOfFeatures()) + 1;
+                        int     numberOfFeatures = generateRandomValue(1, randomCase.getMaxNumberOfFeatures());
                         for (int f = 0; f < numberOfFeatures; f++) {
                             Feature feature         = addFeature(version, nameGenerator.generateFeatureName(featureIndex));
-                            int     numberOfSprints = random.nextInt(randomCase.getMaxNumberOfSprints()) + 1;
+                            int     numberOfSprints = generateRandomValue(1, randomCase.getMaxNumberOfSprints());
                             for (int s = 0; s < numberOfSprints; s++) {
                                 generateSprint(testInfo, randomCase, feature);
                             }
@@ -274,6 +274,13 @@ public class AbstractGanttTestUtil extends AbstractEntityGenerator {
             }
             Profiler.log("generate Products for test case -" + randomCase.getTestCaseIndex());
         }
+    }
+
+    private int generateRandomValue(int minNumber, int maxNumberExclusive) {
+        if (maxNumberExclusive - minNumber > 0)
+            return random.nextInt(maxNumberExclusive - minNumber) + minNumber;
+        else
+            return minNumber;
     }
 
     private void generateSprint(TestInfo testInfo, RandomCase randomCase, Feature project) throws Exception {

@@ -22,9 +22,7 @@ import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
-import javax.sound.sampled.LineEvent;
+import javax.sound.sampled.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -78,6 +76,8 @@ public class Narrator {
             throw new RuntimeException("Failed to create audio output directory: " + this.audioDir, e);
         }
         initNextId();
+        // Log available playback mixers to help choose a device
+        logAvailablePlaybackMixers();
     }
 
     private String buildFileName(String text, float temperature, float exaggeration, float cfgWeight) {
@@ -145,6 +145,33 @@ public class Narrator {
         return temperature;
     }
 
+    /**
+     * Find a playback mixer by name from system property or environment variable, else return null.
+     * Matching is case-insensitive and checks both name and description contains the token.
+     * <p>
+     * System property: projecthub.audio.playback.mixer
+     * Env var: PROJECTHUB_AUDIO_PLAYBACK_MIXER
+     */
+    private static Mixer.Info findConfiguredPlaybackMixer() {
+        String token = "direct audio device: directsound playback"; // Replace with actual retrieval logic
+//        String token = System.getProperty("projecthub.audio.playback.mixer");
+//        if (token == null || token.isBlank()) {
+//            token = System.getenv("PROJECTHUB_AUDIO_PLAYBACK_MIXER");
+//        }
+//        if (token == null || token.isBlank()) return null;
+        String t = token.toLowerCase(Locale.ROOT);
+        for (Mixer.Info info : AudioSystem.getMixerInfo()) {
+            String name = info.getName() == null ? "" : info.getName().toLowerCase(Locale.ROOT);
+            String desc = info.getDescription() == null ? "" : info.getDescription().toLowerCase(Locale.ROOT);
+            if (name.contains(t) || desc.contains(t)) {
+                logger.warn("using playback mixer '{}'.", token);
+                return info;
+            }
+        }
+        logger.warn("Requested playback mixer '{}' not found. Falling back to default.", token);
+        return null;
+    }
+
     private void initNextId() {
         int max = 0;
         try {
@@ -169,6 +196,25 @@ public class Narrator {
         }
         this.nextId = max + 1; // reset per directory
         logger.debug("Initialized nextId={} for directory {}", this.nextId, audioDir);
+    }
+
+    /**
+     * Enumerate and log all playback-capable mixers (supporting Clip or SourceDataLine).
+     */
+    private static void logAvailablePlaybackMixers() {
+        try {
+            for (Mixer.Info info : AudioSystem.getMixerInfo()) {
+                Mixer   mixer          = AudioSystem.getMixer(info);
+                boolean supportsClip   = mixer.isLineSupported(new DataLine.Info(Clip.class, null));
+                boolean supportsSource = mixer.isLineSupported(new DataLine.Info(javax.sound.sampled.SourceDataLine.class, null));
+                if (supportsClip || supportsSource) {
+                    logger.info("Playback device: name='{}', desc='{}', vendor='{}', version='{}' (Clip={}, SourceDataLine={})",
+                            info.getName(), info.getDescription(), info.getVendor(), info.getVersion(), supportsClip, supportsSource);
+                }
+            }
+        } catch (Throwable t) {
+            logger.warn("Failed to enumerate playback mixers", t);
+        }
     }
 
     // Blocking convenience method preserving existing behavior
@@ -236,7 +282,23 @@ public class Narrator {
                     return;
                 }
 
-                Clip clip = AudioSystem.getClip();
+                Clip clip = null;
+//                Mixer.Info chosen = findConfiguredPlaybackMixer();
+//                try {
+//                    if (chosen != null) {
+//                        Mixer mixer = AudioSystem.getMixer(chosen);
+//                        if (mixer.isLineSupported(new DataLine.Info(Clip.class, null))) {
+//                            clip = (Clip) mixer.getLine(new DataLine.Info(Clip.class, null));
+//                            logger.info("Using configured playback mixer: {}", chosen.getName());
+//                        }
+//                    }
+//                } catch (Exception e) {
+//                    logger.warn("Failed to get Clip from configured mixer, falling back to default: {}", e.toString());
+//                    clip = null;
+//                }
+                if (clip == null) {
+                    clip = AudioSystem.getClip();
+                }
                 thisPlayback.setClip(clip);
 
                 clip.addLineListener(ev -> {

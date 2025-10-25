@@ -54,9 +54,12 @@ import static org.junit.jupiter.api.Assertions.*;
 @Getter
 public class SeleniumHandler {
     private       WebDriver       driver;
+    // Humanize typing configuration
+    private       boolean         humanize          = false;
     private final Duration        implicitWaitDuration;
     private final Stack<Duration> implicitWaitStack = new Stack<>();
     private final Logger          logger            = LoggerFactory.getLogger(this.getClass());
+    private       int             typingDelayMillis = 50;
     private final VideoRecorder   videoRecorder;
     private       WebDriverWait   wait;
     private       Duration        waitDuration;
@@ -710,10 +713,10 @@ public class SeleniumHandler {
             i.sendKeys(Keys.CONTROL + "a");
             i.sendKeys(Keys.DELETE);
         }
-        i.sendKeys(text);
+        // Humanized typing into the combobox
+        typeText(i, text);
         sendKeys(id, Keys.RETURN);
         wait(500);
-//        setTextField(id, value);
         sendKeys(id, Keys.ARROW_DOWN, Keys.TAB);
         logger.info("set ComboBox value=" + text);
 //        wait(1000);
@@ -764,6 +767,14 @@ public class SeleniumHandler {
         }
     }
 
+    /**
+     * Enable or disable humanized typing mode.
+     * When enabled, text is typed character-by-character with a tiny delay.
+     */
+    public void setHumanize(boolean humanize) {
+        this.humanize = humanize;
+    }
+
     public void setImplicitWaitDuration(Duration duration) {
         getDriver().manage().timeouts().implicitlyWait(duration);
     }
@@ -777,20 +788,23 @@ public class SeleniumHandler {
             i.sendKeys(Keys.CONTROL + "a");
             i.sendKeys(Keys.DELETE);
         }
-        i.sendKeys(userName);
+        // Humanized typing
+        typeText(i, userName);
     }
 
     public void setLoginPassword(String loginPassword) {
         WebElement passwordElement = findElement(By.id(LoginView.LOGIN_VIEW_PASSWORD));
         logger.info("sent loginPassword='{}' to element with name '{}}'%n", loginPassword, LoginView.LOGIN_VIEW_PASSWORD);
-        passwordElement.sendKeys(loginPassword);
+        // Humanized typing
+        typeText(passwordElement, loginPassword);
     }
 
     public void setLoginUser(String loginUser) {
         waitForElementToBeLocated(LoginView.LOGIN_VIEW_USERNAME);
         WebElement usernameElement = findElement(By.id(LoginView.LOGIN_VIEW_USERNAME));
         logger.info("sent loginUser='{}' to element with id '{}'%n", loginUser, LoginView.LOGIN_VIEW_USERNAME);
-        usernameElement.sendKeys(loginUser);
+        // Humanized typing
+        typeText(usernameElement, loginUser);
     }
 
     public void setTextArea(String id, String userName) {
@@ -802,7 +816,8 @@ public class SeleniumHandler {
             i.sendKeys(Keys.CONTROL + "a");
             i.sendKeys(Keys.DELETE);
         }
-        i.sendKeys(userName);
+        // Humanized typing
+        typeText(i, userName);
     }
 
     public void setTextField(String id, String text) {
@@ -816,7 +831,15 @@ public class SeleniumHandler {
             i.sendKeys(Keys.DELETE);
         }
         logger.info("set TextField " + id + " to '" + text + "'\n");
-        i.sendKeys(text);
+        // Humanized typing
+        typeText(i, text);
+    }
+
+    /**
+     * Adjust per-character typing delay in milliseconds for humanized mode.
+     */
+    public void setTypingDelayMillis(int typingDelayMillis) {
+        this.typingDelayMillis = Math.max(0, typingDelayMillis);
     }
 
     public void setWaitDuration(Duration waitDuration) {
@@ -919,6 +942,29 @@ public class SeleniumHandler {
         WebElement e = findElement(By.id(id));
         WebElement i = e.findElement(By.tagName("input"));
         i.click();
+    }
+
+    /**
+     * Internal helper to type text into an input/textarea.
+     * Respects humanized typing mode if enabled.
+     */
+    private void typeText(WebElement inputElement, String text) {
+        if (text == null || text.isEmpty()) return;
+        if (!humanize) {
+            inputElement.sendKeys(text);
+            return;
+        }
+        for (int idx = 0; idx < text.length(); idx++) {
+            String ch = String.valueOf(text.charAt(idx));
+            inputElement.sendKeys(ch);
+            if (typingDelayMillis > 0) {
+                try {
+                    Thread.sleep(typingDelayMillis);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
     }
 
     public void wait(int milliseconds) {

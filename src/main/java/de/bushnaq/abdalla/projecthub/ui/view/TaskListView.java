@@ -544,15 +544,17 @@ public class TaskListView extends Main implements AfterNavigationObserver {
 
                 return container;
             })).setHeader("Name").setAutoWidth(true).setFlexGrow(1);
+            nameColumn.setId("task-grid-name-column");
         }
         //Start - Editable only for Milestone tasks
         {
-            grid.addColumn(new ComponentRenderer<>(task -> {
+            Grid.Column<Task> startColumn = grid.addColumn(new ComponentRenderer<>(task -> {
                 if (isEditMode && task.isMilestone()) {
                     // Editable for Milestone tasks
                     DateTimePicker startField = new DateTimePicker();
                     startField.setValue(task.getStart() != null ? task.getStart() : LocalDateTime.now());
                     startField.setWidthFull();
+                    startField.setId(TASK_GRID_NAME_PREFIX + task.getName() + "-start-field");
 
                     startField.addValueChangeListener(e -> {
                         if (e.isFromClient()) {

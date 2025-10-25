@@ -35,6 +35,7 @@ public class RandomCase {
     private final int       maxNumberOfUsers;
     private final int       maxNumberOfVersions;
     private final Duration  maxStartDateShift;
+    private final int       minNumberOfProducts;
     private final LocalDate minStartDate;
     private final long      seed;
     private final int       testCaseIndex;
@@ -43,6 +44,7 @@ public class RandomCase {
         this.testCaseIndex       = testCaseIndex;
         this.minStartDate        = LocalDate.parse("2024-12-15");
         this.maxStartDateShift   = Duration.ofDays(1);
+        this.minNumberOfProducts = 1;
         this.maxNumberOfProducts = 1;
         this.maxNumberOfVersions = 1;
         this.maxNumberOfFeatures = 1;
@@ -54,10 +56,11 @@ public class RandomCase {
         this.seed                = seed;
     }
 
-    public RandomCase(int testCaseIndex, LocalDate minStartDate, Duration maxStartDateShift, int maxNumberOfProducts, int maxNumberOfVersions, int maxNumberOfFeatures, int maxNumberOfSprints, int maxDurationDays, int maxNumberOfStories, int maxNumberOfUsers, int maxNumberOfTasks, int seed) {
+    public RandomCase(int testCaseIndex, LocalDate minStartDate, Duration maxStartDateShift, int minNumberOfProducts, int maxNumberOfProducts, int maxNumberOfVersions, int maxNumberOfFeatures, int maxNumberOfSprints, int maxDurationDays, int maxNumberOfStories, int maxNumberOfUsers, int maxNumberOfTasks, int seed) {
         this.testCaseIndex       = testCaseIndex;
         this.minStartDate        = minStartDate;
         this.maxStartDateShift   = maxStartDateShift;
+        this.minNumberOfProducts = minNumberOfProducts;
         this.maxNumberOfProducts = maxNumberOfProducts;
         this.maxNumberOfVersions = maxNumberOfVersions;
         this.maxNumberOfFeatures = maxNumberOfFeatures;
