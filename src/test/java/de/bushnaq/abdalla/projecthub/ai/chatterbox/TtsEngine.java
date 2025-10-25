@@ -23,15 +23,13 @@ package de.bushnaq.abdalla.projecthub.ai.chatterbox;
  */
 public interface TtsEngine {
     /**
-     * Synthesizes speech for the provided text and parameters.
+     * Synthesizes speech for the provided text and attributes.
      *
-     * @param text         input text
-     * @param temperature  sampling temperature
-     * @param exaggeration prosody/exaggeration control
-     * @param cfgWeight    CFG (classifier-free guidance) weight
+     * @param text       input text
+     * @param attributes engine-specific attributes (temperature, exaggeration, etc.)
      * @return WAV audio bytes
      * @throws Exception on synthesis failure
      */
-    byte[] synthesize(String text, float temperature, float exaggeration, float cfgWeight) throws Exception;
+    byte[] synthesize(String text, NarratorAttribute attributes) throws Exception;
 }
 

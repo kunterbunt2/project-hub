@@ -39,21 +39,15 @@ import java.util.concurrent.TimeUnit;
  */
 public class Narrator {
 
-    private static final Logger          logger = LoggerFactory.getLogger(Narrator.class);
-    private final        AudioPlayer     audioPlayer;  // playback queue/handles
-    private final        TtsCacheManager cacheManager; // chronological file coordinator
+    private static final Logger            logger = LoggerFactory.getLogger(Narrator.class);
+    private final        AudioPlayer       audioPlayer;  // playback queue/handles
+    private final        TtsCacheManager   cacheManager; // chronological file coordinator
     @Getter
     @Setter
-    private              float           cfgWeight;
+    private              NarratorAttribute defaultAttributes; // default TTS attributes for this narrator
     @Getter
-    @Setter
-    private              float           exaggeration;
-    @Getter
-    private volatile     Playback        playback; // most recently scheduled playback for external access
-    @Getter
-    @Setter
-    private              float           temperature;
-    private final        TtsEngine       ttsEngine;    // synthesis strategy
+    private volatile     Playback          playback; // most recently scheduled playback for external access
+    private final        TtsEngine         ttsEngine;    // synthesis strategy
 
     /**
      * Creates a Narrator storing audio under {@code relativeFolder} and using the default TTS engine.
@@ -70,16 +64,19 @@ public class Narrator {
      */
     public Narrator(String relativeFolder, TtsEngine engine) {
         Path audioDir = Path.of(relativeFolder);
-        this.cacheManager = new TtsCacheManager(audioDir);
-        this.audioPlayer  = new AudioPlayer();
-        this.ttsEngine    = engine;
-        this.temperature  = 0.5f;
-        this.exaggeration = 0.5f;
-        this.cfgWeight    = 1.0f;
+        this.cacheManager      = new TtsCacheManager(audioDir);
+        this.audioPlayer       = new AudioPlayer();
+        this.ttsEngine         = engine;
+        this.defaultAttributes = new NarratorAttribute(0.5f, 1.0f, 0.5f);
     }
 
     private static TtsEngine defaultEngine() {
-        return (text, temp, ex, cfg) -> ChatterboxTTS.generateSpeech(text, temp, ex, cfg);
+        return (text, attrs) -> ChatterboxTTS.generateSpeech(
+                text,
+                attrs.getTemperature() != null ? attrs.getTemperature() : 0.5f,
+                attrs.getExaggeration() != null ? attrs.getExaggeration() : 0.5f,
+                attrs.getCfg_weight() != null ? attrs.getCfg_weight() : 1.0f
+        );
     }
 
     /**
@@ -113,9 +110,9 @@ public class Narrator {
      * Nullable fields in {@code attrs} fall back to instance defaults.
      */
     public Narrator narrateAsync(NarratorAttribute attrs, String text) throws Exception {
-        float eTemp = attrs != null && attrs.getTemperature() != null ? attrs.getTemperature() : this.temperature;
-        float eEx   = attrs != null && attrs.getExaggeration() != null ? attrs.getExaggeration() : this.exaggeration;
-        float eCfg  = attrs != null && attrs.getCfg_weight() != null ? attrs.getCfg_weight() : this.cfgWeight;
+        float eTemp = attrs != null && attrs.getTemperature() != null ? attrs.getTemperature() : defaultAttributes.getTemperature();
+        float eEx   = attrs != null && attrs.getExaggeration() != null ? attrs.getExaggeration() : defaultAttributes.getExaggeration();
+        float eCfg  = attrs != null && attrs.getCfg_weight() != null ? attrs.getCfg_weight() : defaultAttributes.getCfg_weight();
         return narrateResolved(eTemp, eEx, eCfg, text);
     }
 
@@ -124,9 +121,9 @@ public class Narrator {
      * Returns immediately with a {@link Playback} handle available via {@link #getPlayback()}.
      */
     public Narrator narrateAsync(String text) throws Exception {
-        float eTemp = this.temperature;
-        float eEx   = this.exaggeration;
-        float eCfg  = this.cfgWeight;
+        float eTemp = defaultAttributes.getTemperature();
+        float eEx   = defaultAttributes.getExaggeration();
+        float eCfg  = defaultAttributes.getCfg_weight();
         return narrateResolved(eTemp, eEx, eCfg, text);
     }
 
@@ -151,7 +148,11 @@ public class Narrator {
         } else {
             long t0 = System.nanoTime();
             logger.info("TTS generate start: temp={}, ex={}, cfg={}, file={}, text=\"{}\"", eTemp, eEx, eCfg, plan.path().getFileName(), text);
-            byte[] audio = ttsEngine.synthesize(text, eTemp, eEx, eCfg);
+
+            // Create NarratorAttribute with resolved values
+            NarratorAttribute resolvedAttrs = new NarratorAttribute(eEx, eCfg, eTemp);
+            byte[]            audio         = ttsEngine.synthesize(text, resolvedAttrs);
+
             cacheManager.writeChronological(audio, plan.path());
             long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - t0);
             logger.info("TTS generate done:   temp={}, ex={}, cfg={}, file={}, bytes={}, took={} ms", eTemp, eEx, eCfg, plan.path().getFileName(), audio.length, tookMs);

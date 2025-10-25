@@ -21,7 +21,6 @@ import dasniko.testcontainers.keycloak.KeycloakContainer;
 import de.bushnaq.abdalla.projecthub.dto.OffDayType;
 import de.bushnaq.abdalla.projecthub.ui.dialog.*;
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
-import de.bushnaq.abdalla.projecthub.ui.util.RenderUtil;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.*;
 import de.bushnaq.abdalla.projecthub.ui.view.util.*;
@@ -31,6 +30,8 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.openqa.selenium.By;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -121,7 +122,7 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
     private static List<RandomCase> listRandomCases() {
         RandomCase[] randomCases = new RandomCase[]{//
 //                new RandomCase(1, 5, 8, 8, 8, 1),//
-                new RandomCase(1, LocalDate.parse("2024-12-01"), Duration.ofDays(10), 1, 1, 1, 1, 6, 8, 8, 6, 13)//
+                new RandomCase(1, LocalDate.parse("2024-12-01"), Duration.ofDays(10), 1, 1, 1, 1, 1, 6, 8, 8, 6, 13)//
 //                new RandomCase(2, 10, 3, 2, 3, 1)//
 //                new RandomCase(2, 4, 4, 4, 4, 10, 7, 8, 5, 1)//
         };
@@ -349,52 +350,56 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         taskName    = nameGenerator.generateSprintName(0);
 
         productListViewTester.switchToProductListViewWithOidc("christopher.paul@kassandra.org", "password", "../project-hub.wiki/screenshots/login-view.png", testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
-        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/product-list-view.png");
-        takeProductDialogScreenshots();
+//        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/product-list-view.png");
+//        takeProductDialogScreenshots();
         productListViewTester.selectProduct(productName);
-        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/version-list-view.png");
-        takeVersionDialogScreenshots();
+//        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/version-list-view.png");
+//        takeVersionDialogScreenshots();
         versionListViewTester.selectVersion(versionName);
-        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/feature-list-view.png");
-        takeProjectDialogScreenshots();
+//        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/feature-list-view.png");
+//        takeProjectDialogScreenshots();
         featureListViewTester.selectFeature(featureName);
-        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/sprint-list-view.png");
-        takeSprintDialogScreenshots();
+//        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/sprint-list-view.png");
+//        takeSprintDialogScreenshots();
 
 //        seleniumHandler.setWindowSize(1800, 1300);
-        sprintListViewTester.selectSprint(sprintName);
-        seleniumHandler.waitForElementToBeClickable(RenderUtil.GANTT_CHART);
-        seleniumHandler.waitForElementToBeClickable(RenderUtil.BURNDOWN_CHART);
-        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/sprint-quality-board.png");
-
-        // After visiting the SprintQualityBoard, go back to SprintListView and use the column config button
-        seleniumHandler.click("Sprints (" + sprintName + ")"); // Go back to SprintListView using breadcrumb
-        // Find and click the column configuration button
         seleniumHandler.click(SprintListView.SPRINT_GRID_CONFIG_BUTTON_PREFIX + sprintName);
-        seleniumHandler.waitForElementToBeClickable(RenderUtil.GANTT_CHART);
-        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/task-list-view.png");
+        seleniumHandler.waitUntil(ExpectedConditions.elementToBeClickable(By.id(TaskListView.TASK_LIST_PAGE_TITLE)));
 
+//        sprintListViewTester.selectSprint(sprintName);
+//        seleniumHandler.waitForElementToBeClickable(RenderUtil.GANTT_CHART);
+//        seleniumHandler.waitForElementToBeClickable(RenderUtil.BURNDOWN_CHART);
+//        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/sprint-quality-board.png");
+        takeTaskDialogScreenshots();
 
-        userListViewTester.switchToUserListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
-        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/user-list-view.png");
-        takeUserDialogScreenshots();
-
-//        seleniumHandler.setWindowSize(1024, 800);
-        // Navigate to AvailabilityListView for the current user and take screenshots
-        availabilityListViewTester.switchToAvailabilityListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
-        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/availability-list-view.png");
-        takeAvailabilityDialogScreenshots();
-
-        // Navigate to LocationListView for the current user and take screenshots
-        locationListViewTester.switchToLocationListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
-        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/location-list-view.png");
-        takeLocationDialogScreenshots();
-
-        // Navigate to OffDayListView for the current user and take screenshots
-//        seleniumHandler.setWindowSize(1800, 1300);
-        offDayListViewTester.switchToOffDayListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
-        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/offday-list-view.png");
-        takeOffDayDialogScreenshots();
+//        // After visiting the SprintQualityBoard, go back to SprintListView and use the column config button
+//        seleniumHandler.click("Sprints (" + sprintName + ")"); // Go back to SprintListView using breadcrumb
+//        // Find and click the column configuration button
+//        seleniumHandler.click(SprintListView.SPRINT_GRID_CONFIG_BUTTON_PREFIX + sprintName);
+//        seleniumHandler.waitForElementToBeClickable(RenderUtil.GANTT_CHART);
+//        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/task-list-view.png");
+//
+//
+//        userListViewTester.switchToUserListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+//        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/user-list-view.png");
+//        takeUserDialogScreenshots();
+//
+////        seleniumHandler.setWindowSize(1024, 800);
+//        // Navigate to AvailabilityListView for the current user and take screenshots
+//        availabilityListViewTester.switchToAvailabilityListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
+//        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/availability-list-view.png");
+//        takeAvailabilityDialogScreenshots();
+//
+//        // Navigate to LocationListView for the current user and take screenshots
+//        locationListViewTester.switchToLocationListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
+//        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/location-list-view.png");
+//        takeLocationDialogScreenshots();
+//
+//        // Navigate to OffDayListView for the current user and take screenshots
+////        seleniumHandler.setWindowSize(1800, 1300);
+//        offDayListViewTester.switchToOffDayListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
+//        seleniumHandler.takeScreenShot("../project-hub.wiki/screenshots/offday-list-view.png");
+//        takeOffDayDialogScreenshots();
 
         seleniumHandler.waitUntilBrowserClosed(5000);
     }
@@ -420,6 +425,20 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
         seleniumHandler.waitForElementToBeClickable(ConfirmDialog.CANCEL_BUTTON); // Wait for dialog
         seleniumHandler.takeElementScreenShot(seleniumHandler.findDialogOverlayElement(ConfirmDialog.CONFIRM_DIALOG), ConfirmDialog.CONFIRM_DIALOG, "../project-hub.wiki/screenshots/sprint-delete-dialog.png");
         seleniumHandler.click(ConfirmDialog.CANCEL_BUTTON);
+    }
+
+    private void takeTaskDialogScreenshots() {
+        // Create product dialog
+        seleniumHandler.click(TaskListView.CREATE_MILESTONE_BUTTON_ID);
+        seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, "New Milestone-34");
+        seleniumHandler.click(TaskListView.CREATE_STORY_BUTTON_ID);
+        seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, "New Story-2");
+        seleniumHandler.click(TaskListView.CREATE_TASK_BUTTON_ID);
+        seleniumHandler.ensureIsInList(ProductListView.PRODUCT_GRID_NAME_PREFIX, "New Task-3");
+        // select the milestone
+        seleniumHandler.click(TaskListView.TASK_GRID_NAME_PREFIX + "New Milestone-34");
+        // select start cell
+        seleniumHandler.click(TaskListView.TASK_GRID_NAME_PREFIX + "New Milestone-34" + "-start-cell");
     }
 
     /**
