@@ -22,154 +22,68 @@ import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
-import javax.sound.sampled.LineEvent;
 import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.security.MessageDigest;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.util.Locale;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Narrator provides text-to-speech generation with on-disk caching and queued audio playback.
  * <p>
- * Features:
- * <ul>
- *   <li>Deterministic cache key based on text and TTS attributes (temperature, exaggeration, cfgWeight)</li>
- *   <li>Chronological copies for easy per-session/history browsing</li>
- *   <li>Serialized playback: each clip waits until the previous one finishes</li>
- *   <li>Per-call attribute overrides via {@link NarratorAttribute}; instance fields are used as defaults</li>
- * </ul>
+ * Responsibilities are split into collaborators:
+ * - TtsCacheManager: build canonical name, manage cache/chronological files
+ * - TtsEngine: synthesize WAV bytes for text
+ * - AudioPlayer: serialized playback with {@link Playback}
  */
 public class Narrator {
 
-    private static final Pattern  ID_PREFIX    = Pattern.compile("^(\\d{3,})-.*");
-    private static final Logger   logger       = LoggerFactory.getLogger(Narrator.class);
-    private final        Path     audioDir; // Directory to store generated audio files
-    private final        Path     cacheDir; // Subfolder for canonical cached files
+    private static final Logger logger = LoggerFactory.getLogger(Narrator.class);
+    private final AudioPlayer     audioPlayer;  // playback queue/handles
+    private final TtsCacheManager cacheManager; // file/cache coordinator
     @Getter
     @Setter
-    private              float    cfgWeight;
+    private float cfgWeight;
     @Getter
     @Setter
-    private              float    exaggeration;
-    private              Playback lastPlayback = null;
-    private              int      nextId; // incrementing file id per audioDir
+    private float exaggeration;
     @Getter
-    private volatile     Playback playback;//most recently scheduled playback for external access
-    private final        Object   queueLock    = new Object();// Serialize all playback: each request waits for the previous to finish before starting
+    private volatile Playback playback; // most recently scheduled playback for external access
     @Getter
     @Setter
-    private              float    temperature;
+    private float temperature;
+    private final TtsEngine       ttsEngine;    // synthesis strategy
 
     /**
-     * Creates a Narrator that stores generated audio under the given folder.
-     * A cache subfolder is created for canonical files.
-     *
-     * @param relativeFolder target directory for generated audio and the cache subfolder
-     * @throws RuntimeException if the directory cannot be created
+     * Creates a Narrator storing generated audio under the given folder using default TTS engine.
      */
     public Narrator(String relativeFolder) {
-        this.audioDir = Path.of(relativeFolder);
-        this.cacheDir = this.audioDir.resolve("cache");
-        // Set sensible defaults used when no per-call attributes are provided
+        this(relativeFolder, defaultEngine());
+    }
+
+    /**
+     * Creates a Narrator with an explicit {@link TtsEngine}.
+     */
+    public Narrator(String relativeFolder, TtsEngine engine) {
+        Path audioDir = Path.of(relativeFolder);
+        this.cacheManager = new TtsCacheManager(audioDir);
+        this.audioPlayer  = new AudioPlayer();
+        this.ttsEngine    = engine;
+        // defaults
         this.temperature  = 0.5f;
         this.exaggeration = 0.5f;
         this.cfgWeight    = 1.0f;
-        try {
-            Files.createDirectories(this.audioDir);
-            Files.createDirectories(this.cacheDir);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create audio output directory: " + this.audioDir, e);
-        }
-        initNextId();
     }
 
-    private String buildFileName(String text, float temperature, float exaggeration, float cfgWeight) {
-        String prefix = sanitizePrefix(crop(text, 20));
-        if (prefix.isBlank()) prefix = "tts";
-
-        // Locale-stable formatting for floats
-        DecimalFormat df      = new DecimalFormat("0.########", DecimalFormatSymbols.getInstance(Locale.ROOT));
-        String        tempStr = df.format(temperature);
-        String        exStr   = df.format(exaggeration);
-        String        cfgStr  = df.format(cfgWeight);
-
-        String toHash = text + "|temp=" + tempStr + "|ex=" + exStr + "|cfg=" + cfgStr;
-        String hash   = shortSha256Hex(toHash, 12);
-        return prefix + "_" + hash + ".wav";
-    }
-
-    private void cleanupCacheSiblings(String canonicalName) {
-        // canonicalName format: <prefix>_<hash>.wav ; delete other files with same <prefix>_* .wav
-        int sep = canonicalName.lastIndexOf('_');
-        int dot = canonicalName.lastIndexOf('.');
-        if (sep <= 0 || dot <= sep) return;
-        String prefix = canonicalName.substring(0, sep) + "_"; // include underscore separator
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(cacheDir, path -> {
-            String n = path.getFileName().toString();
-            return n.startsWith(prefix) && n.endsWith(".wav") && !n.equals(canonicalName);
-        })) {
-            for (Path stale : stream) {
-                try {
-                    Files.deleteIfExists(stale);
-                    logger.debug("Deleted stale cache file {}", stale.getFileName());
-                } catch (IOException e) {
-                    logger.warn("Failed to delete stale cache file {}", stale.getFileName(), e);
-                }
-            }
-        } catch (IOException e) {
-            logger.warn("Failed to list cache dir {} for cleanup", cacheDir, e);
-        }
-    }
-
-    private static String crop(String s, int maxLen) {
-        if (s == null) return "";
-        return s.length() <= maxLen ? s : s.substring(0, maxLen);
-    }
-
-    private void initNextId() {
-        int max = 0;
-        try {
-            if (Files.isDirectory(audioDir)) {
-                try (var stream = Files.list(audioDir)) {
-                    for (Path p : (Iterable<Path>) stream::iterator) {
-                        String  name = p.getFileName().toString();
-                        Matcher m    = ID_PREFIX.matcher(name);
-                        if (m.matches()) {
-                            try {
-                                int id = Integer.parseInt(m.group(1));
-                                if (id > max) max = id;
-                            } catch (NumberFormatException ignore) {
-                                // skip
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (IOException e) {
-            logger.warn("Failed to scan audioDir for id prefix: {}", audioDir, e);
-        }
-        this.nextId = max + 1; // reset per directory
-        logger.debug("Initialized nextId={} for directory {}", this.nextId, audioDir);
+    private static TtsEngine defaultEngine() {
+        return (text, temp, ex, cfg) -> {
+            // Delegate to existing implementation to preserve behavior
+            return ChatterboxTTS.generateSpeech(text, temp, ex, cfg);
+            // return CoquiTTS.generateSpeech(text);
+        };
     }
 
     /**
      * Synchronously speak the provided text using the current instance defaults.
-     * This call blocks until playback of the generated or cached audio finishes.
-     *
-     * @param text text to synthesize and play
-     * @throws Exception if TTS generation, file IO, or audio playback fails
      */
     public Narrator narrate(String text) throws Exception {
         narrateAsync(text);
@@ -178,13 +92,7 @@ public class Narrator {
     }
 
     /**
-     * Synchronously speak the provided text using per-call attributes.
-     * Any null fields in {@code attrs} will fall back to the instance defaults.
-     * This call blocks until playback finishes.
-     *
-     * @param attrs optional attribute overrides (may be null)
-     * @param text  text to synthesize and play
-     * @throws Exception if TTS generation, file IO, or audio playback fails
+     * Synchronously speak with per-call attributes.
      */
     public Narrator narrate(NarratorAttribute attrs, String text) throws Exception {
         narrateAsync(attrs, text);
@@ -193,15 +101,9 @@ public class Narrator {
     }
 
     /**
-     * Asynchronously speak the provided text using the current instance defaults.
-     * Returns {@code this} to allow call chaining; the current playback handle can be retrieved via {@link #getPlayback()}.
-     *
-     * @param text text to synthesize and play
-     * @return this narrator instance for chaining
-     * @throws Exception if TTS generation or file IO fails prior to starting playback
+     * Asynchronously speak using instance defaults.
      */
     public Narrator narrateAsync(String text) throws Exception {
-        // Use instance defaults
         float eTemp = this.temperature;
         float eEx   = this.exaggeration;
         float eCfg  = this.cfgWeight;
@@ -209,167 +111,52 @@ public class Narrator {
     }
 
     /**
-     * Asynchronously speak the provided text using per-call attributes.
-     * Any null fields in {@code attrs} will fall back to the instance defaults.
-     * Returns {@code this} to allow call chaining; the current playback handle can be retrieved via {@link #getPlayback()}.
-     *
-     * @param attrs optional attribute overrides (may be null)
-     * @param text  text to synthesize and play
-     * @return this narrator instance for chaining
-     * @throws Exception if TTS generation or file IO fails prior to starting playback
+     * Asynchronously speak using per-call attributes.
      */
     public Narrator narrateAsync(NarratorAttribute attrs, String text) throws Exception {
-        // If attrs provided, take precedence; else fall back to instance defaults
         float eTemp = attrs != null && attrs.getTemperature() != null ? attrs.getTemperature() : this.temperature;
         float eEx   = attrs != null && attrs.getExaggeration() != null ? attrs.getExaggeration() : this.exaggeration;
         float eCfg  = attrs != null && attrs.getCfg_weight() != null ? attrs.getCfg_weight() : this.cfgWeight;
         return narrateResolved(eTemp, eEx, eCfg, text);
     }
 
-    // Core implementation shared by both overloads
+    // Core orchestration: resolve file from cache, synthesize if missing, copy chronological, queue playback
     private Narrator narrateResolved(float eTemp, float eEx, float eCfg, String text) throws Exception {
-        String canonicalName = buildFileName(text, eTemp, eEx, eCfg);
-        Path   out           = cacheDir.resolve(canonicalName);
+        String canonicalName = cacheManager.buildFileName(text, eTemp, eEx, eCfg);
+        Path   canonicalPath = cacheManager.canonicalPath(canonicalName);
 
-        // Remove stale cache entries with same prefix but different hash
-        cleanupCacheSiblings(canonicalName);
+        cacheManager.cleanupCacheSiblings(canonicalName);
 
-        // Determine chronological filename with incrementing id
-        String idPrefix = nextIdPrefix();
-        Path   idOut    = audioDir.resolve(idPrefix + canonicalName);
-        while (Files.exists(idOut)) { // extremely rare, but avoid collisions
-            idPrefix = nextIdPrefix();
-            idOut    = audioDir.resolve(idPrefix + canonicalName);
-        }
-
-        if (!Files.exists(out)) {
+        if (!Files.exists(canonicalPath)) {
             long t0 = System.nanoTime();
-            logger.info("TTS generate start: temp={}, ex={}, cfg={}, file={}, text=\"{}\"", eTemp, eEx, eCfg, out.getFileName(), text);
-            byte[] audio = ChatterboxTTS.generateSpeech(text, eTemp, eEx, eCfg);
-//            byte[] audio = CoquiTTS.generateSpeech(text);
-            Files.write(out, audio);
+            logger.info("TTS generate start: temp={}, ex={}, cfg={}, file={}, text=\"{}\"", eTemp, eEx, eCfg, canonicalName, text);
+            byte[] audio = ttsEngine.synthesize(text, eTemp, eEx, eCfg);
+            cacheManager.writeCanonical(audio, canonicalName);
             long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - t0);
-            logger.info("TTS generate done:   temp={}, ex={}, cfg={}, file={}, bytes={}, took={} ms", eTemp, eEx, eCfg, out.getFileName(), audio.length, tookMs);
+            logger.info("TTS generate done:   temp={}, ex={}, cfg={}, file={}, bytes={}, took={} ms", eTemp, eEx, eCfg, canonicalName, audio.length, tookMs);
         } else {
-            logger.debug("TTS cache hit: canonical file={}", out.getFileName());
+            logger.debug("TTS cache hit: canonical file={}", canonicalName);
         }
 
-        // Create chronological file as a copy of canonical for sortable history
-        try {
-            Files.copy(out, idOut, StandardCopyOption.REPLACE_EXISTING);
-            logger.debug("Saved chronological file: {} -> {}", out.getFileName(), idOut.getFileName());
-        } catch (IOException e) {
-            logger.warn("Failed to create chronological file {} from {}", idOut.getFileName(), out.getFileName(), e);
-        }
+        Path chronological = cacheManager.copyToChronological(canonicalPath, canonicalName);
+        File fileToPlay    = cacheManager.toFile(chronological);
 
-        // Prepare playback and queue behind any prior playback
-        final Playback prevPlayback;
-        final Playback current = new Playback();
-        synchronized (queueLock) {
-            prevPlayback  = lastPlayback;
-            lastPlayback  = current;
-            this.playback = current; // expose latest handle
-        }
-
-        final File file = idOut.toFile(); // play the chronological file
-        Thread t = new Thread(() -> {
-            try {
-                // Wait for any previous playback to finish
-                if (prevPlayback != null) prevPlayback.await();
-
-                // If stopped before starting, complete and return
-                if (current.isCanceled()) {
-                    current.finishEarly();
-                    return;
-                }
-
-                Clip clip = null;
-                if (clip == null) {
-                    clip = AudioSystem.getClip();
-                }
-                current.setClip(clip);
-
-                clip.addLineListener(ev -> {
-                    if (ev.getType() == LineEvent.Type.STOP) {
-                        current.countDown();
-                    }
-                });
-
-                clip.open(AudioSystem.getAudioInputStream(file));
-
-                if (current.isCanceled()) {
-                    current.finishEarly();
-                    return;
-                }
-
-                clip.start();
-                current.await(); // wait until STOP event or external stop
-            } catch (Exception e) {
-                current.countDown(); // ensure latch is released on failure
-            } finally {
-                current.closeQuietly();
-            }
-        }, "Narrator-Playback");
-        t.setDaemon(true);
-        t.start();
-
+        Playback current = audioPlayer.play(fileToPlay);
+        this.playback = current;
         return this;
-    }
-
-    private String nextIdPrefix() {
-        int id = nextId++;
-        return (id < 1000)
-                ? String.format(Locale.ROOT, "%03d-", id)
-                : id + "-";
     }
 
     /**
      * Sleeps the current thread for 1s.
-     * Convenience helper to pause UI/test flows between narrations.
-     *
-     * @throws InterruptedException if the thread is interrupted while sleeping
      */
     public void pause() throws InterruptedException {
-        Thread.sleep((long) (1000));
-    }
-
-    private static String sanitizePrefix(String s) {
-        // Replace non-filename-safe characters with '_', collapse repeats, trim underscores
-        String cleaned = s
-                .replaceAll("\\s+", "_")
-                .replaceAll("[^A-Za-z0-9._-]", "_")
-                .replaceAll("_+", "_")
-                .replaceAll("^_+|_+$", "");
-        // prevent empty or dot-only names
-        if (cleaned.isBlank() || cleaned.equals(".") || cleaned.equals("..")) {
-            return "tts";
-        }
-        return cleaned;
+        Thread.sleep(1000);
     }
 
     /**
      * Sleeps the current thread for 0.5s.
-     * Convenience helper to pause UI/test flows between narrations.
-     *
-     * @throws InterruptedException if the thread is interrupted while sleeping
      */
     public void shortPause() throws InterruptedException {
-        Thread.sleep((long) (500));
+        Thread.sleep(500);
     }
-
-    private static String shortSha256Hex(String input, int hexLen) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[]        d  = md.digest(input.getBytes(StandardCharsets.UTF_8));
-            StringBuilder sb = new StringBuilder(d.length * 2);
-            for (byte b : d) sb.append(String.format(Locale.ROOT, "%02x", b));
-            String hex = sb.toString();
-            return hexLen > 0 && hexLen < hex.length() ? hex.substring(0, hexLen) : hex;
-        } catch (Exception e) {
-            // Fallback to simple hashCode if SHA-256 not available
-            return Integer.toHexString(input.hashCode());
-        }
-    }
-
-
 }
