@@ -1,0 +1,22 @@
+# FastAPI and server dependencies
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+pydantic==2.5.3
+python-multipart==0.0.6
+
+# Audio processing (numpy and scipy already in PyTorch image)
+soundfile==0.12.1
+librosa==0.10.1
+
+# Hugging Face and model management
+huggingface-hub>=0.20.0
+transformers>=4.30.0
+safetensors>=0.3.0
+
+# Index TTS specific dependencies
+omegaconf>=2.3.0
+modelscope>=1.9.0
+
+# Note: PyTorch, CUDA, cuDNN are provided by the nvcr.io/nvidia/pytorch base image
+# Note: Index TTS will be installed from GitHub repository in Dockerfile
+

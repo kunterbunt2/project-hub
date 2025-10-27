@@ -53,7 +53,7 @@ public class Narrator {
      * Creates a Narrator storing audio under {@code relativeFolder} and using the default TTS engine.
      */
     public Narrator(String relativeFolder) {
-        this(relativeFolder, defaultEngine());
+        this(relativeFolder, chatterboxTtsEngine());
     }
 
     /**
@@ -70,13 +70,33 @@ public class Narrator {
         this.defaultAttributes = new NarratorAttribute(0.5f, 1.0f, 0.5f);
     }
 
-    private static TtsEngine defaultEngine() {
+    private static TtsEngine chatterboxTtsEngine() {
         return (text, attrs) -> ChatterboxTTS.generateSpeech(
                 text,
                 attrs.getTemperature() != null ? attrs.getTemperature() : 0.5f,
                 attrs.getExaggeration() != null ? attrs.getExaggeration() : 0.5f,
                 attrs.getCfg_weight() != null ? attrs.getCfg_weight() : 1.0f
         );
+    }
+
+    /**
+     * Creates TTS engine for Index TTS with specific voice
+     */
+    private static TtsEngine indexTtsEngine() {
+        return (text, attrs) -> {
+            String voiceReference  = attrs.getVoiceReference();
+            Float  speed           = attrs.getSpeed();
+            Float  emotionAngry    = attrs.getEmotion_angry();
+            Float  emotionHappy    = attrs.getEmotion_happy();
+            Float  emotionSad      = attrs.getEmotion_sad();
+            Float  emotionSurprise = attrs.getEmotion_surprise();
+            Float  emotionNeutral  = attrs.getEmotion_neutral();
+            Float  temperature     = attrs.getTemperature();
+
+            return IndexTTS.generateSpeech(text, voiceReference, speed,
+                    emotionAngry, emotionHappy, emotionSad,
+                    emotionSurprise, emotionNeutral, temperature);
+        };
     }
 
     /**
@@ -151,7 +171,8 @@ public class Narrator {
 
             // Create NarratorAttribute with resolved values
             NarratorAttribute resolvedAttrs = new NarratorAttribute(eEx, eCfg, eTemp);
-            byte[]            audio         = ttsEngine.synthesize(text, resolvedAttrs);
+            resolvedAttrs.setVoiceReference("/opt/index-tts/voices/chatterbox.wav");
+            byte[] audio = ttsEngine.synthesize(text, resolvedAttrs);
 
             cacheManager.writeChronological(audio, plan.path());
             long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - t0);
@@ -170,4 +191,16 @@ public class Narrator {
     public void pause() throws InterruptedException {
         Thread.sleep(500);
     }
+
+    public static Narrator withChatterboxTTS(String relativeFolder) {
+        return new Narrator(relativeFolder, chatterboxTtsEngine());
+    }
+
+    /**
+     * Creates a Narrator using Index TTS engine with default voice
+     */
+    public static Narrator withIndexTTS(String relativeFolder) {
+        return new Narrator(relativeFolder, indexTtsEngine());
+    }
+
 }
