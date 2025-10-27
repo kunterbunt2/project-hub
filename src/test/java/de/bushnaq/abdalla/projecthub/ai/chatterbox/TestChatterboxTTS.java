@@ -18,11 +18,12 @@
 package de.bushnaq.abdalla.projecthub.ai.chatterbox;
 
 import de.bushnaq.abdalla.projecthub.ai.narrator.Narrator;
+import de.bushnaq.abdalla.projecthub.ai.narrator.NarratorAttribute;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import org.junit.jupiter.api.Test;
 
 public class TestChatterboxTTS {
-    Narrator        narrator        = new Narrator("tts");
+    Narrator        narrator        = Narrator.withChatterboxTTS("tts/TestChatterboxTTS");
     SeleniumHandler seleniumHandler = new SeleniumHandler();
 
     @Test
@@ -51,7 +52,14 @@ public class TestChatterboxTTS {
 
     @Test
     public void testSpeech_02() throws Exception {
-        narrator.narrate("Kassandra is a project planning and progress tracking server.");
+        narrator.narrate(new NarratorAttribute().withTemperature(0.05f), ",,Lets call it Jupiter!,,");
+        narrator.narrate(new NarratorAttribute().withTemperature(0.05f), ",,And we got ourself a new product!,,");
+        narrator.narrate(new NarratorAttribute().withTemperature(0.05f), ",,Select the Create button.,,");
+        narrator.narrate(new NarratorAttribute().withTemperature(0.05f), ",,Lets select our version.,,");
+        narrator.narrate(new NarratorAttribute().withTemperature(0.05f), ",,Lets call it Jupiter!,,");
+        narrator.narrate(new NarratorAttribute().withTemperature(0.05f), ",,Lets call it Jupiter!,,");
+        narrator.narrate(new NarratorAttribute().withTemperature(0.05f), ",,Lets call it Jupiter!,,");
+        narrator.narrate(new NarratorAttribute().withTemperature(0.05f), ",,Lets call it Jupiter!,,");
 
     }
 }

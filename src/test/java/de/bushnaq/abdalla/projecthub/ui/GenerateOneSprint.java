@@ -136,7 +136,7 @@ public class GenerateOneSprint extends AbstractUiTestUtil {
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         generateProductsIfNeeded(testInfo, randomCase);
         seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
-        Narrator narrator = Narrator.withIndexTTS("tts/" + testInfo.getTestClass().get().getSimpleName());
+        Narrator narrator = Narrator.withChatterboxTTS("tts/" + testInfo.getTestClass().get().getSimpleName());
         productName = "Jupiter";
         versionName = "1.0.0";
         featureName = "Property request api";
@@ -150,19 +150,19 @@ public class GenerateOneSprint extends AbstractUiTestUtil {
         //---------------------------------------------------------------------------------------..
         // Products Page
         //---------------------------------------------------------------------------------------..
-        narrator.narrate(NORMAL, "Kassandra is a project planning and progress tracking server targeting small to medium team sizes. It is a open source project and has an Apachee two dot zero license.").pause();
-        narrator.narrate(NORMAL, "Kassandra supports OIDC authentication and authorization. I just logged into the server using my kassandra dot org ID.").pause();
-        narrator.narrate(NORMAL, "The first page you see when you log into the server is the Products page where all Products are listed.").pause();
+//        narrator.narrate(NORMAL, "Kassandra is a project planning and progress tracking server targeting small to medium team sizes. It is a open source project and has an Apachee two dot zero license.").pause();
+//        narrator.narrate(NORMAL, "Kassandra supports OIDC authentication and authorization. I just logged into the server using my kassandra dot org ID.").pause();
+//        narrator.narrate(NORMAL, "The first page you see when you log into the server is the Products page where all Products are listed.").pause();
         //---------------------------------------------------------------------------------------..
         // Create a Product
         //---------------------------------------------------------------------------------------..
         narrator.narrate(NORMAL, "Lets start by adding a new product by selecting the Create button.");
         seleniumHandler.click(ProductListView.CREATE_PRODUCT_BUTTON);
-        narrator.narrate(INTENSE, "Lets call it Jupiter!").pause();
+        narrator.narrate(INTENSE, "Lets call it Jupiter!............................................").pause();
         seleniumHandler.setTextField(ProductDialog.PRODUCT_NAME_FIELD, productName);
-        narrator.narrate(NORMAL, "Select Save to close the dialog and persist our product.").pause();
+        narrator.narrate(NORMAL, "Select Save to close the dialog and persist our product...........").pause();
         seleniumHandler.click(ProductDialog.CONFIRM_BUTTON);
-        narrator.narrate(INTENSE, "And we got ourself a new product!").pause();
+        narrator.narrate(INTENSE, "And we got ourself a new product!................................").pause();
 
 
         narrator.narrate(NORMAL, "With the little notepad and trashcan icons, on the right side, you can edit or delete your product.").pause();

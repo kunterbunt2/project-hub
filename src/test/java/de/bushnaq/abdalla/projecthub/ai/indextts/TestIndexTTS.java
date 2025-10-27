@@ -23,7 +23,6 @@ import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import org.junit.jupiter.api.Test;
 
 public class TestIndexTTS {
-    Narrator        narrator        = Narrator.withIndexTTS("tts/index-tts");
     SeleniumHandler seleniumHandler = new SeleniumHandler();
 
     @Test
@@ -84,156 +83,34 @@ public class TestIndexTTS {
         String text = "Good morning, my name is Jennifer Holleman. I am the product manager of Kassandra and I will be demonstrating the latest alpha version of the Kassandra project server to you today.";
 
         IndexTTS.VoiceReference[] refs = IndexTTS.listVoiceReferences();
-        if (refs.length == 0) {
-            System.out.println("No voice references available. Using default voice.");
-            narrator.narrate(text);
-        } else {
-            for (IndexTTS.VoiceReference ref : refs) {
-                System.out.println("Testing voice reference: " + ref.filename());
-                Narrator          narrator = Narrator.withIndexTTS("tts/TestIndexTTS");
-                NarratorAttribute na       = new NarratorAttribute();
-                na.withVoiceReference(ref.path());
-                narrator.narrate(na, text);
-                Thread.sleep(1000);
-            }
+        for (IndexTTS.VoiceReference ref : refs) {
+            System.out.println("Testing voice reference: " + ref.filename());
+            Narrator          narrator = Narrator.withIndexTTS("tts/TestIndexTTS/testDifferentVoices");
+            NarratorAttribute na       = new NarratorAttribute();
+            // Use the convenient withVoice method that takes just the filename
+            na.withVoice(ref.filename());
+            narrator.narrate(na, text);
+            Thread.sleep(1000);
         }
     }
 
     @Test
     public void testEmotionalRange() throws Exception {
-        System.out.println("=== Testing Emotional Range ===");
-
-        String text = "And we got ourself a new product!";
-
-        // Neutral
-        System.out.println("Neutral:");
-        narrator.narrate(new NarratorAttribute().withNeutral(1.0f), text);
-        Thread.sleep(500);
-
-        // Happy
-        System.out.println("Happy:");
-        narrator.narrate(new NarratorAttribute().withHappy(0.9f), text);
-        Thread.sleep(500);
-
-        // Sad
-        System.out.println("Sad:");
-        narrator.narrate(new NarratorAttribute().withSad(0.8f), text);
-        Thread.sleep(500);
-
-        // Angry
-        System.out.println("Angry:");
-        narrator.narrate(new NarratorAttribute().withAngry(0.7f), text);
-        Thread.sleep(500);
-
-        // Surprised
-        System.out.println("Surprised:");
-        narrator.narrate(new NarratorAttribute().withSurprise(0.9f), text);
-    }
-
-    @Test
-    public void testSpeech_01_Basic() throws Exception {
-//        seleniumHandler.startRecording("TestIndexTTS", "testSpeech_01_Basic");
-        narrator.narrate("Welcome to the Kassandra demonstration. My name is powered by Index TTS.");
-//        seleniumHandler.destroy();
-    }
-
-    @Test
-    public void testSpeech_02_Simple() throws Exception {
-        narrator.narrate("Kassandra is a project planning and progress tracking server.");
+        String   text     = "And we got ourself a new product!";
+        Narrator narrator = Narrator.withIndexTTS("tts/TestIndexTTS/testEmotionalRange");
+        narrator.narrate(new NarratorAttribute().withVoice("chatterbox").withNeutral(0.3f), text);
+        narrator.narrate(new NarratorAttribute().withVoice("chatterbox").withHappy(0.3f), text);
+        narrator.narrate(new NarratorAttribute().withVoice("chatterbox").withSad(0.3f), text);
+        narrator.narrate(new NarratorAttribute().withVoice("chatterbox").withAngry(0.3f), text);
+        narrator.narrate(new NarratorAttribute().withVoice("chatterbox").withSurprise(0.3f), text);
     }
 
     @Test
     public void testSpeech_03_WithSpeed() throws Exception {
-        NarratorAttribute attrs = new NarratorAttribute();
-        attrs.setSpeed(1.3f);  // Faster speech
-
-        narrator.narrate(attrs, "This text is spoken faster than normal speed.");
+        Narrator          narrator = Narrator.withIndexTTS("tts/TestIndexTTS/testSpeech_03_WithSpeed");
+        NarratorAttribute attrs    = new NarratorAttribute().withVoice("chatterbox").withSpeed(.7f);
+        narrator.narrate(attrs, "This text is spoken slower than normal speed.");
     }
 
-    @Test
-    public void testSpeech_04_Happy() throws Exception {
-        NarratorAttribute attrs = new NarratorAttribute()
-                .withHappy(0.8f);
-
-        narrator.narrate(attrs, "I'm so excited to announce that the project is complete!");
-    }
-
-    @Test
-    public void testSpeech_05_Sad() throws Exception {
-        NarratorAttribute attrs = new NarratorAttribute()
-                .withSad(0.7f);
-
-        narrator.narrate(attrs, "Unfortunately, we encountered some setbacks in the development.");
-    }
-
-    @Test
-    public void testSpeech_06_Angry() throws Exception {
-        NarratorAttribute attrs = new NarratorAttribute()
-                .withAngry(0.6f);
-
-        narrator.narrate(attrs, "This is completely unacceptable! The deadline was yesterday!");
-    }
-
-    @Test
-    public void testSpeech_07_Surprise() throws Exception {
-        NarratorAttribute attrs = new NarratorAttribute()
-                .withSurprise(0.9f);
-
-        narrator.narrate(attrs, "Wow! I can't believe we finished ahead of schedule!");
-    }
-
-    @Test
-    public void testSpeech_08_MixedEmotions() throws Exception {
-        NarratorAttribute attrs = new NarratorAttribute()
-                .withHappy(0.5f)
-                .withSurprise(0.3f);
-
-        narrator.narrate(attrs, "The results are in, and they're better than expected!");
-    }
-
-    @Test
-    public void testSpeech_09_WithVoice() throws Exception {
-        IndexTTS.VoiceReference[] refs = IndexTTS.listVoiceReferences();
-        if (refs.length > 0) {
-            System.out.println("Using voice reference: " + refs[0].filename());
-            NarratorAttribute attrs = new NarratorAttribute()
-                    .withVoiceReference(refs[0].path());
-
-            narrator.narrate(attrs, "Testing with a specific voice reference.");
-        } else {
-            System.out.println("No voice references available. Using default voice.");
-            narrator.narrate("Testing with default voice.");
-        }
-    }
-
-    @Test
-    public void testSpeech_10_ComplexAttributes() throws Exception {
-        NarratorAttribute attrs = new NarratorAttribute()
-                .withSpeed(0.9f)        // Slightly slower
-                .withHappy(0.4f)        // Moderately happy
-                .withSurprise(0.2f);    // Slightly surprised
-
-        attrs.setTemperature(0.8f);     // More variation
-
-        narrator.narrate(attrs, "This is a complex test with multiple emotional parameters and custom speed.");
-    }
-
-    @Test
-    public void testSpeedVariations() throws Exception {
-        String text = "This sentence tests different speed variations.";
-
-        System.out.println("=== Testing Speed Variations ===");
-
-        System.out.println("Slow (0.7x):");
-        narrator.narrate(new NarratorAttribute().withSpeed(0.7f), text);
-        Thread.sleep(500);
-
-        System.out.println("Normal (1.0x):");
-        narrator.narrate(new NarratorAttribute().withSpeed(1.0f), text);
-        Thread.sleep(500);
-
-        System.out.println("Fast (1.5x):");
-        narrator.narrate(new NarratorAttribute().withSpeed(1.5f), text);
-    }
 }
 

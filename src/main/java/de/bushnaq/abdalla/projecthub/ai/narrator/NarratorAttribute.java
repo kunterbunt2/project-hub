@@ -17,16 +17,21 @@
 
 package de.bushnaq.abdalla.projecthub.ai.narrator;
 
+import de.bushnaq.abdalla.projecthub.ai.indextts.IndexTTS;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 @Getter
 @Setter
 public class NarratorAttribute {
+    // Static cache for voice references: filename -> full path
+    private static final Map<String, String> voiceCache     = new HashMap<>();
     Float  cfg_weight;
     Float  emotion_angry;    // Anger emotion level (0.0 to 1.0)
     Float  emotion_happy;    // Happiness emotion level (0.0 to 1.0)
@@ -36,11 +41,47 @@ public class NarratorAttribute {
     Float  exaggeration;
     Float  speed;            // Speech speed multiplier (0.5 to 2.0, default 1.0)
     Float  temperature;
+    private static       boolean             voiceCacheInit = false;
     String voiceReference;  // Voice reference path for cloning (e.g., "/opt/index-tts/voices/my_voice.wav")
 
     public NarratorAttribute() {
     }
 
+    /**
+     * Ensures the voice cache is loaded. Thread-safe lazy initialization.
+     */
+    private static synchronized void ensureVoiceCacheLoaded() {
+        if (!voiceCacheInit) {
+            refreshVoiceCache();
+        }
+    }
+
+    /**
+     * Helper method to format available voice names from cache for error messages
+     */
+    private static String getAvailableVoiceNamesFromCache() {
+        if (voiceCache.isEmpty()) {
+            return "(none)";
+        }
+        return String.join(", ", voiceCache.keySet());
+    }
+
+    /**
+     * Refreshes the voice cache by querying the Index TTS server.
+     * Call this if voices are added or removed while the application is running.
+     */
+    public static synchronized void refreshVoiceCache() {
+        try {
+            voiceCache.clear();
+            IndexTTS.VoiceReference[] refs = IndexTTS.listVoiceReferences();
+            for (IndexTTS.VoiceReference ref : refs) {
+                voiceCache.put(ref.filename(), ref.path());
+            }
+            voiceCacheInit = true;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load voice references from Index TTS server: " + e.getMessage(), e);
+        }
+    }
 
     /**
      * Generates a string representation of all non-null attributes suitable for hashing.
@@ -150,6 +191,33 @@ public class NarratorAttribute {
     public NarratorAttribute withTemperature(Float temperature) {
         this.temperature = temperature;
         return this;
+    }
+
+    /**
+     * Convenience method to set voice by filename instead of full path.
+     * Looks up the voice reference from the cached list (loaded on first use).
+     *
+     * @param filename The WAV filename (e.g., "chatterbox.wav" or just "chatterbox")
+     * @return this NarratorAttribute for method chaining
+     * @throws RuntimeException if the voice file is not found on the server
+     */
+    public NarratorAttribute withVoice(String filename) {
+        // Ensure voice cache is initialized
+        ensureVoiceCacheLoaded();
+
+        // Add .wav extension if not present
+        String searchFilename = filename.endsWith(".wav") ? filename : filename + ".wav";
+
+        // Look up in cache
+        String path = voiceCache.get(searchFilename);
+        if (path != null) {
+            this.voiceReference = path;
+            return this;
+        }
+
+        // Not found - throw exception with helpful message
+        throw new RuntimeException("Voice file '" + searchFilename + "' not found. " +
+                "Available voices: " + getAvailableVoiceNamesFromCache());
     }
 
     public NarratorAttribute withVoiceReference(String voiceReference) {
