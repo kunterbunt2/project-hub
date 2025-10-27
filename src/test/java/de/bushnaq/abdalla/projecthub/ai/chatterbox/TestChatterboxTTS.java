@@ -35,14 +35,6 @@ public class TestChatterboxTTS {
     }
 
     @Test
-    public void listVoices() throws Exception {
-
-        for (String voice : ChatterboxTTS.getVoices()) {
-            System.out.println(voice);
-        }
-    }
-
-    @Test
     public void testSpeech_01() throws Exception {
 
         seleniumHandler.startRecording("test", "test1");

@@ -1,3 +1,20 @@
+/*
+ *
+ * Copyright (C) 2025-2025 Abdalla Bushnaq
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
 package de.bushnaq.abdalla.projecthub.ai.chatterbox;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,10 +31,6 @@ import java.util.List;
 public class ChatterboxTTS {
     private static final ObjectMapper objectMapper    = new ObjectMapper();
     private static       String       TTS_SERVICE_URL = "http://localhost:4123";
-
-    public static byte[] generateSpeech(String text) throws Exception {
-        return generateSpeech(text, 1f, 1f, .5f);
-    }
 
     public static byte[] generateSpeech(String text, float temperature, float exaggeration, float cfgWeight) throws Exception {
         URL               url  = new URL(TTS_SERVICE_URL + "/v1/audio/speech");
@@ -76,27 +89,6 @@ public class ChatterboxTTS {
             return codes.toArray(new String[0]);
         } else {
             throw new RuntimeException("Unexpected response format: 'languages' field missing or not a list");
-        }
-    }
-
-    public static String[] getVoices() throws Exception {
-        URL               url  = new URL(TTS_SERVICE_URL + "/voices");
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        int responseCode = conn.getResponseCode();
-        if (responseCode != 200) {
-            String error = readProcessOutput(conn.getErrorStream());
-            throw new RuntimeException("Failed to get voices " + responseCode + ": " + error);
-        }
-        String response = readProcessOutput(conn.getInputStream());
-        // Parse as Map and extract voices array
-        java.util.Map<?, ?> map       = objectMapper.readValue(response, java.util.Map.class);
-        Object              voicesObj = map.get("voices");
-        if (voicesObj instanceof List<?> voicesList) {
-            String[] voices = voicesList.stream().map(Object::toString).toArray(String[]::new);
-            return voices;
-        } else {
-            throw new RuntimeException("Unexpected response format: 'voices' field missing or not a list");
         }
     }
 
