@@ -15,7 +15,7 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.ai.chatterbox;
+package de.bushnaq.abdalla.projecthub.ai.indextts;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -316,15 +316,15 @@ public class IndexTTS {
     }
 
     /**
-         * Represents a voice reference file on the server
-         */
-        public record VoiceReference(String filename, String path, long sizeBytes, double modifiedTimestamp) {
+     * Represents a voice reference file on the server
+     */
+    public record VoiceReference(String filename, String path, long sizeBytes, double modifiedTimestamp) {
 
         @Override
-            public String toString() {
-                return String.format("VoiceReference{filename='%s', path='%s', size=%d bytes}",
-                        filename, path, sizeBytes);
-            }
+        public String toString() {
+            return String.format("VoiceReference{filename='%s', path='%s', size=%d bytes}",
+                    filename, path, sizeBytes);
         }
+    }
 }
 

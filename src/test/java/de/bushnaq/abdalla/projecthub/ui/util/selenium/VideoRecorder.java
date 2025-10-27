@@ -17,7 +17,10 @@
 
 package de.bushnaq.abdalla.projecthub.ui.util.selenium;
 
+import de.bushnaq.abdalla.projecthub.ai.narrator.AudioMirrorRegistry;
+import de.bushnaq.abdalla.projecthub.ai.narrator.Narrator;
 import lombok.Getter;
+import lombok.Setter;
 import org.bytedeco.ffmpeg.global.avcodec;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FFmpegFrameRecorder;
@@ -46,40 +49,42 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Utility class for recording screen during UI tests using JavaCV (FFmpeg)
  */
 public class VideoRecorder {
-    private        String                                                    audioDevice      = System.getProperty("videoRecorder.audioDevice", "auto");
-    private        FFmpegFrameGrabber                                        audioGrabber;
-    private        Thread                                                    audioThread;
-    private        Rectangle                                                 captureArea;  // Optional explicit capture area
-    // Video rate control config
-    private final  boolean                                                   cbrRateControl   = Boolean.parseBoolean(System.getProperty("videoRecorder.cbr", "true"));
-    private        String                                                    currentTestName;
-    private final  int                                                       frameRate        = Integer.getInteger("videoRecorder.fps", 60);
-    // Config
-    private        boolean                                                   includeAudio     = Boolean.parseBoolean(System.getProperty("videoRecorder.audioEnabled", "true"));
+    @Setter
+    private       String                                                    audioDevice      = System.getProperty("videoRecorder.audioDevice", "auto");//the preferred audio loopback device name (Windows dshow, macOS avfoundation, Linux pulse/alsa).
+    private       FFmpegFrameGrabber                                        audioGrabber;
+    private       Thread                                                    audioThread;
+    private       Rectangle                                                 captureArea;  // Optional explicit capture area
+    private final boolean                                                   cbrRateControl   = Boolean.parseBoolean(System.getProperty("videoRecorder.cbr", "true"));// Video rate control config
+    private       String                                                    currentTestName;
+    private final int                                                       frameRate        = Integer.getInteger("videoRecorder.fps", 60);
+    @Setter
+    private       boolean                                                   includeAudio     = Boolean.parseBoolean(System.getProperty("videoRecorder.audioEnabled", "true"));// whether to include system audio in the recording.
     @Getter
-    private        boolean                                                   isRecording      = false;
-    private        long                                                      lastAudioPtsUs;
-    private        long                                                      lastVideoTimestampUs;
-    private final  Logger                                                    logger           = LoggerFactory.getLogger(this.getClass());
-    private        long                                                      mirroredAudioFramesRecorded; // sample frames (per time step), not raw samples
-    private        Thread                                                    mirroredAudioThread; // thread pumping mirrored WAVs
-    // Audio mirror queue (PCM frames)
-    private final  LinkedBlockingQueue<javax.sound.sampled.AudioInputStream> mirroredQueue    = new LinkedBlockingQueue<>();
-    private        File                                                      outputDirectory;
-    private        FFmpegFrameRecorder                                       recorder;
-    // Recording metrics
-    private        long                                                      recordingStartNanos;
-    private final  File                                                      rootDirectory;
-    private final  AtomicBoolean                                             running          = new AtomicBoolean(false);
-    // JavaCV/FFmpeg members
-    private        FFmpegFrameGrabber                                        screenGrabber;
-    private static long                                                      startTime;
-    private final  int                                                       videoBitrateKbps = Math.max(25000, Integer.getInteger("videoRecorder.videoBitrateKbps", 64000));
-    private        long                                                      videoFramesRecorded;
-    private        Thread                                                    videoThread;
-    private        WebDriver                                                 webDriver;    // Used to compute content-only area
-    private final  String                                                    windowsCapture   = System.getProperty("videoRecorder.winCapture", "gdigrab");
-    private final  String                                                    x264Preset       = System.getProperty("videoRecorder.preset", "veryslow");
+    private       boolean                                                   isRecording      = false;
+    private       long                                                      lastAudioPtsUs;
+    private       long                                                      lastVideoTimestampUs;
+    private final Logger                                                    logger           = LoggerFactory.getLogger(this.getClass());
+    private       long                                                      mirroredAudioFramesRecorded; // sample frames (per time step), not raw samples
+    private       Thread                                                    mirroredAudioThread; // thread pumping mirrored WAVs
+    private final LinkedBlockingQueue<javax.sound.sampled.AudioInputStream> mirroredQueue    = new LinkedBlockingQueue<>();// Audio mirror queue (PCM frames)
+    private       File                                                      outputDirectory;
+    private       FFmpegFrameRecorder                                       recorder;
+    private       long                                                      recordingStartNanos;// Recording metrics
+    private final File                                                      rootDirectory;
+    private final AtomicBoolean                                             running          = new AtomicBoolean(false);
+    private       FFmpegFrameGrabber                                        screenGrabber;// JavaCV/FFmpeg members
+    private final int                                                       videoBitrateKbps = Math.max(25000, Integer.getInteger("videoRecorder.videoBitrateKbps", 64000));
+    private       long                                                      videoFramesRecorded;
+    private       Thread                                                    videoThread;
+    /**
+     * -- SETTER --
+     * Sets the WebDriver to use for content capture
+     *
+     */
+    @Setter
+    private       WebDriver                                                 webDriver;    // Used to compute content-only area
+    private final String                                                    windowsCapture   = System.getProperty("videoRecorder.winCapture", "gdigrab");
+    private final String                                                    x264Preset       = System.getProperty("videoRecorder.preset", "veryslow");
 
     public VideoRecorder() {
         this(new File("test-recordings"));
@@ -133,17 +138,6 @@ public class VideoRecorder {
         } else {
             return captureArea != null ? captureArea : new Rectangle(gc.getBounds());
         }
-    }
-
-    public static String getVideoTime() {
-        long   now          = System.currentTimeMillis();
-        long   elapsedMs    = now - startTime;
-        long   secondsTotal = elapsedMs / 1000;
-        long   hours        = secondsTotal / 3600;
-        long   minutes      = (secondsTotal % 3600) / 60;
-        long   seconds      = secondsTotal % 60;
-        String timeString   = String.format("%02d:%02d:%02d", hours, minutes, seconds);
-        return timeString;
     }
 
     private boolean initAudio() {
@@ -316,7 +310,7 @@ public class VideoRecorder {
                 byte[] buffer            = new byte[8192];
                 int    read;
                 long   clipFramesWritten = 0;
-                logger.info("Feeding mirrored audio into recorder: {} sampleRate={}, channels={}, bigEndian={}", VideoRecorder.getVideoTime(), sampleRate, channels, bigEndian);
+                logger.info("Feeding mirrored audio into recorder: {} sampleRate={}, channels={}, bigEndian={}", Narrator.getElapsedNarrationTime(), sampleRate, channels, bigEndian);
                 while (running.get() && (read = ais.read(buffer)) != -1) {
                     if (read <= 0) continue;
                     // Convert to little-endian 16-bit samples
@@ -423,13 +417,6 @@ public class VideoRecorder {
     }
 
     /**
-     * Sets the preferred audio loopback device name (Windows dshow, macOS avfoundation, Linux pulse/alsa).
-     */
-    public void setAudioDevice(String audioDevice) {
-        this.audioDevice = audioDevice;
-    }
-
-    /**
      * Sets the area to be captured during recording
      *
      * @param x      X coordinate of the top-left corner
@@ -439,22 +426,6 @@ public class VideoRecorder {
      */
     public void setCaptureArea(int x, int y, int width, int height) {
         this.captureArea = new Rectangle(x, y, width, height);
-    }
-
-    /**
-     * Sets whether to include system audio in the recording.
-     */
-    public void setIncludeAudio(boolean includeAudio) {
-        this.includeAudio = includeAudio;
-    }
-
-    /**
-     * Sets the WebDriver to use for content capture
-     *
-     * @param driver The Selenium WebDriver instance
-     */
-    public void setWebDriver(WebDriver driver) {
-        this.webDriver = driver;
     }
 
     /**
@@ -475,7 +446,7 @@ public class VideoRecorder {
      * @return true if recording started successfully, false if in headless mode
      */
     public boolean startRecording(String subFolderName, String testName, boolean contentOnly) throws IOException, AWTException {
-        startTime            = System.currentTimeMillis();
+        Narrator.setStartTime(System.currentTimeMillis());
         this.outputDirectory = new File(rootDirectory, subFolderName);
         outputDirectory.mkdirs();
 
@@ -566,7 +537,7 @@ public class VideoRecorder {
         isRecording = true;
 
         // Register audio mirror to receive WAVs during test run
-        de.bushnaq.abdalla.projecthub.ai.chatterbox.AudioMirrorRegistry.set(file -> {
+        AudioMirrorRegistry.set(file -> {
             try {
                 AudioInputStream ais = AudioSystem.getAudioInputStream(file);
                 // Attempt to fetch clip duration for diagnostics
@@ -643,7 +614,7 @@ public class VideoRecorder {
         closeQuietly(audioGrabber);
 
         // Unregister audio mirror to avoid leaking into other tests
-        de.bushnaq.abdalla.projecthub.ai.chatterbox.AudioMirrorRegistry.set(null);
+        AudioMirrorRegistry.set(null);
 
         isRecording = false;
         Path output = Paths.get(rootDirectory.getPath(), outputDirectory.getName(), currentTestName + ".mp4");

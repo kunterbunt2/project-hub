@@ -15,21 +15,30 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.ai.chatterbox;
+package de.bushnaq.abdalla.projecthub.ai.narrator;
+
+import java.io.File;
 
 /**
- * TtsEngine defines an abstraction for text-to-speech synthesis.
- * Implementations must return a WAV byte array for the provided input.
+ * Global hook to mirror audio files being played to another sink (e.g., video recorder).
+ * This allows injecting TTS audio directly into recordings without OS loopback.
  */
-public interface TtsEngine {
-    /**
-     * Synthesizes speech for the provided text and attributes.
-     *
-     * @param text       input text
-     * @param attributes engine-specific attributes (temperature, exaggeration, etc.)
-     * @return WAV audio bytes
-     * @throws Exception on synthesis failure
-     */
-    byte[] synthesize(String text, NarratorAttribute attributes) throws Exception;
+public final class AudioMirrorRegistry {
+    private static volatile AudioMirror mirror;
+
+    private AudioMirrorRegistry() {
+    }
+
+    public static AudioMirror get() {
+        return mirror;
+    }
+
+    public static void set(AudioMirror m) {
+        mirror = m;
+    }
+
+    public interface AudioMirror {
+        void mirror(File audioFile);
+    }
 }
 

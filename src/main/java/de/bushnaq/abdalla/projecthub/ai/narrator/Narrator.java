@@ -15,8 +15,10 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.ai.chatterbox;
+package de.bushnaq.abdalla.projecthub.ai.narrator;
 
+import de.bushnaq.abdalla.projecthub.ai.chatterbox.ChatterboxTTS;
+import de.bushnaq.abdalla.projecthub.ai.indextts.IndexTTS;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
@@ -47,6 +49,9 @@ public class Narrator {
     private              NarratorAttribute defaultAttributes; // default TTS attributes for this narrator
     @Getter
     private volatile     Playback          playback; // most recently scheduled playback for external access
+    @Getter
+    @Setter
+    private static       long              startTime;//used by VideoRecorder to sync time with audio playing (only used to log the time)
     private final        TtsEngine         ttsEngine;    // synthesis strategy
 
     /**
@@ -55,6 +60,7 @@ public class Narrator {
     public Narrator(String relativeFolder) {
         this(relativeFolder, chatterboxTtsEngine());
     }
+
 
     /**
      * Creates a Narrator storing audio under {@code relativeFolder} and using a provided {@link TtsEngine}.
@@ -77,6 +83,17 @@ public class Narrator {
                 attrs.getExaggeration() != null ? attrs.getExaggeration() : 0.5f,
                 attrs.getCfg_weight() != null ? attrs.getCfg_weight() : 1.0f
         );
+    }
+
+    public static String getElapsedNarrationTime() {
+        long   now          = System.currentTimeMillis();
+        long   elapsedMs    = now - Narrator.getStartTime();
+        long   secondsTotal = elapsedMs / 1000;
+        long   hours        = secondsTotal / 3600;
+        long   minutes      = (secondsTotal % 3600) / 60;
+        long   seconds      = secondsTotal % 60;
+        String timeString   = String.format("%02d:%02d:%02d", hours, minutes, seconds);
+        return timeString;
     }
 
     /**

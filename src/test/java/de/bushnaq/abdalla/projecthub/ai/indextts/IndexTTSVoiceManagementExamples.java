@@ -15,7 +15,7 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.ai.chatterbox;
+package de.bushnaq.abdalla.projecthub.ai.indextts;
 
 import org.junit.jupiter.api.Test;
 

@@ -15,8 +15,10 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.ai.chatterbox;
+package de.bushnaq.abdalla.projecthub.ai.indextts;
 
+import de.bushnaq.abdalla.projecthub.ai.narrator.Narrator;
+import de.bushnaq.abdalla.projecthub.ai.narrator.NarratorAttribute;
 import org.junit.jupiter.api.Test;
 
 /**

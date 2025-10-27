@@ -14,9 +14,15 @@
 | profiler                    | TestResult.java                           | src      |        4 |        0 |       16 |        9 |       29 |
 | profiler                    | TimeKeeping.java                          | src      |       14 |        0 |       16 |       65 |       95 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
+| projecthub.ai.chatterbox    | AudioMirrorRegistry.java                  | src      |        8 |        4 |       16 |       16 |       44 |
+| projecthub.ai.chatterbox    | AudioPlayer.java                          | src      |       13 |        7 |       17 |       59 |       96 |
 | projecthub.ai.chatterbox    | ChatterboxTTS.java                        | src      |       11 |        0 |        2 |      105 |      118 |
-| projecthub.ai.chatterbox    | Narrator.java                             | src      |       56 |       10 |       60 |      366 |      492 |
-| projecthub.ai.chatterbox    | NarratorAttribute.java                    | src      |        3 |        0 |       17 |       10 |       30 |
+| projecthub.ai.chatterbox    | Narrator.java                             | src      |       19 |       50 |       18 |       86 |      173 |
+| projecthub.ai.chatterbox    | NarratorAttribute.java                    | src      |        5 |        0 |       17 |       17 |       39 |
+| projecthub.ai.chatterbox    | Playback.java                             | src      |       13 |       25 |       17 |       62 |      117 |
+| projecthub.ai.chatterbox    | TtsCacheManager.java                      | src      |       23 |       85 |       20 |      134 |      262 |
+| projecthub.ai.chatterbox    | TtsCacheManagerTest.java                  | src      |       10 |        0 |        9 |       35 |       54 |
+| projecthub.ai.chatterbox    | TtsEngine.java                            | src      |        3 |       12 |       16 |        4 |       35 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.ai.config        | AiFilterConfig.java                       | src      |       11 |       15 |       23 |       33 |       82 |
 | projecthub.ai.config        | AvailabilityConfig.java                   | src      |       34 |        3 |       16 |      100 |      153 |
@@ -233,9 +239,9 @@
 | projecthub.ui.dialog        | VersionDialog.java                        | src      |       20 |       17 |       20 |       67 |      124 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.ui.util.selenium | ScreenShotCreator.java                    | src      |       15 |        7 |       35 |       78 |      135 |
-| projecthub.ui.util.selenium | SeleniumHandler.java                      | src      |      121 |      183 |       81 |      747 |     1132 |
+| projecthub.ui.util.selenium | SeleniumHandler.java                      | src      |      170 |      241 |      123 |      928 |     1462 |
 | projecthub.ui.util.selenium | SeleniumTestResultExtension.java          | src      |        9 |        0 |       17 |       42 |       68 |
-| projecthub.ui.util.selenium | VideoRecorder.java                        | src      |       28 |       40 |       28 |      135 |      231 |
+| projecthub.ui.util.selenium | VideoRecorder.java                        | src      |       52 |       38 |       65 |      523 |      678 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.ui.util          | AbstractUiTestUtil.java                   | src      |        9 |        0 |       20 |       18 |       47 |
 | projecthub.ui.util          | RenderUtil.java                           | src      |       12 |       40 |       18 |      103 |      173 |
@@ -245,7 +251,7 @@
 | projecthub.ui.view.util     | FeatureListViewTester.java                | src      |       18 |       95 |       18 |       77 |      208 |
 | projecthub.ui.view.util     | LocationListViewTester.java               | src      |       35 |      117 |       33 |      132 |      317 |
 | projecthub.ui.view.util     | OffDayListViewTester.java                 | src      |       52 |      142 |       56 |      154 |      404 |
-| projecthub.ui.view.util     | ProductListViewTester.java                | src      |       30 |      115 |       52 |      138 |      335 |
+| projecthub.ui.view.util     | ProductListViewTester.java                | src      |       31 |      115 |       53 |      140 |      339 |
 | projecthub.ui.view.util     | SprintListViewTester.java                 | src      |       19 |       96 |       18 |       80 |      213 |
 | projecthub.ui.view.util     | TaskListViewTester.java                   | src      |        9 |       45 |       40 |       16 |      110 |
 | projecthub.ui.view.util     | UserListViewTester.java                   | src      |       17 |      115 |       32 |      126 |      290 |
@@ -277,7 +283,7 @@
 | projecthub.ui.view          | VersionListViewTest.java                  | src      |       13 |       80 |       20 |       74 |      187 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
 | projecthub.ui               | Demo.java                                 | src      |       12 |        3 |       71 |       68 |      154 |
-| projecthub.ui               | GenerateASprint.java                      | src      |       35 |        0 |       85 |      265 |      385 |
+| projecthub.ui               | GenerateOneSprint.java                    | src      |       38 |        0 |       80 |      244 |      362 |
 | projecthub.ui               | GenerateScreenshots.java                  | src      |       49 |       27 |      140 |      310 |      526 |
 | projecthub.ui               | HtmlColor.java                            | src      |        6 |        0 |       36 |       22 |       64 |
 | projecthub.ui               | MainErrorHandler.java                     | src      |        5 |        0 |       16 |       28 |       49 |
@@ -344,5 +350,5 @@
 | util                        | TaskUtil.java                             | src      |        8 |        0 |       31 |       15 |       54 |
 | util                        | Util.java                                 | src      |       21 |        0 |       30 |      162 |      213 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+
-| 33 package(s)               | 310 file(s)                               | java     |     6117 |     3681 |     8416 |    31789 |    50003 |
+| 33 package(s)               | 316 file(s)                               | java     |     6229 |     3910 |     8544 |    32376 |    51059 |
 +-----------------------------+-------------------------------------------+----------+----------+----------+----------+----------+----------+

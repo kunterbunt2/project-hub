@@ -15,10 +15,9 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.ai;
+package de.bushnaq.abdalla.projecthub.ai.chatterbox;
 
-import de.bushnaq.abdalla.projecthub.ai.chatterbox.ChatterboxTTS;
-import de.bushnaq.abdalla.projecthub.ai.chatterbox.Narrator;
+import de.bushnaq.abdalla.projecthub.ai.narrator.Narrator;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import org.junit.jupiter.api.Test;
 

@@ -15,10 +15,10 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.ai;
+package de.bushnaq.abdalla.projecthub.ai.coqui;
 
 import de.bushnaq.abdalla.projecthub.ai.chatterbox.ChatterboxTTS;
-import de.bushnaq.abdalla.projecthub.ai.chatterbox.Narrator;
+import de.bushnaq.abdalla.projecthub.ai.narrator.Narrator;
 import org.junit.jupiter.api.Test;
 
 public class TestCoquiTTS {

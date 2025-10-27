@@ -15,9 +15,8 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.ai.chatterbox;
+package de.bushnaq.abdalla.projecthub.ai.narrator;
 
-import de.bushnaq.abdalla.projecthub.ui.util.selenium.VideoRecorder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +61,7 @@ public class AudioPlayer {
                 } catch (Throwable mirrorEx) {
                     logger.debug("Audio mirror ignored: {}", mirrorEx.toString());
                 }
-                logger.info("Playing audio file: {} - {}", VideoRecorder.getVideoTime(), file.getAbsolutePath());
+                logger.info("Playing audio file: {} - {}", Narrator.getElapsedNarrationTime(), file.getAbsolutePath());
 
                 Clip clip = AudioSystem.getClip();
                 current.setClip(clip);

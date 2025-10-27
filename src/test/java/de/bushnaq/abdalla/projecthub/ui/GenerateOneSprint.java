@@ -18,8 +18,8 @@
 package de.bushnaq.abdalla.projecthub.ui;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
-import de.bushnaq.abdalla.projecthub.ai.chatterbox.Narrator;
-import de.bushnaq.abdalla.projecthub.ai.chatterbox.NarratorAttribute;
+import de.bushnaq.abdalla.projecthub.ai.narrator.Narrator;
+import de.bushnaq.abdalla.projecthub.ai.narrator.NarratorAttribute;
 import de.bushnaq.abdalla.projecthub.dto.OffDayType;
 import de.bushnaq.abdalla.projecthub.ui.dialog.FeatureDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ProductDialog;

@@ -15,7 +15,7 @@
  *
  */
 
-package de.bushnaq.abdalla.projecthub.ai.chatterbox;
+package de.bushnaq.abdalla.projecthub.ai.narrator;
 
 import javax.sound.sampled.Clip;
 import java.util.concurrent.CountDownLatch;
