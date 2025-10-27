@@ -31,8 +31,11 @@ class TtsCacheManagerTest {
         try {
             TtsCacheManager mgr = new TtsCacheManager(tmp);
 
-            String name1 = mgr.buildFileName("Hello", 0.5f, 0.5f, 1.0f);
-            String name2 = mgr.buildFileName("World", 0.5f, 0.5f, 1.0f);
+            NarratorAttribute attrs1 = new NarratorAttribute().withExaggeration(0.5f).withCfgWeight(1.0f).withTemperature(0.5f);
+            NarratorAttribute attrs2 = new NarratorAttribute().withExaggeration(0.5f).withCfgWeight(1.0f).withTemperature(0.5f);
+
+            String name1 = mgr.buildFileName("Hello", attrs1);
+            String name2 = mgr.buildFileName("World", attrs2);
 
             // Empty dir: first call should allocate 001- and require generation
             TtsCacheManager.ChronoPlan plan1 = mgr.prepareChronological(name1);

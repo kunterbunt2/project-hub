@@ -92,7 +92,7 @@ public class TestIndexTTS {
                 System.out.println("Testing voice reference: " + ref.filename());
                 Narrator          narrator = Narrator.withIndexTTS("tts/TestIndexTTS");
                 NarratorAttribute na       = new NarratorAttribute();
-                na.withVoiceReference(ref.filename());
+                na.withVoiceReference(ref.path());
                 narrator.narrate(na, text);
                 Thread.sleep(1000);
             }
@@ -103,7 +103,7 @@ public class TestIndexTTS {
     public void testEmotionalRange() throws Exception {
         System.out.println("=== Testing Emotional Range ===");
 
-        String text = "The quarterly results show significant progress.";
+        String text = "And we got ourself a new product!";
 
         // Neutral
         System.out.println("Neutral:");

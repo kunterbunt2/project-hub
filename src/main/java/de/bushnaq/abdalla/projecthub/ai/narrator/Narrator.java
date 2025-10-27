@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * Responsibilities:
  * <ul>
- *   <li>Builds a canonical name for the text + parameters via {@link TtsCacheManager#buildFileName(String, float, float, float)}</li>
+ *   <li>Builds a canonical name for the text + parameters via {@link TtsCacheManager#buildFileName(String, NarratorAttribute)}</li>
  *   <li>Requests a chronological target path from {@link TtsCacheManager#prepareChronological(String)}</li>
  *   <li>Synthesizes audio only when the current id is not up-to-date, then writes it via {@link TtsCacheManager#writeChronological(byte[], Path)}</li>
  *   <li>Queues playback with {@link AudioPlayer}</li>
@@ -73,7 +73,7 @@ public class Narrator {
         this.cacheManager      = new TtsCacheManager(audioDir);
         this.audioPlayer       = new AudioPlayer();
         this.ttsEngine         = engine;
-        this.defaultAttributes = new NarratorAttribute(0.5f, 1.0f, 0.5f);
+        this.defaultAttributes = new NarratorAttribute().withTemperature(0.5f).withCfgWeight(1.0f).withExaggeration(0.5f);
     }
 
     private static TtsEngine chatterboxTtsEngine() {
@@ -84,6 +84,7 @@ public class Narrator {
                 attrs.getCfg_weight() != null ? attrs.getCfg_weight() : 1.0f
         );
     }
+
 
     public static String getElapsedNarrationTime() {
         long   now          = System.currentTimeMillis();
@@ -123,6 +124,7 @@ public class Narrator {
         Thread.sleep(1000);
     }
 
+
     /**
      * Synchronously synthesize and play using per-call attributes. Blocks until playback finishes.
      */
@@ -144,13 +146,10 @@ public class Narrator {
 
     /**
      * Asynchronously synthesize and queue playback using per-call attributes.
-     * Nullable fields in {@code attrs} fall back to instance defaults.
+     * The provided attributes are used directly without merging with defaults.
      */
     public Narrator narrateAsync(NarratorAttribute attrs, String text) throws Exception {
-        float eTemp = attrs != null && attrs.getTemperature() != null ? attrs.getTemperature() : defaultAttributes.getTemperature();
-        float eEx   = attrs != null && attrs.getExaggeration() != null ? attrs.getExaggeration() : defaultAttributes.getExaggeration();
-        float eCfg  = attrs != null && attrs.getCfg_weight() != null ? attrs.getCfg_weight() : defaultAttributes.getCfg_weight();
-        return narrateResolved(eTemp, eEx, eCfg, text);
+        return narrateResolved(attrs, text);
     }
 
     /**
@@ -158,10 +157,7 @@ public class Narrator {
      * Returns immediately with a {@link Playback} handle available via {@link #getPlayback()}.
      */
     public Narrator narrateAsync(String text) throws Exception {
-        float eTemp = defaultAttributes.getTemperature();
-        float eEx   = defaultAttributes.getExaggeration();
-        float eCfg  = defaultAttributes.getCfg_weight();
-        return narrateResolved(eTemp, eEx, eCfg, text);
+        return narrateResolved(defaultAttributes, text);
     }
 
     /**
@@ -173,8 +169,8 @@ public class Narrator {
      *   <li>Queue playback and expose the {@link Playback} handle.</li>
      * </ol>
      */
-    private Narrator narrateResolved(float eTemp, float eEx, float eCfg, String text) throws Exception {
-        String                     canonicalName = cacheManager.buildFileName(text, eTemp, eEx, eCfg);
+    private Narrator narrateResolved(NarratorAttribute attrs, String text) throws Exception {
+        String                     canonicalName = cacheManager.buildFileName(text, attrs);
         TtsCacheManager.ChronoPlan plan          = cacheManager.prepareChronological(canonicalName);
 
         Path pathToPlay;
@@ -184,16 +180,13 @@ public class Narrator {
             logger.debug("Narration up-to-date at {}", pathToPlay.getFileName());
         } else {
             long t0 = System.nanoTime();
-            logger.info("TTS generate start: temp={}, ex={}, cfg={}, file={}, text=\"{}\"", eTemp, eEx, eCfg, plan.path().getFileName(), text);
+            logger.info("TTS generate start: attrs={}, file={}, text=\"{}\"", attrs, plan.path().getFileName(), text);
 
-            // Create NarratorAttribute with resolved values
-            NarratorAttribute resolvedAttrs = new NarratorAttribute(eEx, eCfg, eTemp);
-            resolvedAttrs.setVoiceReference("/opt/index-tts/voices/chatterbox.wav");
-            byte[] audio = ttsEngine.synthesize(text, resolvedAttrs);
+            byte[] audio = ttsEngine.synthesize(text, attrs);
 
             cacheManager.writeChronological(audio, plan.path());
             long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - t0);
-            logger.info("TTS generate done:   temp={}, ex={}, cfg={}, file={}, bytes={}, took={} ms", eTemp, eEx, eCfg, plan.path().getFileName(), audio.length, tookMs);
+            logger.info("TTS generate done:   attrs={}, file={}, bytes={}, took={} ms", attrs, plan.path().getFileName(), audio.length, tookMs);
             pathToPlay = plan.path();
         }
 

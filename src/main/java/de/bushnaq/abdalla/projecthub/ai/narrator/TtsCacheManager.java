@@ -28,8 +28,6 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
 /**
@@ -73,21 +71,16 @@ public class TtsCacheManager {
      * The resulting name has the shape {@code <prefix>_<hash>.wav} and is intended to be appended
      * to an id prefix (e.g., {@code 001-}) for chronological files.
      *
-     * @param text         input text
-     * @param temperature  sampling temperature
-     * @param exaggeration prosody/exaggeration control
-     * @param cfgWeight    CFG (classifier-free guidance) weight
+     * @param text       input text
+     * @param attributes TTS attributes (all non-null fields will be included in the hash)
      * @return a stable canonical name including a short SHA-256 hash of text+parameters
      */
-    public String buildFileName(String text, float temperature, float exaggeration, float cfgWeight) {
+    public String buildFileName(String text, NarratorAttribute attributes) {
         String prefix = sanitizePrefix(crop(text, 20));
         if (prefix.isBlank()) prefix = "tts";
-        DecimalFormat df      = new DecimalFormat("0.########", DecimalFormatSymbols.getInstance(Locale.ROOT));
-        String        tempStr = df.format(temperature);
-        String        exStr   = df.format(exaggeration);
-        String        cfgStr  = df.format(cfgWeight);
-        String        toHash  = text + "|temp=" + tempStr + "|ex=" + exStr + "|cfg=" + cfgStr;
-        String        hash    = shortSha256Hex(toHash, 12);
+
+        String toHash = text + attributes.toHashString();
+        String hash   = shortSha256Hex(toHash, 12);
         return prefix + "_" + hash + ".wav";
     }
 
@@ -163,7 +156,7 @@ public class TtsCacheManager {
      *   <li>Otherwise, delete any files with this id prefix and return the target path for writing a new file.</li>
      * </ol>
      *
-     * @param canonicalName a name produced by {@link #buildFileName(String, float, float, float)} (no id prefix)
+     * @param canonicalName a name produced by {@link #buildFileName(String, NarratorAttribute)} (no id prefix)
      * @return a plan describing whether synthesis is needed and which path to use
      */
     public ChronoPlan prepareChronological(String canonicalName) {
@@ -217,7 +210,7 @@ public class TtsCacheManager {
      * Resolves the path for a chronological file combining the id prefix and canonical name.
      *
      * @param idPrefix      allocated id prefix such as {@code 001-}
-     * @param canonicalName name from {@link #buildFileName(String, float, float, float)}
+     * @param canonicalName name from {@link #buildFileName(String, NarratorAttribute)}
      * @return target full path under {@link #audioDir}
      */
     private Path targetPathFor(String idPrefix, String canonicalName) {

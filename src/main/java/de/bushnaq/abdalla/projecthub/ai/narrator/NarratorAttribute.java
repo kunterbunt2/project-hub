@@ -20,14 +20,14 @@ package de.bushnaq.abdalla.projecthub.ai.narrator;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
+
 @Getter
 @Setter
 public class NarratorAttribute {
-    // Nullable fields: when null, fall back to stack or instance defaults
-
-    // === Chatterbox TTS parameters ===
     Float  cfg_weight;
-    // Index TTS Emotional parameters
     Float  emotion_angry;    // Anger emotion level (0.0 to 1.0)
     Float  emotion_happy;    // Happiness emotion level (0.0 to 1.0)
     Float  emotion_neutral;  // Neutral emotion level (0.0 to 1.0)
@@ -36,20 +36,89 @@ public class NarratorAttribute {
     Float  exaggeration;
     Float  speed;            // Speech speed multiplier (0.5 to 2.0, default 1.0)
     Float  temperature;
-    // === Index TTS parameters ===
     String voiceReference;  // Voice reference path for cloning (e.g., "/opt/index-tts/voices/my_voice.wav")
 
     public NarratorAttribute() {
     }
 
-    public NarratorAttribute(Float exaggeration, Float cfg_weight, Float temperature) {
-        this.exaggeration = exaggeration;
-        this.cfg_weight   = cfg_weight;
-        this.temperature  = temperature;
+
+    /**
+     * Generates a string representation of all non-null attributes suitable for hashing.
+     * Uses consistent formatting for floating-point values.
+     *
+     * @return formatted string with all non-null attributes for hash computation
+     */
+    public String toHashString() {
+        DecimalFormat df = new DecimalFormat("0.########", DecimalFormatSymbols.getInstance(Locale.ROOT));
+        StringBuilder sb = new StringBuilder();
+
+        if (temperature != null) {
+            sb.append("|temp=").append(df.format(temperature));
+        }
+        if (exaggeration != null) {
+            sb.append("|ex=").append(df.format(exaggeration));
+        }
+        if (cfg_weight != null) {
+            sb.append("|cfg=").append(df.format(cfg_weight));
+        }
+        if (speed != null) {
+            sb.append("|speed=").append(df.format(speed));
+        }
+        if (emotion_angry != null) {
+            sb.append("|angry=").append(df.format(emotion_angry));
+        }
+        if (emotion_happy != null) {
+            sb.append("|happy=").append(df.format(emotion_happy));
+        }
+        if (emotion_sad != null) {
+            sb.append("|sad=").append(df.format(emotion_sad));
+        }
+        if (emotion_surprise != null) {
+            sb.append("|surprise=").append(df.format(emotion_surprise));
+        }
+        if (emotion_neutral != null) {
+            sb.append("|neutral=").append(df.format(emotion_neutral));
+        }
+        if (voiceReference != null) {
+            sb.append("|voice=").append(voiceReference);
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Formats attributes for logging or display, showing only non-null values.
+     *
+     * @return formatted string with all non-null attributes
+     */
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        if (temperature != null) sb.append("temp=").append(temperature).append(" ");
+        if (exaggeration != null) sb.append("ex=").append(exaggeration).append(" ");
+        if (cfg_weight != null) sb.append("cfg=").append(cfg_weight).append(" ");
+        if (speed != null) sb.append("speed=").append(speed).append(" ");
+        if (emotion_angry != null) sb.append("angry=").append(emotion_angry).append(" ");
+        if (emotion_happy != null) sb.append("happy=").append(emotion_happy).append(" ");
+        if (emotion_sad != null) sb.append("sad=").append(emotion_sad).append(" ");
+        if (emotion_surprise != null) sb.append("surprise=").append(emotion_surprise).append(" ");
+        if (emotion_neutral != null) sb.append("neutral=").append(emotion_neutral).append(" ");
+        if (voiceReference != null) sb.append("voice=").append(voiceReference).append(" ");
+        return sb.toString().trim();
     }
 
     public NarratorAttribute withAngry(Float level) {
         this.emotion_angry = level;
+        return this;
+    }
+
+    public NarratorAttribute withCfgWeight(Float cfgWeight) {
+        this.cfg_weight = cfgWeight;
+        return this;
+    }
+
+    public NarratorAttribute withExaggeration(Float exaggeration) {
+        this.exaggeration = exaggeration;
         return this;
     }
 
@@ -78,14 +147,11 @@ public class NarratorAttribute {
         return this;
     }
 
-    @Deprecated
-    public NarratorAttribute withVoice(String voice) {
-        // Keep for backward compatibility
-        this.voiceReference = voice;
+    public NarratorAttribute withTemperature(Float temperature) {
+        this.temperature = temperature;
         return this;
     }
 
-    // Convenience builder methods for Index TTS emotions
     public NarratorAttribute withVoiceReference(String voiceReference) {
         this.voiceReference = voiceReference;
         return this;

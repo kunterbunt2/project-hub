@@ -72,8 +72,8 @@ import java.util.Map;
 public class GenerateOneSprint extends AbstractUiTestUtil {
     //    public static final  float                      EXAGGERATE_LOW    = 0.25f;
 //    public static final  float                      EXAGGERATE_NORMAL = 0.3f;
-    public static final  NarratorAttribute          INTENSE     = new NarratorAttribute(.7f, .3f, 1f);
-    public static final  NarratorAttribute          NORMAL      = new NarratorAttribute(.5f, .5f, 1f);
+    public static final  NarratorAttribute          INTENSE     = new NarratorAttribute().withExaggeration(.7f).withCfgWeight(.3f).withTemperature(1f).withVoiceReference("chatterbox").withNeutral(0.5f).withHappy(0.5f);
+    public static final  NarratorAttribute          NORMAL      = new NarratorAttribute().withExaggeration(.5f).withCfgWeight(.5f).withTemperature(1f).withVoiceReference("/opt/index-tts/voices/chatterbox.wav").withNeutral(0.5f);
     // Start Keycloak container with realm configuration
     @Container
     private static final KeycloakContainer          keycloak    = new KeycloakContainer("quay.io/keycloak/keycloak:24.0.1")
@@ -136,7 +136,7 @@ public class GenerateOneSprint extends AbstractUiTestUtil {
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         generateProductsIfNeeded(testInfo, randomCase);
         seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
-        Narrator narrator = new Narrator("tts/" + testInfo.getTestClass().get().getSimpleName());
+        Narrator narrator = Narrator.withIndexTTS("tts/" + testInfo.getTestClass().get().getSimpleName());
         productName = "Jupiter";
         versionName = "1.0.0";
         featureName = "Property request api";
