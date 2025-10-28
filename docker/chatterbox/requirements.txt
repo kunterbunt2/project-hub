@@ -1,0 +1,32 @@
+# Core dependencies - Install numpy first (required by spacy-pkuseg at build time)
+numpy>=1.24.0,<1.26.0
+
+# Chatterbox TTS dependencies (from pyproject.toml)
+librosa==0.11.0
+torch==2.6.0
+torchaudio==2.6.0
+transformers==4.46.3
+diffusers==0.29.0
+safetensors==0.5.3
+conformer==0.3.2
+spacy-pkuseg
+pykakasi==2.3.0
+gradio==5.44.1
+
+# Additional Chatterbox dependencies
+s3tokenizer
+resemble-perth==1.0.1
+# git+https://github.com/Vuizur/add-stress-to-epub  # Commented out - conflicts with Gradio via Spacy/typer
+# Note: russian-text-stresser is only needed for Russian text stress marking
+# If you need Russian support, consider using a newer version or alternative
+
+# Chatterbox TTS itself
+chatterbox-tts==0.1.4
+
+# REST API server dependencies
+fastapi>=0.115.2,<1.0
+uvicorn[standard]==0.31.0
+python-multipart>=0.0.18
+pydantic>=2.0,<3.0
+soundfile
+

@@ -1,0 +1,38 @@
+services:
+  chatterbox:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatterbox-tts
+    ports:
+      - "4123:4123"
+    volumes:
+      - chatterbox-cache:/cache
+      - ./server.py:/app/server.py:rw
+    environment:
+      - HOST=0.0.0.0
+      - PORT=4123
+      - DEVICE=cuda
+      - HF_HOME=/cache/models
+      - TRANSFORMERS_CACHE=/cache/models
+      - HF_HUB_CACHE=/cache/models
+      - CUDA_VISIBLE_DEVICES=0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:4123/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    restart: unless-stopped
+
+volumes:
+  chatterbox-cache:
+    driver: local
+
