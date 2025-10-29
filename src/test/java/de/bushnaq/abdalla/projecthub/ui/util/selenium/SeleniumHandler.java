@@ -195,6 +195,25 @@ public class SeleniumHandler {
     }
 
     /**
+     * Escape special characters in a string for safe use in JavaScript.
+     *
+     * @param input The string to escape
+     * @return The escaped string safe for JavaScript injection
+     */
+    private String escapeJavaScript(String input) {
+        if (input == null) {
+            return "";
+        }
+        return input
+                .replace("\\", "\\\\")
+                .replace("'", "\\'")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
+    }
+
+    /**
      * Executes JavaScript in the current browser window.
      * <p>
      * This method allows executing arbitrary JavaScript code in the browser, which is useful for
@@ -541,6 +560,36 @@ public class SeleniumHandler {
 
     public Duration getWaitDuration() {
         return waitDuration;
+    }
+
+    /**
+     * Hide the currently displayed overlay with a fade-out animation.
+     * The overlay will fade out over 1 second and then be removed from the DOM.
+     */
+    public void hideOverlay() {
+        try {
+            String script =
+                    "var overlay = document.getElementById('video-intro-overlay');\n" +
+                            "if (overlay) {\n" +
+                            "    overlay.style.opacity = '0';\n" +
+                            "    setTimeout(function() {\n" +
+                            "        overlay.remove();\n" +
+                            "    }, 1000);\n" +
+                            "}\n";
+
+            executeJavaScript(script);
+            logger.info("Hiding overlay with fade-out animation");
+
+            // Wait for fade-out animation to complete
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                logger.warn("Interrupted while waiting for overlay fade-out");
+            }
+        } catch (Exception e) {
+            logger.error("Failed to hide overlay: {}", e.getMessage(), e);
+        }
     }
 
     /**
@@ -1151,6 +1200,101 @@ public class SeleniumHandler {
         if (driver != null) {
             driver.manage().window().setSize(windowSize);
         }
+    }
+
+    /**
+     * Show a full-screen overlay with title and subtitle.
+     * The overlay fades in over 1 second and remains visible until hideOverlay() is called.
+     * This is useful for creating intro screens or chapter markers in instruction videos.
+     *
+     * @param title    Main title text to display
+     * @param subtitle Subtitle text (can be null or empty)
+     */
+    public void showOverlay(String title, String subtitle) {
+        try {
+            // Wait for page to be fully loaded
+            waitForPageLoaded();
+
+            // Escape special characters for JavaScript
+            String escapedTitle    = escapeJavaScript(title);
+            String escapedSubtitle = subtitle != null ? escapeJavaScript(subtitle) : "";
+
+            String script =
+                    "// Remove existing overlay if present\n" +
+                            "var existingOverlay = document.getElementById('video-intro-overlay');\n" +
+                            "if (existingOverlay) {\n" +
+                            "    existingOverlay.remove();\n" +
+                            "}\n" +
+                            "\n" +
+                            "// Create overlay container\n" +
+                            "var overlay = document.createElement('div');\n" +
+                            "overlay.id = 'video-intro-overlay';\n" +
+                            "overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #000000; z-index: 999999; display: flex; justify-content: center; align-items: center; opacity: 0; transition: opacity 1s ease-in-out;';\n" +
+                            "\n" +
+                            "// Create content container\n" +
+                            "var content = document.createElement('div');\n" +
+                            "content.style.cssText = 'text-align: center;';\n" +
+                            "\n" +
+                            "// Create title element\n" +
+                            "var titleDiv = document.createElement('div');\n" +
+                            "titleDiv.style.cssText = 'color: #ffffff; font-size: 48px; font-weight: bold; margin-bottom: 20px; font-family: \"Segoe UI\", Tahoma, Geneva, Verdana, sans-serif; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);';\n" +
+                            "titleDiv.textContent = '" + escapedTitle + "';\n" +
+                            "content.appendChild(titleDiv);\n" +
+                            "\n" +
+                            "// Create subtitle element if provided\n" +
+                            "if ('" + escapedSubtitle + "') {\n" +
+                            "    var subtitleDiv = document.createElement('div');\n" +
+                            "    subtitleDiv.style.cssText = 'color: #cccccc; font-size: 24px; font-family: \"Segoe UI\", Tahoma, Geneva, Verdana, sans-serif; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);';\n" +
+                            "    subtitleDiv.textContent = '" + escapedSubtitle + "';\n" +
+                            "    content.appendChild(subtitleDiv);\n" +
+                            "}\n" +
+                            "\n" +
+                            "overlay.appendChild(content);\n" +
+                            "document.body.appendChild(overlay);\n" +
+                            "\n" +
+                            "// Trigger fade-in animation\n" +
+                            "setTimeout(function() {\n" +
+                            "    overlay.style.opacity = '1';\n" +
+                            "}, 10);\n";
+
+            executeJavaScript(script);
+            logger.info("Displayed overlay with title: '{}'", title);
+
+            // Wait for fade-in animation to complete
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                logger.warn("Interrupted while waiting for overlay fade-in");
+            }
+        } catch (Exception e) {
+            logger.error("Failed to show overlay: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to show overlay: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Show overlay, wait for specified duration, then hide it automatically.
+     * Total duration will be: 1s (fade-in) + displaySeconds + 1s (fade-out).
+     *
+     * @param title          Main title text to display
+     * @param subtitle       Subtitle text (can be null or empty)
+     * @param displaySeconds How long to display the overlay between fade-in and fade-out
+     */
+    public void showOverlayAndWait(String title, String subtitle, int displaySeconds) {
+        showOverlay(title, subtitle);
+
+        // Wait for the specified display duration
+        if (displaySeconds > 0) {
+            try {
+                Thread.sleep(displaySeconds * 1000L);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                logger.warn("Interrupted while waiting for overlay display duration");
+            }
+        }
+
+        hideOverlay();
     }
 
     /**

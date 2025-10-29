@@ -24,6 +24,7 @@ import de.bushnaq.abdalla.projecthub.dto.OffDayType;
 import de.bushnaq.abdalla.projecthub.ui.dialog.OffDayDialog;
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import de.bushnaq.abdalla.projecthub.ui.view.LoginView;
 import de.bushnaq.abdalla.projecthub.ui.view.OffDayListView;
 import de.bushnaq.abdalla.projecthub.ui.view.util.*;
 import de.bushnaq.abdalla.projecthub.util.RandomCase;
@@ -129,8 +130,7 @@ public class OffDayInstructionVideo extends AbstractUiTestUtil {
         TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         generateProductsIfNeeded(testInfo, randomCase);
-        seleniumHandler.get("https://github.com/kunterbunt2/project-hub");
-        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+//        seleniumHandler.get("https://github.com/kunterbunt2/project-hub");
         Narrator narrator = Narrator.withChatterboxTTS("tts/" + testInfo.getTestClass().get().getSimpleName());
 //        productName = "Jupiter";
 //        versionName = "1.0.0";
@@ -138,8 +138,14 @@ public class OffDayInstructionVideo extends AbstractUiTestUtil {
 //        sprintName  = "Minimum Viable Product";
 //        taskName    = nameGenerator.generateSprintName(0);
 
-
+        seleniumHandler.getAndCheck("http://localhost:" + "8080" + "/ui/" + LoginView.ROUTE);
+        // Show intro overlay with title
+        seleniumHandler.showOverlay("Kassandra Off-Days", "Introduction Video");
+        // Start recording after page is loaded
+        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+        seleniumHandler.wait(5000);
         narrator.narrateAsync(NORMAL, "Hi everyone, Christopher Paul here from kassandra.org. Today I am happy to release our first instruction video for our Kassandra project management server.");
+        seleniumHandler.hideOverlay();
         productListViewTester.switchToProductListViewWithOidc("christopher.paul@kassandra.org", "password", "../project-hub.wiki/screenshots/login-view.png", testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
 
         //---------------------------------------------------------------------------------------..
@@ -148,10 +154,13 @@ public class OffDayInstructionVideo extends AbstractUiTestUtil {
 //        final LocalDate firstDayRecord1 = LocalDate.of(2025, 8, 1);
 
 
-        narrator.narrate(NORMAL, "We are going to lear about off days management in Kassandra. By Off days we mean vacations, sick leaves, or business trips. Basically any day where you are not available to work on your project tasks.");
+        narrator.narrate(NORMAL, "We are going to learn about off days management in Kassandra. By Off days we mean vacations, sick leaves, or business trips. Basically any day where you are not available to work on your project tasks.");
         narrator.narrateAsync(NORMAL, "Lets open the user menu and switch to the Offday Page.");
         // Navigate to OffDayListView for the current user and take screenshots
-        offDayListViewTester.switchToOffDayListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
+//        offDayListViewTester.switchToOffDayListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
+        seleniumHandler.click(TopMenu.USER_MENU_BUTTON);
+
+
         narrator.narrate(NORMAL, "The User Off-Days shows a calendar with every day of the current year. The legent on the bottom explains the different types of off days and there colors.");
         narrator.narrate(NORMAL, "You can see that there are Holidays marked in the calendar. These are public holidays that Kassandra automatically populated based on the logged in user location.");
         narrator.narrate(NORMAL, "I am located in germany North Rhine Westphalia and so you can see the holidays of that region in Germany.");
