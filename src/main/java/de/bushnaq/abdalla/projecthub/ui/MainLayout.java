@@ -41,6 +41,7 @@ import de.bushnaq.abdalla.projecthub.security.SecurityUtils;
 import de.bushnaq.abdalla.projecthub.ui.component.Breadcrumbs;
 import de.bushnaq.abdalla.projecthub.ui.component.ThemeToggle;
 import jakarta.annotation.security.PermitAll;
+import lombok.Getter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
@@ -55,6 +56,21 @@ import static com.vaadin.flow.theme.lumo.LumoUtility.*;
 //@JsModule("/tooltips.js")
 public final class MainLayout extends AppLayout {
 
+    public static final String ID_BREADCRUMBS               = "main-layout-breadcrumbs";
+    // Test IDs for Selenium testing
+    public static final String ID_LOGO                      = "main-layout-logo";
+    public static final String ID_NAVIGATION_TABS           = "main-layout-navigation-tabs";
+    public static final String ID_THEME_TOGGLE              = "main-layout-theme-toggle";
+    public static final String ID_USER_MENU                 = "main-layout-user-menu";
+    public static final String ID_USER_MENU_AVAILABILITY    = "main-layout-user-menu-availability";
+    public static final String ID_USER_MENU_ITEM            = "main-layout-user-menu-item";
+    public static final String ID_USER_MENU_LOCATION        = "main-layout-user-menu-location";
+    public static final String ID_USER_MENU_LOGOUT          = "main-layout-user-menu-logout";
+    public static final String ID_USER_MENU_MANAGE_SETTINGS = "main-layout-user-menu-manage-settings";
+    public static final String ID_USER_MENU_OFF_DAYS        = "main-layout-user-menu-off-days";
+    public static final String ID_USER_MENU_VIEW_PROFILE    = "main-layout-user-menu-view-profile";
+    // Method to get the breadcrumbs component (to be used by views)
+    @Getter
     private final Breadcrumbs      breadcrumbs  = new Breadcrumbs();
     private       Image            logoImage;   // Store reference to logo image
     private final Map<Tab, String> tabToPathMap = new HashMap<>();
@@ -88,6 +104,7 @@ public final class MainLayout extends AppLayout {
     }
 
     private Div createBreadcrumbs() {
+        breadcrumbs.setId(ID_BREADCRUMBS);
         Div breadcrumbContainer = new Div(breadcrumbs);
         breadcrumbContainer.addClassNames(
                 Padding.Horizontal.MEDIUM,
@@ -103,6 +120,7 @@ public final class MainLayout extends AppLayout {
         // Create the logo image component
         logoImage = new Image("images/logo.svg", "Kassandra Logo");
         logoImage.setHeight("32px");
+        logoImage.setId(ID_LOGO);
 
         // Check initial theme and set appropriate logo
         UI      ui          = UI.getCurrent();
@@ -139,6 +157,7 @@ public final class MainLayout extends AppLayout {
 
     private void createNavTabs() {
         tabs.setOrientation(Tabs.Orientation.HORIZONTAL);
+        tabs.setId(ID_NAVIGATION_TABS);
 
         MenuConfiguration.getMenuEntries().forEach(entry -> {
             Tab tab = createTab(entry);
@@ -178,6 +197,7 @@ public final class MainLayout extends AppLayout {
      */
     private ThemeToggle createThemeToggle() {
         ThemeToggle themeToggle = new ThemeToggle();
+        themeToggle.setId(ID_THEME_TOGGLE);
 
         // Add click listener to update logo when theme is toggled
         themeToggle.addClickListener(event -> {
@@ -200,22 +220,33 @@ public final class MainLayout extends AppLayout {
         var userMenu = new MenuBar();
         userMenu.addThemeVariants(MenuBarVariant.LUMO_TERTIARY_INLINE);
         userMenu.addClassNames(Margin.Right.MEDIUM);
+        userMenu.setId(ID_USER_MENU);
 
         var userMenuItem = userMenu.addItem(avatar);
         userMenuItem.add(username);
-        userMenuItem.getSubMenu().addItem("Manage Availability", e -> navigateToAvailability(username));
-        userMenuItem.getSubMenu().addItem("Manage Location", e -> navigateToLocation(username));
-        userMenuItem.getSubMenu().addItem("Manage Off Days", e -> navigateToOffDays(username));
-        userMenuItem.getSubMenu().addItem("View Profile").setEnabled(false);
-        userMenuItem.getSubMenu().addItem("Manage Settings").setEnabled(false);
-        userMenuItem.getSubMenu().addItem("Logout", e -> logout());
+        userMenuItem.setId(ID_USER_MENU_ITEM);
+
+        var availabilityItem = userMenuItem.getSubMenu().addItem("Manage Availability", e -> navigateToAvailability(username));
+        availabilityItem.setId(ID_USER_MENU_AVAILABILITY);
+
+        var locationItem = userMenuItem.getSubMenu().addItem("Manage Location", e -> navigateToLocation(username));
+        locationItem.setId(ID_USER_MENU_LOCATION);
+
+        var offDaysItem = userMenuItem.getSubMenu().addItem("Manage Off Days", e -> navigateToOffDays(username));
+        offDaysItem.setId(ID_USER_MENU_OFF_DAYS);
+
+        var viewProfileItem = userMenuItem.getSubMenu().addItem("View Profile");
+        viewProfileItem.setEnabled(false);
+        viewProfileItem.setId(ID_USER_MENU_VIEW_PROFILE);
+
+        var manageSettingsItem = userMenuItem.getSubMenu().addItem("Manage Settings");
+        manageSettingsItem.setEnabled(false);
+        manageSettingsItem.setId(ID_USER_MENU_MANAGE_SETTINGS);
+
+        var logoutItem = userMenuItem.getSubMenu().addItem("Logout", e -> logout());
+        logoutItem.setId(ID_USER_MENU_LOGOUT);
 
         return userMenu;
-    }
-
-    // Method to get the breadcrumbs component (to be used by views)
-    public Breadcrumbs getBreadcrumbs() {
-        return breadcrumbs;
     }
 
     private String getUserName() {
