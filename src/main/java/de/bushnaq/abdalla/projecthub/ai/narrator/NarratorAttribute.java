@@ -17,7 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.ai.narrator;
 
-import de.bushnaq.abdalla.projecthub.ai.indextts.IndexTTS;
+import de.bushnaq.abdalla.projecthub.ai.chatterbox.ChatterboxTTS;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -31,17 +31,17 @@ import java.util.Map;
 @Setter
 public class NarratorAttribute {
     // Static cache for voice references: filename -> full path
-    private static final Map<String, String> voiceCache     = new HashMap<>();
-    Float  cfg_weight;
-    Float  emotion_angry;    // Anger emotion level (0.0 to 1.0)
-    Float  emotion_happy;    // Happiness emotion level (0.0 to 1.0)
-    Float  emotion_neutral;  // Neutral emotion level (0.0 to 1.0)
-    Float  emotion_sad;      // Sadness emotion level (0.0 to 1.0)
-    Float  emotion_surprise; // Surprise emotion level (0.0 to 1.0)
-    Float  exaggeration;
-    Float  speed;            // Speech speed multiplier (0.5 to 2.0, default 1.0)
-    Float  temperature;
-    private static       boolean             voiceCacheInit = false;
+    private static final Map<String, String> voiceCache = new HashMap<>();
+    Float cfg_weight;
+    Float emotion_angry;    // Anger emotion level (0.0 to 1.0)
+    Float emotion_happy;    // Happiness emotion level (0.0 to 1.0)
+    Float emotion_neutral;  // Neutral emotion level (0.0 to 1.0)
+    Float emotion_sad;      // Sadness emotion level (0.0 to 1.0)
+    Float emotion_surprise; // Surprise emotion level (0.0 to 1.0)
+    Float exaggeration;
+    Float speed;            // Speech speed multiplier (0.5 to 2.0, default 1.0)
+    Float temperature;
+    private static boolean voiceCacheInit = false;
     String voiceReference;  // Voice reference path for cloning (e.g., "/opt/index-tts/voices/my_voice.wav")
 
     public NarratorAttribute() {
@@ -73,8 +73,8 @@ public class NarratorAttribute {
     public static synchronized void refreshVoiceCache() {
         try {
             voiceCache.clear();
-            IndexTTS.VoiceReference[] refs = IndexTTS.listVoiceReferences();
-            for (IndexTTS.VoiceReference ref : refs) {
+            ChatterboxTTS.VoiceReference[] refs = ChatterboxTTS.listVoiceReferences();
+            for (ChatterboxTTS.VoiceReference ref : refs) {
                 voiceCache.put(ref.filename(), ref.path());
             }
             voiceCacheInit = true;

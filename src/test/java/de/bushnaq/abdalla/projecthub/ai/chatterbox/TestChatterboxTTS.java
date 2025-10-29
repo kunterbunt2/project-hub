@@ -37,9 +37,9 @@ public class TestChatterboxTTS {
     @Test
     public void testSpeech_01() throws Exception {
 
-        seleniumHandler.startRecording("test", "test1");
+//        seleniumHandler.startRecording("test", "test1");
         narrator.narrate("Welcome to the Kassandra demonstration. My name is Abby, and I will be your guide today.");
-        seleniumHandler.destroy();
+//        seleniumHandler.destroy();
     }
 
     @Test

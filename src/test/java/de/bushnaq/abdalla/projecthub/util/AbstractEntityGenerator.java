@@ -344,7 +344,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
             long      time      = System.currentTimeMillis();
             String    name      = nameGenerator.generateUserName(userIndex);
             String    email     = nameGenerator.generateUserEmail(userIndex);
-            LocalDate firstDate = ParameterOptions.getNow().toLocalDate().minusYears(1);
+            LocalDate firstDate = ParameterOptions.getNow().toLocalDate().minusYears(2);
             User      saved     = addUser(name, email, "de", "nw", firstDate, generateUserColor(userIndex), 0.5f);
             System.out.println("Adding user: " + saved.getName() + " took " + (System.currentTimeMillis() - time) + " ms");
 //            GanttContext gc        = new GanttContext();

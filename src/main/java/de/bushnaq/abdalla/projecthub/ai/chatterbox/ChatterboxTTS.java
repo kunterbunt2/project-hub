@@ -32,7 +32,36 @@ public class ChatterboxTTS {
     private static final ObjectMapper objectMapper    = new ObjectMapper();
     private static       String       TTS_SERVICE_URL = "http://localhost:4123";
 
-    public static byte[] generateSpeech(String text, float temperature, float exaggeration, float cfgWeight) throws Exception {
+    /**
+     * Delete a voice reference file from the server
+     *
+     * @param filename The filename to delete (e.g., "my_voice.wav")
+     */
+    public static void deleteVoiceReference(String filename) throws Exception {
+        URL               url  = new URL(TTS_SERVICE_URL + "/v1/voice-references/" + filename);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("DELETE");
+
+        int responseCode = conn.getResponseCode();
+        if (responseCode != 200) {
+            String error = readProcessOutput(conn.getErrorStream());
+            throw new RuntimeException("Failed to delete voice reference " + responseCode + ": " + error);
+        }
+    }
+
+    /**
+     * Generate speech with voice cloning support
+     *
+     * @param text            Text to convert to speech
+     * @param audioPromptPath Path to audio prompt WAV file for voice cloning (server-side path), null for default voice
+     * @param language        Language code (e.g., 'en', 'fr', 'es'), null for English
+     * @param temperature     Legacy parameter (unused, kept for compatibility)
+     * @param exaggeration    Legacy parameter (unused, kept for compatibility)
+     * @param cfgWeight       Legacy parameter (unused, kept for compatibility)
+     * @return Audio data as WAV bytes
+     */
+    public static byte[] generateSpeech(String text, String audioPromptPath, String language,
+                                        float temperature, float exaggeration, float cfgWeight) throws Exception {
         URL               url  = new URL(TTS_SERVICE_URL + "/v1/audio/speech");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
@@ -40,7 +69,9 @@ public class ChatterboxTTS {
         conn.setDoOutput(true);
 
         java.util.Map<String, Object> jsonMap = new java.util.HashMap<>();
-        jsonMap.put("input", text); // Chatterbox API expects 'input' not 'text'
+        jsonMap.put("input", text);
+        if (audioPromptPath != null) jsonMap.put("audio_prompt_path", audioPromptPath);
+        if (language != null) jsonMap.put("language", language);
         jsonMap.put("temperature", temperature);
         jsonMap.put("exaggeration", exaggeration);
         jsonMap.put("cfg_weight", cfgWeight);
@@ -63,6 +94,10 @@ public class ChatterboxTTS {
             }
             return baos.toByteArray();
         }
+    }
+
+    public static byte[] generateSpeech(String text, float temperature, float exaggeration, float cfgWeight) throws Exception {
+        return generateSpeech(text, null, null, temperature, exaggeration, cfgWeight);
     }
 
     public static String[] getLanguages() throws Exception {
@@ -92,6 +127,40 @@ public class ChatterboxTTS {
         }
     }
 
+    /**
+     * List available voice reference files on the server
+     * <p>
+     * Returns information about WAV files that can be used for voice cloning.
+     */
+    public static VoiceReference[] listVoiceReferences() throws Exception {
+        URL               url  = new URL(TTS_SERVICE_URL + "/v1/voice-references");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+
+        int responseCode = conn.getResponseCode();
+        if (responseCode != 200) {
+            String error = readProcessOutput(conn.getErrorStream());
+            throw new RuntimeException("Failed to list voice references " + responseCode + ": " + error);
+        }
+
+        String              response = readProcessOutput(conn.getInputStream());
+        java.util.Map<?, ?> jsonMap  = objectMapper.readValue(response, java.util.Map.class);
+        List<?>             refsData = (List<?>) jsonMap.get("voice_references");
+
+        VoiceReference[] refs = new VoiceReference[refsData.size()];
+        for (int i = 0; i < refsData.size(); i++) {
+            java.util.Map<?, ?> data = (java.util.Map<?, ?>) refsData.get(i);
+            refs[i] = new VoiceReference(
+                    (String) data.get("filename"),
+                    (String) data.get("path"),
+                    ((Number) data.get("size_bytes")).longValue(),
+                    ((Number) data.get("modified_timestamp")).doubleValue()
+            );
+        }
+
+        return refs;
+    }
+
     private static String readProcessOutput(InputStream inputStream) throws IOException {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
             return reader.lines().reduce("", (a, b) -> a + "\n" + b);
@@ -102,9 +171,84 @@ public class ChatterboxTTS {
         TTS_SERVICE_URL = url;
     }
 
+    /**
+     * Upload a voice reference WAV file to the server
+     *
+     * @param localFilePath Path to the local WAV file to upload
+     * @return Information about the uploaded file
+     */
+    public static VoiceReference uploadVoiceReference(String localFilePath) throws Exception {
+        java.io.File file = new java.io.File(localFilePath);
+        if (!file.exists()) {
+            throw new Exception("File not found: " + localFilePath);
+        }
+        if (!localFilePath.toLowerCase().endsWith(".wav")) {
+            throw new Exception("Only WAV files are supported");
+        }
+
+        String            boundary = "----ChatterboxBoundary" + System.currentTimeMillis();
+        URL               url      = new URL(TTS_SERVICE_URL + "/v1/voice-references");
+        HttpURLConnection conn     = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setDoOutput(true);
+        conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+
+        try (OutputStream out = conn.getOutputStream();
+             java.io.FileInputStream fileIn = new java.io.FileInputStream(file)) {
+
+            java.io.PrintWriter writer = new java.io.PrintWriter(new java.io.OutputStreamWriter(out, StandardCharsets.UTF_8), true);
+
+            // Write file part
+            writer.append("--").append(boundary).append("\r\n");
+            writer.append("Content-Disposition: form-data; name=\"file\"; filename=\"")
+                    .append(file.getName()).append("\"\r\n");
+            writer.append("Content-Type: audio/wav\r\n\r\n");
+            writer.flush();
+
+            // Copy file data
+            byte[] buffer = new byte[4096];
+            int    bytesRead;
+            while ((bytesRead = fileIn.read(buffer)) != -1) {
+                out.write(buffer, 0, bytesRead);
+            }
+            out.flush();
+
+            writer.append("\r\n");
+            writer.append("--").append(boundary).append("--\r\n");
+            writer.flush();
+        }
+
+        int responseCode = conn.getResponseCode();
+        if (responseCode != 200) {
+            String error = readProcessOutput(conn.getErrorStream());
+            throw new RuntimeException("Failed to upload voice reference " + responseCode + ": " + error);
+        }
+
+        String              response = readProcessOutput(conn.getInputStream());
+        java.util.Map<?, ?> jsonMap  = objectMapper.readValue(response, java.util.Map.class);
+        return new VoiceReference(
+                (String) jsonMap.get("filename"),
+                (String) jsonMap.get("path"),
+                ((Number) jsonMap.get("size_bytes")).longValue(),
+                0.0 // timestamp not provided in upload response
+        );
+    }
+
     public static void writeWav(byte[] audioData, String fileName) throws IOException {
         Path outputPath = Paths.get(fileName);
         Files.write(outputPath, audioData);
         System.out.printf("Audio saved to '%s'.\n", outputPath.toAbsolutePath());
+    }
+
+    /**
+     * Represents a voice reference file on the server
+     */
+    public record VoiceReference(String filename, String path, long sizeBytes, double modifiedTimestamp) {
+
+        @Override
+        public String toString() {
+            return String.format("VoiceReference{filename='%s', path='%s', size=%d bytes}",
+                    filename, path, sizeBytes);
+        }
     }
 }

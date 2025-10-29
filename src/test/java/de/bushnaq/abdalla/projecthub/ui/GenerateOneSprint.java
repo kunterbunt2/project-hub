@@ -72,8 +72,8 @@ import java.util.Map;
 public class GenerateOneSprint extends AbstractUiTestUtil {
     //    public static final  float                      EXAGGERATE_LOW    = 0.25f;
 //    public static final  float                      EXAGGERATE_NORMAL = 0.3f;
-    public static final  NarratorAttribute          INTENSE     = new NarratorAttribute().withExaggeration(.7f).withCfgWeight(.3f).withTemperature(1f).withVoiceReference("chatterbox").withNeutral(0.5f).withHappy(0.5f);
-    public static final  NarratorAttribute          NORMAL      = new NarratorAttribute().withExaggeration(.5f).withCfgWeight(.5f).withTemperature(1f).withVoiceReference("/opt/index-tts/voices/chatterbox.wav").withNeutral(0.5f);
+    public static final  NarratorAttribute          INTENSE     = new NarratorAttribute().withExaggeration(.7f).withCfgWeight(.3f).withTemperature(1f)/*.withVoice("chatterbox")*/;
+    public static final  NarratorAttribute          NORMAL      = new NarratorAttribute().withExaggeration(.5f).withCfgWeight(.5f).withTemperature(1f)/*.withVoice("chatterbox")*/;
     // Start Keycloak container with realm configuration
     @Container
     private static final KeycloakContainer          keycloak    = new KeycloakContainer("quay.io/keycloak/keycloak:24.0.1")
@@ -144,25 +144,25 @@ public class GenerateOneSprint extends AbstractUiTestUtil {
         taskName    = nameGenerator.generateSprintName(0);
 
 
-        narrator.narrateAsync(NORMAL, "Good morning, my name is Jennifer Holleman. I am the product manager of Kassandra and I will be demonstrating the latest alpha version of the Kassandra project server to you today.");
-        productListViewTester.switchToProductListViewWithOidc("jennifer.holleman@kassandra.org", "password", "../project-hub.wiki/screenshots/login-view.png", testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+        narrator.narrateAsync(NORMAL, "Good morning, my name is Christopher Paul. I am the product manager of Kassandra and I will be demonstrating the latest alpha version of the Kassandra project server to you today.");
+        productListViewTester.switchToProductListViewWithOidc("christopher.paul@kassandra.org", "password", "../project-hub.wiki/screenshots/login-view.png", testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
 
         //---------------------------------------------------------------------------------------..
         // Products Page
         //---------------------------------------------------------------------------------------..
-//        narrator.narrate(NORMAL, "Kassandra is a project planning and progress tracking server targeting small to medium team sizes. It is a open source project and has an Apachee two dot zero license.").pause();
-//        narrator.narrate(NORMAL, "Kassandra supports OIDC authentication and authorization. I just logged into the server using my kassandra dot org ID.").pause();
-//        narrator.narrate(NORMAL, "The first page you see when you log into the server is the Products page where all Products are listed.").pause();
+        narrator.narrate(NORMAL, "Kassandra is a project planning and progress tracking server targeting small to medium team sizes. It is a open source project and has an Apachee two dot zero license.").pause();
+        narrator.narrate(NORMAL, "Kassandra supports OIDC authentication and authorization. I just logged into the server using my kassandra dot org ID.").pause();
+        narrator.narrate(NORMAL, "The first page you see when you log into the server is the Products page where all Products are listed.").pause();
         //---------------------------------------------------------------------------------------..
         // Create a Product
         //---------------------------------------------------------------------------------------..
         narrator.narrate(NORMAL, "Lets start by adding a new product by selecting the Create button.");
         seleniumHandler.click(ProductListView.CREATE_PRODUCT_BUTTON);
-        narrator.narrate(INTENSE, "Lets call it Jupiter!............................................").pause();
+        narrator.narrate(INTENSE, "Lets call it Jupiter!").pause();
         seleniumHandler.setTextField(ProductDialog.PRODUCT_NAME_FIELD, productName);
-        narrator.narrate(NORMAL, "Select Save to close the dialog and persist our product...........").pause();
+        narrator.narrate(NORMAL, "Select Save to close the dialog and persist our product.").pause();
         seleniumHandler.click(ProductDialog.CONFIRM_BUTTON);
-        narrator.narrate(INTENSE, "And we got ourself a new product!................................").pause();
+        narrator.narrate(INTENSE, "And we got ourself a new product!").pause();
 
 
         narrator.narrate(NORMAL, "With the little notepad and trashcan icons, on the right side, you can edit or delete your product.").pause();

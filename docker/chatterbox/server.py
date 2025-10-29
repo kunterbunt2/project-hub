@@ -11,8 +11,8 @@ from typing import Optional
 import torch
 import torchaudio as ta
 import uvicorn
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi import FastAPI, HTTPException, UploadFile
+from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel, Field
 
 # Configure logging
@@ -256,6 +256,138 @@ async def generate_speech(request: SpeechRequest):
 
     except Exception as e:
         logger.error(f"Speech generation failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/v1/voice-references")
+async def list_voice_references():
+    """
+    List available voice reference files
+
+    Returns a list of WAV files that can be used as audio prompts for voice cloning.
+    """
+    voice_dir = "/opt/chatterbox/voices"
+
+    # Create directory if it doesn't exist
+    os.makedirs(voice_dir, exist_ok=True)
+
+    try:
+        # List all WAV files
+        wav_files = []
+        for filename in os.listdir(voice_dir):
+            if filename.lower().endswith('.wav'):
+                file_path = os.path.join(voice_dir, filename)
+                file_size = os.path.getsize(file_path)
+                file_mtime = os.path.getmtime(file_path)
+
+                wav_files.append({
+                    "filename": filename,
+                    "path": file_path,
+                    "size_bytes": file_size,
+                    "modified_timestamp": file_mtime
+                })
+
+        return {
+            "voice_references": wav_files,
+            "count": len(wav_files),
+            "directory": voice_dir
+        }
+    except Exception as e:
+        logger.error(f"Error listing voice references: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/v1/voice-references")
+async def upload_voice_reference(file: UploadFile):
+    """
+    Upload a voice reference WAV file
+
+    The uploaded file will be saved in the voice references directory and can be used
+    for voice cloning in speech synthesis requests.
+
+    Requirements:
+    - File must be in WAV format
+    - Recommended: 10-30 seconds of clear speech
+    - Recommended sample rate: 16kHz, 22.05kHz, or 44.1kHz
+    """
+    voice_dir = "/opt/chatterbox/voices"
+    os.makedirs(voice_dir, exist_ok=True)
+
+    # Validate file extension
+    if not file.filename.lower().endswith('.wav'):
+        raise HTTPException(
+            status_code=400,
+            detail="Only WAV files are supported. Please upload a .wav file."
+        )
+
+    # Sanitize filename to prevent directory traversal
+    import re
+    safe_filename = re.sub(r'[^\w\-\.]', '_', file.filename)
+    file_path = os.path.join(voice_dir, safe_filename)
+
+    try:
+        # Read and save the file
+        contents = await file.read()
+
+        with open(file_path, "wb") as f:
+            f.write(contents)
+
+        file_size = os.path.getsize(file_path)
+
+        logger.info(f"Voice reference uploaded: {safe_filename} ({file_size} bytes)")
+
+        return {
+            "filename": safe_filename,
+            "path": file_path,
+            "size_bytes": file_size,
+            "message": "Voice reference uploaded successfully"
+        }
+    except Exception as e:
+        logger.error(f"Error uploading voice reference: {e}", exc_info=True)
+        # Clean up partial file if it exists
+        if os.path.exists(file_path):
+            os.unlink(file_path)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/v1/voice-references/{filename}")
+async def delete_voice_reference(filename: str):
+    """
+    Delete a voice reference file
+
+    Removes the specified voice reference file from the server.
+    """
+    voice_dir = "/opt/chatterbox/voices"
+
+    # Sanitize filename to prevent directory traversal
+    import re
+    safe_filename = re.sub(r'[^\w\-\.]', '_', filename)
+    file_path = os.path.join(voice_dir, safe_filename)
+
+    # Check if file exists
+    if not os.path.exists(file_path):
+        raise HTTPException(
+            status_code=404,
+            detail=f"Voice reference '{safe_filename}' not found"
+        )
+
+    # Check if it's actually a file (not a directory)
+    if not os.path.isfile(file_path):
+        raise HTTPException(
+            status_code=400,
+            detail=f"'{safe_filename}' is not a file"
+        )
+
+    try:
+        os.unlink(file_path)
+        logger.info(f"Voice reference deleted: {safe_filename}")
+
+        return {
+            "filename": safe_filename,
+            "message": "Voice reference deleted successfully"
+        }
+    except Exception as e:
+        logger.error(f"Error deleting voice reference: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
