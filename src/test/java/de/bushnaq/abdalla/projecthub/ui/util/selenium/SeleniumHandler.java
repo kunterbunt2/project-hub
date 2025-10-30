@@ -796,7 +796,7 @@ public class SeleniumHandler {
             // Perform smooth mouse movement with human-like characteristics
             humanLikeMouseMove(currentMouse.x, currentMouse.y, targetX, targetY);
 
-            logger.debug("Moved mouse to element at ({}, {})", targetX, targetY);
+            logger.debug("Moved mouse to element {} at ({}, {})", element.getText(), targetX, targetY);
 
         } catch (Exception e) {
             logger.warn("Failed to move mouse to element: {}", e.getMessage());
@@ -1035,20 +1035,130 @@ public class SeleniumHandler {
         WebElement e = findElement(By.id(id));
         WebElement i = e.findElement(By.tagName("input"));
         waitForElementToBeInteractable(i.getAttribute("id"));
-        moveMouseToElement(i);  // Move mouse to combobox field before typing
-        String value = i.getAttribute("value");
-        if (value.isEmpty()) {
+
+        // If humanize is enabled, interact like a human by clicking on dropdown items
+        if (humanize) {
+            setComboBoxValueHumanized(e, i, text);
         } else {
-            i.sendKeys(Keys.CONTROL + "a");
-            i.sendKeys(Keys.DELETE);
+            // Original fast method: type and select
+            moveMouseToElement(i);  // Move mouse to combobox field before typing
+            String value = i.getAttribute("value");
+            if (value.isEmpty()) {
+            } else {
+                i.sendKeys(Keys.CONTROL + "a");
+                i.sendKeys(Keys.DELETE);
+            }
+            // Humanized typing into the combobox
+            typeText(i, text);
+            sendKeys(id, Keys.RETURN);
+            wait(500);
+            sendKeys(id, Keys.ARROW_DOWN, Keys.TAB);
         }
-        // Humanized typing into the combobox
-        typeText(i, text);
-        sendKeys(id, Keys.RETURN);
-        wait(500);
-        sendKeys(id, Keys.ARROW_DOWN, Keys.TAB);
         logger.info("set ComboBox value=" + text);
-//        wait(1000);
+    }
+
+    /**
+     * Fallback method to set combobox value by typing.
+     * Used when humanized click selection fails or item cannot be found.
+     *
+     * @param inputElement the input element within the combobox
+     * @param text         the text to type
+     */
+    private void setComboBoxValueByTyping(WebElement inputElement, String text) {
+        String value = inputElement.getAttribute("value");
+        if (!value.isEmpty()) {
+            inputElement.sendKeys(Keys.CONTROL + "a");
+            inputElement.sendKeys(Keys.DELETE);
+        }
+        typeText(inputElement, text);
+        inputElement.sendKeys(Keys.RETURN);
+        wait(500);
+        inputElement.sendKeys(Keys.ARROW_DOWN, Keys.TAB);
+    }
+
+    /**
+     * Sets a combobox value in a humanized way by clicking on the dropdown toggle,
+     * waiting for the overlay to appear, and clicking on the matching item.
+     * This simulates how a real human would interact with a combobox using mouse clicks.
+     *
+     * @param comboBoxElement the combobox WebElement
+     * @param inputElement    the input element within the combobox
+     * @param text            the text of the item to select
+     */
+    private void setComboBoxValueHumanized(WebElement comboBoxElement, WebElement inputElement, String text) {
+        try {
+            // Find and click the toggle button to open the dropdown
+            // A human would just click the toggle button directly (no need to click input first)
+            // Vaadin combobox uses shadow DOM, so we use expandRootElementAndFindElement to access it
+            try {
+                // Try to find toggle button by ID first
+                WebElement toggleButton = expandRootElementAndFindElement(comboBoxElement, "#toggleButton");
+
+                if (toggleButton == null) {
+                    // Fallback: try to find by part attribute
+                    toggleButton = expandRootElementAndFindElement(comboBoxElement, "[part='toggle-button']");
+                }
+
+                if (toggleButton != null) {
+                    moveMouseToElement(toggleButton);
+                    toggleButton.click();
+                    logger.debug("Clicked combobox toggle button via shadow DOM");
+                } else {
+                    // Fallback: click on the input field if toggle button not found
+                    logger.debug("Toggle button not found in shadow DOM, clicking input field to open dropdown");
+                    inputElement.click();
+                }
+            } catch (Exception ex) {
+                // Fallback: click on the input field if shadow DOM access fails
+                logger.debug("Failed to access toggle button via shadow DOM: {}, clicking input field to open dropdown", ex.getMessage());
+                inputElement.click();
+            }
+
+            // Wait for the dropdown overlay to become visible
+            // The overlay element exists in the DOM even when closed
+            // When opened, the 'opened' attribute is set to "true" (not an empty string)
+            waitUntil(ExpectedConditions.or(
+                    ExpectedConditions.attributeToBe(By.cssSelector("vaadin-combo-box-overlay"), "opened", "true"),
+                    ExpectedConditions.attributeToBe(By.cssSelector("vaadin-combo-box-dropdown-wrapper"), "opened", "true")
+            ));
+
+            // Find dropdown items
+            // Items are in the light DOM as children of vaadin-combo-box-scroller
+            // We can query them directly without accessing shadow DOM
+            List<WebElement> dropdownItems = driver.findElements(By.cssSelector("vaadin-combo-box-item"));
+
+            logger.debug("Found {} dropdown items", dropdownItems.size());
+
+            // Find the item that matches the text
+            WebElement matchingItem = null;
+            for (WebElement item : dropdownItems) {
+                String itemText = item.getText();
+                if (itemText != null && itemText.trim().equals(text.trim())) {
+                    matchingItem = item;
+                    break;
+                }
+            }
+
+            if (matchingItem != null) {
+                // Move mouse to the item and click it
+                moveMouseToElement(matchingItem);
+                wait(100);
+                matchingItem.click();
+                logger.debug("Clicked on dropdown item: {}", text);
+            } else {
+                logger.warn("Could not find dropdown item with text: {}. Falling back to keyboard method.", text);
+                // Fallback to typing method if item not found
+                setComboBoxValueByTyping(inputElement, text);
+            }
+
+            // Wait for dropdown to close
+            wait(200);
+
+        } catch (Exception ex) {
+            logger.warn("Error during humanized combobox selection: {}. Falling back to keyboard method.", ex.getMessage());
+            // Fallback to typing method on any error
+            setComboBoxValueByTyping(inputElement, text);
+        }
     }
 
     /**
