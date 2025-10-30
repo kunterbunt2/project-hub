@@ -64,9 +64,7 @@ import java.util.Map;
 @AutoConfigureMockMvc
 @Transactional
 @Testcontainers
-public class OffDayInstructionVideo extends AbstractUiTestUtil {
-    //    public static final  float                      EXAGGERATE_LOW    = 0.25f;
-//    public static final  float                      EXAGGERATE_NORMAL = 0.3f;
+public class UserOffDaysInstructionVideo extends AbstractUiTestUtil {
     public static final  NarratorAttribute          INTENSE  = new NarratorAttribute().withExaggeration(.7f).withCfgWeight(.3f).withTemperature(1f)/*.withVoice("chatterbox")*/;
     public static final  NarratorAttribute          NORMAL   = new NarratorAttribute().withExaggeration(.5f).withCfgWeight(.5f).withTemperature(1f)/*.withVoice("chatterbox")*/;
     // Start Keycloak container with realm configuration
@@ -87,70 +85,48 @@ public class OffDayInstructionVideo extends AbstractUiTestUtil {
     @Autowired
     private              FeatureListViewTester      featureListViewTester;
     private              String                     featureName;
-    //    private final        LocalDate                  firstDay        = LocalDate.of(2025, 6, 1);
-//    private final        LocalDate                  firstDayRecord1 = LocalDate.of(2025, 8, 1);
-//    private final        LocalDate                  lastDay         = LocalDate.of(2025, 6, 1);
-//    private final        LocalDate                  lastDayRecord1  = LocalDate.of(2025, 8, 5);
     @Autowired
     private              LocationListViewTester     locationListViewTester;
     @Autowired
     private              OffDayListViewTester       offDayListViewTester;
     @Autowired
     private              ProductListViewTester      productListViewTester;
-    //    private              String                     productName;
     @Autowired
     private              SeleniumHandler            seleniumHandler;
     @Autowired
     private              SprintListViewTester       sprintListViewTester;
-    //    private              String                     sprintName;
     @Autowired
     private              TaskListViewTester         taskListViewTester;
-    //    private              String                     taskName;
-//    private final        OffDayType                 typeRecord1 = OffDayType.VACATION;
     @Autowired
     private              UserListViewTester         userListViewTester;
-    //    private              String                     userName;
     @Autowired
     private              VersionListViewTester      versionListViewTester;
-//    private              String                     versionName;
 
     @ParameterizedTest
     @MethodSource("listRandomCases")
     @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void createASprint(RandomCase randomCase, TestInfo testInfo) throws Exception {
-        // Set browser window to a fixed size for consistent screenshots
-//        seleniumHandler.setWindowSize(1024, 800);
-//        seleniumHandler.setWindowSize(1800, 1300);
-        // Enable humanized typing and mouse movement for demo-like input behavior
         seleniumHandler.setHumanize(true);
 
         TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         generateProductsIfNeeded(testInfo, randomCase);
-//        seleniumHandler.get("https://github.com/kunterbunt2/project-hub");
         Narrator narrator = Narrator.withChatterboxTTS("tts/" + testInfo.getTestClass().get().getSimpleName());
-
         seleniumHandler.getAndCheck("http://localhost:" + "8080" + "/ui/" + LoginView.ROUTE);
-        // Show intro overlay with title
-        seleniumHandler.showOverlay("Kassandra Off-Days", "Introduction Video");
-        // Start recording after page is loaded
+        seleniumHandler.showOverlay("Kassandra User Off-Days", "Introduction Video");
         seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
         seleniumHandler.wait(5000);
-//        narrator.narrateAsync(NORMAL, "Hi everyone, Christopher Paul here from kassandra.org. Today I am happy to release our first instruction video for our Kassandra project management server.");
+        narrator.narrateAsync(NORMAL, "Hi everyone, Christopher Paul here from kassandra.org. Today I am happy to release our first instruction video for our Kassandra project management server.");
         seleniumHandler.hideOverlay();
         productListViewTester.switchToProductListViewWithOidc("christopher.paul@kassandra.org", "password", "../project-hub.wiki/screenshots/login-view.png", testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
 
         //---------------------------------------------------------------------------------------..
         // Products Page
         //---------------------------------------------------------------------------------------..
-//        final LocalDate firstDayRecord1 = LocalDate.of(2025, 8, 1);
 
-
-//        narrator.narrate(NORMAL, "We are going to learn about off days management in Kassandra. By Off days we mean vacations, sick leaves, or business trips. Basically any day where you are not available to work on your project tasks.");
-//        narrator.narrateAsync(NORMAL, "Lets open the user menu and switch to the User Off-Days page.");
-        // Navigate to OffDayListView for the current user and take screenshots
-//        offDayListViewTester.switchToOffDayListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo), null);
+        narrator.narrate(NORMAL, "We are going to learn about User Off-Days management in Kassandra. By User Off-Days we mean vacations, sick leaves, or business trips. Basically any day where you are not available to work on your project tasks.");
+        narrator.narrateAsync(NORMAL, "Lets open the user menu and switch to the User Off-Days page.");
         seleniumHandler.click(MainLayout.ID_USER_MENU);
         seleniumHandler.click(MainLayout.ID_USER_MENU_OFF_DAYS);
 
@@ -162,19 +138,19 @@ public class OffDayInstructionVideo extends AbstractUiTestUtil {
         narrator.narrate(NORMAL, "Select the create button.");
         seleniumHandler.click(OffDayListView.CREATE_OFFDAY_BUTTON);
 
-        narrator.narrate(NORMAL, "Chose vacation.");
+        narrator.narrate(NORMAL, "Choose vacation.");
         seleniumHandler.setComboBoxValue(OffDayDialog.OFFDAY_TYPE_FIELD, OffDayType.VACATION.name());
         narrator.narrate(NORMAL, "Select the start date.");
         final LocalDate firstDay = LocalDate.of(2025, 5, 12);
         seleniumHandler.setDatePickerValue(OffDayDialog.OFFDAY_START_DATE_FIELD, firstDay);
-        narrator.narrate(NORMAL, "and select the end date. I am really looking forward to a long summer vacation with my family.");
+        narrator.narrate(NORMAL, "and select the end date.");
+        narrator.narrateAsync(NORMAL, "I am really looking forward to a long summer vacation with my family.");
         final LocalDate lastDay = LocalDate.of(2025, 6, 6);
         seleniumHandler.setDatePickerValue(OffDayDialog.OFFDAY_END_DATE_FIELD, lastDay);
         narrator.narrate(NORMAL, "Select Save to close the dialog and persist our vacation.").pause();
         seleniumHandler.click(OffDayDialog.CONFIRM_BUTTON);
         narrator.narrate(NORMAL, "the vacation immediately becomes visible in the calendar. Kassandra skips any weekend day or holiday that falls in your vacation.").pause();
 
-        //        takeOffDayDialogScreenshots();
         seleniumHandler.waitUntilBrowserClosed(5000);
 
     }

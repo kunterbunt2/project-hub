@@ -184,37 +184,22 @@ public class VideoRecorder {
     private void initVideo(Rectangle area) throws IOException {
         String os = System.getProperty("os.name").toLowerCase();
         try {
-            if (os.contains("win")) {
-                String fmt = windowsCapture; // "gdigrab" or "ddagrab"
-                screenGrabber = new FFmpegFrameGrabber("desktop");
-                screenGrabber.setFormat(fmt);
-                screenGrabber.setFrameRate(frameRate);
-                screenGrabber.setOption("framerate", Integer.toString(frameRate));
-                screenGrabber.setOption("draw_mouse", "1");
-                screenGrabber.setOption("video_size", area.width + "x" + area.height);
-                // ddagrab and gdigrab both support offsets in modern ffmpeg
-                screenGrabber.setOption("offset_x", Integer.toString(area.x));
-                screenGrabber.setOption("offset_y", Integer.toString(area.y));
-                logger.info("Windows screen capture using {} at {} fps at {} Kbps", fmt, frameRate, videoBitrateKbps);
-            } else if (os.contains("mac")) {
-                // macOS: use avfoundation; region cropping via filter later if needed
-                // Default device 1 for screen; JavaCV expects device index like ":1"
-                screenGrabber = new FFmpegFrameGrabber("1");
-                screenGrabber.setFormat("avfoundation");
-                screenGrabber.setFrameRate(frameRate);
-                screenGrabber.setImageWidth(area.width);
-                screenGrabber.setImageHeight(area.height);
-            } else {
-                // Linux: use x11grab
-                String display = System.getenv().getOrDefault("DISPLAY", ":0.0");
-                screenGrabber = new FFmpegFrameGrabber(display);
-                screenGrabber.setFormat("x11grab");
-                screenGrabber.setFrameRate(frameRate);
-                screenGrabber.setOption("framerate", Integer.toString(frameRate));
-                screenGrabber.setOption("video_size", area.width + "x" + area.height);
-                screenGrabber.setOption("grab_x", Integer.toString(area.x));
-                screenGrabber.setOption("grab_y", Integer.toString(area.y));
-            }
+            String fmt = windowsCapture; // "gdigrab" or "ddagrab"
+            screenGrabber = new FFmpegFrameGrabber("desktop");
+            screenGrabber.setFormat(fmt);
+            screenGrabber.setFrameRate(frameRate);
+            screenGrabber.setOption("framerate", Integer.toString(frameRate));
+            screenGrabber.setOption("draw_mouse", "1");
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            double    width      = screenSize.getWidth();
+            double    height     = screenSize.getHeight();
+            screenGrabber.setOption("video_size", (int) Math.min(width - Math.max(0, area.x), area.width) + "x" + (int) Math.min(height - Math.max(0, area.y), area.height));
+//            screenGrabber.setOption("video_size", area.width + "x" + area.height);
+            // ddagrab and gdigrab both support offsets in modern ffmpeg
+            screenGrabber.setOption("offset_x", Integer.toString(Math.max(0, area.x)));
+            screenGrabber.setOption("offset_y", Integer.toString(Math.max(0, area.y)));
+            logger.info("Windows screen capture using {} at {} fps at {} Kbps", fmt, frameRate, videoBitrateKbps);
+            logger.info("Recording browser content area: x={}, y={}, width={}, height={}", Math.max(0, area.x), Math.max(0, area.y), (int) Math.min(width, area.width), (int) Math.min(height, area.height));
             screenGrabber.start();
         } catch (Exception e) {
             closeQuietly(screenGrabber);
@@ -247,8 +232,7 @@ public class VideoRecorder {
                 if (ais == null) continue;
 //                logger.info("received mirrored audio file: {}", "" + ais);
                 // Target format for recorder
-                AudioFormat target = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
-                        44100f, 16, 2, 4, 44100f, false);
+                AudioFormat target = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, 44100f, 16, 2, 4, 44100f, false);
                 try {
                     if (!ais.getFormat().matches(target)) {
                         ais = AudioSystem.getAudioInputStream(target, ais);
@@ -277,7 +261,7 @@ public class VideoRecorder {
 
                 // If there's a gap from lastAudioPtsUs to clipStartUs, insert silence
                 synchronized (this) {
-                    if (lastAudioPtsUs > 0 && clipStartUs > lastAudioPtsUs) {
+                    if (clipStartUs > lastAudioPtsUs) {
                         long gapUs     = clipStartUs - lastAudioPtsUs;
                         long gapFrames = (gapUs * sampleRate) / 1_000_000L; // per channel
                         if (gapFrames > 0) {
@@ -285,6 +269,7 @@ public class VideoRecorder {
                             final short[] zeroSamples = new short[chunkFrames * channels];
                             ShortBuffer   zeroBuf     = ShortBuffer.wrap(zeroSamples);
                             long          filled      = 0;
+                            logger.info("Feeding silence audio into recorder: {} sampleRate={}, channels={}, bigEndian={}", Narrator.getElapsedNarrationTime(), sampleRate, channels, bigEndian);
                             while (running.get() && filled < gapFrames) {
                                 int thisFrames = (int) Math.min(chunkFrames, gapFrames - filled);
                                 zeroBuf.rewind();
@@ -533,6 +518,7 @@ public class VideoRecorder {
         videoFramesRecorded         = 0L;
         mirroredAudioFramesRecorded = 0L;
         recordingStartNanos         = System.nanoTime();
+        lastAudioPtsUs              = 0;
         running.set(true);
         isRecording = true;
 
