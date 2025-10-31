@@ -144,12 +144,12 @@ public class UserOffDaysInstructionVideo extends AbstractUiTestUtil {
         seleniumHandler.setComboBoxValue(OffDayDialog.OFFDAY_TYPE_FIELD, OffDayType.VACATION.name());
 
         narrator.narrateAsync(NORMAL, "Select the start date.");
-        final LocalDate firstDay = LocalDate.of(2025, 5, 12);
+        final LocalDate firstDay = LocalDate.of(2025, 6, 2);
         seleniumHandler.setDatePickerValue(OffDayDialog.OFFDAY_START_DATE_FIELD, firstDay);
 
         narrator.narrate(NORMAL, "and select the end date.");
         narrator.narrateAsync(NORMAL, "I am really looking forward to a long summer vacation with my family.");
-        final LocalDate lastDay = LocalDate.of(2025, 6, 6);
+        final LocalDate lastDay = LocalDate.of(2025, 6, 27);
         seleniumHandler.setDatePickerValue(OffDayDialog.OFFDAY_END_DATE_FIELD, lastDay);
         narrator.narrateAsync(NORMAL, "Select Save to close the dialog and persist our vacation.").pause();
         seleniumHandler.click(OffDayDialog.CONFIRM_BUTTON);
