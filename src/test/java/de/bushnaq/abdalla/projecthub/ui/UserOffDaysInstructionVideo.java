@@ -21,6 +21,7 @@ import dasniko.testcontainers.keycloak.KeycloakContainer;
 import de.bushnaq.abdalla.projecthub.ai.narrator.Narrator;
 import de.bushnaq.abdalla.projecthub.ai.narrator.NarratorAttribute;
 import de.bushnaq.abdalla.projecthub.dto.OffDayType;
+import de.bushnaq.abdalla.projecthub.ui.component.YearCalendarComponent;
 import de.bushnaq.abdalla.projecthub.ui.dialog.OffDayDialog;
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
@@ -129,14 +130,19 @@ public class UserOffDaysInstructionVideo extends AbstractUiTestUtil {
 
         paul.narrate(NORMAL, "We are going to learn about User Off-Days management in Kassandra. By User Off-Days we mean vacations, sick leaves, or business trips. Basically any day where you are not available to work on your project tasks.");
         paul.narrateAsync(NORMAL, "Lets open the user menu and switch to the User Off-Days page.");
+        seleniumHandler.highlight(MainLayout.ID_USER_MENU);
         seleniumHandler.click(MainLayout.ID_USER_MENU);
+        seleniumHandler.highlight(MainLayout.ID_USER_MENU_OFF_DAYS);
         seleniumHandler.click(MainLayout.ID_USER_MENU_OFF_DAYS);
 
 
+        seleniumHandler.highlight(OffDayListView.OFFDAY_LIST_PAGE_TITLE);
         paul.narrate(NORMAL, "The User Off-Days shows a calendar with every day of the current year. The legend on the bottom explains the different types of User Off-Days and their colors.");
+        seleniumHandler.highlight(YearCalendarComponent.LEGEND_ITEM_ID_PREFIX_BUSINESS_TRIP, YearCalendarComponent.LEGEND_ITEM_ID_PREFIX_SICK_LEAVE, YearCalendarComponent.LEGEND_ITEM_ID_PREFIX_VACATION, YearCalendarComponent.LEGEND_ITEM_ID_PREFIX_HOLIDAY);
         paul.narrate(NORMAL, "You can see that there are holidays marked in the calendar. These are public holidays that Kassandra automatically populated based on the logged in user location.");
         paul.narrate(NORMAL, "I am located in germany North Rhine Westphalia and so you can see the holidays of that region in Germany.");
         paul.narrate(NORMAL, "Ok, i just noticed, that I have not taken any vacation days this year. So let me plan my summer vacation.");
+        seleniumHandler.highlight(OffDayListView.CREATE_OFFDAY_BUTTON);
         paul.narrateAsync(NORMAL, "Select the create button.");
         seleniumHandler.click(OffDayListView.CREATE_OFFDAY_BUTTON);
 
@@ -151,6 +157,7 @@ public class UserOffDaysInstructionVideo extends AbstractUiTestUtil {
         paul.narrateAsync(NORMAL, "I am really looking forward to a long summer vacation with my family.");
         final LocalDate lastDay = LocalDate.of(2025, 6, 27);
         seleniumHandler.setDatePickerValue(OffDayDialog.OFFDAY_END_DATE_FIELD, lastDay);
+        seleniumHandler.highlight(OffDayDialog.CONFIRM_BUTTON);
         paul.narrateAsync(NORMAL, "Select Save to close the dialog and persist our vacation.").pause();
         seleniumHandler.click(OffDayDialog.CONFIRM_BUTTON);
         paul.narrate(NORMAL, "the vacation immediately becomes visible in the calendar. Kassandra skips any weekend day or holiday that falls in your vacation.").pause();

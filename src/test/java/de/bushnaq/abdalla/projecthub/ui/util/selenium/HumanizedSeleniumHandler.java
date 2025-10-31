@@ -106,6 +106,203 @@ public class HumanizedSeleniumHandler extends SeleniumHandler {
     }
 
     /**
+     * Highlights one or more elements by their IDs for a short period of time (default 2 seconds).
+     * This is a convenience method that finds the elements by ID and then highlights them.
+     * <p>
+     * The highlight style is automatically determined based on the element type:
+     * - Buttons and interactive elements: Red border (3px solid)
+     * - Text elements (titles, labels, spans): 50% transparent red overlay
+     * - Other elements: Red border by default
+     * <p>
+     * The highlights are applied simultaneously to all elements and removed after the duration.
+     *
+     * @param ids One or more element IDs to highlight
+     */
+    public void highlight(String... ids) {
+        highlight(2000, ids);
+    }
+
+    /**
+     * Highlights one or more elements by their IDs for a specified duration.
+     * This is a convenience method that finds the elements by ID and then highlights them.
+     * <p>
+     * The highlight style is automatically determined based on the element type:
+     * - Buttons and interactive elements: Red border (3px solid)
+     * - Text elements (titles, labels, spans): 50% transparent red overlay
+     * - Other elements: Red border by default
+     * <p>
+     * The highlights are applied simultaneously to all elements and removed after the duration.
+     *
+     * @param durationMillis Duration in milliseconds to show the highlight (e.g., 2000 for 2 seconds)
+     * @param ids            One or more element IDs to highlight
+     */
+    public void highlight(int durationMillis, String... ids) {
+        if (ids == null || ids.length == 0) {
+            logger.warn("No element IDs provided to highlight");
+            return;
+        }
+
+        // Find all elements by their IDs
+        WebElement[] elements = new WebElement[ids.length];
+        for (int i = 0; i < ids.length; i++) {
+            waitUntil(ExpectedConditions.elementToBeClickable(By.id(ids[i])));
+            elements[i] = findElement(By.id(ids[i]));
+        }
+
+        // Delegate to the WebElement version
+        highlight(durationMillis, elements);
+    }
+
+    /**
+     * Highlights one or more WebElements on the page for a short period of time (default 2 seconds).
+     * This is useful for creating instruction videos where you want to draw the viewer's attention
+     * to specific elements without needing to describe their exact location.
+     * <p>
+     * The highlight style is automatically determined based on the element type:
+     * - Buttons and interactive elements: Red border (3px solid)
+     * - Text elements (titles, labels, spans): 50% transparent red overlay
+     * - Other elements: Red border by default
+     * <p>
+     * The highlights are applied simultaneously to all elements and removed after the duration.
+     * The original element styles are preserved and restored after highlighting.
+     *
+     * @param elements One or more WebElements to highlight
+     */
+    public void highlight(WebElement... elements) {
+        highlight(2000, elements);
+    }
+
+    /**
+     * Highlights one or more WebElements on the page for a specified duration.
+     * This is useful for creating instruction videos where you want to draw the viewer's attention
+     * to specific elements without needing to describe their exact location.
+     * <p>
+     * The highlight style is automatically determined based on the element type:
+     * - Buttons and interactive elements: Red border (3px solid)
+     * - Text elements (titles, labels, spans): 50% transparent red overlay
+     * - Other elements: Red border by default
+     * <p>
+     * The highlights are applied simultaneously to all elements and removed after the duration.
+     * The original element styles are preserved and restored after highlighting.
+     *
+     * @param durationMillis Duration in milliseconds to show the highlight (e.g., 2000 for 2 seconds)
+     * @param elements       One or more WebElements to highlight
+     */
+    public void highlight(int durationMillis, WebElement... elements) {
+        if (elements == null || elements.length == 0) {
+            logger.warn("No elements provided to highlight");
+            return;
+        }
+
+        try {
+            // Build JavaScript to highlight all elements
+
+            String script = "var elements = arguments;\n" +
+                    "var originals = [];\n" +
+                    "var overlays = [];\n" +
+                    "\n" +
+
+                    // Add highlights to all elements
+                    "for (var i = 0; i < elements.length; i++) {\n" +
+                    "  var element = elements[i];\n" +
+                    "  if (!element) continue;\n" +
+                    "\n" +
+                    "  var tagName = element.tagName.toLowerCase();\n" +
+                    "  var isTextElement = (tagName === 'h1' || tagName === 'h2' || tagName === 'h3' || \n" +
+                    "                        tagName === 'h4' || tagName === 'h5' || tagName === 'h6' || \n" +
+                    "                        tagName === 'p' || tagName === 'span' || tagName === 'label' || \n" +
+                    "                        tagName === 'div' && element.classList.contains('title'));\n" +
+                    "\n" +
+                    "  if (isTextElement) {\n" +
+                    "    // For text elements, create a semi-transparent red overlay\n" +
+                    "    var overlay = document.createElement('div');\n" +
+                    "    overlay.style.cssText = 'position: absolute; background-color: rgba(255, 0, 0, 0.3); pointer-events: none; z-index: 999998; border-radius: 4px; transition: opacity 0.3s ease-in-out;';\n" +
+                    "    \n" +
+                    "    // Get element position and size\n" +
+                    "    var rect = element.getBoundingClientRect();\n" +
+                    "    var scrollTop = window.pageYOffset || document.documentElement.scrollTop;\n" +
+                    "    var scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;\n" +
+                    "    \n" +
+                    "    overlay.style.top = (rect.top + scrollTop) + 'px';\n" +
+                    "    overlay.style.left = (rect.left + scrollLeft) + 'px';\n" +
+                    "    overlay.style.width = rect.width + 'px';\n" +
+                    "    overlay.style.height = rect.height + 'px';\n" +
+                    "    overlay.style.opacity = '0';\n" +
+                    "    \n" +
+                    "    document.body.appendChild(overlay);\n" +
+                    "    overlays.push(overlay);\n" +
+                    "    \n" +
+                    "    // Trigger fade-in\n" +
+                    "    setTimeout(function() { overlay.style.opacity = '1'; }, 10);\n" +
+                    "  } else {\n" +
+                    "    // For buttons and other elements, add a simple red border\n" +
+                    "    originals.push({\n" +
+                    "      element: element,\n" +
+                    "      border: element.style.border,\n" +
+                    "      transition: element.style.transition\n" +
+                    "    });\n" +
+                    "    \n" +
+                    "    element.style.transition = 'all 0.3s ease-in-out';\n" +
+                    "    element.style.border = '3px solid #ff0000';\n" +
+                    "  }\n" +
+                    "}\n" +
+                    "\n" +
+                    "// Store the cleanup data for later removal\n" +
+                    "return { originals: originals, overlays: overlays };\n";
+
+            // Execute the highlight script
+            Object result = executeJavaScript(script, elements);
+
+            logger.info("Highlighted {} element(s) for {}ms", elements.length, durationMillis);
+
+            // Wait for the specified duration
+            try {
+                Thread.sleep(durationMillis);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                logger.warn("Interrupted while waiting for highlight duration");
+            }
+
+            // Remove highlights
+            String cleanupScript =
+                    "var cleanup = arguments[0];\n" +
+                            "if (!cleanup) return;\n" +
+                            "\n" +
+                            "// Restore original styles for border highlights\n" +
+                            "if (cleanup.originals) {\n" +
+                            "  cleanup.originals.forEach(function(original) {\n" +
+                            "    if (original.element) {\n" +
+                            "      original.element.style.transition = original.transition || '';\n" +
+                            "      original.element.style.border = original.border || '';\n" +
+                            "    }\n" +
+                            "  });\n" +
+                            "}\n" +
+                            "\n" +
+                            "// Remove overlay elements with fade-out\n" +
+                            "if (cleanup.overlays) {\n" +
+                            "  cleanup.overlays.forEach(function(overlay) {\n" +
+                            "    if (overlay) {\n" +
+                            "      overlay.style.opacity = '0';\n" +
+                            "      setTimeout(function() {\n" +
+                            "        if (overlay.parentNode) {\n" +
+                            "          overlay.parentNode.removeChild(overlay);\n" +
+                            "        }\n" +
+                            "      }, 300);\n" +
+                            "    }\n" +
+                            "  });\n" +
+                            "}\n";
+
+            executeJavaScript(cleanupScript, result);
+
+            logger.debug("Removed highlights from {} element(s)", elements.length);
+
+        } catch (Exception e) {
+            logger.error("Failed to highlight elements: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to highlight elements: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * Performs a human-like mouse movement from one point to another.
      * Uses a B-spline curve for natural arc-like path and variable speed with easing
      * (starts fast, ends slow) to simulate real human mouse movement.
@@ -346,6 +543,13 @@ public class HumanizedSeleniumHandler extends SeleniumHandler {
         }
     }
 
+//    /**
+//     * Adjust per-character typing delay in milliseconds for humanized mode.
+//     */
+//    public void setTypingDelayMillis(int typingDelayMillis) {
+//        this.typingDelayMillis = Math.max(0, typingDelayMillis);
+//    }
+
     /**
      * Fallback method to set combobox value by typing.
      * Used when humanized click selection fails or item cannot be found.
@@ -419,13 +623,6 @@ public class HumanizedSeleniumHandler extends SeleniumHandler {
         logger.debug("Date picker overlay closed successfully");
         logger.debug("Successfully set date: {}", date);
     }
-
-//    /**
-//     * Adjust per-character typing delay in milliseconds for humanized mode.
-//     */
-//    public void setTypingDelayMillis(int typingDelayMillis) {
-//        this.typingDelayMillis = Math.max(0, typingDelayMillis);
-//    }
 
     /**
      * Show a full-screen overlay with title and subtitle.

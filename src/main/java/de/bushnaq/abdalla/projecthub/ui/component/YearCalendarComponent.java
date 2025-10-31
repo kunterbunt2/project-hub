@@ -48,20 +48,25 @@ import java.util.function.Consumer;
  */
 public class YearCalendarComponent extends VerticalLayout {
 
-    private static final String                     CLASS_FILLING_DAY  = "calendar-filling-day";
-    private static final String                     CLASS_HOLIDAY_DAY  = "calendar-holiday-day";
-    private static final String                     CLASS_MONTH_NAME   = "calendar-month-name";
-    private static final String                     CLASS_NORMAL_DAY   = "calendar-normal-day";
-    private static final String                     CLASS_SICK_DAY     = "calendar-sick-day";
-    private static final String                     CLASS_TODAY        = "calendar-today";
-    private static final String                     CLASS_TRIP_DAY     = "calendar-trip-day";
-    private static final String                     CLASS_VACATION_DAY = "calendar-vacation-day";
-    private static final String                     CLASS_WEEKEND_DAY  = "calendar-weekend-day";
-    private static final String                     DAY_SIZE_PX        = "36px"; // Increased from 24px (50% larger)
-    private static final int                        MONTHS_PER_ROW     = 4;
+    private static final String                     CLASS_FILLING_DAY                   = "calendar-filling-day";
+    private static final String                     CLASS_HOLIDAY_DAY                   = "calendar-holiday-day";
+    private static final String                     CLASS_MONTH_NAME                    = "calendar-month-name";
+    private static final String                     CLASS_NORMAL_DAY                    = "calendar-normal-day";
+    private static final String                     CLASS_SICK_DAY                      = "calendar-sick-day";
+    private static final String                     CLASS_TODAY                         = "calendar-today";
+    private static final String                     CLASS_TRIP_DAY                      = "calendar-trip-day";
+    private static final String                     CLASS_VACATION_DAY                  = "calendar-vacation-day";
+    private static final String                     CLASS_WEEKEND_DAY                   = "calendar-weekend-day";
+    private static final String                     DAY_SIZE_PX                         = "36px"; // Increased from 24px (50% larger)
+    private static final String                     LEGEND_ITEM_ID_PREFIX               = "calendar-legend-item-";
+    public static final  String                     LEGEND_ITEM_ID_PREFIX_BUSINESS_TRIP = "calendar-legend-item-business-trip";
+    public static final  String                     LEGEND_ITEM_ID_PREFIX_HOLIDAY       = "calendar-legend-item-holiday";
+    public static final  String                     LEGEND_ITEM_ID_PREFIX_SICK_LEAVE    = "calendar-legend-item-sick-leave";
+    public static final  String                     LEGEND_ITEM_ID_PREFIX_VACATION      = "calendar-legend-item-vacation";
+    private static final int                        MONTHS_PER_ROW                      = 4;
     private              int                        currentYear;
     private final        Consumer<LocalDate>        dayClickHandler;
-    private final        Map<LocalDate, OffDayType> offDayMap          = new HashMap<>();
+    private final        Map<LocalDate, OffDayType> offDayMap                           = new HashMap<>();
     private              User                       user;
 
     /**
@@ -210,6 +215,7 @@ public class YearCalendarComponent extends VerticalLayout {
      */
     private Component createLegendItem(String label, String colorClass) {
         HorizontalLayout item = new HorizontalLayout();
+        item.setId(LEGEND_ITEM_ID_PREFIX + label.toLowerCase().replace(" ", "-"));
         item.setSpacing(true);
         item.setAlignItems(FlexComponent.Alignment.CENTER);
 
