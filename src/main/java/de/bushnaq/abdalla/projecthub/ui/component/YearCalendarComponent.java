@@ -48,6 +48,8 @@ import java.util.function.Consumer;
  */
 public class YearCalendarComponent extends VerticalLayout {
 
+    public static final  String                     CALENDAR_NEXT_YEAR_BTN              = "calendar-next-year-btn";
+    public static final  String                     CALENDAR_PREV_YEAR_BTN              = "calendar-prev-year-btn";
     private static final String                     CLASS_FILLING_DAY                   = "calendar-filling-day";
     private static final String                     CLASS_HOLIDAY_DAY                   = "calendar-holiday-day";
     private static final String                     CLASS_MONTH_NAME                    = "calendar-month-name";
@@ -339,6 +341,7 @@ public class YearCalendarComponent extends VerticalLayout {
         header.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
 
         Button prevYearBtn = new Button(new Icon(VaadinIcon.ANGLE_LEFT));
+        prevYearBtn.setId(CALENDAR_PREV_YEAR_BTN);
         prevYearBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         prevYearBtn.addClickListener(e -> setYear(currentYear - 1));
 
@@ -346,6 +349,7 @@ public class YearCalendarComponent extends VerticalLayout {
         yearLabel.addClassNames(LumoUtility.Margin.NONE);
 
         Button nextYearBtn = new Button(new Icon(VaadinIcon.ANGLE_RIGHT));
+        nextYearBtn.setId(CALENDAR_NEXT_YEAR_BTN);
         nextYearBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         nextYearBtn.addClickListener(e -> setYear(currentYear + 1));
 

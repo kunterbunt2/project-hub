@@ -139,8 +139,13 @@ public class UserOffDaysInstructionVideo extends AbstractUiTestUtil {
         paul.narrate(NORMAL, "The User Off-Days shows a calendar with every day of the current year.");
         seleniumHandler.highlight(YearCalendarComponent.LEGEND_ITEM_ID_PREFIX_BUSINESS_TRIP, YearCalendarComponent.LEGEND_ITEM_ID_PREFIX_SICK_LEAVE, YearCalendarComponent.LEGEND_ITEM_ID_PREFIX_VACATION, YearCalendarComponent.LEGEND_ITEM_ID_PREFIX_HOLIDAY);
         paul.narrate(NORMAL, "The legend on the bottom explains the different types of User Off-Days and their colors.");
+        paul.narrateAsync(NORMAL, "Lets take a look at previous year. There is a lot more going on");
+        seleniumHandler.click(YearCalendarComponent.CALENDAR_PREV_YEAR_BTN);
         paul.narrate(NORMAL, "You can see that there are holidays marked in the calendar. These are public holidays that Kassandra automatically populated based on the logged in user location.");
-        paul.narrate(NORMAL, "I am located in germany North Rhine Westphalia and so you can see the holidays of that region in Germany.");
+        paul.narrate(NORMAL, "The vacation, business trip and sick leave days are all created by me.");
+//        paul.getPlayback().await();
+        seleniumHandler.click(YearCalendarComponent.CALENDAR_NEXT_YEAR_BTN);
+        paul.narrate(NORMAL, "I am located in Germany North Rhine Westphalia and so you can see the holidays of that region in Germany.");
         paul.narrate(NORMAL, "Ok, i just noticed, that I have not taken any vacation days this year. So let me plan my summer vacation.");
         paul.narrateAsync(NORMAL, "Select the create button.");
         seleniumHandler.click(OffDayListView.CREATE_OFFDAY_BUTTON);
