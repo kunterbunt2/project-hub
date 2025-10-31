@@ -33,6 +33,8 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
+import com.vaadin.flow.router.AfterNavigationEvent;
+import com.vaadin.flow.router.AfterNavigationObserver;
 import com.vaadin.flow.router.Layout;
 import com.vaadin.flow.server.menu.MenuConfiguration;
 import com.vaadin.flow.server.menu.MenuEntry;
@@ -54,27 +56,27 @@ import static com.vaadin.flow.theme.lumo.LumoUtility.*;
 @Layout
 @PermitAll // When security is enabled, allow all authenticated users
 //@JsModule("/tooltips.js")
-public final class MainLayout extends AppLayout {
+public final class MainLayout extends AppLayout implements AfterNavigationObserver {
 
-    public static final String ID_BREADCRUMBS               = "main-layout-breadcrumbs";
+    public static final String           ID_BREADCRUMBS               = "main-layout-breadcrumbs";
     // Test IDs for Selenium testing
-    public static final String ID_LOGO                      = "main-layout-logo";
-    public static final String ID_NAVIGATION_TABS           = "main-layout-navigation-tabs";
-    public static final String ID_THEME_TOGGLE              = "main-layout-theme-toggle";
-    public static final String ID_USER_MENU                 = "main-layout-user-menu";
-    public static final String ID_USER_MENU_AVAILABILITY    = "main-layout-user-menu-availability";
-    public static final String ID_USER_MENU_ITEM            = "main-layout-user-menu-item";
-    public static final String ID_USER_MENU_LOCATION        = "main-layout-user-menu-location";
-    public static final String ID_USER_MENU_LOGOUT          = "main-layout-user-menu-logout";
-    public static final String ID_USER_MENU_MANAGE_SETTINGS = "main-layout-user-menu-manage-settings";
-    public static final String ID_USER_MENU_OFF_DAYS        = "main-layout-user-menu-off-days";
-    public static final String ID_USER_MENU_VIEW_PROFILE    = "main-layout-user-menu-view-profile";
+    public static final String           ID_LOGO                      = "main-layout-logo";
+    public static final String           ID_NAVIGATION_TABS           = "main-layout-navigation-tabs";
+    public static final String           ID_THEME_TOGGLE              = "main-layout-theme-toggle";
+    public static final String           ID_USER_MENU                 = "main-layout-user-menu";
+    public static final String           ID_USER_MENU_AVAILABILITY    = "main-layout-user-menu-availability";
+    public static final String           ID_USER_MENU_ITEM            = "main-layout-user-menu-item";
+    public static final String           ID_USER_MENU_LOCATION        = "main-layout-user-menu-location";
+    public static final String           ID_USER_MENU_LOGOUT          = "main-layout-user-menu-logout";
+    public static final String           ID_USER_MENU_MANAGE_SETTINGS = "main-layout-user-menu-manage-settings";
+    public static final String           ID_USER_MENU_OFF_DAYS        = "main-layout-user-menu-off-days";
+    public static final String           ID_USER_MENU_VIEW_PROFILE    = "main-layout-user-menu-view-profile";
     // Method to get the breadcrumbs component (to be used by views)
     @Getter
-    private final Breadcrumbs      breadcrumbs  = new Breadcrumbs();
-    private       Image            logoImage;   // Store reference to logo image
-    private final Map<Tab, String> tabToPathMap = new HashMap<>();
-    private final Tabs             tabs         = new Tabs();
+    private final       Breadcrumbs      breadcrumbs                  = new Breadcrumbs();
+    private             Image            logoImage;   // Store reference to logo image
+    private final       Map<Tab, String> tabToPathMap                 = new HashMap<>();
+    private final       Tabs             tabs                         = new Tabs();
 
     MainLayout() {
         UI.getCurrent().getPage().addJavaScript("/js/tooltips.js");
@@ -101,6 +103,29 @@ public final class MainLayout extends AppLayout {
         this.getStyle().set("padding-left", "var(--lumo-space-m)");
         this.getStyle().set("padding-right", "var(--lumo-space-m)");
 
+    }
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+        // Get the current location path
+        String currentPath = "/" + event.getLocation().getPath();
+
+        // Find and select the tab that matches the current path
+        boolean matchFound = false;
+        for (Map.Entry<Tab, String> entry : tabToPathMap.entrySet()) {
+            String tabPath = entry.getValue();
+            // Match if current path equals the tab path or starts with it (for sub-routes)
+            if (currentPath.equals(tabPath)) {
+                tabs.setSelectedTab(entry.getKey());
+                matchFound = true;
+                break;
+            }
+        }
+
+        // If no match found, deselect all tabs
+        if (!matchFound) {
+            tabs.setSelectedTab(null);
+        }
     }
 
     private Div createBreadcrumbs() {
