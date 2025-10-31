@@ -1,7 +1,7 @@
 {
   "realm": "project-hub-realm",
   "enabled": true,
-  "displayName": "Project Hub Test Realm",
+  "displayName": "Kassandra Test Realm",
   "users": [
     {
       "username": "christopher.paul@kassandra.org",

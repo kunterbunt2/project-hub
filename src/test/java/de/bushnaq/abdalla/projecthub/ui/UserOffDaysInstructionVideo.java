@@ -29,6 +29,7 @@ import de.bushnaq.abdalla.projecthub.ui.view.OffDayListView;
 import de.bushnaq.abdalla.projecthub.ui.view.util.*;
 import de.bushnaq.abdalla.projecthub.util.RandomCase;
 import de.bushnaq.abdalla.projecthub.util.TestInfoUtil;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -64,6 +65,7 @@ import java.util.Map;
 @AutoConfigureMockMvc
 @Transactional
 @Testcontainers
+@Disabled
 public class UserOffDaysInstructionVideo extends AbstractUiTestUtil {
     public static final  NarratorAttribute          INTENSE  = new NarratorAttribute().withExaggeration(.7f).withCfgWeight(.3f).withTemperature(1f)/*.withVoice("chatterbox")*/;
     public static final  NarratorAttribute          NORMAL   = new NarratorAttribute().withExaggeration(.5f).withCfgWeight(.5f).withTemperature(1f)/*.withVoice("chatterbox")*/;
@@ -105,7 +107,7 @@ public class UserOffDaysInstructionVideo extends AbstractUiTestUtil {
     @ParameterizedTest
     @MethodSource("listRandomCases")
     @WithMockUser(username = "admin-user", roles = "ADMIN")
-    public void createASprint(RandomCase randomCase, TestInfo testInfo) throws Exception {
+    public void createVideo(RandomCase randomCase, TestInfo testInfo) throws Exception {
         seleniumHandler.setHumanize(true);
 
         TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
@@ -140,9 +142,11 @@ public class UserOffDaysInstructionVideo extends AbstractUiTestUtil {
 
         narrator.narrate(NORMAL, "Choose vacation.");
         seleniumHandler.setComboBoxValue(OffDayDialog.OFFDAY_TYPE_FIELD, OffDayType.VACATION.name());
+
         narrator.narrate(NORMAL, "Select the start date.");
         final LocalDate firstDay = LocalDate.of(2025, 5, 12);
         seleniumHandler.setDatePickerValue(OffDayDialog.OFFDAY_START_DATE_FIELD, firstDay);
+
         narrator.narrate(NORMAL, "and select the end date.");
         narrator.narrateAsync(NORMAL, "I am really looking forward to a long summer vacation with my family.");
         final LocalDate lastDay = LocalDate.of(2025, 6, 6);

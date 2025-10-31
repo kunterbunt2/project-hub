@@ -76,7 +76,7 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
         centeringLayout.setAlignSelf(Alignment.CENTER);
         centeringLayout.setAlignItems(Alignment.CENTER);
 
-        H1 title = new H1("Project Hub");
+        H1 title = new H1("Kassandra");
         title.addClassNames(Margin.Bottom.MEDIUM);
 
         centeringLayout.add(title);
