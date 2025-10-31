@@ -35,10 +35,16 @@ import java.util.Random;
 public class HumanizedSeleniumHandler extends SeleniumHandler {
     @Getter
     @Setter
-    private       boolean humanize          = true;
-    private final Random  random            = new Random(); // For human-like randomness
-    private       Robot   robot             = null; // Lazily initialized
-    private final int     typingDelayMillis = 50;
+    private       boolean highlightEnabled       = false;
+    // Synchronization for highlight removal
+    private final Object  highlightLock          = new Object();
+    private       Thread  highlightRemovalThread = null;
+    @Getter
+    @Setter
+    private       boolean humanize               = true;
+    private final Random  random                 = new Random(); // For human-like randomness
+    private       Robot   robot                  = null; // Lazily initialized
+    private final int     typingDelayMillis      = 50;
 
     /**
      * Centers the mouse cursor on the browser window.
@@ -109,11 +115,7 @@ public class HumanizedSeleniumHandler extends SeleniumHandler {
      * Highlights one or more elements by their IDs for a short period of time (default 2 seconds).
      * This is a convenience method that finds the elements by ID and then highlights them.
      * <p>
-     * The highlight style is automatically determined based on the element type:
-     * - Buttons and interactive elements: Red border (3px solid)
-     * - Text elements (titles, labels, spans): 50% transparent red overlay
-     * - Other elements: Red border by default
-     * <p>
+     * All elements are highlighted with a simple red border (3px solid) regardless of element type.
      * The highlights are applied simultaneously to all elements and removed after the duration.
      *
      * @param ids One or more element IDs to highlight
@@ -126,11 +128,7 @@ public class HumanizedSeleniumHandler extends SeleniumHandler {
      * Highlights one or more elements by their IDs for a specified duration.
      * This is a convenience method that finds the elements by ID and then highlights them.
      * <p>
-     * The highlight style is automatically determined based on the element type:
-     * - Buttons and interactive elements: Red border (3px solid)
-     * - Text elements (titles, labels, spans): 50% transparent red overlay
-     * - Other elements: Red border by default
-     * <p>
+     * All elements are highlighted with a simple red border (3px solid) regardless of element type.
      * The highlights are applied simultaneously to all elements and removed after the duration.
      *
      * @param durationMillis Duration in milliseconds to show the highlight (e.g., 2000 for 2 seconds)
@@ -158,11 +156,7 @@ public class HumanizedSeleniumHandler extends SeleniumHandler {
      * This is useful for creating instruction videos where you want to draw the viewer's attention
      * to specific elements without needing to describe their exact location.
      * <p>
-     * The highlight style is automatically determined based on the element type:
-     * - Buttons and interactive elements: Red border (3px solid)
-     * - Text elements (titles, labels, spans): 50% transparent red overlay
-     * - Other elements: Red border by default
-     * <p>
+     * All elements are highlighted with a simple red border (3px solid) regardless of element type.
      * The highlights are applied simultaneously to all elements and removed after the duration.
      * The original element styles are preserved and restored after highlighting.
      *
@@ -177,11 +171,7 @@ public class HumanizedSeleniumHandler extends SeleniumHandler {
      * This is useful for creating instruction videos where you want to draw the viewer's attention
      * to specific elements without needing to describe their exact location.
      * <p>
-     * The highlight style is automatically determined based on the element type:
-     * - Buttons and interactive elements: Red border (3px solid)
-     * - Text elements (titles, labels, spans): 50% transparent red overlay
-     * - Other elements: Red border by default
-     * <p>
+     * All elements are highlighted with a simple red border (3px solid) regardless of element type.
      * The highlights are applied simultaneously to all elements and removed after the duration.
      * The original element styles are preserved and restored after highlighting.
      *
@@ -189,17 +179,16 @@ public class HumanizedSeleniumHandler extends SeleniumHandler {
      * @param elements       One or more WebElements to highlight
      */
     public void highlight(int durationMillis, WebElement... elements) {
-        if (elements == null || elements.length == 0) {
+        if (!highlightEnabled || elements == null || elements.length == 0) {
             logger.warn("No elements provided to highlight");
             return;
         }
 
         try {
-            // Build JavaScript to highlight all elements
+            // Build JavaScript to highlight all elements with a simple red border
 
             String script = "var elements = arguments;\n" +
                     "var originals = [];\n" +
-                    "var overlays = [];\n" +
                     "\n" +
 
                     // Add highlights to all elements
@@ -207,94 +196,73 @@ public class HumanizedSeleniumHandler extends SeleniumHandler {
                     "  var element = elements[i];\n" +
                     "  if (!element) continue;\n" +
                     "\n" +
-                    "  var tagName = element.tagName.toLowerCase();\n" +
-                    "  var isTextElement = (tagName === 'h1' || tagName === 'h2' || tagName === 'h3' || \n" +
-                    "                        tagName === 'h4' || tagName === 'h5' || tagName === 'h6' || \n" +
-                    "                        tagName === 'p' || tagName === 'span' || tagName === 'label' || \n" +
-                    "                        tagName === 'div' && element.classList.contains('title'));\n" +
-                    "\n" +
-                    "  if (isTextElement) {\n" +
-                    "    // For text elements, create a semi-transparent red overlay\n" +
-                    "    var overlay = document.createElement('div');\n" +
-                    "    overlay.style.cssText = 'position: absolute; background-color: rgba(255, 0, 0, 0.3); pointer-events: none; z-index: 999998; border-radius: 4px; transition: opacity 0.3s ease-in-out;';\n" +
-                    "    \n" +
-                    "    // Get element position and size\n" +
-                    "    var rect = element.getBoundingClientRect();\n" +
-                    "    var scrollTop = window.pageYOffset || document.documentElement.scrollTop;\n" +
-                    "    var scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;\n" +
-                    "    \n" +
-                    "    overlay.style.top = (rect.top + scrollTop) + 'px';\n" +
-                    "    overlay.style.left = (rect.left + scrollLeft) + 'px';\n" +
-                    "    overlay.style.width = rect.width + 'px';\n" +
-                    "    overlay.style.height = rect.height + 'px';\n" +
-                    "    overlay.style.opacity = '0';\n" +
-                    "    \n" +
-                    "    document.body.appendChild(overlay);\n" +
-                    "    overlays.push(overlay);\n" +
-                    "    \n" +
-                    "    // Trigger fade-in\n" +
-                    "    setTimeout(function() { overlay.style.opacity = '1'; }, 10);\n" +
-                    "  } else {\n" +
-                    "    // For buttons and other elements, add a simple red border\n" +
-                    "    originals.push({\n" +
-                    "      element: element,\n" +
-                    "      border: element.style.border,\n" +
-                    "      transition: element.style.transition\n" +
-                    "    });\n" +
-                    "    \n" +
-                    "    element.style.transition = 'all 0.3s ease-in-out';\n" +
-                    "    element.style.border = '3px solid #ff0000';\n" +
-                    "  }\n" +
+                    "  // Add a simple red border to all elements\n" +
+                    "  originals.push({\n" +
+                    "    element: element,\n" +
+                    "    border: element.style.border,\n" +
+                    "    transition: element.style.transition\n" +
+                    "  });\n" +
+                    "  \n" +
+                    "  element.style.transition = 'all 0.3s ease-in-out';\n" +
+                    "  element.style.border = '3px solid #ff0000';\n" +
                     "}\n" +
                     "\n" +
                     "// Store the cleanup data for later removal\n" +
-                    "return { originals: originals, overlays: overlays };\n";
+                    "return { originals: originals };\n";
 
-            // Execute the highlight script
-            Object result = executeJavaScript(script, elements);
+            // Wait for any previous highlight removal to complete before applying new highlights
+            synchronized (highlightLock) {
+                if (highlightRemovalThread != null && highlightRemovalThread.isAlive()) {
+                    try {
+                        logger.debug("Waiting for previous highlight removal to complete...");
+                        highlightRemovalThread.join();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        logger.warn("Interrupted while waiting for previous highlight removal");
+                    }
+                }
 
-            logger.info("Highlighted {} element(s) for {}ms", elements.length, durationMillis);
+                // Execute the highlight script
+                Object result = executeJavaScript(script, elements);
 
-            // Wait for the specified duration
-            try {
-                Thread.sleep(durationMillis);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                logger.warn("Interrupted while waiting for highlight duration");
+                logger.info("Highlighted {} element(s) for {}ms", elements.length, durationMillis);
+
+                // Create cleanup script
+                String cleanupScript =
+                        "var cleanup = arguments[0];\n" +
+                                "if (!cleanup) return;\n" +
+                                "\n" +
+                                "// Restore original styles for border highlights\n" +
+                                "if (cleanup.originals) {\n" +
+                                "  cleanup.originals.forEach(function(original) {\n" +
+                                "    if (original.element) {\n" +
+                                "      original.element.style.transition = original.transition || '';\n" +
+                                "      original.element.style.border = original.border || '';\n" +
+                                "    }\n" +
+                                "  });\n" +
+                                "}\n";
+
+                // Start asynchronous removal thread
+                highlightRemovalThread = new Thread(() -> {
+                    try {
+                        // Wait for the specified duration
+                        Thread.sleep(durationMillis);
+                        // Remove highlights
+                        executeJavaScript(cleanupScript, result);
+                        logger.debug("Removed highlights from {} element(s)", elements.length);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        logger.warn("Highlight removal thread interrupted");
+                    } catch (StaleElementReferenceException e) {
+                        //ignore, as this happens all the time when the element is no longer in the DOM
+                        logger.trace("Element went stale before highlight removal: {}", e.getMessage());
+                    } catch (Exception e) {
+                        logger.trace("Failed to remove highlights: {}", e.getMessage(), e);
+                    }
+                }, "HighlightRemovalThread");
+
+                highlightRemovalThread.start();
             }
-
-            // Remove highlights
-            String cleanupScript =
-                    "var cleanup = arguments[0];\n" +
-                            "if (!cleanup) return;\n" +
-                            "\n" +
-                            "// Restore original styles for border highlights\n" +
-                            "if (cleanup.originals) {\n" +
-                            "  cleanup.originals.forEach(function(original) {\n" +
-                            "    if (original.element) {\n" +
-                            "      original.element.style.transition = original.transition || '';\n" +
-                            "      original.element.style.border = original.border || '';\n" +
-                            "    }\n" +
-                            "  });\n" +
-                            "}\n" +
-                            "\n" +
-                            "// Remove overlay elements with fade-out\n" +
-                            "if (cleanup.overlays) {\n" +
-                            "  cleanup.overlays.forEach(function(overlay) {\n" +
-                            "    if (overlay) {\n" +
-                            "      overlay.style.opacity = '0';\n" +
-                            "      setTimeout(function() {\n" +
-                            "        if (overlay.parentNode) {\n" +
-                            "          overlay.parentNode.removeChild(overlay);\n" +
-                            "        }\n" +
-                            "      }, 300);\n" +
-                            "    }\n" +
-                            "  });\n" +
-                            "}\n";
-
-            executeJavaScript(cleanupScript, result);
-
-            logger.debug("Removed highlights from {} element(s)", elements.length);
 
         } catch (Exception e) {
             logger.error("Failed to highlight elements: {}", e.getMessage(), e);
@@ -414,6 +382,8 @@ public class HumanizedSeleniumHandler extends SeleniumHandler {
         if (!humanize || isSeleniumHeadless()) {
             return;
         }
+
+        highlight(element);
 
         // Initialize Robot if needed
         Robot robotInstance = getRobot();
