@@ -27,6 +27,15 @@ import java.util.Optional;
 
 public interface UserRepository extends ListCrudRepository<UserDAO, Long> {
 
+    /**
+     * Find user by email address, ignoring case sensitivity.
+     *
+     * @param email The email address to search for
+     * @return An Optional containing the user if found, or empty if not found
+     */
+    @Query("SELECT u FROM UserDAO u WHERE LOWER(u.email) = LOWER(:email)")
+    Optional<UserDAO> findByEmail(@Param("email") String email);
+
     Optional<UserDAO> findByName(String name);
 
     /**

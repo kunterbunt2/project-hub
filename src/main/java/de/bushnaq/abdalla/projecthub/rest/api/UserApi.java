@@ -81,6 +81,17 @@ public class UserApi extends AbstractApi {
         return Arrays.asList(response.getBody());
     }
 
+    public User getByEmail(String email) {
+        ResponseEntity<User> response = executeWithErrorHandling(() -> restTemplate.exchange(
+                getBaseUrl() + "/user/email/{email}",
+                HttpMethod.GET,
+                createHttpEntity(),
+                User.class,
+                email
+        ));
+        return response.getBody();
+    }
+
     public User getById(Long id) {
         ResponseEntity<User> response = executeWithErrorHandling(() -> restTemplate.exchange(
                 getBaseUrl() + "/user/{id}",
@@ -128,6 +139,7 @@ public class UserApi extends AbstractApi {
                 partialName
         ));
         return Arrays.asList(response.getBody());
+
     }
 
     public void update(User user) {

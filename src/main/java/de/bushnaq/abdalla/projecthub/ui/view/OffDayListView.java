@@ -97,36 +97,37 @@ public class OffDayListView extends AbstractMainGrid<OffDay> implements BeforeEn
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
-        // Get username from URL parameter or use the currently authenticated user
-        String usernameParam = event.getRouteParameters().get("username").orElse(null);
+        // Get userEmail from URL parameter or use the currently authenticated user
+        String userEmailParam = event.getRouteParameters().get("username").orElse(null);
 
         Authentication authentication  = SecurityContextHolder.getContext().getAuthentication();
         String         currentUsername = authentication != null ? authentication.getName() : null;
 
-        // If no username is provided, use the current authenticated user
+        // If no userEmail is provided, use the current authenticated user
         // Store in a final variable to use in lambda
-        final String username = (usernameParam == null && currentUsername != null) ?
-                currentUsername : usernameParam;
+        final String userEmail = (userEmailParam == null && currentUsername != null) ?
+                currentUsername : userEmailParam;
 
-        if (username != null) {
+        if (userEmail != null) {
             try {
-                // Find user by username using the direct getByName method
-                currentUser = userApi.getByName(username);
+                // Find user by userEmail using the direct getByName method
+                List<User> all = userApi.getAll();
+                currentUser = userApi.getByEmail(userEmail);
                 currentUser.initialize();
             } catch (ResponseStatusException ex) {
                 if (ex.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
                     // Create a new user since one wasn't found
-                    User newUser = createDefaultUser(username);
+                    User newUser = createDefaultUser(userEmail);
                     currentUser = userApi.persist(newUser);
                     currentUser.initialize();
-                    Notification notification = Notification.show("Created new user: " + username, 3000, Notification.Position.MIDDLE);
+                    Notification notification = Notification.show("Created new user: " + userEmail, 3000, Notification.Position.MIDDLE);
                     notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                 } else {
                     throw ex;
                 }
             }
         } else {
-            // Redirect to main page if no username and not authenticated
+            // Redirect to main page if no userEmail and not authenticated
             event.forwardTo("");
         }
         createCalendar();

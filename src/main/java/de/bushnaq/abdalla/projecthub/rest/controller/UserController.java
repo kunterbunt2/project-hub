@@ -72,6 +72,14 @@ public class UserController {
         return userRepository.findAll();
     }
 
+    @GetMapping("/email/{email}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public ResponseEntity<UserDAO> getByEmail(@PathVariable String email) {
+        return userRepository.findByEmail(email)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @GetMapping("/name/{name}")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<UserDAO> getByName(@PathVariable String name) {
