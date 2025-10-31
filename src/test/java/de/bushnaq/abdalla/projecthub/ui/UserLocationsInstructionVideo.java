@@ -20,7 +20,7 @@ package de.bushnaq.abdalla.projecthub.ui;
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 import de.bushnaq.abdalla.projecthub.ai.narrator.Narrator;
 import de.bushnaq.abdalla.projecthub.ai.narrator.NarratorAttribute;
-import de.bushnaq.abdalla.projecthub.ui.component.YearCalendarComponent;
+import de.bushnaq.abdalla.projecthub.ui.component.OffDaysCalendarComponent;
 import de.bushnaq.abdalla.projecthub.ui.dialog.LocationDialog;
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
@@ -144,13 +144,13 @@ public class UserLocationsInstructionVideo extends AbstractUiTestUtil {
         //---------------------------------------------------------------------------------------
 
         paul.narrate(NORMAL, "On the right side, you can see a calendar with every day of the current year.");
-        seleniumHandler.highlight(YearCalendarComponent.LEGEND_ITEM_ID_PREFIX_BUSINESS_TRIP, YearCalendarComponent.LEGEND_ITEM_ID_PREFIX_SICK_LEAVE, YearCalendarComponent.LEGEND_ITEM_ID_PREFIX_VACATION, YearCalendarComponent.LEGEND_ITEM_ID_PREFIX_HOLIDAY);
+        seleniumHandler.highlight(OffDaysCalendarComponent.LEGEND_ITEM_ID_PREFIX_BUSINESS_TRIP, OffDaysCalendarComponent.LEGEND_ITEM_ID_PREFIX_SICK_LEAVE, OffDaysCalendarComponent.LEGEND_ITEM_ID_PREFIX_VACATION, OffDaysCalendarComponent.LEGEND_ITEM_ID_PREFIX_HOLIDAY);
         paul.narrate(NORMAL, "The legend on the bottom explains the different types of days and their colors.");
         paul.narrateAsync(NORMAL, "Let's take a look at last year. There is a lot more going on.");
-        seleniumHandler.click(YearCalendarComponent.CALENDAR_PREV_YEAR_BTN);
+        seleniumHandler.click(OffDaysCalendarComponent.CALENDAR_PREV_YEAR_BTN);
         paul.narrate(NORMAL, "You can see the holidays marked in the calendar, based on my Germany North Rhine Westphalia location.");
         paul.narrate(NORMAL, "When you change your location, the holidays will automatically update to match your new region.");
-        seleniumHandler.click(YearCalendarComponent.CALENDAR_NEXT_YEAR_BTN);
+        seleniumHandler.click(OffDaysCalendarComponent.CALENDAR_NEXT_YEAR_BTN);
 
         //---------------------------------------------------------------------------------------
         // Explain Existing Records

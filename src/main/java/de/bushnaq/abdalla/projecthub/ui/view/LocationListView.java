@@ -35,7 +35,7 @@ import de.bushnaq.abdalla.projecthub.rest.api.LocationApi;
 import de.bushnaq.abdalla.projecthub.rest.api.UserApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.component.AbstractMainGrid;
-import de.bushnaq.abdalla.projecthub.ui.component.YearCalendarComponent;
+import de.bushnaq.abdalla.projecthub.ui.component.OffDaysCalendarComponent;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.LocationDialog;
 import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
@@ -58,21 +58,21 @@ import java.util.stream.Collectors;
 @PageTitle("User Location")
 @PermitAll
 public class LocationListView extends AbstractMainGrid<Location> implements BeforeEnterObserver, AfterNavigationObserver {
-    public static final String                CREATE_LOCATION_BUTTON             = "create-location-button";
-    public static final String                LOCATION_GLOBAL_FILTER             = "location-global-filter";
-    public static final String                LOCATION_GRID                      = "location-grid";
-    public static final String                LOCATION_GRID_COUNTRY_PREFIX       = "location-country-";
-    public static final String                LOCATION_GRID_DELETE_BUTTON_PREFIX = "location-delete-button-";
-    public static final String                LOCATION_GRID_EDIT_BUTTON_PREFIX   = "location-edit-button-";
-    public static final String                LOCATION_GRID_START_DATE_PREFIX    = "location-start-";
-    public static final String                LOCATION_GRID_STATE_PREFIX         = "location-state-";
-    public static final String                LOCATION_LIST_PAGE_TITLE           = "location-page-title";
-    public static final String                LOCATION_ROW_COUNTER               = "location-row-counter";
-    public static final String                ROUTE                              = "location";
-    private             User                  currentUser;
-    private final       LocationApi           locationApi;
-    private final       UserApi               userApi;
-    private             YearCalendarComponent yearCalendar;
+    public static final String                   CREATE_LOCATION_BUTTON             = "create-location-button";
+    public static final String                   LOCATION_GLOBAL_FILTER             = "location-global-filter";
+    public static final String                   LOCATION_GRID                      = "location-grid";
+    public static final String                   LOCATION_GRID_COUNTRY_PREFIX       = "location-country-";
+    public static final String                   LOCATION_GRID_DELETE_BUTTON_PREFIX = "location-delete-button-";
+    public static final String                   LOCATION_GRID_EDIT_BUTTON_PREFIX   = "location-edit-button-";
+    public static final String                   LOCATION_GRID_START_DATE_PREFIX    = "location-start-";
+    public static final String                   LOCATION_GRID_STATE_PREFIX         = "location-state-";
+    public static final String                   LOCATION_LIST_PAGE_TITLE           = "location-page-title";
+    public static final String                   LOCATION_ROW_COUNTER               = "location-row-counter";
+    public static final String                   ROUTE                              = "location";
+    private             User                     currentUser;
+    private final       LocationApi              locationApi;
+    private final       UserApi                  userApi;
+    private             OffDaysCalendarComponent yearCalendar;
 
     public LocationListView(LocationApi locationApi, UserApi userApi, Clock clock, AiFilterService aiFilterService, ObjectMapper mapper) {
         super(clock);
@@ -160,11 +160,11 @@ public class LocationListView extends AbstractMainGrid<Location> implements Befo
         dialog.open();
     }
 
-    private YearCalendarComponent createCalendar() {
-        // Create a new YearCalendarComponent with the current user and the current year
+    private OffDaysCalendarComponent createCalendar() {
+        // Create a new OffDaysCalendarComponent with the current user and the current year
         if (yearCalendar != null)
             return yearCalendar;
-        yearCalendar = new YearCalendarComponent(currentUser, ParameterOptions.getLocalNow().getYear(), this::handleCalendarDayClick);
+        yearCalendar = new OffDaysCalendarComponent(currentUser, ParameterOptions.getLocalNow().getYear(), this::handleCalendarDayClick);
         // Set up handler to refresh grid when year changes
         yearCalendar.setYearChangeHandler(year -> refreshGrid());
         return yearCalendar;

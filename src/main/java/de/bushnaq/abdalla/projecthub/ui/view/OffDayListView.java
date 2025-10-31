@@ -34,7 +34,7 @@ import de.bushnaq.abdalla.projecthub.rest.api.OffDayApi;
 import de.bushnaq.abdalla.projecthub.rest.api.UserApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.component.AbstractMainGrid;
-import de.bushnaq.abdalla.projecthub.ui.component.YearCalendarComponent;
+import de.bushnaq.abdalla.projecthub.ui.component.OffDaysCalendarComponent;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.OffDayDialog;
 import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
@@ -54,21 +54,21 @@ import java.util.stream.Collectors;
 @PageTitle("User Off Days")
 @PermitAll
 public class OffDayListView extends AbstractMainGrid<OffDay> implements BeforeEnterObserver, AfterNavigationObserver {
-    public static final String                CREATE_OFFDAY_BUTTON             = "create-offday-button";
-    public static final String                OFFDAY_GLOBAL_FILTER             = "offday-global-filter";
-    public static final String                OFFDAY_GRID                      = "offday-grid";
-    public static final String                OFFDAY_GRID_DELETE_BUTTON_PREFIX = "offday-delete-button-";
-    public static final String                OFFDAY_GRID_EDIT_BUTTON_PREFIX   = "offday-edit-button-";
-    public static final String                OFFDAY_GRID_END_DATE_PREFIX      = "offday-end-";
-    public static final String                OFFDAY_GRID_START_DATE_PREFIX    = "offday-start-";
-    public static final String                OFFDAY_GRID_TYPE_PREFIX          = "offday-type-";
-    public static final String                OFFDAY_LIST_PAGE_TITLE           = "offday-page-title";
-    public static final String                OFFDAY_ROW_COUNTER               = "offday-row-counter";
-    public static final String                ROUTE                            = "offday";
-    private             User                  currentUser;
-    private final       OffDayApi             offDayApi;
-    private final       UserApi               userApi;
-    private             YearCalendarComponent yearCalendar;
+    public static final String                   CREATE_OFFDAY_BUTTON             = "create-offday-button";
+    public static final String                   OFFDAY_GLOBAL_FILTER             = "offday-global-filter";
+    public static final String                   OFFDAY_GRID                      = "offday-grid";
+    public static final String                   OFFDAY_GRID_DELETE_BUTTON_PREFIX = "offday-delete-button-";
+    public static final String                   OFFDAY_GRID_EDIT_BUTTON_PREFIX   = "offday-edit-button-";
+    public static final String                   OFFDAY_GRID_END_DATE_PREFIX      = "offday-end-";
+    public static final String                   OFFDAY_GRID_START_DATE_PREFIX    = "offday-start-";
+    public static final String                   OFFDAY_GRID_TYPE_PREFIX          = "offday-type-";
+    public static final String                   OFFDAY_LIST_PAGE_TITLE           = "offday-page-title";
+    public static final String                   OFFDAY_ROW_COUNTER               = "offday-row-counter";
+    public static final String                   ROUTE                            = "offday";
+    private             User                     currentUser;
+    private final       OffDayApi                offDayApi;
+    private final       UserApi                  userApi;
+    private             OffDaysCalendarComponent yearCalendar;
 
 
     public OffDayListView(OffDayApi offDayApi, UserApi userApi, Clock clock, AiFilterService aiFilterService, ObjectMapper mapper) {
@@ -153,11 +153,11 @@ public class OffDayListView extends AbstractMainGrid<OffDay> implements BeforeEn
         dialog.open();
     }
 
-    private YearCalendarComponent createCalendar() {
-        // Create a new YearCalendarComponent with the current user and the current year
+    private OffDaysCalendarComponent createCalendar() {
+        // Create a new OffDaysCalendarComponent with the current user and the current year
         if (yearCalendar != null)
             return yearCalendar;
-        yearCalendar = new YearCalendarComponent(currentUser, ParameterOptions.getLocalNow().getYear(), this::handleCalendarDayClick);
+        yearCalendar = new OffDaysCalendarComponent(currentUser, ParameterOptions.getLocalNow().getYear(), this::handleCalendarDayClick);
         // Set up handler to refresh grid when year changes
         yearCalendar.setYearChangeHandler(year -> refreshOffDayGrid());
         return yearCalendar;

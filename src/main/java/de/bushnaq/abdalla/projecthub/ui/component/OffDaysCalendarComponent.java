@@ -47,7 +47,7 @@ import java.util.function.Consumer;
  * A component that displays a year calendar with user's off days
  * highlighted according to their type.
  */
-public class YearCalendarComponent extends VerticalLayout {
+public class OffDaysCalendarComponent extends VerticalLayout {
 
     public static final  String                     CALENDAR_NEXT_YEAR_BTN              = "calendar-next-year-btn";
     public static final  String                     CALENDAR_PREV_YEAR_BTN              = "calendar-prev-year-btn";
@@ -81,7 +81,7 @@ public class YearCalendarComponent extends VerticalLayout {
      * @param year            The year to display
      * @param dayClickHandler Consumer that handles clicks on calendar days that have off days
      */
-    public YearCalendarComponent(User user, int year, Consumer<LocalDate> dayClickHandler) {
+    public OffDaysCalendarComponent(User user, int year, Consumer<LocalDate> dayClickHandler) {
         this.user            = user;
         this.currentYear     = year;
         this.dayClickHandler = dayClickHandler;

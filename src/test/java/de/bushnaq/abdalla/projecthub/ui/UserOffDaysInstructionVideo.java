@@ -21,7 +21,7 @@ import dasniko.testcontainers.keycloak.KeycloakContainer;
 import de.bushnaq.abdalla.projecthub.ai.narrator.Narrator;
 import de.bushnaq.abdalla.projecthub.ai.narrator.NarratorAttribute;
 import de.bushnaq.abdalla.projecthub.dto.OffDayType;
-import de.bushnaq.abdalla.projecthub.ui.component.YearCalendarComponent;
+import de.bushnaq.abdalla.projecthub.ui.component.OffDaysCalendarComponent;
 import de.bushnaq.abdalla.projecthub.ui.dialog.OffDayDialog;
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
@@ -136,13 +136,13 @@ public class UserOffDaysInstructionVideo extends AbstractUiTestUtil {
 
         seleniumHandler.highlight(OffDayListView.OFFDAY_LIST_PAGE_TITLE);
         paul.narrate(NORMAL, "The User Off-Days shows a calendar with every day of the current year.");
-        seleniumHandler.highlight(YearCalendarComponent.LEGEND_ITEM_ID_PREFIX_BUSINESS_TRIP, YearCalendarComponent.LEGEND_ITEM_ID_PREFIX_SICK_LEAVE, YearCalendarComponent.LEGEND_ITEM_ID_PREFIX_VACATION, YearCalendarComponent.LEGEND_ITEM_ID_PREFIX_HOLIDAY);
+        seleniumHandler.highlight(OffDaysCalendarComponent.LEGEND_ITEM_ID_PREFIX_BUSINESS_TRIP, OffDaysCalendarComponent.LEGEND_ITEM_ID_PREFIX_SICK_LEAVE, OffDaysCalendarComponent.LEGEND_ITEM_ID_PREFIX_VACATION, OffDaysCalendarComponent.LEGEND_ITEM_ID_PREFIX_HOLIDAY);
         paul.narrate(NORMAL, "The legend on the bottom explains the different types of User Off-Days and their colors.");
         paul.narrateAsync(NORMAL, "Lets take a look at previous year. There is a lot more going on");
-        seleniumHandler.click(YearCalendarComponent.CALENDAR_PREV_YEAR_BTN);
+        seleniumHandler.click(OffDaysCalendarComponent.CALENDAR_PREV_YEAR_BTN);
         paul.narrate(NORMAL, "You can see that there are holidays marked in the calendar. These are public holidays that Kassandra automatically populated based on the logged in user location.");
         paul.narrate(NORMAL, "The vacation, business trip and sick leave days are all created by me.");
-        seleniumHandler.click(YearCalendarComponent.CALENDAR_NEXT_YEAR_BTN);
+        seleniumHandler.click(OffDaysCalendarComponent.CALENDAR_NEXT_YEAR_BTN);
         paul.narrate(NORMAL, "I am located in Germany North Rhine Westphalia and so you can see the holidays of that region in Germany.");
         paul.narrate(NORMAL, "Ok, i just noticed, that I have not taken any vacation days this year. So let me plan my summer vacation.");
         paul.narrateAsync(NORMAL, "Select the create button.");
