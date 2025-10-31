@@ -300,28 +300,6 @@ public class SeleniumHandler {
         return browserChromeHeight;
     }
 
-    /**
-     * Gets all browser console logs as a list of strings.
-     * This captures console.log(), console.warn(), console.error(), etc. from JavaScript.
-     * <p>
-     * Note: This only works with Chrome/Chromium browsers and requires logging capabilities
-     * to be enabled in ChromeOptions.
-     *
-     * @return List of log messages from the browser console
-     */
-    @Deprecated
-    public List<String> getBrowserConsoleLogs() {
-        try {
-            org.openqa.selenium.logging.LogEntries logEntries = driver.manage().logs().get(org.openqa.selenium.logging.LogType.BROWSER);
-            return logEntries.getAll().stream()
-                    .map(entry -> String.format("[%s] %s", entry.getLevel(), entry.getMessage()))
-                    .toList();
-        } catch (Exception e) {
-            logger.warn("Could not retrieve browser console logs: {}", e.getMessage());
-            return List.of();
-        }
-    }
-
     public boolean getCheckbox(String id) {
         WebElement element = findElement(By.id(id));
         return element.getAttribute("checked") != null;
@@ -372,128 +350,6 @@ public class SeleniumHandler {
         WebElement e = findElement(By.id(id));
         WebElement i = e.findElement(By.tagName("input"));
         return i.getAttribute("value");
-    }
-
-    /**
-     * Gets the currently displayed month and year from the calendar overlay.
-     *
-     * @param overlay the calendar overlay element
-     * @return LocalDate representing the first day of the displayed month, or null if unable to determine
-     */
-    @Deprecated
-    private LocalDate getCurrentDisplayedMonthYear(WebElement overlay) {
-        try {
-            // Get the month/year header text from the calendar
-            // Try multiple approaches to find the month calendar in the shadow DOM
-            String getHeaderScript =
-                    "var overlay = document.querySelector('vaadin-date-picker-overlay');" +
-                            "if (!overlay) { console.log('No overlay found'); return null; }" +
-                            "if (!overlay.shadowRoot) { console.log('No overlay shadowRoot'); return null; }" +
-                            "// Log what's in the overlay shadow root" +
-                            "console.log('Overlay shadow root children:', overlay.shadowRoot.children.length);" +
-                            "// Try to find vaadin-date-picker-overlay-content or similar wrapper" +
-                            "var content = overlay.shadowRoot.querySelector('vaadin-date-picker-overlay-content');" +
-                            "if (content) { console.log('Found overlay-content'); }" +
-                            "// Try to find vaadin-infinite-scroller" +
-                            "var scroller = overlay.shadowRoot.querySelector('vaadin-infinite-scroller');" +
-                            "if (scroller) { console.log('Found infinite-scroller'); }" +
-                            "// Try to find vaadin-date-picker-year-scroller" +
-                            "var yearScroller = overlay.shadowRoot.querySelector('vaadin-date-picker-year-scroller');" +
-                            "if (yearScroller) { console.log('Found year-scroller'); }" +
-                            "// Try direct query for month calendar" +
-                            "var monthCalendars = overlay.shadowRoot.querySelectorAll('vaadin-month-calendar');" +
-                            "console.log('Found month calendars (direct):', monthCalendars.length);" +
-                            "if (monthCalendars.length > 0) {" +
-                            "  var mc = monthCalendars[0];" +
-                            "  if (mc.shadowRoot) {" +
-                            "    var header = mc.shadowRoot.querySelector('[part=\"month-header\"]');" +
-                            "    if (header && header.textContent) {" +
-                            "      console.log('Found header via direct query:', header.textContent);" +
-                            "      return header.textContent;" +
-                            "    }" +
-                            "  }" +
-                            "}" +
-                            "// Try via content slot" +
-                            "var slot = overlay.shadowRoot.querySelector('slot');" +
-                            "if (slot) {" +
-                            "  console.log('Found slot');" +
-                            "  var assigned = slot.assignedElements();" +
-                            "  console.log('Slot assigned elements:', assigned.length);" +
-                            "  for (var i = 0; i < assigned.length; i++) {" +
-                            "    if (assigned[i].tagName === 'VAADIN-MONTH-CALENDAR' && assigned[i].shadowRoot) {" +
-                            "      var header = assigned[i].shadowRoot.querySelector('[part=\"month-header\"]');" +
-                            "      if (header && header.textContent) {" +
-                            "        console.log('Found header via slot:', header.textContent);" +
-                            "        return header.textContent;" +
-                            "      }" +
-                            "    }" +
-                            "  }" +
-                            "}" +
-                            "// Try via overlay content div" +
-                            "var contentDiv = overlay.shadowRoot.querySelector('#content');" +
-                            "if (contentDiv) {" +
-                            "  console.log('Found content div');" +
-                            "  var slot2 = contentDiv.querySelector('slot');" +
-                            "  if (slot2) {" +
-                            "    var assigned2 = slot2.assignedElements();" +
-                            "    console.log('Content div slot assigned elements:', assigned2.length);" +
-                            "    for (var i = 0; i < assigned2.length; i++) {" +
-                            "      console.log('Assigned element:', assigned2[i].tagName);" +
-                            "      if (assigned2[i].tagName === 'VAADIN-MONTH-CALENDAR' && assigned2[i].shadowRoot) {" +
-                            "        var header = assigned2[i].shadowRoot.querySelector('[part=\"month-header\"]');" +
-                            "        if (header && header.textContent) {" +
-                            "          console.log('Found header via content div slot:', header.textContent);" +
-                            "          return header.textContent;" +
-                            "        }" +
-                            "      }" +
-                            "      // Check for scroller that might contain month calendar" +
-                            "      if (assigned2[i].tagName.includes('SCROLLER')) {" +
-                            "        var scrollerMC = assigned2[i].querySelector('vaadin-month-calendar');" +
-                            "        if (scrollerMC && scrollerMC.shadowRoot) {" +
-                            "          var header = scrollerMC.shadowRoot.querySelector('[part=\"month-header\"]');" +
-                            "          if (header && header.textContent) {" +
-                            "            console.log('Found header via scroller:', header.textContent);" +
-                            "            return header.textContent;" +
-                            "          }" +
-                            "        }" +
-                            "      }" +
-                            "    }" +
-                            "  }" +
-                            "}" +
-                            "console.log('Could not find month header');" +
-                            "return null;";
-
-            String headerText = (String) executeJavaScript(getHeaderScript);
-
-            if (headerText != null && !headerText.trim().isEmpty()) {
-                logger.debug("Found month header: {}", headerText);
-                // Parse the header text (e.g., "October 2025", "Oct 2025", "June 2025")
-                // Try different date formats
-                DateTimeFormatter[] formatters = {
-                        DateTimeFormatter.ofPattern("MMMM yyyy", java.util.Locale.ENGLISH),
-                        DateTimeFormatter.ofPattern("MMM yyyy", java.util.Locale.ENGLISH),
-                        DateTimeFormatter.ofPattern("MMMM, yyyy", java.util.Locale.ENGLISH),
-                        DateTimeFormatter.ofPattern("MMM, yyyy", java.util.Locale.ENGLISH)
-                };
-
-                for (DateTimeFormatter formatter : formatters) {
-                    try {
-                        // Parse to YearMonth, then convert to LocalDate (first of month)
-                        java.time.YearMonth yearMonth = java.time.YearMonth.parse(headerText.trim(), formatter);
-                        return yearMonth.atDay(1);
-                    } catch (Exception e) {
-                        // Try next formatter
-                    }
-                }
-
-                logger.warn("Could not parse month header: {}", headerText);
-            } else {
-                logger.warn("Month header text is null or empty");
-            }
-        } catch (Exception ex) {
-            logger.warn("Error getting current displayed month/year: {}", ex.getMessage(), ex);
-        }
-        return null;
     }
 
     public String getCurrentUrl() {
@@ -978,46 +834,6 @@ public class SeleniumHandler {
     public void popWaitDuration() {
         if (!waitDurationStack.isEmpty()) {
             setWaitDuration(waitDurationStack.pop());
-        }
-    }
-
-    /**
-     * Prints all browser console logs (from Chrome DevTools) to the test output.
-     * This captures console.log(), console.warn(), console.error(), etc. from JavaScript.
-     * <p>
-     * Note: This only works with Chrome/Chromium browsers and requires logging capabilities
-     * to be enabled in ChromeOptions.
-     */
-    @Deprecated
-    public void printBrowserConsoleLogs() {
-        try {
-            logger.info("=== Attempting to retrieve browser console logs ===");
-
-            // Check if logs are available
-            java.util.Set<String> availableLogTypes = driver.manage().logs().getAvailableLogTypes();
-            logger.info("Available log types: {}", availableLogTypes);
-
-            if (!availableLogTypes.contains(org.openqa.selenium.logging.LogType.BROWSER)) {
-                logger.warn("Browser log type not available! Available types: {}", availableLogTypes);
-                return;
-            }
-
-            org.openqa.selenium.logging.LogEntries logEntries = driver.manage().logs().get(org.openqa.selenium.logging.LogType.BROWSER);
-            int                                    logCount   = 0;
-
-            for (org.openqa.selenium.logging.LogEntry entry : logEntries) {
-                logger.info("[Browser Console] {} - {}", entry.getLevel(), entry.getMessage());
-                logCount++;
-            }
-
-            if (logCount == 0) {
-                logger.info("No browser console logs found");
-            } else {
-                logger.info("=== Found {} browser console log entries ===", logCount);
-            }
-        } catch (Exception e) {
-            logger.warn("Could not retrieve browser console logs: {} - {}", e.getClass().getSimpleName(), e.getMessage());
-            e.printStackTrace();
         }
     }
 

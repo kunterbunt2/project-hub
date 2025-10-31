@@ -68,6 +68,7 @@ public class VideoRecorder {
     private       Thread                                                    mirroredAudioThread; // thread pumping mirrored WAVs
     private final LinkedBlockingQueue<javax.sound.sampled.AudioInputStream> mirroredQueue    = new LinkedBlockingQueue<>();// Audio mirror queue (PCM frames)
     private       File                                                      outputDirectory;
+    private final String                                                    queryAudioDevice = System.getProperty("videoRecorder.queryAudioDevice", "false");//if true, we will try to find an audio device, otherwise not.
     private       FFmpegFrameRecorder                                       recorder;
     private       long                                                      recordingStartNanos;// Recording metrics
     private final File                                                      rootDirectory;
@@ -143,36 +144,16 @@ public class VideoRecorder {
     private boolean initAudio() {
         String os = System.getProperty("os.name").toLowerCase();
         try {
-            if (os.contains("win")) {
-                String device = resolveWindowsAudioDevice();
-                if (device == null) return false;
-                audioGrabber = new FFmpegFrameGrabber(device);
-                audioGrabber.setFormat("dshow");
-                audioGrabber.setSampleRate(44100);
-                audioGrabber.setAudioChannels(2);
-                audioGrabber.start();
-                return true;
-            } else if (os.contains("mac")) {
-                // macOS: requires loopback device (e.g., BlackHole) configured
-                String device = resolveGenericAudioDevice("avfoundation");
-                if (device == null) return false;
-                audioGrabber = new FFmpegFrameGrabber(device);
-                audioGrabber.setFormat("avfoundation");
-                audioGrabber.setSampleRate(44100);
-                audioGrabber.setAudioChannels(2);
-                audioGrabber.start();
-                return true;
-            } else {
-                // Linux: pulse (recommended) or alsa
-                String device = resolveGenericAudioDevice("pulse");
-                if (device == null) return false;
-                audioGrabber = new FFmpegFrameGrabber(device);
-                audioGrabber.setFormat("pulse");
-                audioGrabber.setSampleRate(44100);
-                audioGrabber.setAudioChannels(2);
-                audioGrabber.start();
-                return true;
-            }
+            if (queryAudioDevice.equals("false"))
+                return false;
+            String device = resolveWindowsAudioDevice();
+            if (device == null) return false;
+            audioGrabber = new FFmpegFrameGrabber(device);
+            audioGrabber.setFormat("dshow");
+            audioGrabber.setSampleRate(44100);
+            audioGrabber.setAudioChannels(2);
+            audioGrabber.start();
+            return true;
         } catch (Exception e) {
             logger.warn("Failed to initialize audio grabber: {}", e.toString());
             closeQuietly(audioGrabber);
