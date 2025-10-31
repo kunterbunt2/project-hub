@@ -809,6 +809,7 @@ public class SeleniumHandler {
             humanLikeMouseMove(currentMouse.x, currentMouse.y, targetX, targetY);
 
             logger.debug("Moved mouse to element '{}' at ({}, {})", element.getText(), targetX, targetY);
+            wait(300);
 
         } catch (Exception e) {
             logger.warn("Failed to move mouse to element: {}", e.getMessage());
@@ -1283,7 +1284,7 @@ public class SeleniumHandler {
 
         typeText(inputField, dateStr);
 
-        wait(200);
+        wait(500);
         inputField.sendKeys(Keys.ENTER);// Press Enter to confirm the date and close the calendar
         logger.debug("Pressed Enter to confirm date");
 
