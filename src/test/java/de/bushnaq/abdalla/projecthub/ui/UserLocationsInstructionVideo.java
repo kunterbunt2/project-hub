@@ -20,6 +20,7 @@ package de.bushnaq.abdalla.projecthub.ui;
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 import de.bushnaq.abdalla.projecthub.ai.narrator.Narrator;
 import de.bushnaq.abdalla.projecthub.ai.narrator.NarratorAttribute;
+import de.bushnaq.abdalla.projecthub.ui.component.YearCalendarComponent;
 import de.bushnaq.abdalla.projecthub.ui.dialog.LocationDialog;
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
@@ -135,24 +136,36 @@ public class UserLocationsInstructionVideo extends AbstractUiTestUtil {
         //---------------------------------------------------------------------------------------
 
         seleniumHandler.highlight(LocationListView.LOCATION_LIST_PAGE_TITLE);
-        paul.narrate(NORMAL, "The User Location page shows your location history. Each location record defines where you were working during a specific time period.");
-        seleniumHandler.highlight(LocationListView.LOCATION_GRID);
+        paul.narrate(NORMAL, "This page shows your location history. Each location record defines where you were working during a specific time period.");
         paul.narrate(NORMAL, "This is important because Kassandra uses this information to automatically populate the correct public holidays for your region when planning sprints and calculating availability.");
+
+        //---------------------------------------------------------------------------------------
+        // Explain Calendar
+        //---------------------------------------------------------------------------------------
+
+        paul.narrate(NORMAL, "On the right side, you can see a calendar with every day of the current year.");
+        seleniumHandler.highlight(YearCalendarComponent.LEGEND_ITEM_ID_PREFIX_BUSINESS_TRIP, YearCalendarComponent.LEGEND_ITEM_ID_PREFIX_SICK_LEAVE, YearCalendarComponent.LEGEND_ITEM_ID_PREFIX_VACATION, YearCalendarComponent.LEGEND_ITEM_ID_PREFIX_HOLIDAY);
+        paul.narrate(NORMAL, "The legend on the bottom explains the different types of days and their colors.");
+        paul.narrateAsync(NORMAL, "Let's take a look at last year. There is a lot more going on.");
+        seleniumHandler.click(YearCalendarComponent.CALENDAR_PREV_YEAR_BTN);
+        paul.narrate(NORMAL, "You can see the holidays marked in the calendar, based on my Germany North Rhine Westphalia location.");
+        paul.narrate(NORMAL, "When you change your location, the holidays will automatically update to match your new region.");
+        seleniumHandler.click(YearCalendarComponent.CALENDAR_NEXT_YEAR_BTN);
 
         //---------------------------------------------------------------------------------------
         // Explain Existing Records
         //---------------------------------------------------------------------------------------
 
-        paul.narrate(NORMAL, "You can see that I have a location record starting from my first working day. I'm currently located in Germany, North Rhine-Westphalia.");
-        paul.narrate(NORMAL, "This means that all German national holidays and North Rhine-Westphalia regional holidays are automatically included in my calendar and affect my availability calculations.");
+        seleniumHandler.highlight(LocationListView.LOCATION_GRID);
+        paul.narrate(NORMAL, "On the left, the location grid shows my location history.");
+        paul.narrate(NORMAL, "I have one location record starting from my first working day, which is currently active.");
 
         //---------------------------------------------------------------------------------------
         // Why Multiple Locations
         //---------------------------------------------------------------------------------------
 
-        seleniumHandler.highlight(LocationListView.LOCATION_GRID);
-        paul.narrate(NORMAL, "Why do we need a location history? Well, if you relocate to a different country or region, the public holidays will change.");
-        paul.narrate(NORMAL, "For example, if you move from Germany to the United States, your Thanksgiving holiday would now count as a day off, but your German unity day would not.");
+        paul.narrate(NORMAL, "Why do we need a location history? Well, if you relocate to a different country or region, the holidays will change.");
+        paul.narrate(NORMAL, "For example, if I move from Germany to the United States, Thanksgiving would now count as a day off, but German Unity Day would not.");
 
         //---------------------------------------------------------------------------------------
         // Create New Location - Intro
