@@ -158,6 +158,8 @@ public class OffDayListView extends AbstractMainGrid<OffDay> implements BeforeEn
         if (yearCalendar != null)
             return yearCalendar;
         yearCalendar = new YearCalendarComponent(currentUser, ParameterOptions.getLocalNow().getYear(), this::handleCalendarDayClick);
+        // Set up handler to refresh grid when year changes
+        yearCalendar.setYearChangeHandler(year -> refreshOffDayGrid());
         return yearCalendar;
     }
 
@@ -300,8 +302,19 @@ public class OffDayListView extends AbstractMainGrid<OffDay> implements BeforeEn
             currentUser = userApi.getById(currentUser.getId());
             currentUser.initialize();
 
+            // Get the selected year from the calendar (or use current year if calendar not yet initialized)
+            int selectedYear = (yearCalendar != null) ? yearCalendar.getCurrentYear() : ParameterOptions.getLocalNow().getYear();
+
+            // Filter off days to only show those that overlap with the selected year
             // Sort off days by start date (newest to oldest)
             List<OffDay> sortedOffDays = currentUser.getOffDays().stream()
+                    .filter(offDay -> {
+                        // Include off day if it overlaps with the selected year
+                        int startYear = offDay.getFirstDay().getYear();
+                        int endYear   = offDay.getLastDay().getYear();
+                        return startYear == selectedYear || endYear == selectedYear ||
+                                (startYear < selectedYear && endYear > selectedYear);
+                    })
                     .sorted(Comparator.comparing(OffDay::getFirstDay).reversed())
                     .collect(Collectors.toList());
 

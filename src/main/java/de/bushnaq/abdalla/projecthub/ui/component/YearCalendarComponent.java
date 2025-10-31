@@ -33,6 +33,7 @@ import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.OffDay;
 import de.bushnaq.abdalla.projecthub.dto.OffDayType;
 import de.bushnaq.abdalla.projecthub.dto.User;
+import lombok.Getter;
 import net.sf.mpxj.ProjectCalendar;
 import net.sf.mpxj.ProjectCalendarException;
 
@@ -66,10 +67,12 @@ public class YearCalendarComponent extends VerticalLayout {
     public static final  String                     LEGEND_ITEM_ID_PREFIX_SICK_LEAVE    = "calendar-legend-item-sick-leave";
     public static final  String                     LEGEND_ITEM_ID_PREFIX_VACATION      = "calendar-legend-item-vacation";
     private static final int                        MONTHS_PER_ROW                      = 4;
+    @Getter
     private              int                        currentYear;
     private final        Consumer<LocalDate>        dayClickHandler;
     private final        Map<LocalDate, OffDayType> offDayMap                           = new HashMap<>();
     private              User                       user;
+    private              Consumer<Integer>          yearChangeHandler;
 
     /**
      * Creates a new year calendar component for the given user and year.
@@ -374,6 +377,19 @@ public class YearCalendarComponent extends VerticalLayout {
     public void setYear(int year) {
         this.currentYear = year;
         updateCalendar(user);
+        // Notify the year change handler
+        if (yearChangeHandler != null) {
+            yearChangeHandler.accept(year);
+        }
+    }
+
+    /**
+     * Sets the handler that will be called when the year changes.
+     *
+     * @param yearChangeHandler Consumer that handles year changes
+     */
+    public void setYearChangeHandler(Consumer<Integer> yearChangeHandler) {
+        this.yearChangeHandler = yearChangeHandler;
     }
 
     /**
