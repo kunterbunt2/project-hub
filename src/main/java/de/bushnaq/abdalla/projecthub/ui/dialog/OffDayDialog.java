@@ -32,10 +32,14 @@ import de.bushnaq.abdalla.projecthub.dto.OffDayType;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.rest.api.OffDayApi;
 import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
+import net.sf.mpxj.ProjectCalendar;
+import net.sf.mpxj.ProjectCalendarException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import static de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil.DIALOG_DEFAULT_WIDTH;
 
@@ -138,6 +142,38 @@ public class OffDayDialog extends Dialog {
 //        return header;
 //    }
 
+    /**
+     * Checks if a given date is a holiday (excluding user off-days like vacation, sick leave, or business trips).
+     *
+     * @param date The date to check
+     * @return true if the date is a holiday, false otherwise
+     */
+    private boolean isHoliday(LocalDate date) {
+        ProjectCalendar          calendar  = user.getCalendar();
+        ProjectCalendarException exception = calendar.getException(date);
+        if (exception == null) {
+            return false;
+        }
+
+        String name = exception.getName();
+        // Check if it's NOT a user off-day type (vacation, sick, or trip)
+        // If it's an exception but not one of these types, it's a holiday
+        return !name.equals(OffDayType.VACATION.name())
+                && !name.equals(OffDayType.SICK.name())
+                && !name.equals(OffDayType.TRIP.name());
+    }
+
+    /**
+     * Checks if a given date is a weekend day.
+     *
+     * @param date The date to check
+     * @return true if the date is a weekend, false otherwise
+     */
+    private boolean isWeekend(LocalDate date) {
+        ProjectCalendar calendar = user.getCalendar();
+        return !calendar.isWorkingDay(date.getDayOfWeek());
+    }
+
     private void save() {
         try {
             // Validate all fields first - this will trigger validation and show error messages
@@ -151,14 +187,54 @@ public class OffDayDialog extends Dialog {
             // Ensure user association is set
             offDay.setUser(user);
 
-            // Save to backend
-            if (isNewOffDay) {
-                offDayApi.persist(offDay, user.getId());
-            } else {
-                offDayApi.update(offDay, user.getId());
+            // Ensure the user's calendar is initialized
+            if (user.getCalendar() == null) {
+                user.initialize();
             }
+
+            // Split the off-day range to exclude weekends and holidays
+            List<OffDay> splitOffDays = splitOffDayExcludingWeekendsAndHolidays(
+                    offDay.getFirstDay(),
+                    offDay.getLastDay(),
+                    offDay.getType()
+            );
+
+            // If no valid working days were found in the range
+            if (splitOffDays.isEmpty()) {
+                firstDayField.setInvalid(true);
+                firstDayField.setErrorMessage("The selected date range contains only weekends and holidays");
+                lastDayField.setInvalid(true);
+                lastDayField.setErrorMessage("Please select a range that includes working days");
+                return;
+            }
+
+            // Save to backend - save each split off-day separately
+            if (isNewOffDay) {
+                for (OffDay splitOffDay : splitOffDays) {
+                    offDayApi.persist(splitOffDay, user.getId());
+                }
+            } else {
+                // For updates, we need to handle differently - just save the first split for now
+                // In a real scenario, you might want to delete the old one and create multiple new ones
+                for (OffDay splitOffDay : splitOffDays) {
+                    if (splitOffDay == splitOffDays.getFirst()) {
+                        // Update the first one with the original ID
+                        splitOffDay.setId(offDay.getId());
+                        offDayApi.update(splitOffDay, user.getId());
+                    } else {
+                        // Persist additional split ranges as new records
+                        offDayApi.persist(splitOffDay, user.getId());
+                    }
+                }
+            }
+
             // Notify success
-            String message = isNewOffDay ? "New off day record added" : "Off day record updated";
+            String message;
+            if (splitOffDays.size() == 1) {
+                message = isNewOffDay ? "New off day record added" : "Off day record updated";
+            } else {
+                message = String.format("%s off day records created (weekends and holidays excluded)", splitOffDays.size());
+            }
             Notification.show(message, 3000, Notification.Position.MIDDLE);
 
             // Trigger refresh callback and close dialog
@@ -186,5 +262,52 @@ public class OffDayDialog extends Dialog {
             }
             // Only show notification for unexpected errors
         }
+    }
+
+    /**
+     * Splits an off-day range into multiple ranges, excluding weekends and holidays.
+     * This ensures that vacation, sick leave, or business trips never fall on weekends or holidays.
+     *
+     * @param firstDay The first day of the off-day range
+     * @param lastDay  The last day of the off-day range
+     * @param type     The type of off-day (vacation, sick leave, or business trip)
+     * @return A list of OffDay objects with weekends and holidays excluded
+     */
+    private List<OffDay> splitOffDayExcludingWeekendsAndHolidays(LocalDate firstDay, LocalDate lastDay, OffDayType type) {
+        List<OffDay> result = new ArrayList<>();
+
+        LocalDate rangeStart = null;
+        LocalDate current    = firstDay;
+
+        while (!current.isAfter(lastDay)) {
+            boolean isWeekend = isWeekend(current);
+            boolean isHoliday = isHoliday(current);
+
+            if (!isWeekend && !isHoliday) {
+                // This is a valid working day - include it in the range
+                if (rangeStart == null) {
+                    rangeStart = current;
+                }
+            } else {
+                // This is a weekend or holiday - end the current range if one exists
+                if (rangeStart != null) {
+                    OffDay splitOffDay = new OffDay(rangeStart, current.minusDays(1), type);
+                    splitOffDay.setUser(user);
+                    result.add(splitOffDay);
+                    rangeStart = null;
+                }
+            }
+
+            current = current.plusDays(1);
+        }
+
+        // Add the final range if one is still open
+        if (rangeStart != null) {
+            OffDay splitOffDay = new OffDay(rangeStart, lastDay, type);
+            splitOffDay.setUser(user);
+            result.add(splitOffDay);
+        }
+
+        return result;
     }
 }
