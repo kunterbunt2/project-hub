@@ -43,7 +43,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Stack;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -58,13 +57,10 @@ public class SeleniumHandler {
     private              Integer         browserChromeHeight           = null; // Cached browser chrome height
     private              WebDriver       driver;
     // Humanize typing configuration
-    private              boolean         humanize                      = false;
+//    private              boolean         humanize                      = false;
     private final        Duration        implicitWaitDuration;
     private final        Stack<Duration> implicitWaitStack             = new Stack<>();
-    private final        Logger          logger                        = LoggerFactory.getLogger(this.getClass());
-    private final        Random          random                        = new Random(); // For human-like randomness
-    private              Robot           robot                         = null; // Lazily initialized
-    private              int             typingDelayMillis             = 50;
+    protected final      Logger          logger                        = LoggerFactory.getLogger(this.getClass());
     private final        VideoRecorder   videoRecorder;
     private              WebDriverWait   wait;
     private              Duration        waitDuration;
@@ -81,40 +77,8 @@ public class SeleniumHandler {
         this.videoRecorder        = new VideoRecorder();
     }
 
-    /**
-     * Centers the mouse cursor on the browser window.
-     * This is useful before starting recordings to ensure the mouse starts
-     * in a predictable position rather than wherever it was previously.
-     * Only works if mouse movement is enabled and not in headless mode.
-     */
-    public void centerMouseOnBrowser() {
-        // Skip if we're in headless mode
-        if (isSeleniumHeadless()) {
-            return;
-        }
-
-        Robot robotInstance = getRobot();
-        if (robotInstance == null) {
-            logger.debug("Robot not available, cannot center mouse");
-            return;
-        }
-
-        try {
-            // Get browser window position and size
-            Point     windowPosition = driver.manage().window().getPosition();
-            Dimension windowSize     = driver.manage().window().getSize();
-
-            // Calculate center of browser window
-            int centerX = windowPosition.getX() + (windowSize.getWidth() / 2);
-            int centerY = windowPosition.getY() + (windowSize.getHeight() / 2);
-
-            // Move mouse to center (instantly, no smooth movement)
-            robotInstance.mouseMove(centerX, centerY);
-            logger.debug("Centered mouse on browser at ({}, {})", centerX, centerY);
-
-        } catch (Exception e) {
-            logger.warn("Failed to center mouse on browser: {}", e.getMessage());
-        }
+    protected void centerMouseOnBrowser() {
+        //dummy implementation
     }
 
     public void click(String id) {
@@ -152,7 +116,6 @@ public class SeleniumHandler {
         }
         logger.info("quit selenium driver");
     }
-
 
     /**
      * Ensures that a grid contains exactly the expected count of elements with the specified name.
@@ -201,7 +164,7 @@ public class SeleniumHandler {
      * @param input The string to escape
      * @return The escaped string safe for JavaScript injection
      */
-    private String escapeJavaScript(String input) {
+    protected String escapeJavaScript(String input) {
         if (input == null) {
             return "";
         }
@@ -275,7 +238,7 @@ public class SeleniumHandler {
      *
      * @return the browser chrome height in pixels
      */
-    private int getBrowserChromeHeight() {
+    protected int getBrowserChromeHeight() {
         if (browserChromeHeight != null) {
             return browserChromeHeight;
         }
@@ -520,35 +483,6 @@ public class SeleniumHandler {
         return value;
     }
 
-    /**
-     * Gets or initializes the Robot instance for mouse movement.
-     * Returns null if Robot cannot be initialized (e.g., in headless mode or due to security restrictions).
-     *
-     * @return the Robot instance, or null if unavailable
-     */
-    private Robot getRobot() {
-        if (robot != null) {
-            return robot;
-        }
-
-        // Don't even try to create Robot in headless mode
-        if (isSeleniumHeadless()) {
-            logger.debug("Headless mode detected, Robot not available");
-            return null;
-        }
-
-        try {
-            robot = new Robot();
-            robot.setAutoDelay(0); // We'll control delays manually
-            logger.info("Robot initialized successfully for mouse movement");
-        } catch (AWTException e) {
-            logger.warn("Failed to initialize Robot for mouse movement: {}", e.getMessage());
-            robot = null;
-        }
-
-        return robot;
-    }
-
     public String getRouteValue(Class<?> viewClass) {
         if (viewClass.isAnnotationPresent(com.vaadin.flow.router.Route.class)) {
             com.vaadin.flow.router.Route route = viewClass.getAnnotation(com.vaadin.flow.router.Route.class);
@@ -605,106 +539,6 @@ public class SeleniumHandler {
     }
 
     /**
-     * Performs a human-like mouse movement from one point to another.
-     * Uses a B-spline curve for natural arc-like path and variable speed with easing
-     * (starts fast, ends slow) to simulate real human mouse movement.
-     *
-     * @param fromX starting X coordinate
-     * @param fromY starting Y coordinate
-     * @param toX   target X coordinate
-     * @param toY   target Y coordinate
-     */
-    private void humanLikeMouseMove(int fromX, int fromY, int toX, int toY) {
-        Robot robotInstance = getRobot();
-        if (robotInstance == null) {
-            return;
-        }
-
-        int    deltaX   = toX - fromX;
-        int    deltaY   = toY - fromY;
-        double distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-
-        // If the distance is very small, just move directly
-        if (distance < 5) {
-            robotInstance.mouseMove(toX, toY);
-            return;
-        }
-
-        // Generate control points for B-spline to create a shallow arc
-        // Add a perpendicular offset to create a curved path
-        double midX = (fromX + toX) / 2.0;
-        double midY = (fromY + toY) / 2.0;
-
-        // Calculate perpendicular direction for the curve
-        double perpX      = -deltaY;
-        double perpY      = deltaX;
-        double perpLength = Math.sqrt(perpX * perpX + perpY * perpY);
-
-        // Normalize and scale the perpendicular offset (shallow arc, about 5-10% of distance)
-        double curveFactor = 0.05 + random.nextDouble() * 0.05; // 5-10% arc
-        double offsetX     = (perpX / perpLength) * distance * curveFactor;
-        double offsetY     = (perpY / perpLength) * distance * curveFactor;
-
-        // Randomly choose arc direction
-        if (random.nextBoolean()) {
-            offsetX = -offsetX;
-            offsetY = -offsetY;
-        }
-
-        // Control point for the curve (offset from midpoint)
-        double ctrlX = midX + offsetX;
-        double ctrlY = midY + offsetY;
-
-        // Calculate number of steps (more steps for smoother movement)
-        int steps = (int) (distance / 3); // Approximately 3 pixels per step
-        steps = Math.max(steps, 20); // Minimum steps for smoothness
-        steps = Math.min(steps, 200); // Maximum to prevent overly slow movements
-
-        // Move the mouse along a quadratic B-spline curve with variable speed
-        for (int i = 1; i <= steps; i++) {
-            double t = i / (double) steps;
-
-            // Apply easing function: starts fast (large steps), ends slow (small steps)
-            // Using a cubic ease-out function: 1 - (1-t)^3
-            double eased = 1 - Math.pow(1 - t, 3);
-
-            // Quadratic Bezier curve formula
-            double x = Math.pow(1 - eased, 2) * fromX +
-                    2 * (1 - eased) * eased * ctrlX +
-                    Math.pow(eased, 2) * toX;
-            double y = Math.pow(1 - eased, 2) * fromY +
-                    2 * (1 - eased) * eased * ctrlY +
-                    Math.pow(eased, 2) * toY;
-
-            robotInstance.mouseMove((int) x, (int) y);
-
-            // Variable delay: faster at start, slower at end
-            // Start with 1-3ms, end with 3-8ms
-            int delay;
-            if (t < 0.3) {
-                // Fast start
-                delay = 1 + random.nextInt(3);
-            } else if (t < 0.7) {
-                // Medium speed
-                delay = 2 + random.nextInt(4);
-            } else {
-                // Slow end for precision
-                delay = 3 + random.nextInt(6);
-            }
-
-            if (delay > 0) {
-                robotInstance.delay(delay);
-            }
-        }
-
-        // Ensure we end exactly at the target position
-        robotInstance.mouseMove(toX, toY);
-
-        // Small pause at the end (human-like settling)
-        robotInstance.delay(20 + random.nextInt(30));
-    }
-
-    /**
      * Helper method to initialize WebDriverWait if it hasn't been initialized yet.
      * This is used by methods that need to wait for elements or conditions.
      */
@@ -739,15 +573,15 @@ public class SeleniumHandler {
         return isElementPresent(By.id(id));
     }
 
-    /**
-     * Gets whether mouse movement is currently enabled.
-     * Mouse movement is controlled by the humanize flag.
-     *
-     * @return true if humanize (and thus mouse movement) is enabled, false otherwise
-     */
-    public boolean isMouseMovementEnabled() {
-        return humanize;
-    }
+//    /**
+//     * Gets whether mouse movement is currently enabled.
+//     * Mouse movement is controlled by the humanize flag.
+//     *
+//     * @return true if humanize (and thus mouse movement) is enabled, false otherwise
+//     */
+//    public boolean isMouseMovementEnabled() {
+//        return humanize;
+//    }
 
     public boolean isRecording() {
         return videoRecorder.isRecording();
@@ -767,56 +601,9 @@ public class SeleniumHandler {
         waitForPageLoaded();
     }
 
-    /**
-     * Moves the mouse cursor smoothly to the center of the specified element.
-     * This method only performs the movement if humanize is enabled and not in headless mode.
-     * The actual click should still be performed by Selenium for reliability.
-     *
-     * @param element the WebElement to move the mouse to
-     */
-    private void moveMouseToElement(WebElement element) {
-        // Skip if humanize is disabled or we're in headless mode
-        if (!humanize || isSeleniumHeadless()) {
-            return;
-        }
-
-        // Initialize Robot if needed
-        Robot robotInstance = getRobot();
-        if (robotInstance == null) {
-            logger.debug("Robot not available, skipping mouse movement");
-            return;
-        }
-
-        try {
-            // Get element location and size relative to the page
-            Point     elementLocation = element.getLocation();
-            Dimension elementSize     = element.getSize();
-
-            // Get browser window position on screen
-            Point windowPosition = driver.manage().window().getPosition();
-
-            // Calculate browser chrome height (cached after first calculation)
-            int chromeHeight = getBrowserChromeHeight();
-
-            // Calculate target screen coordinates (center of element)
-            int targetX = windowPosition.getX() + elementLocation.getX() + (elementSize.getWidth() / 2);
-            int targetY = windowPosition.getY() + elementLocation.getY() + (elementSize.getHeight() / 2) + chromeHeight;
-
-            // Get current mouse position
-            java.awt.Point currentMouse = MouseInfo.getPointerInfo().getLocation();
-
-            // Perform smooth mouse movement with human-like characteristics
-            humanLikeMouseMove(currentMouse.x, currentMouse.y, targetX, targetY);
-
-            logger.debug("Moved mouse to element '{}' at ({}, {})", element.getText(), targetX, targetY);
-            wait(300);
-
-        } catch (Exception e) {
-            logger.warn("Failed to move mouse to element: {}", e.getMessage());
-            // Continue with normal Selenium click even if mouse movement fails
-        }
+    protected void moveMouseToElement(WebElement element) {
+        //dummy implementation
     }
-
 
     /**
      * Pops the last implicit wait duration from the stack and restores it.
@@ -1050,163 +837,55 @@ public class SeleniumHandler {
         WebElement i = e.findElement(By.tagName("input"));
         waitForElementToBeInteractable(i.getAttribute("id"));
 
-        // If humanize is enabled, interact like a human by clicking on dropdown items
-        if (humanize) {
-            setComboBoxValueHumanized(e, i, text);
+        // Original fast method: type and select
+        moveMouseToElement(i);  // Move mouse to combobox field before typing
+        String value = i.getAttribute("value");
+        if (value.isEmpty()) {
         } else {
-            // Original fast method: type and select
-            moveMouseToElement(i);  // Move mouse to combobox field before typing
-            String value = i.getAttribute("value");
-            if (value.isEmpty()) {
-            } else {
-                i.sendKeys(Keys.CONTROL + "a");
-                i.sendKeys(Keys.DELETE);
-            }
-            // Humanized typing into the combobox
-            typeText(i, text);
-            sendKeys(id, Keys.RETURN);
-            wait(500);
-            sendKeys(id, Keys.ARROW_DOWN, Keys.TAB);
+            i.sendKeys(Keys.CONTROL + "a");
+            i.sendKeys(Keys.DELETE);
         }
+        // Humanized typing into the combobox
+        typeText(i, text);
+        sendKeys(id, Keys.RETURN);
+        wait(500);
+        sendKeys(id, Keys.ARROW_DOWN, Keys.TAB);
         logger.info("set ComboBox value=" + text);
     }
 
-    /**
-     * Fallback method to set combobox value by typing.
-     * Used when humanized click selection fails or item cannot be found.
-     *
-     * @param inputElement the input element within the combobox
-     * @param text         the text to type
-     */
-    private void setComboBoxValueByTyping(WebElement inputElement, String text) {
-        String value = inputElement.getAttribute("value");
-        if (!value.isEmpty()) {
-            inputElement.sendKeys(Keys.CONTROL + "a");
-            inputElement.sendKeys(Keys.DELETE);
-        }
-        typeText(inputElement, text);
-        inputElement.sendKeys(Keys.RETURN);
-        wait(500);
-        inputElement.sendKeys(Keys.ARROW_DOWN, Keys.TAB);
-    }
 
-    /**
-     * Sets a combobox value in a humanized way by clicking on the dropdown toggle,
-     * waiting for the overlay to appear, and clicking on the matching item.
-     * This simulates how a real human would interact with a combobox using mouse clicks.
-     *
-     * @param comboBoxElement the combobox WebElement
-     * @param inputElement    the input element within the combobox
-     * @param text            the text of the item to select
-     */
-    private void setComboBoxValueHumanized(WebElement comboBoxElement, WebElement inputElement, String text) {
-        try {
-            // Find and click the toggle button to open the dropdown
-            // A human would just click the toggle button directly (no need to click input first)
-            // Vaadin combobox uses shadow DOM, so we use expandRootElementAndFindElement to access it
-            try {
-                // Try to find toggle button by ID first
-                WebElement toggleButton = expandRootElementAndFindElement(comboBoxElement, "#toggleButton");
-
-                if (toggleButton == null) {
-                    // Fallback: try to find by part attribute
-                    toggleButton = expandRootElementAndFindElement(comboBoxElement, "[part='toggle-button']");
-                }
-
-                if (toggleButton != null) {
-                    moveMouseToElement(toggleButton);
-                    toggleButton.click();
-                    logger.debug("Clicked combobox toggle button via shadow DOM");
-                } else {
-                    // Fallback: click on the input field if toggle button not found
-                    logger.debug("Toggle button not found in shadow DOM, clicking input field to open dropdown");
-                    inputElement.click();
-                }
-            } catch (Exception ex) {
-                // Fallback: click on the input field if shadow DOM access fails
-                logger.debug("Failed to access toggle button via shadow DOM: {}, clicking input field to open dropdown", ex.getMessage());
-                inputElement.click();
-            }
-
-            // Wait for the dropdown overlay to become visible
-            // The overlay element exists in the DOM even when closed
-            // When opened, the 'opened' attribute is set to "true" (not an empty string)
-            waitUntil(ExpectedConditions.or(
-                    ExpectedConditions.attributeToBe(By.cssSelector("vaadin-combo-box-overlay"), "opened", "true"),
-                    ExpectedConditions.attributeToBe(By.cssSelector("vaadin-combo-box-dropdown-wrapper"), "opened", "true")
-            ));
-
-            // Find dropdown items
-            // Items are in the light DOM as children of vaadin-combo-box-scroller
-            // We can query them directly without accessing shadow DOM
-            List<WebElement> dropdownItems = driver.findElements(By.cssSelector("vaadin-combo-box-item"));
-
-            logger.debug("Found {} dropdown items", dropdownItems.size());
-
-            // Find the item that matches the text
-            WebElement matchingItem = null;
-            for (WebElement item : dropdownItems) {
-                String itemText = item.getText();
-                if (itemText != null && itemText.trim().equals(text.trim())) {
-                    matchingItem = item;
-                    break;
-                }
-            }
-
-            if (matchingItem != null) {
-                // Move mouse to the item and click it
-                moveMouseToElement(matchingItem);
-                wait(100);
-                matchingItem.click();
-                logger.debug("Clicked on dropdown item: {}", text);
-            } else {
-                logger.warn("Could not find dropdown item with text: {}. Falling back to keyboard method.", text);
-                // Fallback to typing method if item not found
-                setComboBoxValueByTyping(inputElement, text);
-            }
-
-            // Wait for dropdown to close
-            wait(200);
-
-        } catch (Exception ex) {
-            logger.warn("Error during humanized combobox selection: {}. Falling back to keyboard method.", ex.getMessage());
-            // Fallback to typing method on any error
-            setComboBoxValueByTyping(inputElement, text);
-        }
-    }
-
-    /**
-     * Sets a value to a date picker component.
-     * <p>
-     * This method provides a reliable way to set date values on Vaadin DatePicker
-     * components. In humanized mode, it opens the calendar and clicks on the date.
-     * In fast mode, it uses JavaScript to set the value directly.
-     *
-     * @param datePickerId the ID of the date picker component
-     * @param date         the LocalDate value to set, can be null to clear the date
-     */
-    public void setDatePickerValue(String datePickerId, LocalDate date) {
-        // Wait for the date picker element to be present
-        waitUntil(ExpectedConditions.presenceOfElementLocated(By.id(datePickerId)));
-
-        if (date == null) {
-            // Clear the date picker (always use JavaScript for clearing)
-            setDatePickerValueByScript(datePickerId, null);
-        }
-
-        // If humanize is enabled, interact like a human by clicking through the calendar
-        if (humanize) {
-            try {
-                setDatePickerValueHumanized(datePickerId, date);
-            } catch (Exception ex) {
-                logger.warn("Error during humanized date picker selection: {}. Falling back to script method.", ex.getMessage());
-                setDatePickerValueByScript(datePickerId, date);
-            }
-        } else {
-            // Fast mode: use JavaScript to set the value directly
-            setDatePickerValueByScript(datePickerId, date);
-        }
-    }
+//    /**
+//     * Sets a value to a date picker component.
+//     * <p>
+//     * This method provides a reliable way to set date values on Vaadin DatePicker
+//     * components. In humanized mode, it opens the calendar and clicks on the date.
+//     * In fast mode, it uses JavaScript to set the value directly.
+//     *
+//     * @param datePickerId the ID of the date picker component
+//     * @param date         the LocalDate value to set, can be null to clear the date
+//     */
+//    public void setDatePickerValue(String datePickerId, LocalDate date) {
+//        // Wait for the date picker element to be present
+//        waitUntil(ExpectedConditions.presenceOfElementLocated(By.id(datePickerId)));
+//
+//        if (date == null) {
+//            // Clear the date picker (always use JavaScript for clearing)
+//            setDatePickerValueByScript(datePickerId, null);
+//        }
+//
+//        // If humanize is enabled, interact like a human by clicking through the calendar
+//        if (humanize) {
+//            try {
+//                setDatePickerValueHumanized(datePickerId, date);
+//            } catch (Exception ex) {
+//                logger.warn("Error during humanized date picker selection: {}. Falling back to script method.", ex.getMessage());
+//                setDatePickerValueByScript(datePickerId, date);
+//            }
+//        } else {
+//            // Fast mode: use JavaScript to set the value directly
+//            setDatePickerValueByScript(datePickerId, date);
+//        }
+//    }
 
     /**
      * Sets a date picker value by directly setting it via JavaScript.
@@ -1215,7 +894,9 @@ public class SeleniumHandler {
      * @param datePickerId the ID of the date picker component
      * @param date         the LocalDate value to set, can be null to clear
      */
-    private void setDatePickerValueByScript(String datePickerId, LocalDate date) {
+    public void setDatePickerValue(String datePickerId, LocalDate date) {
+        // Wait for the date picker element to be present
+        waitUntil(ExpectedConditions.presenceOfElementLocated(By.id(datePickerId)));
         if (date == null) {
             String clearScript =
                     "var datePicker = document.getElementById('" + datePickerId + "');" +
@@ -1241,72 +922,18 @@ public class SeleniumHandler {
         }
     }
 
-    /**
-     * Sets a date picker value in a humanized way by clicking the toggle button,
-     * then moving to the input field and typing the date.
-     * This simulates how a human would interact with a date picker.
-     *
-     * @param datePickerId the ID of the date picker component
-     * @param date         the LocalDate value to set
-     */
-    private void setDatePickerValueHumanized(String datePickerId, LocalDate date) {
-        // Find the date picker element
-        WebElement datePickerElement = findElement(By.id(datePickerId));
-        // Find the toggle button in the shadow DOM to give visual feedback
-        WebElement toggleButton = expandRootElementAndFindElement(datePickerElement, "[part='toggle-button']");
 
-        if (toggleButton != null) {
-            // Click the toggle button to show the calendar (gives visual feedback)
-            moveMouseToElement(toggleButton);
-            wait(100);
-            toggleButton.click();
-            logger.debug("Clicked date picker toggle button");
-            wait(300); // Wait for calendar to appear
-        }
-
-        // Find the input field - it's NOT in shadow DOM, it's a direct child with slot='input'
-        // The actual input has an id like "search-input-vaadin-date-picker-20"
-        WebElement inputField = datePickerElement.findElement(By.cssSelector("input[slot='input']"));
-
-        logger.debug("Found input field, typing date");
-
-        moveMouseToElement(inputField);
-        wait(100);
-        inputField.click();// Click the input field to focus it
-        wait(100);
-        inputField.clear();// Clear any existing value
-        wait(100);
-
-        // Format the date in US format (M/d/yyyy)
-        // Note: This matches the browser's default US locale
-        String dateStr = date.format(DateTimeFormatter.ofPattern("M/d/yyyy"));
-        logger.info("Typing date into date picker: {} (formatted as US: {})", date, dateStr);
-
-        typeText(inputField, dateStr);
-
-        wait(500);
-        inputField.sendKeys(Keys.ENTER);// Press Enter to confirm the date and close the calendar
-        logger.debug("Pressed Enter to confirm date");
-
-        // Wait for the calendar overlay to close
-        wait(200);
-        WebElement overlay = expandRootElementAndFindElement(datePickerElement, "vaadin-date-picker-overlay");
-        waitUntil(ExpectedConditions.invisibilityOfAllElements(overlay));
-        logger.debug("Date picker overlay closed successfully");
-        logger.debug("Successfully set date: {}", date);
-    }
-
-    /**
-     * Enable or disable humanized typing mode.
-     * When enabled, text is typed character-by-character with variable human-like delays,
-     * and mouse movements become more natural with curved paths and variable speed.
-     */
-    public void setHumanize(boolean humanize) {
-        this.humanize = humanize;
-        if (humanize && !isSeleniumHeadless()) {
-            logger.info("Humanize mode enabled (typing and mouse movement with natural variation)");
-        }
-    }
+//    /**
+//     * Enable or disable humanized typing mode.
+//     * When enabled, text is typed character-by-character with variable human-like delays,
+//     * and mouse movements become more natural with curved paths and variable speed.
+//     */
+//    public void setHumanize(boolean humanize) {
+//        this.humanize = humanize;
+//        if (humanize && !isSeleniumHeadless()) {
+//            logger.info("Humanize mode enabled (typing and mouse movement with natural variation)");
+//        }
+//    }
 
     public void setImplicitWaitDuration(Duration duration) {
         getDriver().manage().timeouts().implicitlyWait(duration);
@@ -1373,13 +1000,6 @@ public class SeleniumHandler {
         typeText(i, text);
     }
 
-    /**
-     * Adjust per-character typing delay in milliseconds for humanized mode.
-     */
-    public void setTypingDelayMillis(int typingDelayMillis) {
-        this.typingDelayMillis = Math.max(0, typingDelayMillis);
-    }
-
     public void setWaitDuration(Duration waitDuration) {
         this.waitDuration = waitDuration;
         wait.withTimeout(waitDuration);
@@ -1402,100 +1022,6 @@ public class SeleniumHandler {
         }
     }
 
-    /**
-     * Show a full-screen overlay with title and subtitle.
-     * The overlay fades in over 1 second and remains visible until hideOverlay() is called.
-     * This is useful for creating intro screens or chapter markers in instruction videos.
-     *
-     * @param title    Main title text to display
-     * @param subtitle Subtitle text (can be null or empty)
-     */
-    public void showOverlay(String title, String subtitle) {
-        try {
-            // Wait for page to be fully loaded
-            waitForPageLoaded();
-
-            // Escape special characters for JavaScript
-            String escapedTitle    = escapeJavaScript(title);
-            String escapedSubtitle = subtitle != null ? escapeJavaScript(subtitle) : "";
-
-            String script =
-                    "// Remove existing overlay if present\n" +
-                            "var existingOverlay = document.getElementById('video-intro-overlay');\n" +
-                            "if (existingOverlay) {\n" +
-                            "    existingOverlay.remove();\n" +
-                            "}\n" +
-                            "\n" +
-                            "// Create overlay container\n" +
-                            "var overlay = document.createElement('div');\n" +
-                            "overlay.id = 'video-intro-overlay';\n" +
-                            "overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #000000; z-index: 999999; display: flex; justify-content: center; align-items: center; opacity: 0; transition: opacity 1s ease-in-out;';\n" +
-                            "\n" +
-                            "// Create content container\n" +
-                            "var content = document.createElement('div');\n" +
-                            "content.style.cssText = 'text-align: center;';\n" +
-                            "\n" +
-                            "// Create title element\n" +
-                            "var titleDiv = document.createElement('div');\n" +
-                            "titleDiv.style.cssText = 'color: #ffffff; font-size: 48px; font-weight: bold; margin-bottom: 20px; font-family: \"Segoe UI\", Tahoma, Geneva, Verdana, sans-serif; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);';\n" +
-                            "titleDiv.textContent = '" + escapedTitle + "';\n" +
-                            "content.appendChild(titleDiv);\n" +
-                            "\n" +
-                            "// Create subtitle element if provided\n" +
-                            "if ('" + escapedSubtitle + "') {\n" +
-                            "    var subtitleDiv = document.createElement('div');\n" +
-                            "    subtitleDiv.style.cssText = 'color: #cccccc; font-size: 24px; font-family: \"Segoe UI\", Tahoma, Geneva, Verdana, sans-serif; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);';\n" +
-                            "    subtitleDiv.textContent = '" + escapedSubtitle + "';\n" +
-                            "    content.appendChild(subtitleDiv);\n" +
-                            "}\n" +
-                            "\n" +
-                            "overlay.appendChild(content);\n" +
-                            "document.body.appendChild(overlay);\n" +
-                            "\n" +
-                            "// Trigger fade-in animation\n" +
-                            "setTimeout(function() {\n" +
-                            "    overlay.style.opacity = '1';\n" +
-                            "}, 10);\n";
-
-            executeJavaScript(script);
-            logger.info("Displayed overlay with title: '{}'", title);
-
-            // Wait for fade-in animation to complete
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                logger.warn("Interrupted while waiting for overlay fade-in");
-            }
-        } catch (Exception e) {
-            logger.error("Failed to show overlay: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to show overlay: " + e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Show overlay, wait for specified duration, then hide it automatically.
-     * Total duration will be: 1s (fade-in) + displaySeconds + 1s (fade-out).
-     *
-     * @param title          Main title text to display
-     * @param subtitle       Subtitle text (can be null or empty)
-     * @param displaySeconds How long to display the overlay between fade-in and fade-out
-     */
-    public void showOverlayAndWait(String title, String subtitle, int displaySeconds) {
-        showOverlay(title, subtitle);
-
-        // Wait for the specified display duration
-        if (displaySeconds > 0) {
-            try {
-                Thread.sleep(displaySeconds * 1000L);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                logger.warn("Interrupted while waiting for overlay display duration");
-            }
-        }
-
-        hideOverlay();
-    }
 
     /**
      * Start recording screen activities for the current test
@@ -1608,37 +1134,34 @@ public class SeleniumHandler {
      * Respects humanized typing mode if enabled, using variable delays
      * to simulate real human typing patterns (not perfectly rhythmic).
      */
-    private void typeText(WebElement inputElement, String text) {
+    protected void typeText(WebElement inputElement, String text) {
         if (text == null || text.isEmpty()) return;
-        if (!humanize) {
-            inputElement.sendKeys(text);
-            return;
-        }
+        inputElement.sendKeys(text);
 
-        for (int idx = 0; idx < text.length(); idx++) {
-            String ch = String.valueOf(text.charAt(idx));
-            inputElement.sendKeys(ch);
-
-            if (typingDelayMillis > 0) {
-                try {
-                    // Variable delay: base delay +/- 50% randomness
-                    // This creates a more natural typing rhythm
-                    int minDelay      = typingDelayMillis / 2;
-                    int maxDelay      = typingDelayMillis + (typingDelayMillis / 2);
-                    int variableDelay = minDelay + random.nextInt(maxDelay - minDelay + 1);
-
-                    // Occasionally add a longer pause (simulating thinking/hesitation)
-                    // About 10% chance of a longer pause
-                    if (random.nextInt(10) == 0) {
-                        variableDelay += typingDelayMillis * (2 + random.nextInt(3)); // 2-4x longer
-                    }
-
-                    Thread.sleep(variableDelay);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        }
+//        for (int idx = 0; idx < text.length(); idx++) {
+//            String ch = String.valueOf(text.charAt(idx));
+//            inputElement.sendKeys(ch);
+//
+//            if (typingDelayMillis > 0) {
+//                try {
+//                    // Variable delay: base delay +/- 50% randomness
+//                    // This creates a more natural typing rhythm
+//                    int minDelay      = typingDelayMillis / 2;
+//                    int maxDelay      = typingDelayMillis + (typingDelayMillis / 2);
+//                    int variableDelay = minDelay + random.nextInt(maxDelay - minDelay + 1);
+//
+//                    // Occasionally add a longer pause (simulating thinking/hesitation)
+//                    // About 10% chance of a longer pause
+//                    if (random.nextInt(10) == 0) {
+//                        variableDelay += typingDelayMillis * (2 + random.nextInt(3)); // 2-4x longer
+//                    }
+//
+//                    Thread.sleep(variableDelay);
+//                } catch (InterruptedException e) {
+//                    Thread.currentThread().interrupt();
+//                }
+//            }
+//        }
     }
 
     public void wait(int milliseconds) {

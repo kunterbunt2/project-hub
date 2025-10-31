@@ -23,7 +23,7 @@ import de.bushnaq.abdalla.projecthub.ai.narrator.NarratorAttribute;
 import de.bushnaq.abdalla.projecthub.dto.OffDayType;
 import de.bushnaq.abdalla.projecthub.ui.dialog.OffDayDialog;
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
-import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.LoginView;
 import de.bushnaq.abdalla.projecthub.ui.view.OffDayListView;
 import de.bushnaq.abdalla.projecthub.ui.view.util.*;
@@ -94,7 +94,7 @@ public class UserOffDaysInstructionVideo extends AbstractUiTestUtil {
     @Autowired
     private              ProductListViewTester      productListViewTester;
     @Autowired
-    private              SeleniumHandler            seleniumHandler;
+    private              HumanizedSeleniumHandler   seleniumHandler;
     @Autowired
     private              SprintListViewTester       sprintListViewTester;
     @Autowired
@@ -108,18 +108,18 @@ public class UserOffDaysInstructionVideo extends AbstractUiTestUtil {
     @MethodSource("listRandomCases")
     @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void createVideo(RandomCase randomCase, TestInfo testInfo) throws Exception {
-        seleniumHandler.setHumanize(true);
+//        seleniumHandler.setHumanize(true);
 
         TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         generateProductsIfNeeded(testInfo, randomCase);
-        Narrator narrator = Narrator.withChatterboxTTS("tts/" + testInfo.getTestClass().get().getSimpleName());
+        Narrator paul = Narrator.withChatterboxTTS("tts/" + testInfo.getTestClass().get().getSimpleName());
         seleniumHandler.getAndCheck("http://localhost:" + "8080" + "/ui/" + LoginView.ROUTE);
         seleniumHandler.showOverlay("Kassandra User Off-Days", "Introduction Video");
         seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), "User Off Days Introduction Video");
         seleniumHandler.wait(3000);
-        narrator.narrateAsync(NORMAL, "Hi everyone, Christopher Paul here from kassandra.org. Today I am happy to release our first instruction video for our Kassandra project management server.");
+        paul.narrateAsync(NORMAL, "Hi everyone, Christopher Paul here from kassandra.org. Today I am happy to release our first instruction video for our Kassandra project management server.");
         seleniumHandler.hideOverlay();
         productListViewTester.switchToProductListViewWithOidc("christopher.paul@kassandra.org", "password", "../project-hub.wiki/screenshots/login-view.png", testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
 
@@ -127,33 +127,33 @@ public class UserOffDaysInstructionVideo extends AbstractUiTestUtil {
         // Products Page
         //---------------------------------------------------------------------------------------..
 
-        narrator.narrate(NORMAL, "We are going to learn about User Off-Days management in Kassandra. By User Off-Days we mean vacations, sick leaves, or business trips. Basically any day where you are not available to work on your project tasks.");
-        narrator.narrateAsync(NORMAL, "Lets open the user menu and switch to the User Off-Days page.");
+        paul.narrate(NORMAL, "We are going to learn about User Off-Days management in Kassandra. By User Off-Days we mean vacations, sick leaves, or business trips. Basically any day where you are not available to work on your project tasks.");
+        paul.narrateAsync(NORMAL, "Lets open the user menu and switch to the User Off-Days page.");
         seleniumHandler.click(MainLayout.ID_USER_MENU);
         seleniumHandler.click(MainLayout.ID_USER_MENU_OFF_DAYS);
 
 
-        narrator.narrate(NORMAL, "The User Off-Days shows a calendar with every day of the current year. The legend on the bottom explains the different types of User Off-Days and their colors.");
-        narrator.narrate(NORMAL, "You can see that there are holidays marked in the calendar. These are public holidays that Kassandra automatically populated based on the logged in user location.");
-        narrator.narrate(NORMAL, "I am located in germany North Rhine Westphalia and so you can see the holidays of that region in Germany.");
-        narrator.narrate(NORMAL, "Ok, i just noticed, that I have not taken any vacation days this year. So let me plan my summer vacation.");
-        narrator.narrateAsync(NORMAL, "Select the create button.");
+        paul.narrate(NORMAL, "The User Off-Days shows a calendar with every day of the current year. The legend on the bottom explains the different types of User Off-Days and their colors.");
+        paul.narrate(NORMAL, "You can see that there are holidays marked in the calendar. These are public holidays that Kassandra automatically populated based on the logged in user location.");
+        paul.narrate(NORMAL, "I am located in germany North Rhine Westphalia and so you can see the holidays of that region in Germany.");
+        paul.narrate(NORMAL, "Ok, i just noticed, that I have not taken any vacation days this year. So let me plan my summer vacation.");
+        paul.narrateAsync(NORMAL, "Select the create button.");
         seleniumHandler.click(OffDayListView.CREATE_OFFDAY_BUTTON);
 
-        narrator.narrateAsync(NORMAL, "Choose vacation.");
+        paul.narrateAsync(NORMAL, "Choose vacation.");
         seleniumHandler.setComboBoxValue(OffDayDialog.OFFDAY_TYPE_FIELD, OffDayType.VACATION.name());
 
-        narrator.narrateAsync(NORMAL, "Select the start date.");
+        paul.narrateAsync(NORMAL, "Select the start date.");
         final LocalDate firstDay = LocalDate.of(2025, 6, 2);
         seleniumHandler.setDatePickerValue(OffDayDialog.OFFDAY_START_DATE_FIELD, firstDay);
 
-        narrator.narrate(NORMAL, "and select the end date.");
-        narrator.narrateAsync(NORMAL, "I am really looking forward to a long summer vacation with my family.");
+        paul.narrate(NORMAL, "and select the end date.");
+        paul.narrateAsync(NORMAL, "I am really looking forward to a long summer vacation with my family.");
         final LocalDate lastDay = LocalDate.of(2025, 6, 27);
         seleniumHandler.setDatePickerValue(OffDayDialog.OFFDAY_END_DATE_FIELD, lastDay);
-        narrator.narrateAsync(NORMAL, "Select Save to close the dialog and persist our vacation.").pause();
+        paul.narrateAsync(NORMAL, "Select Save to close the dialog and persist our vacation.").pause();
         seleniumHandler.click(OffDayDialog.CONFIRM_BUTTON);
-        narrator.narrate(NORMAL, "the vacation immediately becomes visible in the calendar. Kassandra skips any weekend day or holiday that falls in your vacation.").pause();
+        paul.narrate(NORMAL, "the vacation immediately becomes visible in the calendar. Kassandra skips any weekend day or holiday that falls in your vacation.").pause();
 
         seleniumHandler.waitUntilBrowserClosed(5000);
 

@@ -19,6 +19,7 @@ package de.bushnaq.abdalla.projecthub.ui.view.util;
 
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ProductDialog;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.LoginView;
 import de.bushnaq.abdalla.projecthub.ui.view.ProductListView;
@@ -46,8 +47,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Lazy
 public class ProductListViewTester {
     @Getter
-    private final int             port;
-    private final SeleniumHandler seleniumHandler;
+    private final int                      port;
+    private final HumanizedSeleniumHandler seleniumHandler;
 
     /**
      * Constructs a new ProductViewTester with the given Selenium handler and server port.
@@ -55,7 +56,7 @@ public class ProductListViewTester {
      * @param seleniumHandler the handler for Selenium operations
      * @param port            the port on which the application server is running
      */
-    public ProductListViewTester(SeleniumHandler seleniumHandler, @Value("${local.server.port:8080}") int port) {
+    public ProductListViewTester(HumanizedSeleniumHandler seleniumHandler, @Value("${local.server.port:8080}") int port) {
         this.seleniumHandler = seleniumHandler;
         this.port            = port;
     }

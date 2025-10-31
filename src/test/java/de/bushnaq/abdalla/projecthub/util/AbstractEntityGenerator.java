@@ -575,7 +575,7 @@ public class AbstractEntityGenerator extends AbstractTestUtil {
 
     @PostConstruct
     protected void postConstruct() {
-        ParameterOptions.setNow(OffsetDateTime.parse("2025-01-01T08:00:00+01:00"));
+        ParameterOptions.setNow(OffsetDateTime.parse("2025-05-05T08:00:00+01:00"));
 
         // Set the correct port after injection
         String baseUrl = "http://localhost:" + port + "/api";

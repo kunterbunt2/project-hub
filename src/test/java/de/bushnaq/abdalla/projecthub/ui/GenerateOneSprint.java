@@ -128,8 +128,6 @@ public class GenerateOneSprint extends AbstractUiTestUtil {
         // Set browser window to a fixed size for consistent screenshots
 //        seleniumHandler.setWindowSize(1024, 800);
         seleniumHandler.setWindowSize(1800, 1300);
-        // Enable humanized typing and mouse movement for demo-like input behavior
-        seleniumHandler.setHumanize(true);
 //        seleniumHandler.setTypingDelayMillis(50);
 
 //        printAuthentication();
