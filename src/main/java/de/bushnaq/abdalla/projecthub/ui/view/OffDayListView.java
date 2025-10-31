@@ -26,6 +26,7 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
+import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.ai.AiFilterService;
 import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.dto.Location;
@@ -156,7 +157,7 @@ public class OffDayListView extends AbstractMainGrid<OffDay> implements BeforeEn
         // Create a new YearCalendarComponent with the current user and the current year
         if (yearCalendar != null)
             return yearCalendar;
-        yearCalendar = new YearCalendarComponent(currentUser, java.time.LocalDate.now().getYear(), this::handleCalendarDayClick);
+        yearCalendar = new YearCalendarComponent(currentUser, ParameterOptions.getLocalNow().getYear(), this::handleCalendarDayClick);
         return yearCalendar;
     }
 
@@ -172,9 +173,9 @@ public class OffDayListView extends AbstractMainGrid<OffDay> implements BeforeEn
         user.setEmail(username);
         user.setFirstWorkingDay(java.time.LocalDate.now());
         user.setColor(new java.awt.Color(51, 102, 204));
-        Availability availability = new Availability(1.0f, java.time.LocalDate.now());
+        Availability availability = new Availability(1.0f, ParameterOptions.getLocalNow().toLocalDate());
         user.addAvailability(availability);
-        de.bushnaq.abdalla.projecthub.dto.Location location = new Location("DE", "nw", java.time.LocalDate.now());
+        de.bushnaq.abdalla.projecthub.dto.Location location = new Location("DE", "nw", ParameterOptions.getLocalNow().toLocalDate());
         user.addLocation(location);
         return user;
     }

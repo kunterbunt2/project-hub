@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
+import de.bushnaq.abdalla.projecthub.config.KassandraProperties;
 import de.bushnaq.abdalla.projecthub.report.calendar.CalendarUtil;
 import de.bushnaq.abdalla.projecthub.report.gantt.GanttContext;
 import de.focus_shift.jollyday.core.Holiday;
@@ -48,10 +49,8 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(of = {"id"}, callSuper = false)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class User extends AbstractTimeAware implements Comparable<User> {
-
-    private static final long               MAX_PROJECT_LENGTH = 1;
     @JsonManagedReference
-    private              List<Availability> availabilities     = new ArrayList<>();
+    private List<Availability> availabilities = new ArrayList<>();
 
     @JsonIgnore
     private ProjectCalendar calendar;
@@ -151,7 +150,7 @@ public class User extends AbstractTimeAware implements Comparable<User> {
             if (i + 1 < locations.size())
                 endDateInclusive = locations.get(i + 1).getStart();//end of this location is start of next location
             else
-                endDateInclusive = ParameterOptions.getNow().plusYears(MAX_PROJECT_LENGTH).toLocalDate();
+                endDateInclusive = ParameterOptions.getNow().plusMonths(KassandraProperties.getHolidayLookAheadMonths()).toLocalDate();
             HolidayManager holidayManager = HolidayManager.getInstance(ManagerParameters.create(location.getCountry()));
             List<Holiday>  holidays       = holidayManager.getHolidays(startDateInclusive, endDateInclusive, location.getState()).stream().sorted().collect(Collectors.toList());
             URL            url            = getClass().getClassLoader().getResource("holidays/carnival-holidays.xml");

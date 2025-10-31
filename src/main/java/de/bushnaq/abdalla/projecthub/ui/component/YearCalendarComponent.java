@@ -29,6 +29,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.OffDay;
 import de.bushnaq.abdalla.projecthub.dto.OffDayType;
 import de.bushnaq.abdalla.projecthub.dto.User;
@@ -281,7 +282,7 @@ public class YearCalendarComponent extends VerticalLayout {
 
         // Add some bottom margin to ensure space between month name and first row
         calendarGrid.getStyle().set("margin-top", "4px");
-        LocalDate today = LocalDate.now();
+        LocalDate today = ParameterOptions.getLocalNow().toLocalDate();
         // First day of month
         LocalDate firstOfMonth = LocalDate.of(currentYear, month, 1);
         // Determine first day of week for this month (0 = Monday, 6 = Sunday in our display)
