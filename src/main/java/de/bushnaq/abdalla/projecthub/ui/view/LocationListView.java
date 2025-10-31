@@ -23,8 +23,10 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
+import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.ai.AiFilterService;
 import de.bushnaq.abdalla.projecthub.dto.Availability;
 import de.bushnaq.abdalla.projecthub.dto.Location;
@@ -33,6 +35,7 @@ import de.bushnaq.abdalla.projecthub.rest.api.LocationApi;
 import de.bushnaq.abdalla.projecthub.rest.api.UserApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.component.AbstractMainGrid;
+import de.bushnaq.abdalla.projecthub.ui.component.YearCalendarComponent;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.LocationDialog;
 import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
@@ -55,20 +58,21 @@ import java.util.stream.Collectors;
 @PageTitle("User Location")
 @PermitAll
 public class LocationListView extends AbstractMainGrid<Location> implements BeforeEnterObserver, AfterNavigationObserver {
-    public static final String      CREATE_LOCATION_BUTTON             = "create-location-button";
-    public static final String      LOCATION_GLOBAL_FILTER             = "location-global-filter";
-    public static final String      LOCATION_GRID                      = "location-grid";
-    public static final String      LOCATION_GRID_COUNTRY_PREFIX       = "location-country-";
-    public static final String      LOCATION_GRID_DELETE_BUTTON_PREFIX = "location-delete-button-";
-    public static final String      LOCATION_GRID_EDIT_BUTTON_PREFIX   = "location-edit-button-";
-    public static final String      LOCATION_GRID_START_DATE_PREFIX    = "location-start-";
-    public static final String      LOCATION_GRID_STATE_PREFIX         = "location-state-";
-    public static final String      LOCATION_LIST_PAGE_TITLE           = "location-page-title";
-    public static final String      LOCATION_ROW_COUNTER               = "location-row-counter";
-    public static final String      ROUTE                              = "location";
-    private             User        currentUser;
-    private final       LocationApi locationApi;
-    private final       UserApi     userApi;
+    public static final String                CREATE_LOCATION_BUTTON             = "create-location-button";
+    public static final String                LOCATION_GLOBAL_FILTER             = "location-global-filter";
+    public static final String                LOCATION_GRID                      = "location-grid";
+    public static final String                LOCATION_GRID_COUNTRY_PREFIX       = "location-country-";
+    public static final String                LOCATION_GRID_DELETE_BUTTON_PREFIX = "location-delete-button-";
+    public static final String                LOCATION_GRID_EDIT_BUTTON_PREFIX   = "location-edit-button-";
+    public static final String                LOCATION_GRID_START_DATE_PREFIX    = "location-start-";
+    public static final String                LOCATION_GRID_STATE_PREFIX         = "location-state-";
+    public static final String                LOCATION_LIST_PAGE_TITLE           = "location-page-title";
+    public static final String                LOCATION_ROW_COUNTER               = "location-row-counter";
+    public static final String                ROUTE                              = "location";
+    private             User                  currentUser;
+    private final       LocationApi           locationApi;
+    private final       UserApi               userApi;
+    private             YearCalendarComponent yearCalendar;
 
     public LocationListView(LocationApi locationApi, UserApi userApi, Clock clock, AiFilterService aiFilterService, ObjectMapper mapper) {
         super(clock);
@@ -86,7 +90,7 @@ public class LocationListView extends AbstractMainGrid<Location> implements Befo
                         LOCATION_GLOBAL_FILTER,
                         aiFilterService, mapper, "Location"
                 ),
-                grid
+                new HorizontalLayout(grid, createCalendar())
         );
     }
 
@@ -98,24 +102,26 @@ public class LocationListView extends AbstractMainGrid<Location> implements Befo
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         // Get username from URL parameter or use the currently authenticated user
-        String usernameParam = event.getRouteParameters().get("username").orElse(null);
+        String userEmailParam = event.getRouteParameters().get("username").orElse(null);
 
         Authentication authentication  = SecurityContextHolder.getContext().getAuthentication();
         String         currentUsername = authentication != null ? authentication.getName() : null;
 
         // If no username is provided, use the current authenticated user
-        final String username = (usernameParam == null && currentUsername != null) ? currentUsername : usernameParam;
+        final String userEmail = (userEmailParam == null && currentUsername != null) ? currentUsername : userEmailParam;
 
-        if (username != null) {
+        if (userEmail != null) {
             try {
                 // Find user by username
-                currentUser = userApi.getByName(username);
+                currentUser = userApi.getByEmail(userEmail);
+                currentUser.initialize();
             } catch (ResponseStatusException ex) {
                 if (ex.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
                     // Create a new user since one wasn't found
-                    User newUser = createDefaultUser(username);
+                    User newUser = createDefaultUser(userEmail);
                     currentUser = userApi.persist(newUser);
-                    Notification notification = Notification.show("Created new user: " + username, 3000, Notification.Position.MIDDLE);
+                    currentUser.initialize();
+                    Notification notification = Notification.show("Created new user: " + userEmail, 3000, Notification.Position.MIDDLE);
                     notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                 } else {
                     throw ex;
@@ -125,6 +131,7 @@ public class LocationListView extends AbstractMainGrid<Location> implements Befo
             // Redirect to main page if no username and not authenticated
             event.forwardTo("");
         }
+        createCalendar();
     }
 
     private void confirmDelete(Location location) {
@@ -151,6 +158,16 @@ public class LocationListView extends AbstractMainGrid<Location> implements Befo
                     }
                 });
         dialog.open();
+    }
+
+    private YearCalendarComponent createCalendar() {
+        // Create a new YearCalendarComponent with the current user and the current year
+        if (yearCalendar != null)
+            return yearCalendar;
+        yearCalendar = new YearCalendarComponent(currentUser, ParameterOptions.getLocalNow().getYear(), this::handleCalendarDayClick);
+        // Set up handler to refresh grid when year changes
+        yearCalendar.setYearChangeHandler(year -> refreshGrid());
+        return yearCalendar;
     }
 
     /**
@@ -200,6 +217,16 @@ public class LocationListView extends AbstractMainGrid<Location> implements Befo
 
         // Default fallback is to just return the state code
         return stateCode;
+    }
+
+    /**
+     * Handles clicks on calendar days
+     *
+     * @param date The date that was clicked
+     */
+    private void handleCalendarDayClick(java.time.LocalDate date) {
+        // For location view, we could show the location that was active on that date
+        // For now, we'll just keep it simple and not implement special behavior
     }
 
     protected void initGrid(Clock clock) {
@@ -308,8 +335,9 @@ public class LocationListView extends AbstractMainGrid<Location> implements Befo
     private void refreshGrid() {
         if (currentUser != null) {
             // Get a fresh copy of the user to ensure we have the latest data
-            User refreshedUser = userApi.getById(currentUser.getId());
-            currentUser = refreshedUser;
+            // Reload the user to get fresh data
+            currentUser = userApi.getById(currentUser.getId());
+            currentUser.initialize();
 
             // Sort locations by start date in descending order (latest first)
             List<Location> sortedLocations = currentUser.getLocations().stream().sorted(Comparator.comparing(Location::getStart).reversed()).collect(Collectors.toList());
@@ -317,6 +345,11 @@ public class LocationListView extends AbstractMainGrid<Location> implements Befo
             dataProvider.getItems().clear();
             dataProvider.getItems().addAll(sortedLocations);
             dataProvider.refreshAll();
+
+            // Update the calendar with the fresh user data
+            if (yearCalendar != null) {
+                yearCalendar.updateCalendar(currentUser);
+            }
         }
     }
 }

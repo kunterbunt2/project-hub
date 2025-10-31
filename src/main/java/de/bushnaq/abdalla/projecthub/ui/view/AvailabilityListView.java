@@ -97,25 +97,25 @@ public class AvailabilityListView extends AbstractMainGrid<Availability> impleme
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         // Get username from URL parameter or use the currently authenticated user
-        String usernameParam = event.getRouteParameters().get("username").orElse(null);
+        String userEmailParam = event.getRouteParameters().get("username").orElse(null);
 
         Authentication authentication  = SecurityContextHolder.getContext().getAuthentication();
         String         currentUsername = authentication != null ? authentication.getName() : null;
 
         // If no username is provided, use the current authenticated user
         // Store in a final variable to use in lambda
-        final String username = (usernameParam == null && currentUsername != null) ? currentUsername : usernameParam;
+        final String userEmail = (userEmailParam == null && currentUsername != null) ? currentUsername : userEmailParam;
 
-        if (username != null) {
+        if (userEmail != null) {
             try {
                 // Find user by username using the direct getByName method
-                currentUser = userApi.getByName(username);
+                currentUser = userApi.getByEmail(userEmail);
             } catch (ResponseStatusException ex) {
                 if (ex.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
                     // Create a new user since one wasn't found
-                    User newUser = createDefaultUser(username);
+                    User newUser = createDefaultUser(userEmail);
                     currentUser = userApi.persist(newUser);
-                    Notification notification = Notification.show("Created new user: " + username, 3000, Notification.Position.MIDDLE);
+                    Notification notification = Notification.show("Created new user: " + userEmail, 3000, Notification.Position.MIDDLE);
                     notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                 } else {
                     throw ex;

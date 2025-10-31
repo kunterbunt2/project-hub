@@ -109,7 +109,6 @@ public class UserOffDaysInstructionVideo extends AbstractUiTestUtil {
     @MethodSource("listRandomCases")
     @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void createVideo(RandomCase randomCase, TestInfo testInfo) throws Exception {
-//        seleniumHandler.setHumanize(true);
 
         TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
@@ -143,7 +142,6 @@ public class UserOffDaysInstructionVideo extends AbstractUiTestUtil {
         seleniumHandler.click(YearCalendarComponent.CALENDAR_PREV_YEAR_BTN);
         paul.narrate(NORMAL, "You can see that there are holidays marked in the calendar. These are public holidays that Kassandra automatically populated based on the logged in user location.");
         paul.narrate(NORMAL, "The vacation, business trip and sick leave days are all created by me.");
-//        paul.getPlayback().await();
         seleniumHandler.click(YearCalendarComponent.CALENDAR_NEXT_YEAR_BTN);
         paul.narrate(NORMAL, "I am located in Germany North Rhine Westphalia and so you can see the holidays of that region in Germany.");
         paul.narrate(NORMAL, "Ok, i just noticed, that I have not taken any vacation days this year. So let me plan my summer vacation.");
