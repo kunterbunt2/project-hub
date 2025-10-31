@@ -23,9 +23,11 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.NumberRenderer;
 import com.vaadin.flow.router.*;
+import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.ai.AiFilterService;
 import de.bushnaq.abdalla.projecthub.dto.Availability;
 import de.bushnaq.abdalla.projecthub.dto.Location;
@@ -34,6 +36,7 @@ import de.bushnaq.abdalla.projecthub.rest.api.AvailabilityApi;
 import de.bushnaq.abdalla.projecthub.rest.api.UserApi;
 import de.bushnaq.abdalla.projecthub.ui.MainLayout;
 import de.bushnaq.abdalla.projecthub.ui.component.AbstractMainGrid;
+import de.bushnaq.abdalla.projecthub.ui.component.AvailabilityCalendarComponent;
 import de.bushnaq.abdalla.projecthub.ui.dialog.AvailabilityDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
@@ -55,19 +58,20 @@ import java.util.stream.Collectors;
 @PageTitle("User Availability")
 @PermitAll
 public class AvailabilityListView extends AbstractMainGrid<Availability> implements BeforeEnterObserver, AfterNavigationObserver {
-    public static final String          AVAILABILITY_GLOBAL_FILTER             = "availability-global-filter";
-    public static final String          AVAILABILITY_GRID                      = "availability-grid";
-    public static final String          AVAILABILITY_GRID_AVAILABILITY_PREFIX  = "availability-value-";
-    public static final String          AVAILABILITY_GRID_DELETE_BUTTON_PREFIX = "availability-delete-button-";
-    public static final String          AVAILABILITY_GRID_EDIT_BUTTON_PREFIX   = "availability-edit-button-";
-    public static final String          AVAILABILITY_GRID_START_DATE_PREFIX    = "availability-start-";
-    public static final String          AVAILABILITY_LIST_PAGE_TITLE           = "availability-page-title";
-    public static final String          AVAILABILITY_ROW_COUNTER               = "availability-row-counter";
-    public static final String          CREATE_AVAILABILITY_BUTTON             = "create-availability-button";
-    public static final String          ROUTE                                  = "availability";
-    private final       AvailabilityApi availabilityApi;
-    private             User            currentUser;
-    private final       UserApi         userApi;
+    public static final String                        AVAILABILITY_GLOBAL_FILTER             = "availability-global-filter";
+    public static final String                        AVAILABILITY_GRID                      = "availability-grid";
+    public static final String                        AVAILABILITY_GRID_AVAILABILITY_PREFIX  = "availability-value-";
+    public static final String                        AVAILABILITY_GRID_DELETE_BUTTON_PREFIX = "availability-delete-button-";
+    public static final String                        AVAILABILITY_GRID_EDIT_BUTTON_PREFIX   = "availability-edit-button-";
+    public static final String                        AVAILABILITY_GRID_START_DATE_PREFIX    = "availability-start-";
+    public static final String                        AVAILABILITY_LIST_PAGE_TITLE           = "availability-page-title";
+    public static final String                        AVAILABILITY_ROW_COUNTER               = "availability-row-counter";
+    public static final String                        CREATE_AVAILABILITY_BUTTON             = "create-availability-button";
+    public static final String                        ROUTE                                  = "availability";
+    private final       AvailabilityApi               availabilityApi;
+    private             User                          currentUser;
+    private final       UserApi                       userApi;
+    private             AvailabilityCalendarComponent yearCalendar;
 
     public AvailabilityListView(AvailabilityApi availabilityApi, UserApi userApi, Clock clock, AiFilterService aiFilterService, ObjectMapper mapper) {
         super(clock);
@@ -85,7 +89,7 @@ public class AvailabilityListView extends AbstractMainGrid<Availability> impleme
                         AVAILABILITY_GLOBAL_FILTER,
                         aiFilterService, mapper, "Availability"
                 ),
-                grid
+                new HorizontalLayout(grid, createCalendar())
         );
     }
 
@@ -150,6 +154,16 @@ public class AvailabilityListView extends AbstractMainGrid<Availability> impleme
         dialog.open();
     }
 
+    private AvailabilityCalendarComponent createCalendar() {
+        // Create a new AvailabilityCalendarComponent with the current user and the current year
+        if (yearCalendar != null)
+            return yearCalendar;
+        yearCalendar = new AvailabilityCalendarComponent(currentUser, ParameterOptions.getLocalNow().getYear(), this::handleCalendarDayClick);
+        // Set up handler to refresh grid when year changes
+        yearCalendar.setYearChangeHandler(year -> refreshGrid());
+        return yearCalendar;
+    }
+
     /**
      * Creates a default user with standard availability and location
      *
@@ -167,6 +181,26 @@ public class AvailabilityListView extends AbstractMainGrid<Availability> impleme
         Location location = new Location("DE", "nw", java.time.LocalDate.now());
         user.addLocation(location);
         return user;
+    }
+
+    /**
+     * Handles clicks on calendar days
+     *
+     * @param date The date that was clicked
+     */
+    private void handleCalendarDayClick(java.time.LocalDate date) {
+        // Find the availability that applies to this date
+        List<Availability> sortedAvailabilities = currentUser.getAvailabilities().stream()
+                .sorted(Comparator.comparing(Availability::getStart).reversed())
+                .collect(Collectors.toList());
+
+        for (Availability availability : sortedAvailabilities) {
+            if (!availability.getStart().isAfter(date)) {
+                // Open dialog to edit this availability
+                openAvailabilityDialog(availability);
+                break;
+            }
+        }
     }
 
     protected void initGrid(Clock clock) {
@@ -245,11 +279,17 @@ public class AvailabilityListView extends AbstractMainGrid<Availability> impleme
         if (currentUser != null) {
             // Get a fresh copy of the user to ensure we have the latest data
             currentUser = userApi.getById(currentUser.getId());
+            currentUser.initialize();
             // Sort availabilities by start date in descending order (latest first)
             List<Availability> sortedAvailabilities = currentUser.getAvailabilities().stream().sorted(Comparator.comparing(Availability::getStart).reversed()).collect(Collectors.toList());
             dataProvider.getItems().clear();
             dataProvider.getItems().addAll(sortedAvailabilities);
             dataProvider.refreshAll();
+
+            // Update the calendar with the latest data
+            if (yearCalendar != null) {
+                yearCalendar.updateCalendar(currentUser, sortedAvailabilities);
+            }
         }
     }
 }
