@@ -153,6 +153,7 @@ public class SeleniumHandler {
         logger.info("quit selenium driver");
     }
 
+
     /**
      * Ensures that a grid contains exactly the expected count of elements with the specified name.
      * <p>
@@ -230,8 +231,10 @@ public class SeleniumHandler {
     }
 
     public WebElement expandRootElementAndFindElement(WebElement element, String elementName) {
-        String     script = String.format("return arguments[0].shadowRoot.querySelector('%s')", elementName);
-        WebElement ele    = (WebElement) ((JavascriptExecutor) getDriver()).executeScript(script, element);
+        // Escape single quotes in the selector to prevent JavaScript syntax errors
+        String     escapedElementName = elementName.replace("'", "\\'");
+        String     script             = String.format("return arguments[0].shadowRoot.querySelector('%s')", escapedElementName);
+        WebElement ele                = (WebElement) ((JavascriptExecutor) getDriver()).executeScript(script, element);
         return ele;
     }
 
@@ -297,6 +300,28 @@ public class SeleniumHandler {
         return browserChromeHeight;
     }
 
+    /**
+     * Gets all browser console logs as a list of strings.
+     * This captures console.log(), console.warn(), console.error(), etc. from JavaScript.
+     * <p>
+     * Note: This only works with Chrome/Chromium browsers and requires logging capabilities
+     * to be enabled in ChromeOptions.
+     *
+     * @return List of log messages from the browser console
+     */
+    @Deprecated
+    public List<String> getBrowserConsoleLogs() {
+        try {
+            org.openqa.selenium.logging.LogEntries logEntries = driver.manage().logs().get(org.openqa.selenium.logging.LogType.BROWSER);
+            return logEntries.getAll().stream()
+                    .map(entry -> String.format("[%s] %s", entry.getLevel(), entry.getMessage()))
+                    .toList();
+        } catch (Exception e) {
+            logger.warn("Could not retrieve browser console logs: {}", e.getMessage());
+            return List.of();
+        }
+    }
+
     public boolean getCheckbox(String id) {
         WebElement element = findElement(By.id(id));
         return element.getAttribute("checked") != null;
@@ -347,6 +372,128 @@ public class SeleniumHandler {
         WebElement e = findElement(By.id(id));
         WebElement i = e.findElement(By.tagName("input"));
         return i.getAttribute("value");
+    }
+
+    /**
+     * Gets the currently displayed month and year from the calendar overlay.
+     *
+     * @param overlay the calendar overlay element
+     * @return LocalDate representing the first day of the displayed month, or null if unable to determine
+     */
+    @Deprecated
+    private LocalDate getCurrentDisplayedMonthYear(WebElement overlay) {
+        try {
+            // Get the month/year header text from the calendar
+            // Try multiple approaches to find the month calendar in the shadow DOM
+            String getHeaderScript =
+                    "var overlay = document.querySelector('vaadin-date-picker-overlay');" +
+                            "if (!overlay) { console.log('No overlay found'); return null; }" +
+                            "if (!overlay.shadowRoot) { console.log('No overlay shadowRoot'); return null; }" +
+                            "// Log what's in the overlay shadow root" +
+                            "console.log('Overlay shadow root children:', overlay.shadowRoot.children.length);" +
+                            "// Try to find vaadin-date-picker-overlay-content or similar wrapper" +
+                            "var content = overlay.shadowRoot.querySelector('vaadin-date-picker-overlay-content');" +
+                            "if (content) { console.log('Found overlay-content'); }" +
+                            "// Try to find vaadin-infinite-scroller" +
+                            "var scroller = overlay.shadowRoot.querySelector('vaadin-infinite-scroller');" +
+                            "if (scroller) { console.log('Found infinite-scroller'); }" +
+                            "// Try to find vaadin-date-picker-year-scroller" +
+                            "var yearScroller = overlay.shadowRoot.querySelector('vaadin-date-picker-year-scroller');" +
+                            "if (yearScroller) { console.log('Found year-scroller'); }" +
+                            "// Try direct query for month calendar" +
+                            "var monthCalendars = overlay.shadowRoot.querySelectorAll('vaadin-month-calendar');" +
+                            "console.log('Found month calendars (direct):', monthCalendars.length);" +
+                            "if (monthCalendars.length > 0) {" +
+                            "  var mc = monthCalendars[0];" +
+                            "  if (mc.shadowRoot) {" +
+                            "    var header = mc.shadowRoot.querySelector('[part=\"month-header\"]');" +
+                            "    if (header && header.textContent) {" +
+                            "      console.log('Found header via direct query:', header.textContent);" +
+                            "      return header.textContent;" +
+                            "    }" +
+                            "  }" +
+                            "}" +
+                            "// Try via content slot" +
+                            "var slot = overlay.shadowRoot.querySelector('slot');" +
+                            "if (slot) {" +
+                            "  console.log('Found slot');" +
+                            "  var assigned = slot.assignedElements();" +
+                            "  console.log('Slot assigned elements:', assigned.length);" +
+                            "  for (var i = 0; i < assigned.length; i++) {" +
+                            "    if (assigned[i].tagName === 'VAADIN-MONTH-CALENDAR' && assigned[i].shadowRoot) {" +
+                            "      var header = assigned[i].shadowRoot.querySelector('[part=\"month-header\"]');" +
+                            "      if (header && header.textContent) {" +
+                            "        console.log('Found header via slot:', header.textContent);" +
+                            "        return header.textContent;" +
+                            "      }" +
+                            "    }" +
+                            "  }" +
+                            "}" +
+                            "// Try via overlay content div" +
+                            "var contentDiv = overlay.shadowRoot.querySelector('#content');" +
+                            "if (contentDiv) {" +
+                            "  console.log('Found content div');" +
+                            "  var slot2 = contentDiv.querySelector('slot');" +
+                            "  if (slot2) {" +
+                            "    var assigned2 = slot2.assignedElements();" +
+                            "    console.log('Content div slot assigned elements:', assigned2.length);" +
+                            "    for (var i = 0; i < assigned2.length; i++) {" +
+                            "      console.log('Assigned element:', assigned2[i].tagName);" +
+                            "      if (assigned2[i].tagName === 'VAADIN-MONTH-CALENDAR' && assigned2[i].shadowRoot) {" +
+                            "        var header = assigned2[i].shadowRoot.querySelector('[part=\"month-header\"]');" +
+                            "        if (header && header.textContent) {" +
+                            "          console.log('Found header via content div slot:', header.textContent);" +
+                            "          return header.textContent;" +
+                            "        }" +
+                            "      }" +
+                            "      // Check for scroller that might contain month calendar" +
+                            "      if (assigned2[i].tagName.includes('SCROLLER')) {" +
+                            "        var scrollerMC = assigned2[i].querySelector('vaadin-month-calendar');" +
+                            "        if (scrollerMC && scrollerMC.shadowRoot) {" +
+                            "          var header = scrollerMC.shadowRoot.querySelector('[part=\"month-header\"]');" +
+                            "          if (header && header.textContent) {" +
+                            "            console.log('Found header via scroller:', header.textContent);" +
+                            "            return header.textContent;" +
+                            "          }" +
+                            "        }" +
+                            "      }" +
+                            "    }" +
+                            "  }" +
+                            "}" +
+                            "console.log('Could not find month header');" +
+                            "return null;";
+
+            String headerText = (String) executeJavaScript(getHeaderScript);
+
+            if (headerText != null && !headerText.trim().isEmpty()) {
+                logger.debug("Found month header: {}", headerText);
+                // Parse the header text (e.g., "October 2025", "Oct 2025", "June 2025")
+                // Try different date formats
+                DateTimeFormatter[] formatters = {
+                        DateTimeFormatter.ofPattern("MMMM yyyy", java.util.Locale.ENGLISH),
+                        DateTimeFormatter.ofPattern("MMM yyyy", java.util.Locale.ENGLISH),
+                        DateTimeFormatter.ofPattern("MMMM, yyyy", java.util.Locale.ENGLISH),
+                        DateTimeFormatter.ofPattern("MMM, yyyy", java.util.Locale.ENGLISH)
+                };
+
+                for (DateTimeFormatter formatter : formatters) {
+                    try {
+                        // Parse to YearMonth, then convert to LocalDate (first of month)
+                        java.time.YearMonth yearMonth = java.time.YearMonth.parse(headerText.trim(), formatter);
+                        return yearMonth.atDay(1);
+                    } catch (Exception e) {
+                        // Try next formatter
+                    }
+                }
+
+                logger.warn("Could not parse month header: {}", headerText);
+            } else {
+                logger.warn("Month header text is null or empty");
+            }
+        } catch (Exception ex) {
+            logger.warn("Error getting current displayed month/year: {}", ex.getMessage(), ex);
+        }
+        return null;
     }
 
     public String getCurrentUrl() {
@@ -428,6 +575,15 @@ public class SeleniumHandler {
 
         options.addArguments("--remote-allow-origins=*");
         options.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
+
+        // Enable browser console logging to capture JavaScript console.log messages
+        // Use W3C-compliant logging preferences for modern Chrome/Selenium
+        options.setCapability("goog:loggingPrefs", Map.of(
+                "browser", "ALL",
+                "driver", "ALL",
+                "performance", "ALL"
+        ));
+
 
         // Set a higher script timeout to prevent connection issues
         driver = new ChromeDriver(options);
@@ -796,13 +952,14 @@ public class SeleniumHandler {
             // Perform smooth mouse movement with human-like characteristics
             humanLikeMouseMove(currentMouse.x, currentMouse.y, targetX, targetY);
 
-            logger.debug("Moved mouse to element {} at ({}, {})", element.getText(), targetX, targetY);
+            logger.debug("Moved mouse to element '{}' at ({}, {})", element.getText(), targetX, targetY);
 
         } catch (Exception e) {
             logger.warn("Failed to move mouse to element: {}", e.getMessage());
             // Continue with normal Selenium click even if mouse movement fails
         }
     }
+
 
     /**
      * Pops the last implicit wait duration from the stack and restores it.
@@ -821,6 +978,46 @@ public class SeleniumHandler {
     public void popWaitDuration() {
         if (!waitDurationStack.isEmpty()) {
             setWaitDuration(waitDurationStack.pop());
+        }
+    }
+
+    /**
+     * Prints all browser console logs (from Chrome DevTools) to the test output.
+     * This captures console.log(), console.warn(), console.error(), etc. from JavaScript.
+     * <p>
+     * Note: This only works with Chrome/Chromium browsers and requires logging capabilities
+     * to be enabled in ChromeOptions.
+     */
+    @Deprecated
+    public void printBrowserConsoleLogs() {
+        try {
+            logger.info("=== Attempting to retrieve browser console logs ===");
+
+            // Check if logs are available
+            java.util.Set<String> availableLogTypes = driver.manage().logs().getAvailableLogTypes();
+            logger.info("Available log types: {}", availableLogTypes);
+
+            if (!availableLogTypes.contains(org.openqa.selenium.logging.LogType.BROWSER)) {
+                logger.warn("Browser log type not available! Available types: {}", availableLogTypes);
+                return;
+            }
+
+            org.openqa.selenium.logging.LogEntries logEntries = driver.manage().logs().get(org.openqa.selenium.logging.LogType.BROWSER);
+            int                                    logCount   = 0;
+
+            for (org.openqa.selenium.logging.LogEntry entry : logEntries) {
+                logger.info("[Browser Console] {} - {}", entry.getLevel(), entry.getMessage());
+                logCount++;
+            }
+
+            if (logCount == 0) {
+                logger.info("No browser console logs found");
+            } else {
+                logger.info("=== Found {} browser console log entries ===", logCount);
+            }
+        } catch (Exception e) {
+            logger.warn("Could not retrieve browser console logs: {} - {}", e.getClass().getSimpleName(), e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -1165,45 +1362,121 @@ public class SeleniumHandler {
      * Sets a value to a date picker component.
      * <p>
      * This method provides a reliable way to set date values on Vaadin DatePicker
-     * components. It uses JavaScript to set the value directly in ISO date format
-     * and ensures the component properly registers the date change by triggering
-     * necessary events.
+     * components. In humanized mode, it opens the calendar and clicks on the date.
+     * In fast mode, it uses JavaScript to set the value directly.
      *
      * @param datePickerId the ID of the date picker component
      * @param date         the LocalDate value to set, can be null to clear the date
-     * @return true if the date was successfully set, false otherwise
      */
-    public boolean setDatePickerValue(String datePickerId, LocalDate date) {
+    public void setDatePickerValue(String datePickerId, LocalDate date) {
         // Wait for the date picker element to be present
         waitUntil(ExpectedConditions.presenceOfElementLocated(By.id(datePickerId)));
 
         if (date == null) {
-            // Clear the date picker
-            String clearScript =//
-                    "var datePicker = document.getElementById('" + datePickerId + "');" +//
-                            "if (datePicker) {" +//
-                            "  datePicker.value = '';" +//
-                            "  datePicker.dispatchEvent(new CustomEvent('change', { bubbles: true }));" +//
-                            "  return true;" +//
-                            "}" +//
-                            "return false;";//
+            // Clear the date picker (always use JavaScript for clearing)
+            setDatePickerValueByScript(datePickerId, null);
+        }
 
-            return Boolean.TRUE.equals(executeJavaScript(clearScript));
+        // If humanize is enabled, interact like a human by clicking through the calendar
+        if (humanize) {
+            try {
+                setDatePickerValueHumanized(datePickerId, date);
+            } catch (Exception ex) {
+                logger.warn("Error during humanized date picker selection: {}. Falling back to script method.", ex.getMessage());
+                setDatePickerValueByScript(datePickerId, date);
+            }
         } else {
-            // Format the date in ISO format (YYYY-MM-DD) as expected by the date picker
-            String dateStr = date.format(DateTimeFormatter.ISO_LOCAL_DATE);
+            // Fast mode: use JavaScript to set the value directly
+            setDatePickerValueByScript(datePickerId, date);
+        }
+    }
 
-            String dateScript =//
-                    "var datePicker = document.getElementById('" + datePickerId + "');" +//
-                            "if (datePicker) {" +//
-                            "  datePicker.value = '" + dateStr + "';" +//
-                            "  datePicker.dispatchEvent(new CustomEvent('change', { bubbles: true }));" +//
-                            "  return true;" +//
-                            "}" +//
+    /**
+     * Sets a date picker value by directly setting it via JavaScript.
+     * This is the fast method used when humanize mode is disabled.
+     *
+     * @param datePickerId the ID of the date picker component
+     * @param date         the LocalDate value to set, can be null to clear
+     */
+    private void setDatePickerValueByScript(String datePickerId, LocalDate date) {
+        if (date == null) {
+            String clearScript =
+                    "var datePicker = document.getElementById('" + datePickerId + "');" +
+                            "if (datePicker) {" +
+                            "  datePicker.value = '';" +
+                            "  datePicker.dispatchEvent(new CustomEvent('change', { bubbles: true }));" +
+                            "  return true;" +
+                            "}" +
+                            "return false;";
+//            Boolean.TRUE.equals(executeJavaScript(clearScript));
+        } else {
+            String dateStr = date.format(DateTimeFormatter.ISO_LOCAL_DATE);
+            String dateScript =
+                    "var datePicker = document.getElementById('" + datePickerId + "');" +
+                            "if (datePicker) {" +
+                            "  datePicker.value = '" + dateStr + "';" +
+                            "  datePicker.dispatchEvent(new CustomEvent('change', { bubbles: true }));" +
+                            "  return true;" +
+                            "}" +
                             "return false;";
             logger.info("set DatePicker value=" + dateStr);
-            return Boolean.TRUE.equals(executeJavaScript(dateScript));
+//            Boolean.TRUE.equals(executeJavaScript(dateScript));
         }
+    }
+
+    /**
+     * Sets a date picker value in a humanized way by clicking the toggle button,
+     * then moving to the input field and typing the date.
+     * This simulates how a human would interact with a date picker.
+     *
+     * @param datePickerId the ID of the date picker component
+     * @param date         the LocalDate value to set
+     */
+    private void setDatePickerValueHumanized(String datePickerId, LocalDate date) {
+        // Find the date picker element
+        WebElement datePickerElement = findElement(By.id(datePickerId));
+        // Find the toggle button in the shadow DOM to give visual feedback
+        WebElement toggleButton = expandRootElementAndFindElement(datePickerElement, "[part='toggle-button']");
+
+        if (toggleButton != null) {
+            // Click the toggle button to show the calendar (gives visual feedback)
+            moveMouseToElement(toggleButton);
+            wait(100);
+            toggleButton.click();
+            logger.debug("Clicked date picker toggle button");
+            wait(300); // Wait for calendar to appear
+        }
+
+        // Find the input field - it's NOT in shadow DOM, it's a direct child with slot='input'
+        // The actual input has an id like "search-input-vaadin-date-picker-20"
+        WebElement inputField = datePickerElement.findElement(By.cssSelector("input[slot='input']"));
+
+        logger.debug("Found input field, typing date");
+
+        moveMouseToElement(inputField);
+        wait(100);
+        inputField.click();// Click the input field to focus it
+        wait(100);
+        inputField.clear();// Clear any existing value
+        wait(100);
+
+        // Format the date in US format (M/d/yyyy)
+        // Note: This matches the browser's default US locale
+        String dateStr = date.format(DateTimeFormatter.ofPattern("M/d/yyyy"));
+        logger.info("Typing date into date picker: {} (formatted as US: {})", date, dateStr);
+
+        typeText(inputField, dateStr);
+
+        wait(200);
+        inputField.sendKeys(Keys.ENTER);// Press Enter to confirm the date and close the calendar
+        logger.debug("Pressed Enter to confirm date");
+
+        // Wait for the calendar overlay to close
+        wait(200);
+        WebElement overlay = expandRootElementAndFindElement(datePickerElement, "vaadin-date-picker-overlay");
+        waitUntil(ExpectedConditions.invisibilityOfAllElements(overlay));
+        logger.debug("Date picker overlay closed successfully");
+        logger.debug("Successfully set date: {}", date);
     }
 
     /**
