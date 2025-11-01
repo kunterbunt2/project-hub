@@ -235,9 +235,9 @@ public final class MainLayout extends AppLayout implements AfterNavigationObserv
     }
 
     private Component createUserMenu() {
-        final String username = getUserName();
+        final String userEmail = getUserEmail();
 
-        var avatar = new Avatar(username);
+        var avatar = new Avatar(userEmail);
         avatar.addThemeVariants(AvatarVariant.LUMO_XSMALL);
         avatar.addClassNames(Margin.Right.SMALL);
         avatar.setColorIndex(5);
@@ -248,16 +248,16 @@ public final class MainLayout extends AppLayout implements AfterNavigationObserv
         userMenu.setId(ID_USER_MENU);
 
         var userMenuItem = userMenu.addItem(avatar);
-        userMenuItem.add(username);
+        userMenuItem.add(userEmail);
         userMenuItem.setId(ID_USER_MENU_ITEM);
 
-        var availabilityItem = userMenuItem.getSubMenu().addItem("Manage Availability", e -> navigateToAvailability(username));
+        var availabilityItem = userMenuItem.getSubMenu().addItem("Manage Availability", e -> navigateToAvailability(userEmail));
         availabilityItem.setId(ID_USER_MENU_AVAILABILITY);
 
-        var locationItem = userMenuItem.getSubMenu().addItem("Manage Location", e -> navigateToLocation(username));
+        var locationItem = userMenuItem.getSubMenu().addItem("Manage Location", e -> navigateToLocation(userEmail));
         locationItem.setId(ID_USER_MENU_LOCATION);
 
-        var offDaysItem = userMenuItem.getSubMenu().addItem("Manage Off Days", e -> navigateToOffDays(username));
+        var offDaysItem = userMenuItem.getSubMenu().addItem("Manage Off Days", e -> navigateToOffDays(userEmail));
         offDaysItem.setId(ID_USER_MENU_OFF_DAYS);
 
         var viewProfileItem = userMenuItem.getSubMenu().addItem("View Profile");
@@ -274,18 +274,18 @@ public final class MainLayout extends AppLayout implements AfterNavigationObserv
         return userMenu;
     }
 
-    private String getUserName() {
+    private String getUserEmail() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String         userName       = authentication != null ? authentication.getName() : "Guest";
+        String         userEmail      = authentication != null ? authentication.getName() : "Guest";
 
         // If using OIDC, try to get the email address from authentication details
         if (authentication != null && authentication.getPrincipal() instanceof org.springframework.security.oauth2.core.oidc.user.OidcUser oidcUser) {
             String email = oidcUser.getEmail();
             if (email != null && !email.isEmpty()) {
-                userName = email;
+                userEmail = email;
             }
         }
-        return userName;
+        return userEmail;
     }
 
     private void logout() {
@@ -294,16 +294,16 @@ public final class MainLayout extends AppLayout implements AfterNavigationObserv
         getUI().ifPresent(ui -> ui.getPage().setLocation("/ui/login"));
     }
 
-    private void navigateToAvailability(String username) {
-        getUI().ifPresent(ui -> ui.navigate("availability/" + username));
+    private void navigateToAvailability(String userEmail) {
+        getUI().ifPresent(ui -> ui.navigate("availability/" + userEmail));
     }
 
-    private void navigateToLocation(String username) {
-        getUI().ifPresent(ui -> ui.navigate("location/" + username));
+    private void navigateToLocation(String userEmail) {
+        getUI().ifPresent(ui -> ui.navigate("location/" + userEmail));
     }
 
-    private void navigateToOffDays(String username) {
-        getUI().ifPresent(ui -> ui.navigate("offday/" + username));
+    private void navigateToOffDays(String userEmail) {
+        getUI().ifPresent(ui -> ui.navigate("offday/" + userEmail));
     }
 
     /**

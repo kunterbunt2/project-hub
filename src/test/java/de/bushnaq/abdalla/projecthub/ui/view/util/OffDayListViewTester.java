@@ -20,7 +20,7 @@ package de.bushnaq.abdalla.projecthub.ui.view.util;
 import de.bushnaq.abdalla.projecthub.dto.OffDayType;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.OffDayDialog;
-import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.LoginView;
 import de.bushnaq.abdalla.projecthub.ui.view.OffDayListView;
 import de.bushnaq.abdalla.projecthub.ui.view.ProductListView;
@@ -41,15 +41,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * <p>
  * This class provides methods to test off day-related operations in the UI such as
  * creating, editing, deleting off day records and navigating between views. It uses
- * {@link SeleniumHandler} to interact with UI elements and validate results.
+ * {@link HumanizedSeleniumHandler} to interact with UI elements and validate results.
  */
 @Component
 @Lazy
 public class OffDayListViewTester {
 
-    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private final int               port;
-    private final SeleniumHandler   seleniumHandler;
+    private final DateTimeFormatter        dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private final int                      port;
+    private final HumanizedSeleniumHandler seleniumHandler;
 
     /**
      * Constructs a new OffDayListViewTester with the given Selenium handler and server port.
@@ -57,7 +57,7 @@ public class OffDayListViewTester {
      * @param seleniumHandler the handler for Selenium operations
      * @param port            the port on which the application server is running
      */
-    public OffDayListViewTester(SeleniumHandler seleniumHandler, @Value("${local.server.port:8080}") int port) {
+    public OffDayListViewTester(HumanizedSeleniumHandler seleniumHandler, @Value("${local.server.port:8080}") int port) {
         this.seleniumHandler = seleniumHandler;
         this.port            = port;
     }

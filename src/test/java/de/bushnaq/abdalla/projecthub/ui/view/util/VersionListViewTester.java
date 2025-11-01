@@ -19,7 +19,7 @@ package de.bushnaq.abdalla.projecthub.ui.view.util;
 
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.VersionDialog;
-import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.FeatureListView;
 import de.bushnaq.abdalla.projecthub.ui.view.VersionListView;
 import org.springframework.stereotype.Component;
@@ -33,20 +33,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>
  * This class provides methods to test version-related operations in the UI such as
  * creating, editing, deleting versions and navigating between views. It uses
- * {@link SeleniumHandler} to interact with UI elements and validate results.
+ * {@link HumanizedSeleniumHandler} to interact with UI elements and validate results.
  * <p>
  * Versions represent a specific release of a product and contain multiple features.
  */
 @Component
 public class VersionListViewTester {
-    private final SeleniumHandler seleniumHandler;
+    private final HumanizedSeleniumHandler seleniumHandler;
 
     /**
      * Constructs a new VersionViewTester with the given Selenium handler.
      *
      * @param seleniumHandler the handler for Selenium operations
      */
-    public VersionListViewTester(SeleniumHandler seleniumHandler) {
+    public VersionListViewTester(HumanizedSeleniumHandler seleniumHandler) {
         this.seleniumHandler = seleniumHandler;
     }
 

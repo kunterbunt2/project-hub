@@ -19,11 +19,9 @@ package de.bushnaq.abdalla.projecthub.ai.indextts;
 
 import de.bushnaq.abdalla.projecthub.ai.narrator.Narrator;
 import de.bushnaq.abdalla.projecthub.ai.narrator.NarratorAttribute;
-import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import org.junit.jupiter.api.Test;
 
 public class TestIndexTTS {
-    SeleniumHandler seleniumHandler = new SeleniumHandler();
 
     @Test
     public void compareWithChatterbox() throws Exception {

@@ -17,7 +17,7 @@
 
 package de.bushnaq.abdalla.projecthub.ui.view.util;
 
-import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.TaskListView;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
  * <p>
  * This class provides methods to test task-related operations in the UI such as
  * creating, editing, deleting tasks and navigating between views. It uses
- * {@link SeleniumHandler} to interact with UI elements and validate results.
+ * {@link HumanizedSeleniumHandler} to interact with UI elements and validate results.
  * <p>
  * Tasks represent work items within a sprint. In the hierarchy: Products contain Versions,
  * Versions contain Features, Features contain Sprints, and Sprints contain Tasks.
@@ -35,14 +35,14 @@ import org.springframework.stereotype.Component;
 @Component
 @Lazy
 public class TaskListViewTester {
-    private final SeleniumHandler seleniumHandler;
+    private final HumanizedSeleniumHandler seleniumHandler;
 
     /**
      * Constructs a new TaskListViewTester with the given Selenium handler.
      *
      * @param seleniumHandler the handler for Selenium operations
      */
-    public TaskListViewTester(SeleniumHandler seleniumHandler) {
+    public TaskListViewTester(HumanizedSeleniumHandler seleniumHandler) {
         this.seleniumHandler = seleniumHandler;
     }
 

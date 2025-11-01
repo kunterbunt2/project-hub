@@ -19,7 +19,7 @@ package de.bushnaq.abdalla.projecthub.ui.view.util;
 
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.UserDialog;
-import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.LoginView;
 import de.bushnaq.abdalla.projecthub.ui.view.ProductListView;
 import de.bushnaq.abdalla.projecthub.ui.view.UserListView;
@@ -37,13 +37,13 @@ import java.time.LocalDate;
  * <p>
  * This class provides methods to test user-related operations in the UI such as
  * creating, editing, deleting users and navigating between views. It uses
- * {@link SeleniumHandler} to interact with UI elements and validate results.
+ * {@link HumanizedSeleniumHandler} to interact with UI elements and validate results.
  */
 @Component
 @Lazy
 public class UserListViewTester {
-    private final int             port;
-    private final SeleniumHandler seleniumHandler;
+    private final int                      port;
+    private final HumanizedSeleniumHandler seleniumHandler;
 
     /**
      * Constructs a new UserViewTester with the given Selenium handler and server port.
@@ -51,7 +51,7 @@ public class UserListViewTester {
      * @param seleniumHandler the handler for Selenium operations
      * @param port            the port on which the application server is running
      */
-    public UserListViewTester(SeleniumHandler seleniumHandler, @Value("${local.server.port:8080}") int port) {
+    public UserListViewTester(HumanizedSeleniumHandler seleniumHandler, @Value("${local.server.port:8080}") int port) {
         this.seleniumHandler = seleniumHandler;
         this.port            = port;
     }

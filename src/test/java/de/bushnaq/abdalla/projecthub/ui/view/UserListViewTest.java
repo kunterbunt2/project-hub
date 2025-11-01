@@ -18,7 +18,7 @@
 package de.bushnaq.abdalla.projecthub.ui.view;
 
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
-import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.util.UserListViewTester;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,20 +51,20 @@ import java.time.LocalDate;
 @AutoConfigureMockMvc
 @Transactional
 public class UserListViewTest extends AbstractUiTestUtil {
-    private final String             color              = "#ff0000"; // Red
-    private final String             email              = "user.test@example.com";
-    private final LocalDate          firstWorkingDay    = LocalDate.of(2025, 1, 15);
-    private final LocalDate          lastWorkingDay     = LocalDate.of(2026, 12, 31);
-    private final String             name               = "User-Test";
-    private final String             newColor           = "#0000ff"; // Blue
-    private final String             newEmail           = "newuser.test@example.com";
-    private final LocalDate          newFirstWorkingDay = LocalDate.of(2025, 2, 1);
-    private final LocalDate          newLastWorkingDay  = LocalDate.of(2027, 6, 30);
-    private final String             newName            = "NewUser-Test";
+    private final String                   color              = "#ff0000"; // Red
+    private final String                   email              = "user.test@example.com";
+    private final LocalDate                firstWorkingDay    = LocalDate.of(2025, 1, 15);
+    private final LocalDate                lastWorkingDay     = LocalDate.of(2026, 12, 31);
+    private final String                   name               = "User-Test";
+    private final String                   newColor           = "#0000ff"; // Blue
+    private final String                   newEmail           = "newuser.test@example.com";
+    private final LocalDate                newFirstWorkingDay = LocalDate.of(2025, 2, 1);
+    private final LocalDate                newLastWorkingDay  = LocalDate.of(2027, 6, 30);
+    private final String                   newName            = "NewUser-Test";
     @Autowired
-    private       SeleniumHandler    seleniumHandler;
+    private       HumanizedSeleniumHandler seleniumHandler;
     @Autowired
-    private       UserListViewTester userListViewTester;
+    private       UserListViewTester       userListViewTester;
 
     @BeforeEach
     public void setupTest(TestInfo testInfo) {

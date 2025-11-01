@@ -20,7 +20,6 @@ package de.bushnaq.abdalla.projecthub.ui.view.util;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.ProductDialog;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
-import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.LoginView;
 import de.bushnaq.abdalla.projecthub.ui.view.ProductListView;
 import de.bushnaq.abdalla.projecthub.ui.view.VersionListView;
@@ -41,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>
  * This class provides methods to test product-related operations in the UI such as
  * creating, editing, deleting products and navigating between views. It uses
- * {@link SeleniumHandler} to interact with UI elements and validate results.
+ * {@link HumanizedSeleniumHandler} to interact with UI elements and validate results.
  */
 @Component
 @Lazy

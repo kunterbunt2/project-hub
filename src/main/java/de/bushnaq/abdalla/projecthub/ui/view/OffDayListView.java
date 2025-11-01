@@ -50,7 +50,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Route(value = "offday/:username?", layout = MainLayout.class)
+@Route(value = "offday/:user-email?", layout = MainLayout.class)
 @PageTitle("User Off Days")
 @PermitAll
 public class OffDayListView extends AbstractMainGrid<OffDay> implements BeforeEnterObserver, AfterNavigationObserver {
@@ -99,15 +99,15 @@ public class OffDayListView extends AbstractMainGrid<OffDay> implements BeforeEn
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         // Get userEmail from URL parameter or use the currently authenticated user
-        String userEmailParam = event.getRouteParameters().get("username").orElse(null);
+        String userEmailParam = event.getRouteParameters().get("user-email").orElse(null);
 
-        Authentication authentication  = SecurityContextHolder.getContext().getAuthentication();
-        String         currentUsername = authentication != null ? authentication.getName() : null;
+        Authentication authentication   = SecurityContextHolder.getContext().getAuthentication();
+        String         currentUserEmail = authentication != null ? authentication.getName() : null;
 
         // If no userEmail is provided, use the current authenticated user
         // Store in a final variable to use in lambda
-        final String userEmail = (userEmailParam == null && currentUsername != null) ?
-                currentUsername : userEmailParam;
+        final String userEmail = (userEmailParam == null && currentUserEmail != null) ?
+                currentUserEmail : userEmailParam;
 
         if (userEmail != null) {
             try {

@@ -54,7 +54,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
-@Route(value = "location/:username?", layout = MainLayout.class)
+@Route(value = "location/:user-email?", layout = MainLayout.class)
 @PageTitle("User Location")
 @PermitAll
 public class LocationListView extends AbstractMainGrid<Location> implements BeforeEnterObserver, AfterNavigationObserver {
@@ -102,13 +102,13 @@ public class LocationListView extends AbstractMainGrid<Location> implements Befo
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         // Get username from URL parameter or use the currently authenticated user
-        String userEmailParam = event.getRouteParameters().get("username").orElse(null);
+        String userEmailParam = event.getRouteParameters().get("user-email").orElse(null);
 
-        Authentication authentication  = SecurityContextHolder.getContext().getAuthentication();
-        String         currentUsername = authentication != null ? authentication.getName() : null;
+        Authentication authentication   = SecurityContextHolder.getContext().getAuthentication();
+        String         currentUserEmail = authentication != null ? authentication.getName() : null;
 
         // If no username is provided, use the current authenticated user
-        final String userEmail = (userEmailParam == null && currentUsername != null) ? currentUsername : userEmailParam;
+        final String userEmail = (userEmailParam == null && currentUserEmail != null) ? currentUserEmail : userEmailParam;
 
         if (userEmail != null) {
             try {

@@ -18,7 +18,7 @@
 package de.bushnaq.abdalla.projecthub.ui;
 
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
-import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.util.ProductListViewTester;
 import de.bushnaq.abdalla.projecthub.util.RandomCase;
 import de.bushnaq.abdalla.projecthub.util.TestInfoUtil;
@@ -51,11 +51,11 @@ import java.util.List;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @Disabled
 public class Demo extends AbstractUiTestUtil {
-    private static final Logger                logger = LoggerFactory.getLogger(Demo.class);
+    private static final Logger                   logger = LoggerFactory.getLogger(Demo.class);
     @Autowired
-    private              ProductListViewTester productListViewTester;
+    private              ProductListViewTester    productListViewTester;
     @Autowired
-    private              SeleniumHandler       seleniumHandler;
+    private              HumanizedSeleniumHandler seleniumHandler;
 
     @AfterAll
     static void cleanupOllama() {
@@ -139,6 +139,7 @@ public class Demo extends AbstractUiTestUtil {
     @MethodSource("listRandomCases")
     @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void testShowProducts(RandomCase randomCase, TestInfo testInfo) throws Exception {
+        HumanizedSeleniumHandler.setHumanize(false);
         TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());

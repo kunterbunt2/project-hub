@@ -19,7 +19,7 @@ package de.bushnaq.abdalla.projecthub.ui.view;
 
 import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
-import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.util.*;
 import de.bushnaq.abdalla.projecthub.util.RandomCase;
 import de.bushnaq.abdalla.projecthub.util.TestInfoUtil;
@@ -56,23 +56,23 @@ import java.util.List;
 @Disabled
 public class TaskListViewTest extends AbstractUiTestUtil {
     @Autowired
-    private       FeatureListViewTester featureListViewTester;
-    private final String                featureName = nameGenerator.generateFeatureName(0);
+    private       FeatureListViewTester    featureListViewTester;
+    private final String                   featureName = nameGenerator.generateFeatureName(0);
     //    private final String                newTaskName = "NewTask-3";
     @Autowired
-    private       ProductListViewTester productListViewTester;
-    private final String                productName = nameGenerator.generateProductName(0);
+    private       ProductListViewTester    productListViewTester;
+    private final String                   productName = nameGenerator.generateProductName(0);
     @Autowired
-    private       SeleniumHandler       seleniumHandler;
+    private       HumanizedSeleniumHandler seleniumHandler;
     @Autowired
-    private       SprintListViewTester  sprintListViewTester;
-    private final String                sprintName  = nameGenerator.generateSprintName(0);
+    private       SprintListViewTester     sprintListViewTester;
+    private final String                   sprintName  = nameGenerator.generateSprintName(0);
     @Autowired
-    private       TaskListViewTester    taskListViewTester;
-    private final String                taskName0   = nameGenerator.generateSprintName(0);
+    private       TaskListViewTester       taskListViewTester;
+    private final String                   taskName0   = nameGenerator.generateSprintName(0);
     @Autowired
-    private       VersionListViewTester versionListViewTester;
-    private final String                versionName = nameGenerator.generateVersionName(0);
+    private       VersionListViewTester    versionListViewTester;
+    private final String                   versionName = nameGenerator.generateVersionName(0);
 
     private static List<RandomCase> listRandomCases() {
         RandomCase[] randomCases = new RandomCase[]{//

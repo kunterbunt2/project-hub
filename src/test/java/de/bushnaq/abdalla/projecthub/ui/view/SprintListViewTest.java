@@ -18,7 +18,7 @@
 package de.bushnaq.abdalla.projecthub.ui.view;
 
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
-import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.util.FeatureListViewTester;
 import de.bushnaq.abdalla.projecthub.ui.view.util.ProductListViewTester;
 import de.bushnaq.abdalla.projecthub.ui.view.util.SprintListViewTester;
@@ -47,20 +47,20 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class SprintListViewTest extends AbstractUiTestUtil {
     @Autowired
-    private       FeatureListViewTester featureListViewTester;
-    private final String                newSprintName = "NewSprint-3";
+    private       FeatureListViewTester    featureListViewTester;
+    private final String                   newSprintName = "NewSprint-3";
     @Autowired
-    private       ProductListViewTester productListViewTester;
-    private final String                productName   = "Feature-3";
-    private final String                projectName   = "Feature-3";
+    private       ProductListViewTester    productListViewTester;
+    private final String                   productName   = "Feature-3";
+    private final String                   projectName   = "Feature-3";
     @Autowired
-    private       SeleniumHandler       seleniumHandler;
+    private       HumanizedSeleniumHandler seleniumHandler;
     @Autowired
-    private       SprintListViewTester  sprintListViewTester;
-    private final String                sprintName    = "Sprint-3";
+    private       SprintListViewTester     sprintListViewTester;
+    private final String                   sprintName    = "Sprint-3";
     @Autowired
-    private       VersionListViewTester versionListViewTester;
-    private final String                versionName   = "Version-3";
+    private       VersionListViewTester    versionListViewTester;
+    private final String                   versionName   = "Version-3";
 
     /**
      * Setup method that runs before each test.

@@ -19,12 +19,10 @@ package de.bushnaq.abdalla.projecthub.ai.chatterbox;
 
 import de.bushnaq.abdalla.projecthub.ai.narrator.Narrator;
 import de.bushnaq.abdalla.projecthub.ai.narrator.NarratorAttribute;
-import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
 import org.junit.jupiter.api.Test;
 
 public class TestChatterboxTTS {
-    Narrator        narrator        = Narrator.withChatterboxTTS("tts/TestChatterboxTTS");
-    SeleniumHandler seleniumHandler = new SeleniumHandler();
+    Narrator narrator = Narrator.withChatterboxTTS("tts/TestChatterboxTTS");
 
     @Test
     public void listLanguages() throws Exception {
@@ -37,9 +35,7 @@ public class TestChatterboxTTS {
     @Test
     public void testSpeech_01() throws Exception {
 
-//        seleniumHandler.startRecording("test", "test1");
         narrator.narrate("Welcome to the Kassandra demonstration. My name is Abby, and I will be your guide today.");
-//        seleniumHandler.destroy();
     }
 
     @Test

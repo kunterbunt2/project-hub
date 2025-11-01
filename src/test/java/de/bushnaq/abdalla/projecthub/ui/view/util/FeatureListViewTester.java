@@ -19,7 +19,7 @@ package de.bushnaq.abdalla.projecthub.ui.view.util;
 
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.FeatureDialog;
-import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.FeatureListView;
 import de.bushnaq.abdalla.projecthub.ui.view.SprintListView;
 import org.springframework.stereotype.Component;
@@ -33,21 +33,21 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>
  * This class provides methods to test feature-related operations in the UI such as
  * creating, editing, deleting features and navigating between views. It uses
- * {@link SeleniumHandler} to interact with UI elements and validate results.
+ * {@link HumanizedSeleniumHandler} to interact with UI elements and validate results.
  * <p>
  * Features are organizational units within versions and contain sprints.
  * In the hierarchy: Products contain Versions, Versions contain Features, and Features contain Sprints.
  */
 @Component
 public class FeatureListViewTester {
-    private final SeleniumHandler seleniumHandler;
+    private final HumanizedSeleniumHandler seleniumHandler;
 
     /**
      * Constructs a new FeatureViewTester with the given Selenium handler.
      *
      * @param seleniumHandler the handler for Selenium operations
      */
-    public FeatureListViewTester(SeleniumHandler seleniumHandler) {
+    public FeatureListViewTester(HumanizedSeleniumHandler seleniumHandler) {
         this.seleniumHandler = seleniumHandler;
     }
 

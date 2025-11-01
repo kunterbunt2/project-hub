@@ -18,7 +18,7 @@
 package de.bushnaq.abdalla.projecthub.ui.view;
 
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
-import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.util.ProductListViewTester;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,12 +42,12 @@ import org.springframework.transaction.annotation.Transactional;
 @AutoConfigureMockMvc
 @Transactional
 public class ProductListViewTest extends AbstractUiTestUtil {
-    private final String                name    = "Product-2";
-    private final String                newName = "NewProduct-2";
+    private final String                   name    = "Product-2";
+    private final String                   newName = "NewProduct-2";
     @Autowired
-    private       ProductListViewTester productListViewTester;
+    private       ProductListViewTester    productListViewTester;
     @Autowired
-    private       SeleniumHandler       seleniumHandler;
+    private       HumanizedSeleniumHandler seleniumHandler;
 
     @BeforeEach
     public void setupTest(TestInfo testInfo) {

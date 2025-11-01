@@ -19,7 +19,7 @@ package de.bushnaq.abdalla.projecthub.ui.view.util;
 
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.SprintDialog;
-import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.SprintListView;
 import de.bushnaq.abdalla.projecthub.ui.view.SprintQualityBoard;
 import org.springframework.stereotype.Component;
@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>
  * This class provides methods to test sprint-related operations in the UI such as
  * creating, editing, deleting sprints and navigating between views. It uses
- * {@link SeleniumHandler} to interact with UI elements and validate results.
+ * {@link HumanizedSeleniumHandler} to interact with UI elements and validate results.
  * <p>
  * Sprints represent time-boxed work periods within a feature and contain tasks.
  * In the hierarchy: Products contain Versions, Versions contain Features, Features contain Sprints,
@@ -41,14 +41,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @Component
 public class SprintListViewTester {
-    private final SeleniumHandler seleniumHandler;
+    private final HumanizedSeleniumHandler seleniumHandler;
 
     /**
      * Constructs a new SprintViewTester with the given Selenium handler.
      *
      * @param seleniumHandler the handler for Selenium operations
      */
-    public SprintListViewTester(SeleniumHandler seleniumHandler) {
+    public SprintListViewTester(HumanizedSeleniumHandler seleniumHandler) {
         this.seleniumHandler = seleniumHandler;
     }
 

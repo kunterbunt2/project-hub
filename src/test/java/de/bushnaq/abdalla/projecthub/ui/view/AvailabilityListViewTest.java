@@ -18,7 +18,7 @@
 package de.bushnaq.abdalla.projecthub.ui.view;
 
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
-import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.util.AvailabilityListViewTester;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -71,7 +71,7 @@ public class AvailabilityListViewTest extends AbstractUiTestUtil {
     // Test data for the second availability record (for create operations)
     private final LocalDate                  secondStartDate        = LocalDate.of(2025, 7, 1);
     @Autowired
-    private       SeleniumHandler            seleniumHandler;
+    private       HumanizedSeleniumHandler   seleniumHandler;
     // Test data for the first new availability record
     private final LocalDate                  startDate              = LocalDate.of(2025, 6, 1);
     private final String                     testUsername           = "availability-test-user";

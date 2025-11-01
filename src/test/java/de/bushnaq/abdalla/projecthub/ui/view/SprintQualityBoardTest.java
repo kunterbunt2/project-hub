@@ -21,7 +21,7 @@ import de.bushnaq.abdalla.projecthub.ParameterOptions;
 import de.bushnaq.abdalla.projecthub.dto.*;
 import de.bushnaq.abdalla.projecthub.rest.debug.DebugUtil;
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
-import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.util.FeatureListViewTester;
 import de.bushnaq.abdalla.projecthub.ui.view.util.ProductListViewTester;
 import de.bushnaq.abdalla.projecthub.ui.view.util.SprintListViewTester;
@@ -52,15 +52,15 @@ import java.util.List;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class SprintQualityBoardTest extends AbstractUiTestUtil {
     @Autowired
-    private FeatureListViewTester featureListViewTester;
+    private FeatureListViewTester    featureListViewTester;
     @Autowired
-    private ProductListViewTester productListViewTester;
+    private ProductListViewTester    productListViewTester;
     @Autowired
-    private SeleniumHandler       seleniumHandler;
+    private HumanizedSeleniumHandler seleniumHandler;
     @Autowired
-    private SprintListViewTester  sprintListViewTester;
+    private SprintListViewTester     sprintListViewTester;
     @Autowired
-    private VersionListViewTester versionListViewTester;
+    private VersionListViewTester    versionListViewTester;
 
     private static String generateFeatureName(int t) {
         return String.format("Feature-%d", t);

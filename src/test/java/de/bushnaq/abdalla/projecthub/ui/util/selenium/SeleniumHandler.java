@@ -48,16 +48,14 @@ import java.util.Stack;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * handles vaadin ui tests using selenium
+ * handles vaadin ui tests using selenium, please always use HumanizedSeleniumHandler
  */
 @Component
 @Getter
-public class SeleniumHandler {
+class SeleniumHandler {
     private static final int             DEFAULT_BROWSER_CHROME_HEIGHT = 130; // Typical Chrome window chrome height in pixels
     private              Integer         browserChromeHeight           = null; // Cached browser chrome height
     private              WebDriver       driver;
-    // Humanize typing configuration
-//    private              boolean         humanize                      = false;
     private final        Duration        implicitWaitDuration;
     private final        Stack<Duration> implicitWaitStack             = new Stack<>();
     protected final      Logger          logger                        = LoggerFactory.getLogger(this.getClass());
@@ -592,11 +590,10 @@ public class SeleniumHandler {
     }
 
     public void loginSubmit() {
-        // Find the login button using a more specific XPath selector that matches the attributes
-//        WebElement button = findElement(By.xpath("//vaadin-button[@slot='submit' and contains(@theme, 'submit')]"));
-        WebElement button = findElement(By.id(LoginView.LOGIN_VIEW_SUBMIT_BUTTON));
-        moveMouseToElement(button);
-        button.click();
+//        WebElement button = findElement(By.id(LoginView.LOGIN_VIEW_SUBMIT_BUTTON));
+//        moveMouseToElement(button);
+//        button.click();
+        click(LoginView.LOGIN_VIEW_SUBMIT_BUTTON);
         logger.info("Clicked login submit button");
         waitForPageLoaded();
     }

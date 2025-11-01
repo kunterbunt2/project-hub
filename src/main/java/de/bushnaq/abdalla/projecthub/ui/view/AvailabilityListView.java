@@ -54,7 +54,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
-@Route(value = "availability/:username?", layout = MainLayout.class)
+@Route(value = "availability/:user-email?", layout = MainLayout.class)
 @PageTitle("User Availability")
 @PermitAll
 public class AvailabilityListView extends AbstractMainGrid<Availability> implements BeforeEnterObserver, AfterNavigationObserver {
@@ -101,7 +101,7 @@ public class AvailabilityListView extends AbstractMainGrid<Availability> impleme
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         // Get username from URL parameter or use the currently authenticated user
-        String userEmailParam = event.getRouteParameters().get("username").orElse(null);
+        String userEmailParam = event.getRouteParameters().get("user-email").orElse(null);
 
         Authentication authentication  = SecurityContextHolder.getContext().getAuthentication();
         String         currentUsername = authentication != null ? authentication.getName() : null;

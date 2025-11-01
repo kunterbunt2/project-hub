@@ -21,7 +21,7 @@ import dasniko.testcontainers.keycloak.KeycloakContainer;
 import de.bushnaq.abdalla.projecthub.dto.OffDayType;
 import de.bushnaq.abdalla.projecthub.ui.dialog.*;
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
-import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.*;
 import de.bushnaq.abdalla.projecthub.ui.view.util.*;
 import de.bushnaq.abdalla.projecthub.util.RandomCase;
@@ -97,7 +97,7 @@ public class GenerateScreenshots extends AbstractUiTestUtil {
     private              ProductListViewTester      productListViewTester;
     private              String                     productName;
     @Autowired
-    private              SeleniumHandler            seleniumHandler;
+    private              HumanizedSeleniumHandler   seleniumHandler;
     @Autowired
     private              SprintListViewTester       sprintListViewTester;
     private              String                     sprintName;

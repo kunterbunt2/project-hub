@@ -17,14 +17,14 @@
 
 package de.bushnaq.abdalla.projecthub.ui.util;
 
-import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
 import de.bushnaq.abdalla.projecthub.util.AbstractGanttTestUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class AbstractUiTestUtil extends AbstractGanttTestUtil {
     @Autowired
-    private SeleniumHandler seleniumHandler;
+    private HumanizedSeleniumHandler seleniumHandler;
 
     {
         System.setProperty("java.awt.headless", "false");

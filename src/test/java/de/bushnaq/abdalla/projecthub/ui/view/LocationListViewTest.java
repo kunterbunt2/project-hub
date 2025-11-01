@@ -18,7 +18,7 @@
 package de.bushnaq.abdalla.projecthub.ui.view;
 
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
-import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.util.LocationListViewTester;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,21 +55,21 @@ import java.time.LocalDate;
 @AutoConfigureMockMvc
 @Transactional
 public class LocationListViewTest extends AbstractUiTestUtil {
-    private final String                 country        = "United States (US)";  // United States
-    private final String                 initialCountry = "Germany (DE)";  // Germany
-    private final LocalDate              initialDate    = LocalDate.now();
-    private final String                 initialState   = "North Rhine-Westphalia (nw)";  // North Rhine-Westphalia
+    private final String                   country        = "United States (US)";  // United States
+    private final String                   initialCountry = "Germany (DE)";  // Germany
+    private final LocalDate                initialDate    = LocalDate.now();
+    private final String                   initialState   = "North Rhine-Westphalia (nw)";  // North Rhine-Westphalia
     @Autowired
-    private       LocationListViewTester locationListViewTester;
-    private final String                 newCountry     = "United Kingdom (GB)";  // United Kingdom
-    private final LocalDate              newStartDate   = LocalDate.of(2025, 8, 1);
-    private final String                 newState       = "England (eng)"; // England
+    private       LocationListViewTester   locationListViewTester;
+    private final String                   newCountry     = "United Kingdom (GB)";  // United Kingdom
+    private final LocalDate                newStartDate   = LocalDate.of(2025, 8, 1);
+    private final String                   newState       = "England (eng)"; // England
     @Autowired
-    private       SeleniumHandler        seleniumHandler;
+    private       HumanizedSeleniumHandler seleniumHandler;
     // Test data for the first new location record
-    private final LocalDate              startDate      = LocalDate.of(2025, 6, 1);
-    private final String                 state          = "California (ca)";  // California
-    private final String                 testUsername   = "location-test-user";
+    private final LocalDate                startDate      = LocalDate.of(2025, 6, 1);
+    private final String                   state          = "California (ca)";  // California
+    private final String                   testUsername   = "location-test-user";
 
     @BeforeEach
     public void setupTest(TestInfo testInfo) {

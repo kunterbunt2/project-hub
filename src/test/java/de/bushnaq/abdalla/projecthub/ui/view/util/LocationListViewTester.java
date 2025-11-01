@@ -19,7 +19,7 @@ package de.bushnaq.abdalla.projecthub.ui.view.util;
 
 import de.bushnaq.abdalla.projecthub.ui.dialog.ConfirmDialog;
 import de.bushnaq.abdalla.projecthub.ui.dialog.LocationDialog;
-import de.bushnaq.abdalla.projecthub.ui.util.selenium.SeleniumHandler;
+import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
 import de.bushnaq.abdalla.projecthub.ui.view.LocationListView;
 import de.bushnaq.abdalla.projecthub.ui.view.LoginView;
 import de.bushnaq.abdalla.projecthub.ui.view.ProductListView;
@@ -41,15 +41,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>
  * This class provides methods to test location-related operations in the UI such as
  * creating, editing, deleting location records and navigating between views. It uses
- * {@link SeleniumHandler} to interact with UI elements and validate results.
+ * {@link HumanizedSeleniumHandler} to interact with UI elements and validate results.
  */
 @Component
 @Lazy
 public class LocationListViewTester {
 
-    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private final int               port;
-    private final SeleniumHandler   seleniumHandler;
+    private final DateTimeFormatter        dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private final int                      port;
+    private final HumanizedSeleniumHandler seleniumHandler;
 
     /**
      * Constructs a new LocationViewTester with the given Selenium handler and server port.
@@ -57,7 +57,7 @@ public class LocationListViewTester {
      * @param seleniumHandler the handler for Selenium operations
      * @param port            the port on which the application server is running
      */
-    public LocationListViewTester(SeleniumHandler seleniumHandler, @Value("${local.server.port:8080}") int port) {
+    public LocationListViewTester(HumanizedSeleniumHandler seleniumHandler, @Value("${local.server.port:8080}") int port) {
         this.seleniumHandler = seleniumHandler;
         this.port            = port;
     }

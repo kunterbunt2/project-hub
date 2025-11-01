@@ -31,20 +31,27 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Selenium handler with human-like interactions for improved realism in UI testing and recordings.
+ * Never instanciate this class directly, always use dependency injection to get a singleton instance.
+ * Includes features like smooth mouse movements, element highlighting,
+ * humanized typing delays, and visual overlays.
+ *
+ * @author Abdalla Bushnaq
+ */
 @Component
 public class HumanizedSeleniumHandler extends SeleniumHandler {
     @Getter
     @Setter
-    private       boolean highlightEnabled       = false;
-    // Synchronization for highlight removal
-    private final Object  highlightLock          = new Object();
-    private       Thread  highlightRemovalThread = null;
+    private        boolean highlightEnabled       = false;
+    private final  Object  highlightLock          = new Object();// Synchronization for highlight removal
+    private        Thread  highlightRemovalThread = null;
     @Getter
     @Setter
-    private       boolean humanize               = true;
-    private final Random  random                 = new Random(); // For human-like randomness
-    private       Robot   robot                  = null; // Lazily initialized
-    private final int     typingDelayMillis      = 50;
+    private static boolean humanize               = true;
+    private final  Random  random                 = new Random(); // For human-like randomness
+    private        Robot   robot                  = null; // Lazily initialized
+    private final  int     typingDelayMillis      = 50;
 
     /**
      * Centers the mouse cursor on the browser window.
@@ -53,6 +60,9 @@ public class HumanizedSeleniumHandler extends SeleniumHandler {
      * Only works if mouse movement is enabled and not in headless mode.
      */
     protected void centerMouseOnBrowser() {
+        if (!isHumanize()) {
+            return;
+        }
         // Skip if we're in headless mode
         if (isSeleniumHeadless()) {
             return;
@@ -135,6 +145,9 @@ public class HumanizedSeleniumHandler extends SeleniumHandler {
      * @param ids            One or more element IDs to highlight
      */
     public void highlight(int durationMillis, String... ids) {
+        if (!isHumanize()) {
+            return;
+        }
         if (ids == null || ids.length == 0) {
             logger.warn("No element IDs provided to highlight");
             return;
@@ -179,6 +192,9 @@ public class HumanizedSeleniumHandler extends SeleniumHandler {
      * @param elements       One or more WebElements to highlight
      */
     public void highlight(int durationMillis, WebElement... elements) {
+        if (!isHumanize()) {
+            return;
+        }
         if (!highlightEnabled || elements == null || elements.length == 0) {
             logger.warn("No elements provided to highlight");
             return;
@@ -379,7 +395,7 @@ public class HumanizedSeleniumHandler extends SeleniumHandler {
      */
     protected void moveMouseToElement(WebElement element) {
         // Skip if humanize is disabled, or we're in headless mode
-        if (!humanize || isSeleniumHeadless()) {
+        if (!isHumanize() || isSeleniumHeadless()) {
             return;
         }
 
@@ -430,7 +446,7 @@ public class HumanizedSeleniumHandler extends SeleniumHandler {
      * @param text the text of the item to select
      */
     public void setComboBoxValue(String id, String text) {
-        if (humanize) {
+        if (!isHumanize()) {
             super.setComboBoxValue(id, text);
             return;
         }
@@ -548,6 +564,10 @@ public class HumanizedSeleniumHandler extends SeleniumHandler {
      * @param date         the LocalDate value to set
      */
     public void setDatePickerValue(String datePickerId, LocalDate date) {
+        if (!isHumanize()) {
+            super.setDatePickerValue(datePickerId, date);
+            return;
+        }
         // Find the date picker element
         WebElement datePickerElement = findElement(By.id(datePickerId));
         // Find the toggle button in the shadow DOM to give visual feedback
@@ -603,6 +623,9 @@ public class HumanizedSeleniumHandler extends SeleniumHandler {
      * @param subtitle Subtitle text (can be null or empty)
      */
     public void showOverlay(String title, String subtitle) {
+        if (!isHumanize()) {
+            return;
+        }
         try {
             // Wait for page to be fully loaded
             waitForPageLoaded();
@@ -674,6 +697,9 @@ public class HumanizedSeleniumHandler extends SeleniumHandler {
      * @param displaySeconds How long to display the overlay between fade-in and fade-out
      */
     public void showOverlayAndWait(String title, String subtitle, int displaySeconds) {
+        if (!isHumanize()) {
+            return;
+        }
         showOverlay(title, subtitle);
 
         // Wait for the specified display duration
@@ -696,6 +722,10 @@ public class HumanizedSeleniumHandler extends SeleniumHandler {
      */
     protected void typeText(WebElement inputElement, String text) {
         if (text == null || text.isEmpty()) return;
+        if (!isHumanize()) {
+            super.typeText(inputElement, text);
+            return;
+        }
 
         for (int idx = 0; idx < text.length(); idx++) {
             String ch = String.valueOf(text.charAt(idx));
