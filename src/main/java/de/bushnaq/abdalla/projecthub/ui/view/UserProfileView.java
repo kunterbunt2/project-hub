@@ -55,6 +55,7 @@ public class UserProfileView extends Main implements BeforeEnterObserver {
     public static final String                                        ROUTE               = "profile";
     public static final String                                        SAVE_PROFILE_BUTTON = "save-profile-button";
     public static final String                                        USER_COLOR_PICKER   = "user-color-picker";
+    public static final String                                        USER_EMAIL_FIELD    = "user-email-field";
     public static final String                                        USER_NAME_FIELD     = "user-name-field";
     private             ColorPicker                                   colorPicker;
     private             User                                          currentUser;
@@ -168,9 +169,11 @@ public class UserProfileView extends Main implements BeforeEnterObserver {
         nameField.setPrefixComponent(new Icon(VaadinIcon.USER));
 
         com.vaadin.flow.component.textfield.TextField emailField = new com.vaadin.flow.component.textfield.TextField("Email");
+        emailField.setId(USER_EMAIL_FIELD);
         emailField.setValue(currentUser.getEmail() != null ? currentUser.getEmail() : "");
         emailField.setReadOnly(true);
         emailField.setWidthFull();
+        emailField.setPrefixComponent(new Icon(VaadinIcon.ENVELOPE));
 
         // Color picker (editable)
         colorPicker = new ColorPicker();

@@ -69,7 +69,6 @@ public class UserListViewTest extends AbstractUiTestUtil {
     @BeforeEach
     public void setupTest(TestInfo testInfo) {
         userListViewTester.switchToUserListView(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
-//        seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
     }
 
     /**

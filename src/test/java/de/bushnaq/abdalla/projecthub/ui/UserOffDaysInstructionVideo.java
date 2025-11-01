@@ -115,6 +115,7 @@ public class UserOffDaysInstructionVideo extends AbstractUiTestUtil {
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         generateProductsIfNeeded(testInfo, randomCase);
         Narrator paul = Narrator.withChatterboxTTS("tts/" + testInfo.getTestClass().get().getSimpleName());
+        HumanizedSeleniumHandler.setHumanize(true);
         seleniumHandler.getAndCheck("http://localhost:" + "8080" + "/ui/" + LoginView.ROUTE);
         seleniumHandler.showOverlay("Kassandra User Off-Days", "Introduction Video");
         seleniumHandler.startRecording(testInfo.getTestClass().get().getSimpleName(), "User Off Days Introduction Video");

@@ -65,7 +65,7 @@ public final class MainLayout extends AppLayout implements AfterNavigationObserv
     public static final String           ID_THEME_TOGGLE              = "main-layout-theme-toggle";
     public static final String           ID_USER_MENU                 = "main-layout-user-menu";
     public static final String           ID_USER_MENU_AVAILABILITY    = "main-layout-user-menu-availability";
-    public static final String           ID_USER_MENU_ITEM            = "main-layout-user-menu-item";
+    //    public static final String           ID_USER_MENU_ITEM            = "main-layout-user-menu-item";
     public static final String           ID_USER_MENU_LOCATION        = "main-layout-user-menu-location";
     public static final String           ID_USER_MENU_LOGOUT          = "main-layout-user-menu-logout";
     public static final String           ID_USER_MENU_MANAGE_SETTINGS = "main-layout-user-menu-manage-settings";
@@ -249,7 +249,7 @@ public final class MainLayout extends AppLayout implements AfterNavigationObserv
 
         var userMenuItem = userMenu.addItem(avatar);
         userMenuItem.add(userEmail);
-        userMenuItem.setId(ID_USER_MENU_ITEM);
+//        userMenuItem.setId(ID_USER_MENU_ITEM);
 
         var availabilityItem = userMenuItem.getSubMenu().addItem("Manage Availability", e -> navigateToAvailability(userEmail));
         availabilityItem.setId(ID_USER_MENU_AVAILABILITY);

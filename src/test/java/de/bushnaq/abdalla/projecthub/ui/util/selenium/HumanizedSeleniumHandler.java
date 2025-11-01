@@ -48,7 +48,7 @@ public class HumanizedSeleniumHandler extends SeleniumHandler {
     private        Thread  highlightRemovalThread = null;
     @Getter
     @Setter
-    private static boolean humanize               = true;
+    private static boolean humanize               = false;
     private final  Random  random                 = new Random(); // For human-like randomness
     private        Robot   robot                  = null; // Lazily initialized
     private final  int     typingDelayMillis      = 50;

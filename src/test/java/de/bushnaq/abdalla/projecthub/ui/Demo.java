@@ -139,7 +139,6 @@ public class Demo extends AbstractUiTestUtil {
     @MethodSource("listRandomCases")
     @WithMockUser(username = "admin-user", roles = "ADMIN")
     public void testShowProducts(RandomCase randomCase, TestInfo testInfo) throws Exception {
-        HumanizedSeleniumHandler.setHumanize(false);
         TestInfoUtil.setTestMethod(testInfo, testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
         TestInfoUtil.setTestCaseIndex(testInfo, randomCase.getTestCaseIndex());
         setTestCaseName(this.getClass().getName(), testInfo.getTestMethod().get().getName() + "-" + randomCase.getTestCaseIndex());
