@@ -51,13 +51,15 @@ import java.util.List;
 @PageTitle("User Profile")
 @PermitAll
 public class UserProfileView extends Main implements BeforeEnterObserver {
-    public static final String      PROFILE_PAGE_TITLE  = "profile-page-title";
-    public static final String      ROUTE               = "profile";
-    public static final String      SAVE_PROFILE_BUTTON = "save-profile-button";
-    public static final String      USER_COLOR_PICKER   = "user-color-picker";
-    private             ColorPicker colorPicker;
-    private             User        currentUser;
-    private final       UserApi     userApi;
+    public static final String                                        PROFILE_PAGE_TITLE  = "profile-page-title";
+    public static final String                                        ROUTE               = "profile";
+    public static final String                                        SAVE_PROFILE_BUTTON = "save-profile-button";
+    public static final String                                        USER_COLOR_PICKER   = "user-color-picker";
+    public static final String                                        USER_NAME_FIELD     = "user-name-field";
+    private             ColorPicker                                   colorPicker;
+    private             User                                          currentUser;
+    private             com.vaadin.flow.component.textfield.TextField nameField;
+    private final       UserApi                                       userApi;
 
     public UserProfileView(UserApi userApi) {
         this.userApi = userApi;
@@ -157,11 +159,13 @@ public class UserProfileView extends Main implements BeforeEnterObserver {
         formLayout.getStyle().set("background-color", "var(--lumo-contrast-5pct)");
         formLayout.getStyle().set("border-radius", "var(--lumo-border-radius-m)");
 
-        // User info (read-only)
-        com.vaadin.flow.component.textfield.TextField nameField = new com.vaadin.flow.component.textfield.TextField("Name");
+        // User info
+        nameField = new com.vaadin.flow.component.textfield.TextField("Name");
+        nameField.setId(USER_NAME_FIELD);
         nameField.setValue(currentUser.getName() != null ? currentUser.getName() : "");
-        nameField.setReadOnly(true);
         nameField.setWidthFull();
+        nameField.setRequired(true);
+        nameField.setPrefixComponent(new Icon(VaadinIcon.USER));
 
         com.vaadin.flow.component.textfield.TextField emailField = new com.vaadin.flow.component.textfield.TextField("Email");
         emailField.setValue(currentUser.getEmail() != null ? currentUser.getEmail() : "");
@@ -209,7 +213,17 @@ public class UserProfileView extends Main implements BeforeEnterObserver {
     }
 
     private void saveProfile() {
+        // Validate name field
+        if (nameField.getValue() == null || nameField.getValue().trim().isEmpty()) {
+            Notification notification = Notification.show("Name cannot be empty", 3000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            return;
+        }
+
         try {
+            // Update name
+            currentUser.setName(nameField.getValue().trim());
+
             // Convert Vaadin color string to AWT Color
             String colorValue = colorPicker.getValue();
             if (colorValue != null && !colorValue.isEmpty()) {
