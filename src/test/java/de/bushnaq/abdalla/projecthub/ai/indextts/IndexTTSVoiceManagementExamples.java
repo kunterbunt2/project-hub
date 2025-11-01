@@ -27,63 +27,6 @@ import java.util.List;
 public class IndexTTSVoiceManagementExamples {
 
     /**
-     * Example 7: Setup guide and best practices
-     */
-    @Test
-    public void setupGuide() {
-        System.out.println("=== Example 7: Setup Guide ===\n");
-
-        System.out.println("🎤 Voice Reference Requirements:");
-        System.out.println("  ✓ Format: WAV (PCM 16-bit)");
-        System.out.println("  ✓ Duration: 10-30 seconds (optimal)");
-        System.out.println("  ✓ Sample Rate: 22050 Hz recommended (or 16kHz, 44.1kHz)");
-        System.out.println("  ✓ Content: Natural speech with varied intonation");
-        System.out.println("  ✓ Quality: Clear audio, minimal background noise");
-
-        System.out.println("\n📋 Method 1: Upload via API (Recommended)");
-        System.out.println("  1. Record or obtain a WAV file");
-        System.out.println("  2. Use Java API:");
-        System.out.println("     ```");
-        System.out.println("     IndexTTS.VoiceReference ref =");
-        System.out.println("         IndexTTS.uploadVoiceReference(\"E:\\\\my_voice.wav\");");
-        System.out.println("     ```");
-        System.out.println("  3. Use the voice:");
-        System.out.println("     ```");
-        System.out.println("     byte[] audio = IndexTTS.generateSpeech(");
-        System.out.println("         \"Hello world\",");
-        System.out.println("         ref.getPath(),");
-        System.out.println("         null, null, null, null, null, null, null");
-        System.out.println("     );");
-        System.out.println("     ```");
-
-        System.out.println("\n📋 Method 2: Manual Directory Mount");
-        System.out.println("  1. Create directory:");
-        System.out.println("     mkdir E:\\github\\project-hub\\docker\\index-tts\\voices");
-        System.out.println("  2. Place WAV files in the directory");
-        System.out.println("  3. Update docker-compose-index-tts.yml:");
-        System.out.println("     volumes:");
-        System.out.println("       - ./docker/index-tts/voices:/opt/index-tts/voices");
-        System.out.println("  4. Restart container:");
-        System.out.println("     index-tts-helper.bat restart");
-        System.out.println("  5. List available voices:");
-        System.out.println("     IndexTTS.VoiceReference[] refs = IndexTTS.listVoiceReferences();");
-
-        System.out.println("\n🎙️ Recording Tips:");
-        System.out.println("  • Use good quality microphone");
-        System.out.println("  • Record in quiet environment");
-        System.out.println("  • Speak naturally with emotion");
-        System.out.println("  • Include varied sentence structures");
-        System.out.println("  • Example script:");
-        System.out.println("    \"Hello! How are you today? I'm excited to help.");
-        System.out.println("     Technology is amazing. Let me tell you something interesting.\"");
-
-        System.out.println("\n📚 More Information:");
-        System.out.println("  • See docs/INDEX_TTS_VOICE_CLONING.md for detailed guide");
-        System.out.println("  • Run the example tests in this class");
-        System.out.println("  • Check server API: http://localhost:5124/");
-    }
-
-    /**
      * Synchronize voice references between local directory and server
      * - Uploads files present locally but not on server
      * - Deletes files present on server but not locally

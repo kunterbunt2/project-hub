@@ -121,7 +121,7 @@ public class UserOffDaysInstructionVideo extends AbstractUiTestUtil {
         seleniumHandler.wait(3000);
         paul.narrateAsync(NORMAL, "Hi everyone, Christopher Paul here from kassandra.org. Today I am happy to release our first instruction video for our Kassandra project management server.");
         seleniumHandler.hideOverlay();
-        productListViewTester.switchToProductListViewWithOidc("christopher.paul@kassandra.org", "password", "../project-hub.wiki/screenshots/login-view.png", testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+        productListViewTester.switchToProductListViewWithOidc("christopher.paul@kassandra.org", "password", "../kassandra.wiki/screenshots/login-view.png", testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
 
         //---------------------------------------------------------------------------------------..
         // Products Page

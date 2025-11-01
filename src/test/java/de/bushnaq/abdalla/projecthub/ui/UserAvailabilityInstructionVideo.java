@@ -119,7 +119,7 @@ public class UserAvailabilityInstructionVideo extends AbstractUiTestUtil {
         seleniumHandler.wait(3000);
         paul.narrateAsync(NORMAL, "Hi everyone, Christopher Paul here from kassandra.org. Today we're going to learn about User Availability management in Kassandra. User availability defines what percentage of your time you can dedicate to project work. This is essential for accurate sprint planning and capacity calculations.");
         seleniumHandler.hideOverlay();
-        productListViewTester.switchToProductListViewWithOidc("christopher.paul@kassandra.org", "password", "../project-hub.wiki/screenshots/login-view.png", testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+        productListViewTester.switchToProductListViewWithOidc("christopher.paul@kassandra.org", "password", "../kassandra.wiki/screenshots/login-view.png", testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
 
         //---------------------------------------------------------------------------------------
         // Navigate to Availability Page
@@ -158,7 +158,6 @@ public class UserAvailabilityInstructionVideo extends AbstractUiTestUtil {
         // Create New Availability - Intro
         //---------------------------------------------------------------------------------------
 
-        seleniumHandler.highlight(AvailabilityListView.CREATE_AVAILABILITY_BUTTON);
         paul.narrate(NORMAL, "Let me show you how to add a new availability record. I've been working at fifty percent project availability because I was handling third level support tasks.");
         paul.narrate(NORMAL, "Good news - those support responsibilities are being reassigned, so I can increase my availability to eighty percent starting next month.");
 
@@ -169,11 +168,11 @@ public class UserAvailabilityInstructionVideo extends AbstractUiTestUtil {
         paul.narrateAsync(NORMAL, "Click the create button.");
         seleniumHandler.click(AvailabilityListView.CREATE_AVAILABILITY_BUTTON);
 
-        paul.narrateAsync(NORMAL, "First, we select the start date - this is when the new availability becomes effective. Let's set it to June first, twenty twenty-five.");
+        paul.narrate(NORMAL, "First, we select the start date - this is when the new availability becomes effective. Let's set it to June first, twenty twenty-five.");
         final LocalDate newAvailabilityStartDate = LocalDate.of(2025, 6, 1);
         seleniumHandler.setDatePickerValue(AvailabilityDialog.AVAILABILITY_START_DATE_FIELD, newAvailabilityStartDate);
 
-        paul.narrateAsync(NORMAL, "Next, we enter the availability percentage. I'll enter eighty to represent eighty percent availability.");
+        paul.narrate(NORMAL, "Next, we enter the availability percentage. I'll enter eighty to represent eighty percent availability.");
         seleniumHandler.setTextField(AvailabilityDialog.AVAILABILITY_PERCENTAGE_FIELD, "80");
 
         paul.narrateAsync(NORMAL, "Now click Save to create the availability record.");

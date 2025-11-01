@@ -31,51 +31,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class IndexTTSVoiceCloningExample {
 
     /**
-     * Example 1: Setting up your first voice reference
-     */
-    @Test
-    public void setupGuide() {
-        System.out.println("\n=== Example 1: How to Set Up Voice References ===");
-
-        System.out.println("\n📋 Two Methods Available:");
-        System.out.println("  Method 1: Upload via API (see IndexTTSVoiceManagementExamples)");
-        System.out.println("  Method 2: Manual Directory Mount (shown below)");
-
-        System.out.println("\n1. Create a voices directory:");
-        System.out.println("   mkdir E:\\github\\project-hub\\docker\\index-tts\\voices");
-
-        System.out.println("\n2. Record or obtain voice samples (WAV format):");
-        System.out.println("   - Duration: 10-30 seconds");
-        System.out.println("   - Format: WAV, PCM 16-bit");
-        System.out.println("   - Sample Rate: 22050 Hz recommended");
-        System.out.println("   - Content: Natural speech with varied intonation");
-
-        System.out.println("\n3. Place your WAV files in the voices directory:");
-        System.out.println("   E:\\github\\project-hub\\docker\\index-tts\\voices\\");
-        System.out.println("     ├── narrator.wav");
-        System.out.println("     ├── hero.wav");
-        System.out.println("     └── villain.wav");
-
-        System.out.println("\n4. Update docker-compose-index-tts.yml:");
-        System.out.println("   volumes:");
-        System.out.println("     - ./docker/index-tts/voices:/opt/index-tts/voices");
-
-        System.out.println("\n5. Restart the container:");
-        System.out.println("   index-tts-helper.bat restart");
-
-        System.out.println("\n6. Use in your code:");
-        System.out.println("   byte[] audio = IndexTTS.generateSpeech(");
-        System.out.println("       \"Hello world\",");
-        System.out.println("       \"/opt/index-tts/voices/narrator.wav\",");
-        System.out.println("       null, null, null, null, null, null, null");
-        System.out.println("   );");
-
-        System.out.println("\n📚 See Also:");
-        System.out.println("  • IndexTTSVoiceManagementExamples.java - Upload/list/delete API");
-        System.out.println("  • docs/INDEX_TTS_VOICE_CLONING.md - Complete guide");
-    }
-
-    /**
      * Example 2: Using custom voice reference (voice cloning)
      * NOTE: You need to have a voice reference file in the mounted directory!
      */

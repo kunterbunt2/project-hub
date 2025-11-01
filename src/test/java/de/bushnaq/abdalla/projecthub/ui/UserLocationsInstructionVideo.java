@@ -120,7 +120,7 @@ public class UserLocationsInstructionVideo extends AbstractUiTestUtil {
         seleniumHandler.wait(3000);
         paul.narrateAsync(NORMAL, "Hi everyone, Christopher Paul here from kassandra.org. Today we're going to learn about User Location management in Kassandra. User locations are essential for accurate project planning because they determine which public holidays apply to each team member.");
         seleniumHandler.hideOverlay();
-        productListViewTester.switchToProductListViewWithOidc("christopher.paul@kassandra.org", "password", "../project-hub.wiki/screenshots/login-view.png", testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
+        productListViewTester.switchToProductListViewWithOidc("christopher.paul@kassandra.org", "password", "../kassandra.wiki/screenshots/login-view.png", testInfo.getTestClass().get().getSimpleName(), generateTestCaseName(testInfo));
 
         //---------------------------------------------------------------------------------------
         // Navigate to Location Page
@@ -171,7 +171,6 @@ public class UserLocationsInstructionVideo extends AbstractUiTestUtil {
         // Create New Location - Intro
         //---------------------------------------------------------------------------------------
 
-        seleniumHandler.highlight(LocationListView.CREATE_LOCATION_BUTTON);
         paul.narrate(NORMAL, "Let me show you how to add a new location. Imagine I'm planning to relocate to California in September. Let's create that location record now.");
 
         //---------------------------------------------------------------------------------------

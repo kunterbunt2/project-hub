@@ -28,11 +28,11 @@
 
     <groupId>de.bushnaq.abdalla</groupId>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>project-hub</artifactId>
+    <artifactId>kassandra</artifactId>
     <version>0.0.1</version>
-    <name>project-hub</name>
+    <name>kassandra</name>
     <packaging>jar</packaging>
-    <description>project-hub</description>
+    <description>kassandra</description>
 
     <dependencies>
         <!-- Vaadin -->
