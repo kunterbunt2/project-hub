@@ -260,8 +260,7 @@ public final class MainLayout extends AppLayout implements AfterNavigationObserv
         var offDaysItem = userMenuItem.getSubMenu().addItem("Manage Off Days", e -> navigateToOffDays(userEmail));
         offDaysItem.setId(ID_USER_MENU_OFF_DAYS);
 
-        var viewProfileItem = userMenuItem.getSubMenu().addItem("View Profile");
-        viewProfileItem.setEnabled(false);
+        var viewProfileItem = userMenuItem.getSubMenu().addItem("View Profile", e -> navigateToProfile(userEmail));
         viewProfileItem.setId(ID_USER_MENU_VIEW_PROFILE);
 
         var manageSettingsItem = userMenuItem.getSubMenu().addItem("Manage Settings");
@@ -304,6 +303,10 @@ public final class MainLayout extends AppLayout implements AfterNavigationObserv
 
     private void navigateToOffDays(String userEmail) {
         getUI().ifPresent(ui -> ui.navigate("offday/" + userEmail));
+    }
+
+    private void navigateToProfile(String userEmail) {
+        getUI().ifPresent(ui -> ui.navigate("profile/" + userEmail));
     }
 
     /**
