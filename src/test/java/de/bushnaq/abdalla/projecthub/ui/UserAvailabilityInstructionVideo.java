@@ -20,6 +20,7 @@ package de.bushnaq.abdalla.projecthub.ui;
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 import de.bushnaq.abdalla.projecthub.ai.narrator.Narrator;
 import de.bushnaq.abdalla.projecthub.ai.narrator.NarratorAttribute;
+import de.bushnaq.abdalla.projecthub.ui.component.AvailabilityCalendarComponent;
 import de.bushnaq.abdalla.projecthub.ui.dialog.AvailabilityDialog;
 import de.bushnaq.abdalla.projecthub.ui.util.AbstractUiTestUtil;
 import de.bushnaq.abdalla.projecthub.ui.util.selenium.HumanizedSeleniumHandler;
@@ -145,6 +146,13 @@ public class UserAvailabilityInstructionVideo extends AbstractUiTestUtil {
 
         paul.narrate(NORMAL, "I have one availability record starting from my first working day, set to fifty percent. This means Kassandra assumes I'm working half time on project work.");
         paul.narrate(NORMAL, "However, my capacity might change over time.");
+        //---------------------------------------------------------------------------------------
+        // Explain Calendar
+        //---------------------------------------------------------------------------------------
+
+        paul.narrate(NORMAL, "On the right side, you can see a calendar with every day of the current year.");
+        seleniumHandler.highlight(AvailabilityCalendarComponent.LEGEND_ITEM_ID_100_PERCENT, AvailabilityCalendarComponent.LEGEND_ITEM_ID_80_PERCENT, AvailabilityCalendarComponent.LEGEND_ITEM_ID_60_PERCENT, AvailabilityCalendarComponent.LEGEND_ITEM_ID_40_PERCENT, AvailabilityCalendarComponent.LEGEND_ITEM_ID_20_PERCENT, AvailabilityCalendarComponent.LEGEND_ITEM_ID_0_PERCENT);
+        paul.narrate(NORMAL, "The legend at the bottom shows the different availability levels and their colors. Each day is filled from the bottom up to represent your availability percentage.");
 
         //---------------------------------------------------------------------------------------
         // Why Multiple Availability Records
@@ -184,7 +192,7 @@ public class UserAvailabilityInstructionVideo extends AbstractUiTestUtil {
 
         seleniumHandler.wait(1000);
         seleniumHandler.highlight(AvailabilityListView.AVAILABILITY_GRID_START_DATE_PREFIX + "2025-06-01");
-        paul.narrate(NORMAL, "Perfect! The new availability record is now visible in the grid.");
+        paul.narrate(NORMAL, "Perfect! The new availability record is now visible in the grid and the calendar view.");
         paul.narrate(NORMAL, "Starting June first, Kassandra will use this new availability to calculate the number of days I need to finish my estimated tasks.");
         paul.narrate(NORMAL, "For example, a task that would take me ten days at one hundred percent availability will now take twelve and a half days.");
         paul.narrate(NORMAL, "My old availability record automatically ends the day before the new one begins, ensuring accurate capacity tracking throughout the year.");
@@ -252,7 +260,6 @@ public class UserAvailabilityInstructionVideo extends AbstractUiTestUtil {
         props.put("spring.security.oauth2.client.provider.keycloak.token-uri", publicAuthServerUrl + "realms/project-hub-realm/protocol/openid-connect/token");
         props.put("spring.security.oauth2.client.provider.keycloak.user-info-uri", publicAuthServerUrl + "realms/project-hub-realm/protocol/openid-connect/userinfo");
         props.put("spring.security.oauth2.client.provider.keycloak.jwk-set-uri", publicAuthServerUrl + "realms/project-hub-realm/protocol/openid-connect/certs");
-
         props.put("spring.security.oauth2.client.registration.keycloak.client-id", "project-hub-client");
         props.put("spring.security.oauth2.client.registration.keycloak.client-secret", "test-client-secret");
         props.put("spring.security.oauth2.client.registration.keycloak.scope", "openid,profile,email");

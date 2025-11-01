@@ -180,7 +180,8 @@ public class UserLocationsInstructionVideo extends AbstractUiTestUtil {
         paul.narrateAsync(NORMAL, "Click the create button.");
         seleniumHandler.click(LocationListView.CREATE_LOCATION_BUTTON);
 
-        paul.narrateAsync(NORMAL, "First, we select the start date - this is when the new location becomes effective. Let's set it to September first, twenty twenty-five.");
+        paul.narrate(NORMAL, "First, we select the start date - this is when the new location becomes effective.");
+        paul.narrateAsync(NORMAL, "Let's set it to September first, twenty twenty-five.");
         final LocalDate californiaStartDate = LocalDate.of(2025, 9, 1);
         seleniumHandler.setDatePickerValue(LocationDialog.LOCATION_START_DATE_FIELD, californiaStartDate);
 

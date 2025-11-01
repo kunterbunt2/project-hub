@@ -47,11 +47,18 @@ import java.util.function.Consumer;
  */
 public class AvailabilityCalendarComponent extends VerticalLayout {
 
-    public static final  String                CALENDAR_NEXT_YEAR_BTN = "availability-calendar-next-year-btn";
-    public static final  String                CALENDAR_PREV_YEAR_BTN = "availability-calendar-prev-year-btn";
-    private static final String                DAY_SIZE_PX            = "36px"; // Increased from 24px (50% larger)
-    private final        Map<LocalDate, Float> availabilityMap        = new HashMap<>();
-    private final        Map<Float, String>    colorMap               = new HashMap<>();
+    public static final  String                CALENDAR_NEXT_YEAR_BTN     = "availability-calendar-next-year-btn";
+    public static final  String                CALENDAR_PREV_YEAR_BTN     = "availability-calendar-prev-year-btn";
+    private static final String                DAY_SIZE_PX                = "36px"; // Increased from 24px (50% larger)
+    public static final  String                LEGEND_ITEM_ID_0_PERCENT   = "availability-calendar-legend-item-0";
+    public static final  String                LEGEND_ITEM_ID_100_PERCENT = "availability-calendar-legend-item-100";
+    public static final  String                LEGEND_ITEM_ID_20_PERCENT  = "availability-calendar-legend-item-20";
+    public static final  String                LEGEND_ITEM_ID_40_PERCENT  = "availability-calendar-legend-item-40";
+    public static final  String                LEGEND_ITEM_ID_60_PERCENT  = "availability-calendar-legend-item-60";
+    public static final  String                LEGEND_ITEM_ID_80_PERCENT  = "availability-calendar-legend-item-80";
+    public static final  String                LEGEND_ITEM_ID_PREFIX      = "availability-calendar-legend-item-";
+    private final        Map<LocalDate, Float> availabilityMap            = new HashMap<>();
+    private final        Map<Float, String>    colorMap                   = new HashMap<>();
     @Getter
     private              int                   currentYear;
     private final        Consumer<LocalDate>   dayClickHandler;
@@ -218,7 +225,7 @@ public class AvailabilityCalendarComponent extends VerticalLayout {
      */
     private Component createLegendItem(String label, float availability) {
         HorizontalLayout item = new HorizontalLayout();
-        item.setId("availability-calendar-legend-item-" + label.replace("%", ""));
+        item.setId(LEGEND_ITEM_ID_PREFIX + label.replace("%", ""));
         item.setSpacing(true);
         item.setAlignItems(FlexComponent.Alignment.CENTER);
 
