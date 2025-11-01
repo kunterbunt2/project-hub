@@ -117,18 +117,22 @@ public class UserListView extends AbstractMainGrid<User> implements AfterNavigat
             // Add name column with filtering and sorting
             Grid.Column<User> nameColumn = grid.addColumn(new ComponentRenderer<>(user -> {
                 Div div = new Div();
-                // Create color indicator if available
+                // Always show color indicator using user's color or default light gray
+                Div square = new Div();
+                square.setMinHeight("16px");
+                square.setMaxHeight("16px");
+                square.setMinWidth("16px");
+                square.setMaxWidth("16px");
+                square.getStyle().set("float", "left");
+                square.getStyle().set("margin", "1px");
+                String colorHex;
                 if (user.getColor() != null) {
-                    Div square = new Div();
-                    square.setMinHeight("16px");
-                    square.setMaxHeight("16px");
-                    square.setMinWidth("16px");
-                    square.setMaxWidth("16px");
-                    square.getStyle().set("float", "left");
-                    square.getStyle().set("margin", "1px");
-                    square.getStyle().set("background-color", "#" + Integer.toHexString(user.getColor().getRGB()).substring(2));
-                    div.add(square);
+                    colorHex = "#" + Integer.toHexString(user.getColor().getRGB()).substring(2);
+                } else {
+                    colorHex = "#D3D3D3"; // Light Gray default
                 }
+                square.getStyle().set("background-color", colorHex);
+                div.add(square);
                 div.add(user.getName());
                 div.setId(USER_GRID_NAME_PREFIX + user.getName());
                 return div;

@@ -903,7 +903,7 @@ class SeleniumHandler {
                             "  return true;" +
                             "}" +
                             "return false;";
-//            Boolean.TRUE.equals(executeJavaScript(clearScript));
+            executeJavaScript(clearScript);
         } else {
             String dateStr = date.format(DateTimeFormatter.ISO_LOCAL_DATE);
             String dateScript =
@@ -915,7 +915,7 @@ class SeleniumHandler {
                             "}" +
                             "return false;";
             logger.info("set DatePicker value=" + dateStr);
-//            Boolean.TRUE.equals(executeJavaScript(dateScript));
+            executeJavaScript(dateScript);
         }
     }
 

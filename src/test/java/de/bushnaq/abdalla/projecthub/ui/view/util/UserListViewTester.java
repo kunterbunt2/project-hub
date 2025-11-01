@@ -65,15 +65,13 @@ public class UserListViewTester {
      *
      * @param name            the name of the user to attempt to create
      * @param email           the email of the user to attempt to create
-     * @param color           the hex color code (with # prefix) for the user
      * @param firstWorkingDay the first working day for the user
      * @param lastWorkingDay  the last working day for the user
      */
-    public void createUserCancel(String name, String email, String color, LocalDate firstWorkingDay, LocalDate lastWorkingDay) {
+    public void createUserCancel(String name, String email, LocalDate firstWorkingDay, LocalDate lastWorkingDay) {
         seleniumHandler.click(UserListView.CREATE_USER_BUTTON);
         seleniumHandler.setTextField(UserDialog.USER_NAME_FIELD, name);
         seleniumHandler.setTextField(UserDialog.USER_EMAIL_FIELD, email);
-        seleniumHandler.setColorPickerValue(UserDialog.USER_COLOR_PICKER, color);
         seleniumHandler.setDatePickerValue(UserDialog.USER_FIRST_WORKING_DAY_PICKER, firstWorkingDay);
         seleniumHandler.setDatePickerValue(UserDialog.USER_LAST_WORKING_DAY_PICKER, lastWorkingDay);
         seleniumHandler.click(UserDialog.CANCEL_BUTTON);
@@ -89,24 +87,15 @@ public class UserListViewTester {
      *
      * @param name            the name of the user to create
      * @param email           the email of the user to create
-     * @param color           the hex color code (with # prefix) for the user
      * @param firstWorkingDay the first working day for the user
      * @param lastWorkingDay  the last working day for the user
      */
-    public void createUserConfirm(String name, String email, String color, LocalDate firstWorkingDay, LocalDate lastWorkingDay) {
+    public void createUserConfirm(String name, String email, LocalDate firstWorkingDay, LocalDate lastWorkingDay) {
         seleniumHandler.click(UserListView.CREATE_USER_BUTTON);
         seleniumHandler.setTextField(UserDialog.USER_NAME_FIELD, name);
         seleniumHandler.setTextField(UserDialog.USER_EMAIL_FIELD, email);
-        seleniumHandler.setColorPickerValue(UserDialog.USER_COLOR_PICKER, color);
         seleniumHandler.setDatePickerValue(UserDialog.USER_FIRST_WORKING_DAY_PICKER, firstWorkingDay);
         seleniumHandler.setDatePickerValue(UserDialog.USER_LAST_WORKING_DAY_PICKER, lastWorkingDay);
-
-        // Final verification before submitting
-//        try {
-//            Thread.sleep(500); // Short pause to ensure UI updates
-//        } catch (InterruptedException e) {
-//            Thread.currentThread().interrupt();
-//        }
         seleniumHandler.click(UserDialog.CONFIRM_BUTTON);
         seleniumHandler.ensureIsInList(UserListView.USER_GRID_NAME_PREFIX, name);
     }
@@ -151,8 +140,6 @@ public class UserListViewTester {
      * @param newName          the new originalName to attempt to assign to the user
      * @param originalEmail    the original email to verify remains unchanged after cancellation
      * @param newEmail         the email to attempt to assign to the user
-     * @param originalColor    the original color to verify remains unchanged after cancellation
-     * @param newColor         the hex color code to attempt to assign to the user
      * @param originalFirstDay the original first working day to verify remains unchanged after cancellation
      * @param newFirstDay      the first working day to attempt to assign to the user
      * @param originalLastDay  the original last working day to verify remains unchanged after cancellation
@@ -160,16 +147,14 @@ public class UserListViewTester {
      */
     public void editUserCancel(String originalName, String newName,
                                String originalEmail, String newEmail,
-                               String originalColor, String newColor,
                                LocalDate originalFirstDay, LocalDate newFirstDay,
                                LocalDate originalLastDay, LocalDate newLastDay) {
         // First verify the current field values before starting the edit
-        verifyUserDialogFields(originalName, originalEmail, originalColor, originalFirstDay, originalLastDay);
+        verifyUserDialogFields(originalName, originalEmail, originalFirstDay, originalLastDay);
 
         seleniumHandler.click(UserListView.USER_GRID_EDIT_BUTTON_PREFIX + originalName);
         seleniumHandler.setTextField(UserDialog.USER_NAME_FIELD, newName);
         seleniumHandler.setTextField(UserDialog.USER_EMAIL_FIELD, newEmail);
-        seleniumHandler.setColorPickerValue(UserDialog.USER_COLOR_PICKER, newColor);
         seleniumHandler.setDatePickerValue(UserDialog.USER_FIRST_WORKING_DAY_PICKER, newFirstDay);
         seleniumHandler.setDatePickerValue(UserDialog.USER_LAST_WORKING_DAY_PICKER, newLastDay);
 
@@ -195,15 +180,13 @@ public class UserListViewTester {
      * @param name            the original name of the user to edit
      * @param newName         the new name to assign to the user
      * @param email           the new email to assign to the user
-     * @param color           the new hex color code (with # prefix) for the user
      * @param firstWorkingDay the new first working day for the user
      * @param lastWorkingDay  the new last working day for the user
      */
-    public void editUserConfirm(String name, String newName, String email, String color, LocalDate firstWorkingDay, LocalDate lastWorkingDay) {
+    public void editUserConfirm(String name, String newName, String email, LocalDate firstWorkingDay, LocalDate lastWorkingDay) {
         seleniumHandler.click(UserListView.USER_GRID_EDIT_BUTTON_PREFIX + name);
         seleniumHandler.setTextField(UserDialog.USER_NAME_FIELD, newName);
         seleniumHandler.setTextField(UserDialog.USER_EMAIL_FIELD, email);
-        seleniumHandler.setColorPickerValue(UserDialog.USER_COLOR_PICKER, color);
         seleniumHandler.setDatePickerValue(UserDialog.USER_FIRST_WORKING_DAY_PICKER, firstWorkingDay);
         seleniumHandler.setDatePickerValue(UserDialog.USER_LAST_WORKING_DAY_PICKER, lastWorkingDay);
         seleniumHandler.click(UserDialog.CONFIRM_BUTTON);
@@ -244,7 +227,6 @@ public class UserListViewTester {
         // Read form values
         String    formName     = seleniumHandler.getTextField(UserDialog.USER_NAME_FIELD);
         String    formEmail    = seleniumHandler.getTextField(UserDialog.USER_EMAIL_FIELD);
-        String    formColor    = seleniumHandler.getColorPickerValue(UserDialog.USER_COLOR_PICKER);
         LocalDate formFirstDay = seleniumHandler.getDatePickerValue(UserDialog.USER_FIRST_WORKING_DAY_PICKER);
         LocalDate formLastDay  = seleniumHandler.getDatePickerValue(UserDialog.USER_LAST_WORKING_DAY_PICKER);
         // Close the dialog
@@ -252,7 +234,6 @@ public class UserListViewTester {
         // Assert that all form fields are empty or default values
         Assertions.assertTrue(formName.isEmpty(), "Name field should be empty in new dialog");
         Assertions.assertTrue(formEmail.isEmpty(), "Email field should be empty in new dialog");
-        Assertions.assertEquals("#000000", formColor, "Color picker should have default value black");
         Assertions.assertNull(formFirstDay, "First working day picker should be null in new dialog");
         Assertions.assertNull(formLastDay, "Last working day picker should be null in new dialog");
     }
@@ -261,29 +242,26 @@ public class UserListViewTester {
      * Verifies all fields in the UserDialog for a specific user.
      * <p>
      * Opens the edit dialog for the specified user and verifies that all fields
-     * (name, email, color, first working day, last working day) have the expected values.
+     * (name, email, first working day, last working day) have the expected values.
      * Cancels the dialog after verification to avoid making changes.
      *
      * @param name             the name of the user to verify
      * @param expectedEmail    the expected email of the user
-     * @param expectedColor    the expected hex color code (with # prefix) for the user
      * @param expectedFirstDay the expected first working day for the user
      * @param expectedLastDay  the expected last working day for the user
      */
-    public void verifyUserDialogFields(String name, String expectedEmail, String expectedColor, LocalDate expectedFirstDay, LocalDate expectedLastDay) {
+    public void verifyUserDialogFields(String name, String expectedEmail, LocalDate expectedFirstDay, LocalDate expectedLastDay) {
         // Open the edit dialog for the specified user
         seleniumHandler.click(UserListView.USER_GRID_EDIT_BUTTON_PREFIX + name);
         // Read actual values from the dialog
         String    actualName     = seleniumHandler.getTextField(UserDialog.USER_NAME_FIELD);
         String    actualEmail    = seleniumHandler.getTextField(UserDialog.USER_EMAIL_FIELD);
-        String    actualColor    = seleniumHandler.getColorPickerValue(UserDialog.USER_COLOR_PICKER);
         LocalDate actualFirstDay = seleniumHandler.getDatePickerValue(UserDialog.USER_FIRST_WORKING_DAY_PICKER);
         LocalDate actualLastDay  = seleniumHandler.getDatePickerValue(UserDialog.USER_LAST_WORKING_DAY_PICKER);
         // Cancel the dialog to avoid making changes
         seleniumHandler.click(UserDialog.CANCEL_BUTTON);
         Assertions.assertEquals(name, actualName, "Name mismatch");
         Assertions.assertEquals(expectedEmail, actualEmail, "Email mismatch");
-        Assertions.assertEquals(expectedColor, actualColor, "Color mismatch");
         Assertions.assertEquals(expectedFirstDay, actualFirstDay, "First working day mismatch");
         Assertions.assertEquals(expectedLastDay, actualLastDay, "Last working day mismatch");
     }

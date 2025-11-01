@@ -27,10 +27,8 @@ import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextField;
 import de.bushnaq.abdalla.projecthub.dto.User;
 import de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil;
-import org.vaadin.addons.tatu.ColorPicker;
 
 import java.awt.*;
-import java.util.List;
 import java.util.function.Consumer;
 
 import static de.bushnaq.abdalla.projecthub.ui.util.VaadinUtil.DIALOG_DEFAULT_WIDTH;
@@ -42,13 +40,11 @@ public class UserDialog extends Dialog {
 
     public static final String         CANCEL_BUTTON                 = "cancel-user-button";
     public static final String         CONFIRM_BUTTON                = "save-user-button";
-    public static final String         USER_COLOR_PICKER             = "user-color-picker";
     public static final String         USER_DIALOG                   = "user-dialog";
     public static final String         USER_EMAIL_FIELD              = "user-email-field";
     public static final String         USER_FIRST_WORKING_DAY_PICKER = "user-first-working-day-picker";
     public static final String         USER_LAST_WORKING_DAY_PICKER  = "user-last-working-day-picker";
     public static final String         USER_NAME_FIELD               = "user-name-field";
-    private final       ColorPicker    colorPicker;
     private final       EmailField     emailField;
     private final       DatePicker     firstWorkingDayPicker;
     private final       boolean        isEditMode;
@@ -92,28 +88,6 @@ public class UserDialog extends Dialog {
         emailField.setWidthFull();
         emailField.setPrefixComponent(new Icon(VaadinIcon.ENVELOPE));
 
-        // Color picker (using the community add-on)
-        colorPicker = new ColorPicker();
-        colorPicker.setId(USER_COLOR_PICKER);
-        colorPicker.setWidth("100%");
-
-        // Set predefined color presets
-        colorPicker.setPresets(List.of(
-                new ColorPicker.ColorPreset("#FF0000", "Red"),
-                new ColorPicker.ColorPreset("#0000FF", "Blue"),
-                new ColorPicker.ColorPreset("#008000", "Green"),
-                new ColorPicker.ColorPreset("#FFFF00", "Yellow"),
-                new ColorPicker.ColorPreset("#FFA500", "Orange"),
-                new ColorPicker.ColorPreset("#800080", "Purple"),
-                new ColorPicker.ColorPreset("#FFC0CB", "Pink"),
-                new ColorPicker.ColorPreset("#00FFFF", "Cyan"),
-                new ColorPicker.ColorPreset("#FF00FF", "Magenta"),
-                new ColorPicker.ColorPreset("#D3D3D3", "Light Gray"),
-                new ColorPicker.ColorPreset("#808080", "Gray"),
-                new ColorPicker.ColorPreset("#A9A9A9", "Dark Gray"),
-                new ColorPicker.ColorPreset("#000000", "Black")
-        ));
-
         // First working day picker
         firstWorkingDayPicker = new DatePicker("First Working Day");
         firstWorkingDayPicker.setId(USER_FIRST_WORKING_DAY_PICKER);
@@ -142,10 +116,6 @@ public class UserDialog extends Dialog {
         if (isEditMode) {
             nameField.setValue(user.getName() != null ? user.getName() : "");
             emailField.setValue(user.getEmail() != null ? user.getEmail() : "");
-            if (user.getColor() != null) {
-                String colorHex = "#" + Integer.toHexString(user.getColor().getRGB()).substring(2);
-                colorPicker.setValue(colorHex);
-            }
             firstWorkingDayPicker.setValue(user.getFirstWorkingDay());
             lastWorkingDayPicker.setValue(user.getLastWorkingDay());
         }
@@ -153,7 +123,6 @@ public class UserDialog extends Dialog {
         dialogLayout.add(
                 nameField,
                 emailField,
-                colorPicker,
                 firstWorkingDayPicker,
                 lastWorkingDayPicker
         );
@@ -178,10 +147,9 @@ public class UserDialog extends Dialog {
         userToSave.setName(nameField.getValue().trim());
         userToSave.setEmail(emailField.getValue().trim());
 
-        // Convert Vaadin color string to AWT Color
-        String colorValue = colorPicker.getValue();
-        if (colorValue != null && !colorValue.isEmpty()) {
-            userToSave.setColor(Color.decode(colorValue));
+        // color is managed by the user profile now; ensure a default is present for new users
+        if (!isEditMode && userToSave.getColor() == null) {
+            userToSave.setColor(new Color(211, 211, 211)); // Light Gray default
         }
 
         userToSave.setFirstWorkingDay(firstWorkingDayPicker.getValue());
